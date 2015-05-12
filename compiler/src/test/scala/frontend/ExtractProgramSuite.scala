@@ -36,7 +36,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
          a
          b"""
     )) {
-      case List(et.TopLevelDefine(List(et.SingleBinding(ref1, _))), et.VarRef(ref2), et.VarRef(ref3)) =>
+      case List(et.TopLevelDefine(et.SingleBinding(ref1, _)), et.VarRef(ref2), et.VarRef(ref3)) =>
         assert(ref1 === ref2)
         assert(ref2 === ref3)
     }
@@ -49,8 +49,8 @@ class ExtractProgramSuite extends FunSuite with Inside {
          (define b a)"""
     )) {
       case List(
-           et.TopLevelDefine(List(et.SingleBinding(storageLoc1, _))),
-           et.TopLevelDefine(List(et.SingleBinding(storageLoc2, expression)))
+           et.TopLevelDefine(et.SingleBinding(storageLoc1, _)),
+           et.TopLevelDefine(et.SingleBinding(storageLoc2, expression))
       ) =>
         assert(expression === et.VarRef(storageLoc1))
     }

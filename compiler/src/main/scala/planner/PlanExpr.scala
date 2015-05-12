@@ -45,9 +45,9 @@ private[planner] object PlanExpr {
       case et.Apply(procExpr, argExprs) =>
         PlanApplication(initialState)(procExpr, argExprs)
 
-      case et.TopLevelDefine(bindings) =>
+      case et.TopLevelDefine(binding) =>
         PlanResult(
-          state=PlanBind(initialState)(bindings),
+          state=PlanBind(initialState)(List(binding)),
           values=SingleValue(iv.UnitValue)
         )
 

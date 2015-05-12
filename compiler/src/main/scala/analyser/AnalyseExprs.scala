@@ -46,9 +46,9 @@ object AnalyseExprs  {
   }
 
   private def handleTopLevelExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
-    case et.TopLevelDefine(bindings) =>
+    case et.TopLevelDefine(binding) =>
       // Filter out the bindings that are unused
-      val usedBindings = bindings.filter {
+      val bindingUsed = binding match {
         case et.SingleBinding(storageLoc, initialiser) =>
           TopLevelDefineRequired(storageLoc, initialiser, acc)
 
@@ -58,42 +58,41 @@ object AnalyseExprs  {
           true
       }
 
-      if (usedBindings.isEmpty) {
+      if (!bindingUsed) {
         // Nothing to do!
         // Drop us completely
         acc
       }
       else {
         // Create a new top-level define with just the used bindings
-        val onlyUsedDefine = et.TopLevelDefine(usedBindings).assignLocationFrom(expr)
+        val onlyUsedDefine = et.TopLevelDefine(binding).assignLocationFrom(expr)
 
         // Add it to the list of used expressions
         val accWithOnlyUsedDefine = acc.copy(
           usedTopLevelExprs=onlyUsedDefine :: acc.usedTopLevelExprs
         )
 
-        // Deal with our initialisers
-        // Use foldRight because our exprs are being processed in reverse order
-        usedBindings.foldRight(accWithOnlyUsedDefine) {
-          case (et.SingleBinding(storageLoc, initialiser), previousAcc) =>
-            val accWithBinding = if (previousAcc.mutableVars.contains(storageLoc)) {
+        // Deal with the initialisers
+        binding match {
+          case et.SingleBinding(storageLoc, initialiser) =>
+            val accWithBinding = if (accWithOnlyUsedDefine.mutableVars.contains(storageLoc)) {
               // Don't record the initialisers for mutable top-level bindings
               // They provide no actionable information on the value of the storage location
-              previousAcc
+              accWithOnlyUsedDefine
             }
             else {
               // Record our initialiser
-              previousAcc.copy(
-                constantTopLevelBindings=(storageLoc -> initialiser) :: previousAcc.constantTopLevelBindings
+              accWithOnlyUsedDefine.copy(
+                constantTopLevelBindings=(storageLoc -> initialiser) :: accWithOnlyUsedDefine.constantTopLevelBindings
               )
             }
 
             // Recurse down our initialiser
             handleNestedExpr(initialiser, accWithBinding)
 
-          case (et.Binding(_, _, initialiser), previousAcc) =>
+          case et.Binding(_, _, initialiser) =>
             // We don't record any initialiser information for multiple value bindings
-            handleNestedExpr(initialiser, previousAcc)
+            handleNestedExpr(initialiser, accWithOnlyUsedDefine)
         }
       }
 

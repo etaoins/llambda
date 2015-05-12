@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.compiler.sst
 import llambda.compiler._
-import llambda.compiler.frontend.ParsedSimpleDefine
 
 private[frontend] object ParseSyntaxDefine {
   private def checkDuplicateVariables(foundVariables : PatternVariables, seenVariables : Set[SyntaxVariable]) : Set[SyntaxVariable] = {
@@ -25,9 +24,15 @@ private[frontend] object ParseSyntaxDefine {
     }
   }
 
-  private def parseTransformers(definedSymbol : sst.ScopedSymbol, ellipsisVariable : SyntaxVariable, literalData : List[sst.ScopedDatum], rulesData : List[sst.ScopedDatum], debugContext : debug.SourceContext) : ParsedSimpleDefine = {
-    val literals = (literalData.map { 
-      case symbol @ sst.ScopedSymbol(_, identifier) => 
+  private def parseTransformers(
+      definedSymbol : sst.ScopedSymbol,
+      ellipsisVariable : SyntaxVariable,
+      literalData : List[sst.ScopedDatum],
+      rulesData : List[sst.ScopedDatum],
+      debugContext : debug.SourceContext
+  ) : (sst.ScopedSymbol, BoundSyntax) = {
+    val literals = (literalData.map {
+      case symbol @ sst.ScopedSymbol(_, identifier) =>
         SyntaxVariable.fromSymbol(symbol)
 
       case nonSymbol =>
@@ -62,14 +67,14 @@ private[frontend] object ParseSyntaxDefine {
       sourceNameOpt=Some(definedSymbol.name)
     )
 
-    ParsedSimpleDefine(definedSymbol, new BoundSyntax(ellipsisVariable, literals.toSet, parsedRules, macroDebugContext))
+    (definedSymbol -> new BoundSyntax(ellipsisVariable, literals.toSet, parsedRules, macroDebugContext))
   }
 
   def apply(
       located : SourceLocated,
       operands : List[sst.ScopedDatum],
       debugContext : debug.SourceContext
-  ) : ParsedSimpleDefine = operands match {
+  ) : (sst.ScopedSymbol, BoundSyntax) = operands match {
     case List((definedSymbol : sst.ScopedSymbol),
              sst.ScopedProperList(
                sst.ResolvedSymbol(Primitives.SyntaxRules) :: sst.ScopedProperList(literalData) :: rulesData

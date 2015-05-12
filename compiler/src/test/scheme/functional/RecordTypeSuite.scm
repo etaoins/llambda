@@ -1,6 +1,6 @@
 (define-test "constructing empty record type" (expect #t
-  (define-record-type <unit> (unit) unit?)
-  (unit? (unit))))
+  (define-record-type <empty> (empty) empty?)
+  (empty? (empty))))
 
 (define-test "record types are disjoint" (expect #f
   (define-record-type <type1> (type1) type1?)

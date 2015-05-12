@@ -10,7 +10,7 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 import annotation.tailrec
 
 private object FindBodyDefines {
-  case class Result(parsedDefines : List[ParsedDefine], bodyData : List[sst.ScopedDatum])
+  case class Result(extractedDefines : List[ExtractedVarsDefine], bodyData : List[sst.ScopedDatum])
 
   /** Splits a body in to definitions and body expressions
     *
@@ -19,7 +19,7 @@ private object FindBodyDefines {
     */
   def apply(
       data : List[sst.ScopedDatum],
-      definesAcc : List[ParsedDefine] = Nil
+      definesAcc : List[ExtractedVarsDefine] = Nil
   )(implicit context : FrontendContext) : Result = data match {
     case (pairDatum @ sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr)) :: restData =>
       (appliedSymbol.resolveOpt, cdr) match {
@@ -47,17 +47,8 @@ private object FindBodyDefines {
           apply(scopedData ++ restData, definesAcc)
 
         case (Some(definePrimitive : PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>
-          val parsedDefine = ParseDefine(pairDatum, definePrimitive, operands)
-
-          parsedDefine match {
-            case ParsedSimpleDefine(symbol, boundValue) =>
-              // Inject this macro, type etc. in to the scope so any future bindings can use it
-              symbol.scope += (symbol.name -> boundValue)
-              apply(restData, definesAcc)
-
-            case _ =>
-              apply(restData, parsedDefine :: definesAcc)
-          }
+          val extractedDefines = ExtractDefine(pairDatum, definePrimitive, operands, allowRedefinition=false)
+          apply(restData, extractedDefines ++ definesAcc)
 
         case _ =>
           // Not a define
@@ -124,39 +115,14 @@ private[frontend] object ExtractBodyDefinition {
     val foundDefines = FindBodyDefines(scopedDefinition)
 
     // Expand our scopes with all of the defines
-    val bindingBlocks = foundDefines.parsedDefines flatMap {
-      case ParsedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
+    val bindingBlocks = foundDefines.extractedDefines flatMap {
+      case ExtractedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
         val fixedLocs = fixedValueTargets.map(_.bindStorageLoc(vt.AnySchemeType))
         val restLocOpt = restValueTargetOpt.map(_.bindStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
         List(
           { () => et.Binding(fixedLocs, restLocOpt, exprBlock()) }
         )
-
-      case ParsedSimpleDefine(symbol, boundValue) =>
-        symbol.scope += (symbol.name -> boundValue)
-        Nil
-
-      case ParsedRecordTypeDefine(typeSymbol, recordType, (constructorSym, constructorExpr), procedures) =>
-        typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
-
-        val constructorType = SchemeTypeForSymbol(constructorSym)
-        val constructorLoc = new BoundRecordConstructor(constructorExpr, constructorSym.name, constructorType)
-        constructorSym.scope += (constructorSym.name -> constructorLoc)
-
-        val constructorBindingBlock = { () => et.SingleBinding(constructorLoc, constructorExpr) }
-
-        constructorBindingBlock :: procedures.toList.map { case (procedureSymbol, expr) =>
-          val schemeType = SchemeTypeForSymbol(procedureSymbol)
-          val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
-
-          procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
-
-          { () => et.SingleBinding(storageLoc, expr) }
-        }
-
-      case ParsedTypeAnnotation =>
-        Nil
     } : List[() => et.Binding]
 
     // Execute the expression blocks now that the scopes are prepared

@@ -12,6 +12,22 @@ import llambda.compiler.{Primitives, BoundType, Scope, SourceLocated}
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
+  /** Parsed record type definition
+    *
+    * This is the result of parsing a (define-record-type)
+    *
+    * @param  typeSymbol   Symbol for the newly introduced record type
+    * @param  recordType   The new record type
+    * @param  constructor  Constructor procedure for the record type
+    * @param  procedures   The associated procedures for the record type
+    */
+  case class Result(
+      typeSymbol : sst.ScopedSymbol,
+      recordType : vt.RecordType,
+      constructor : (sst.ScopedSymbol, et.RecordConstructor),
+      procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]
+  )
+
   private case class ParsedField(
     field : vt.RecordField,
     accessorSymbol : sst.ScopedSymbol,
@@ -141,7 +157,7 @@ private[frontend] object ParseRecordTypeDefine {
       constructorArgs : List[sst.ScopedDatum],
       predicateSymbol : sst.ScopedSymbol,
       fieldData : List[sst.ScopedDatum]
-  )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = {
+  )(implicit frontendConfig : FrontendConfig) : Result = {
     val parentRecordOpt = parentSymbolOpt map { parentSymbol =>
       ExtractType.extractSchemeType(parentSymbol) match {
         case parentRecord : vt.RecordType =>
@@ -199,13 +215,13 @@ private[frontend] object ParseRecordTypeDefine {
 
     val allProcedures = predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
 
-    ParsedRecordTypeDefine(nameSymbol, recordType, constructorProcedure, allProcedures.toMap)
+    Result(nameSymbol, recordType, constructorProcedure, allProcedures.toMap)
   }
 
   def apply(
       located : SourceLocated,
       args : List[sst.ScopedDatum]
-  )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = args match {
+  )(implicit frontendConfig : FrontendConfig) : Result = args match {
     case (nameSymbol : sst.ScopedSymbol) ::
          sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorArgs) ::
          (predicateSymbol : sst.ScopedSymbol) ::

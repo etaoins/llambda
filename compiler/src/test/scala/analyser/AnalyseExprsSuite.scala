@@ -22,12 +22,8 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true))),
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(false)))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(false)))),
       et.VarRef(testLocB),
       et.VarRef(testLocA),
       et.VarRef(testLocB)
@@ -60,18 +56,20 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
     val testLocB = new StorageLocation("testLocB")
     val testExprs = List(
-      et.TopLevelDefine(List(
+      et.TopLevelDefine(
         et.SingleBinding(testLocA, et.NativeFunction(
           NativeSystemLibrary,
           testSignature.toPolymorphic,
           "nativeSymbol1"
-        )),
+        ))
+      ),
+      et.TopLevelDefine(
         et.SingleBinding(testLocB, et.NativeFunction(
           NativeSystemLibrary,
           testSignature.toPolymorphic,
           "nativeSymbol2"
         ))
-      )),
+      ),
       // Apply the procs so their definitions don't get dropped
       et.Apply(et.VarRef(testLocA), Nil),
       et.Apply(et.VarRef(testLocB), Nil)
@@ -87,12 +85,8 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true))),
-          et.SingleBinding(testLocB, et.Literal(ast.BooleanLiteral(false)))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
+      et.TopLevelDefine(et.SingleBinding(testLocB, et.Literal(ast.BooleanLiteral(false)))),
       et.MutateVar(testLocA, et.Literal(ast.EmptyList())),
       et.VarRef(testLocA)
     )
@@ -100,15 +94,11 @@ class AnalyseExprsSuite extends FunSuite {
     val analysedExprs = AnalyseExprs(testExprs)
 
     // We should have dropped testLocB completely
-    val expectedUsedExprs = testExprs match {
-      case et.TopLevelDefine(bindings) :: tail =>
-        et.TopLevelDefine(List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))
-        )) :: tail
-
-      case _ =>
-        throw new Exception("Couldn't parse our own test expressions")
-    }
+    val expectedUsedExprs = List(
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
+      et.MutateVar(testLocA, et.Literal(ast.EmptyList())),
+      et.VarRef(testLocA)
+    )
 
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=expectedUsedExprs,
@@ -125,12 +115,8 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.VarRef(testLocB)),
-          et.SingleBinding(testLocB, et.VarRef(testLocA))
-        )
-      )
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.VarRef(testLocB))),
+      et.TopLevelDefine(et.SingleBinding(testLocB, et.VarRef(testLocA)))
     )
 
     val analysedExprs = AnalyseExprs(testExprs)
@@ -143,11 +129,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Cond(
         et.Literal(ast.BooleanLiteral(false)),
         et.MutateVar(testLocA, et.Literal(ast.EmptyList())),
@@ -172,12 +154,8 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
     val testLocB = new StorageLocation("testLocB")
 
-    val testExprs = List( 
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))
-        )
-      ),
+    val testExprs = List(
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Apply(
         et.Lambda(
           polyType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues).toPolymorphic,
@@ -208,11 +186,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Apply(
         et.Lambda(
           polyType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues).toPolymorphic,
@@ -241,11 +215,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Lambda(
         polyType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues).toPolymorphic,
         fixedArgs=Nil,
@@ -272,16 +242,8 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))
-        )
-      ),
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocB, et.MutateVar(testLocA, et.Literal(ast.EmptyList())))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
+      et.TopLevelDefine(et.SingleBinding(testLocB, et.MutateVar(testLocA, et.Literal(ast.EmptyList())))),
       // Reference testLocB so testLocA becomes mutable
       et.VarRef(testLocB)
     )
@@ -305,15 +267,11 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefine(
-        List(
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true))),
-          et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(false)))
-        )
-      ),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(false)))),
       et.MutateVar(testLocA, et.MutateVar(testLocB, et.Literal(ast.BooleanLiteral(true))))
     )
-    
+
     val analysedExprs = AnalyseExprs(testExprs)
     
     assert(analysedExprs === AnalysedExprs(

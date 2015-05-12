@@ -24,17 +24,11 @@ object ExtractModuleBody {
     ExtractModuleBody(foldedData, scope)
   }
 
-  private def guardOutermostRedefinition(symbol : sst.ScopedSymbol)(implicit context : FrontendContext) {
-    if (!context.config.schemeDialect.allowTopLevelRedefinition && symbol.resolveOpt.isDefined) {
-      throw new DuplicateDefinitionException(symbol)
-    }
-  }
-
-  private def handleParsedDefine(
+  private def handleExtractedDefine(
       located : SourceLocated,
-      parsedDefine : ParsedDefine
-  )(implicit context : FrontendContext) : List[et.Expr] = parsedDefine match {
-    case ParsedVarsDefine(List(valueTarget), None, exprBlock) =>
+      extractedDefine : ExtractedVarsDefine
+  )(implicit context : FrontendContext) : List[et.Expr] = extractedDefine match {
+    case ExtractedVarsDefine(List(valueTarget), None, exprBlock) =>
       val symbol = valueTarget.definedSymbol
 
       // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined as
@@ -58,10 +52,10 @@ object ExtractModuleBody {
         case None =>
           // This is a fresh binding
           val boundValue = valueTarget.bindStorageLoc(vt.AnySchemeType)
-          List(et.TopLevelDefine(List(et.SingleBinding(boundValue, exprBlock()))))
+          List(et.TopLevelDefine(et.SingleBinding(boundValue, exprBlock())))
       }
 
-    case ParsedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
+    case ExtractedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
       // Don't support re-defining top-level values with (define-values) in any dialect
       for (symbol <- (fixedValueTargets ++ restValueTargetOpt).map(_.definedSymbol)) {
         if (symbol.resolveOpt.isDefined) {
@@ -72,39 +66,7 @@ object ExtractModuleBody {
       val fixedLocs = fixedValueTargets.map(_.bindStorageLoc(vt.AnySchemeType))
       val restLocOpt = restValueTargetOpt.map(_.bindStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
-      List(et.TopLevelDefine(List(et.Binding(fixedLocs, restLocOpt, exprBlock()))))
-
-    case ParsedSimpleDefine(symbol, boundValue) =>
-      guardOutermostRedefinition(symbol)
-
-      // This doesn't create any expression tree nodes
-      symbol.scope += (symbol.name -> boundValue)
-      Nil
-
-    case ParsedRecordTypeDefine(typeSymbol, recordType, (constructorSym, constructorExpr), procedures) =>
-      typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
-
-      val constructorType = SchemeTypeForSymbol(constructorSym)
-      val constructorLoc = new BoundRecordConstructor(constructorExpr, constructorSym.name, constructorType)
-      constructorSym.scope += (constructorSym.name -> constructorLoc)
-
-      val constructorBinding = et.SingleBinding(constructorLoc, constructorExpr)
-
-      val bindings = constructorBinding :: (procedures.map { case (procedureSymbol, expr) =>
-        val schemeType = SchemeTypeForSymbol(procedureSymbol)
-        val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
-
-        guardOutermostRedefinition(procedureSymbol)
-
-        procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
-
-        et.SingleBinding(storageLoc, expr)
-      }).toList
-
-      List(et.TopLevelDefine(bindings))
-
-    case ParsedTypeAnnotation =>
-      Nil
+      List(et.TopLevelDefine(et.Binding(fixedLocs, restLocOpt, exprBlock())))
   }
 
   private def extractOutermostExpr(
@@ -131,7 +93,11 @@ object ExtractModuleBody {
           extractInclude(appliedSymbol, scope, includeNames, foldCase=true)
 
         case (definePrimitive : PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
-          handleParsedDefine(datum, ParseDefine(datum, definePrimitive, operands))
+          val allowRedefinition = context.config.schemeDialect.allowTopLevelRedefinition
+
+          ExtractDefine(datum, definePrimitive, operands, allowRedefinition).flatMap { define =>
+            handleExtractedDefine(datum, define)
+          }
 
         case _ =>
           ExtractExpr(datum).toSequence

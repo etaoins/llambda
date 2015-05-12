@@ -178,11 +178,11 @@ object SingleBinding {
     Binding(List(storageLoc), None, expr)
 }
 
-case class TopLevelDefine(bindings : List[Binding]) extends Expr {
-  val subexprs = bindings.map(_.initialiser)
+case class TopLevelDefine(binding : Binding) extends Expr {
+  val subexprs = List(binding.initialiser)
 
   def map(f : Expr => Expr) : TopLevelDefine =
-    TopLevelDefine(bindings.map(_.map(f))).assignLocationFrom(this)
+    TopLevelDefine(binding.map(f)).assignLocationFrom(this)
 }
 
 case class InternalDefine(bindings : List[Binding], body : Expr) extends Expr {
