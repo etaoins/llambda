@@ -92,12 +92,16 @@ If the complete type for a procedure is known it is often the simplest and most 
 (: multiply-by-two (-> <number> <number>))
 (define (multiply-by-two val)
   (* val 2))
+
+(multiply-by-two 4) ;; => 8
 ```
 
 However, it is also possible to annotate the individual arguments to a procedure using ``[arg : <type>]`` syntax.
 ```racket
 (define (multiply-by-two [val : <number>])
   (* val 2))
+
+(multiply-by-two -2.5) ;; => -5.0
 ```
 
 The square brackets are an extension to R7RS that are treated identically to round brackets. They are only used in type annotations by convention. This identical to the behaviour and conventions of Typed Racket.
@@ -107,6 +111,8 @@ Procedures taking a rest argument list need to use ``rest : <type> *``. A proced
 (define (sum-integers [inexact-result : <boolean>] ints : <exact-integer> *)
   (define sum (apply + ints))
   (if inexact-result (inexact sum) sum))
+
+(sum-integers #t 1 2 3 4 5) ;; => 15.0
 ```
 
 Polymorphic Procedures
@@ -130,6 +136,8 @@ Currently polymorphic procedures can only be created by a type declaration using
   (if (null? l)
     l
     (append (rev (cdr l)) (list (car l)))))
+
+(rev '(1 2 3 4 5)) ;; => '(5 4 3 2 1)
 ```
 
 This declares that ``rev`` takes a list and returns a list of the same type. If this isn't true an error will be signaled. Typically violations are caught at compile time but some situations will result in runtime checks being generated.
@@ -142,6 +150,8 @@ For example, the following procedure will multiply any ``<number>`` value by 2
 (: times-2 (All ([N : <number>]) N N))
 (define (times-2 v)
   (* 2 v))
+
+(times-2 5.0) ;; => 10.0
 ```
 
 Multiple type variables can appear in a type declaration. The following procedure swaps the car and cdr of a pair while preserving its type information
@@ -150,6 +160,8 @@ Multiple type variables can appear in a type declaration. The following procedur
 (: swap-pair (All (A D) (Pairof A D) (Pairof D A)))
 (define (swap-pair p)
   (cons (cdr p) (car p)))
+
+(swap-pair '(1 . 2)) ;; => '(2 . 1)
 ```
 
 Record Types
@@ -169,6 +181,8 @@ Every record type definition in Llambda introduces a distinct first class type b
   (point
     (+ (point-x first) (point-x second))
     (+ (point-y first) (point-y second))))
+
+(add-points (point 10 20) (point 30 40)) ; => (point 40 60)
 ```
 
 Typed fields allow record type definitions to specify any field's type using type annotation syntax on the field's name. This can have benefits for type safety, self-documentation and performance. As the default field initialiser is ``<unit>`` fields with types not including ``<unit>`` must be explicitly initialised by appearing in the constructor.
@@ -190,4 +204,6 @@ Record type inheritance allows a record type to inherit the fields of another. A
 
 (define-record-type <point-3d> <point> (point-3d x y z) point-3d?
   [[z : <flonum>] point-z])
+
+(point? (point-3d 1.0 2.0 3.0)) ;; => #t
 ```

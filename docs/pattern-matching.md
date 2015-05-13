@@ -11,10 +11,14 @@ Any self-evaluating value (such as numbers, strings, bytevectors, etc) or quoted
 
 The following code will convert the exact integers 1-3 to descriptive symbols. Any other value will signal a ``match-error``
 ```racket
-(match input-val
+(import (llambda match))
+
+(match 2
   [1 'one]
   [2 'two]
   [3 'three])
+
+;; => 'two
 ```
 
 Any Value Matches
@@ -23,10 +27,12 @@ An unquoted symbol will match any value and bind that value in the clause's body
 
 The following code will convert the strings "true" and "false" to their boolean counterparts and takes the boolean value of any other value.
 ```racket
-(match input-val
+(match "false"
   ["true" #t]
   ["false" #f]
   [other (if other #t #f)])
+
+;; => #f
 ```
 
 Intrinsic Constructor Matches
@@ -35,10 +41,11 @@ The constructors ``(cons)``, ``(list)`` and ``(vector)`` match pairs, lists and 
 
 The following code will match lists or vectors with two elements and return the elements in a pair.
 ```racket
-(match two-element-value
+(match #(4 5)
   [(list first second) (cons first second)]
   [(vector first second) (cons first second)])
 
+;; => '(4 . 5)
 ```
 
 Record Type Constructor Matches
@@ -49,14 +56,18 @@ Actors can use user defined record types to send and receive messages in a type 
 
 The following code will match a ``<point>`` record type and determine if the ``x`` or ``y`` value is zero.
 ```racket
+(import (llambda typed))
+
 (define-record-type <point> (point x y) point?
   [[x : <number>] point-x]
   [[y : <number>] point-y])
 
-(match point-val
+(match (point 4 0)
   [(point 0 _) 'zero-x]
   [(point _ 0) 'zero-y]
   [(point _ _) 'nonzero])
+
+;; => 'zero-y
 ```
 
 Typed Value Matches
@@ -65,7 +76,7 @@ Type annotation syntax can be used to match values of a specific type. This requ
 
 The following code will return string description of some basic values.
 ```racket
-(match value
+(match "Hello, world!"
   [#f
     "Boolean false"]
   [#t
@@ -81,6 +92,7 @@ The following code will return string description of some basic values.
   [[_ : <flonum>]
     "Floating point number"])
 
+;; => "String"
 ```
 
 ``(match-lambda)``
@@ -93,4 +105,6 @@ The following code defines a recursive lambda to sum the values in a provided li
 (define sum-list (match-lambda
   ['() 0]
   [(cons head tail) (+ head (sum-list tail))]))
+
+(sum-list '(1 2 3)) ;; => 6
 ```
