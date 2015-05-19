@@ -85,6 +85,18 @@ Another way to annotate values that's common in the Lisp languages is by providi
 
 The forward annotation can appear anywhere in the same scope before the matching definition. If an annotation doesn't match an eventual definition an error will be raised. This can be useful for separating type annotations from code or when using complex types such as procedure types.
 
+Annotating Expressions
+----------------------
+Expressions can be annotated as producing a value of a given type. `(ann)` ensures that an expression has a given type at compile time. If it's possible for the expression to produce an incompatible type the compilation will fail.
+```racket
+(ann (+ 2 5) <number>) ;; => 7
+```
+
+Alternatively `(cast)` can be used to create a runtime check for a type. If the expression produces an incompatible type then a `type-error` will be signalled.
+```racket
+(cast (string->number "56") <exact-integer>) ;; => 56
+```
+
 Annotating Procedures
 ---------------------
 If the complete type for a procedure is known it is often the simplest and most idiomatic to use a forward type declaration with a procedure type
