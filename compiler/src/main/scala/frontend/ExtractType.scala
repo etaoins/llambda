@@ -154,6 +154,10 @@ object ExtractType {
       case Primitives.CaseProcedureType =>
         applyCaseProcedureTypeConstructor(constructorName, args)
 
+      case Primitives.ExternalRecordType =>
+        val sourceNameOpt = recursiveVars.variables.find(_._2 == 0).map(_._1)
+        ExtractExternalRecordType(constructorName, sourceNameOpt, args)
+
       case LiteralTypeConstructor =>
         args match {
           case List(literalValue) =>

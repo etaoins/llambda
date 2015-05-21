@@ -82,10 +82,15 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(UniformProperListType(AnySchemeType)) === "(Listof <any>)")
   }
 
-  test("record type") {
+  test("user-defined record type") {
     assert(NameForType(new RecordType("<custom-record>", Nil)) === "<custom-record>")
   }
-  
+
+  test("external record type") {
+    assert(NameForType(new ExternalRecordType(Some("<custom-external>"), None)) === "<custom-external>")
+    assert(NameForType(new ExternalRecordType(None, None)) === "<external-record-type>")
+  }
+
   test("empty scheme type") {
     assert(NameForType(UnionType(Set())) === "(U)")
   }

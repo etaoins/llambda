@@ -86,7 +86,7 @@ case object UnicodeChar extends IntLikeType(32, true) {
   val schemeType = CharType
 }
 
-/** Pointer to a garabge collected value cell containing a user-defined record type
+/** Pointer to a garbage collected value cell containing a user-defined record type
   *
   * This uniquely identifies a record type even if has the same name and internal structure as another type
   */
@@ -122,6 +122,25 @@ class RecordType(
 
     field -> pm.InstantiateType(reconciledVars, field.typeTemplate)
   }).toMap ++ parentRecordOpt.map(_.typeForField).getOrElse(Map())
+}
+
+/** Represents an externally defined record type
+  *
+  * This allows types to be defined by native libraries without explicit support from the compiler. They're treated
+  * similarly to Scheme record types by the type system: every type is considered distinct. However, the compiler will
+  * emit no definition for the type or accessors for for its fields.
+  *
+  * @param  sourceNameOpt   Name of the type at the site of definition. This is used by diagnostic messages.
+  * @param  predicateOpt   Optional predicate function. If none is provided then runtime type checks will not be
+  *                        supported.
+  */
+class ExternalRecordType(
+    val sourceNameOpt : Option[String],
+    val predicateOpt : Option[ExternalRecordTypePredicate]
+) extends CellValueType with NonRecursiveType with DerivedSchemeType {
+  val cellType = ct.RecordCell
+  val isGcManaged = true
+  val parentType = SchemeTypeAtom(ct.RecordCell)
 }
 
 /** Types visible to Scheme programs without using the NFI */

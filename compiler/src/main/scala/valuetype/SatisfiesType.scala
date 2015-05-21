@@ -167,7 +167,11 @@ object SatisfiesType {
         else {
           // No direct parent-child relationship
           Some(false)
+
         }
+
+      case (superExternal : ExternalRecordType, testingExternal : ExternalRecordType) =>
+        Some(superExternal eq testingExternal)
 
       case (superPair : PairType, testingPair : PairType) =>
         // Pairs satisfy their more general pairs

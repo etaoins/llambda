@@ -59,6 +59,9 @@ object NameForType {
       case recordType : RecordType =>
         recordType.sourceName
 
+      case externalType : ExternalRecordType =>
+        externalType.sourceNameOpt getOrElse "<external-record-type>"
+
       case procType : ProcedureType =>
         nameForProcedureType(procType)
 

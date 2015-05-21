@@ -93,6 +93,40 @@ object PlanTypeCheck {
     }))
   }
 
+  private def testExternalRecordType(
+      plan : PlanWriter,
+      checkValue : BoxedValue,
+      valueType : vt.SchemeType,
+      testType : vt.ExternalRecordType
+  ) : CheckResult = {
+    val predicate = testType.predicateOpt getOrElse {
+      throw new TypeException(
+        located=plan.activeContextLocated,
+        message=s"Value of type ${valueType} does not statically satisfy external record type ${testType}"
+      )
+    }
+
+    plan.requiredNativeLibraries += predicate.library
+
+    val entryPointTemp = ps.EntryPointTemp()
+
+    plan.steps += ps.CreateNamedEntryPoint(
+      entryPointTemp,
+      vt.ExternalRecordTypePredicate.signature,
+      predicate.nativeSymbol
+    )
+
+    val resultPred = ps.Temp(vt.Predicate)
+    plan.steps += ps.Invoke(
+      Some(resultPred),
+      vt.ExternalRecordTypePredicate.signature,
+      entryPointTemp,
+      List(checkValue.castToCellTempValue(ct.AnyCell)(plan))
+    )
+
+    DynamicResult(resultPred)
+  }
+
   private def testNonUnionType(
       plan : PlanWriter,
       checkValue : BoxedValue,
@@ -105,6 +139,9 @@ object PlanTypeCheck {
           (isRecordPlan, remainingType) =>
             testRecordClass(isRecordPlan, checkValue, remainingType, recordType)
         }))
+
+      case externalRecordType : vt.ExternalRecordType =>
+        testExternalRecordType(plan, checkValue, valueType, externalRecordType)
 
       case vt.SpecificPairType(testCarTypeRef, testCdrTypeRef) =>
         val testCarType = unrolledTypeRef(testCarTypeRef)
