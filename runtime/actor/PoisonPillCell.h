@@ -9,7 +9,7 @@ namespace actor
 {
 
 /**
- * Singleton cell instance representing a poison pill messae
+ * Singleton cell instance representing a poison pill message
  */
 class PoisonPillCell : public RecordCell
 {
