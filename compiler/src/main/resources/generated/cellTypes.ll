@@ -157,6 +157,6 @@
 
 ; {supertype, mailbox}
 %mailbox = type {%any, i8*}
-!94 = !{!"Any::typeId->Mailbox", !10}
-!95 = !{!"Any::gcState->Mailbox", !11}
-!96 = !{!"Mailbox::mailbox"}
+!91 = !{!"Any::typeId->Mailbox", !10}
+!92 = !{!"Any::gcState->Mailbox", !11}
+!93 = !{!"Mailbox::mailbox"}

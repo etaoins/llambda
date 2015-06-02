@@ -33,8 +33,8 @@ class RecordCell;
 class ErrorObjectCell;
 class PortCell;
 class EofObjectCell;
-class DynamicStateCell;
 class MailboxCell;
+class DynamicStateCell;
 
 }
 #endif

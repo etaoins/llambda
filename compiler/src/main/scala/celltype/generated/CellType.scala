@@ -1846,15 +1846,15 @@ object MailboxCell extends ConcreteCellType with MailboxFields {
   val schemeName = "<mailbox>"
   val directSubtypes = Set[CellType]()
 
-  val typeId = 18L
+  val typeId = 17L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
   val mailboxGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(94L)
-  val gcStateTbaaNode = NumberedMetadata(95L)
-  val mailboxTbaaNode = NumberedMetadata(96L)
+  val typeIdTbaaNode = NumberedMetadata(91L)
+  val gcStateTbaaNode = NumberedMetadata(92L)
+  val mailboxTbaaNode = NumberedMetadata(93L)
 
   def createConstant(mailbox : IrConstant) : StructureConstant = {
     if (mailbox.irType != mailboxIrType) {

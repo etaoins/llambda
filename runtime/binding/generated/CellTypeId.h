@@ -29,8 +29,8 @@ enum class CellTypeId : std::uint8_t
 	ErrorObject = 14,
 	Port = 15,
 	EofObject = 16,
-	DynamicState = 17,
-	Mailbox = 18,
+	Mailbox = 17,
+	DynamicState = 18,
 };
 
 }
