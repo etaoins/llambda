@@ -6,7 +6,7 @@
 
   (export act tell forward ask self sender stop graceful-stop mailbox? mailbox-open? poison-pill-object
           poison-pill-object? become set-supervisor-strategy schedule-once <mailbox> <behaviour> <failure-action>
-          <supervisor-strategy>)
+          <supervisor-strategy> <poison-pill-object>)
 
   (begin
     (define-native-library llactor (static-library "ll_llambda_actor"))
@@ -33,8 +33,9 @@
     (define-predicate mailbox? <mailbox>)
     (define mailbox-open? (world-function llactor "llactor_mailbox_is_open" (-> <mailbox> <native-bool>)))
 
-    (define poison-pill-object (native-function llactor "llactor_poison_pill_object" (-> <any>)))
-    (define poison-pill-object? (native-function llactor "llactor_is_poison_pill_object" (-> <any> <native-bool>)))
+    (define-type <poison-pill-object> (ExternalRecord (native-function llactor "llactor_is_poison_pill_object" (-> <any> <native-bool>))))
+    (define poison-pill-object (native-function llactor "llactor_poison_pill_object" (-> <poison-pill-object>)))
+    (define-predicate poison-pill-object? <poison-pill-object>)
 
     (define become (world-function llactor "llactor_become" (-> <behaviour> <unit>)))
 
