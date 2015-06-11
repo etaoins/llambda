@@ -292,7 +292,7 @@ object ExtractPatternMatch {
 
         val innerValLoc = new StorageLocation("<match-value>")
 
-        val nextClauseLoc = new StorageLocation("<next-clause>", clauseLambdaType)
+        val nextClauseLoc = new StorageLocation("<next-clause>")
         val nextClauseBindings = List(et.SingleBinding(nextClauseLoc, nextClauseExpr))
 
         val failExpr = et.Apply(
