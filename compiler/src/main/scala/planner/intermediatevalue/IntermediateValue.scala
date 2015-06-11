@@ -51,7 +51,7 @@ trait IntermediateValueHelpers {
 
 abstract class IntermediateValue extends IntermediateValueHelpers {
   val schemeType : vt.SchemeType
-  
+
   /** Provides a human-readable description of the value's type */
   def typeDescription : String
 
@@ -63,22 +63,22 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), schemeType) == Some(true)
 
   /** Returns our exact procedure signature */
-  def procedureSignatureOpt : Option[ProcedureSignature] = 
+  def procedureSignatureOpt : Option[ProcedureSignature] =
     schemeType.applicableTypeOpt.map(ApplicableTypeToAdaptedSignature)
 
   protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
   protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
-    plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1) 
+    plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1)
 
    trueTemp
   }
-  
+
   protected[intermediatevalue] def toProcedureTempValue(
       targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter) : ps.TempValue
-  
+
   private def toProcedureTypeUnionTempValue(
       targetType : vt.SchemeType,
       targetApplicableType : vt.ApplicableType,
@@ -123,7 +123,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
       case Some(false) =>
         createNonProcTemp(plan)
-        
+
       case None =>
         // Branch depending on if this is a proc or not
         val boxedValue = this.toBoxedValue()
@@ -132,7 +132,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         plan.buildCondBranch(isProcPred, createProcTemp, createNonProcTemp)
     }
   }
-  
+
   protected def toNonProcedureTempValue(
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage]
@@ -144,7 +144,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
         // target type
         toBoxedValue().castToCellTempValue(targetType.cellType)
-    
+
       case None =>
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
@@ -221,8 +221,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Casts this value to the specified cell value type
     *
-    * The result may not be of represented by the specified cell value type (e.g. it may be unboxed) but it is 
-    * guaranteed to be convertable to that type. toTempValue should be used when a particular representation is 
+    * The result may not be of represented by the specified cell value type (e.g. it may be unboxed) but it is
+    * guaranteed to be convertible to that type. toTempValue should be used when a particular representation is
     * explicitly required
     *
     * @param  targetType       Target Scheme type to convert the value to
@@ -235,7 +235,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
       staticCheck : Boolean = false
-  )(implicit plan : PlanWriter) : IntermediateValue= {
+  )(implicit plan : PlanWriter) : IntermediateValue = {
     vt.ConvertibleToType(targetType, schemeType) match {
       case Some(true) =>
         // We don't need to do anything
@@ -269,9 +269,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case _ =>
       this
   }
-  
+
   /** Returns the preferred type to represent this value
-    * 
+    *
     * For realized values this will be the type of the TempValue. For unrealized values such as constants and known
     * procedures this will be the type that can specifically represent the value with the minimum of boxing and
     * conversion.
@@ -287,11 +287,11 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Restores this value from a closure's ps.TempValue
     *
-    * This can be overriden to carry value-specific metadata that isn't contained in the value's type alone. This can
+    * This can be overridden to carry value-specific metadata that isn't contained in the value's type alone. This can
     * include things like procedure signature, value ranges, etc.
     */
   def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
-    TempValueToIntermediate(valueType, varTemp)(planConfig) 
+    TempValueToIntermediate(valueType, varTemp)(planConfig)
   }
 
   /** Returns an applicable value for the given argument types
