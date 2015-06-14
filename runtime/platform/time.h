@@ -15,11 +15,6 @@ namespace platform
  */
 double taiEpochSeconds();
 
-/**
- * Returns a monotonic counter of nanoseconds since an arbitrary start point
- */
-std::int64_t monotonicNanoseconds();
-
 }
 }
 
