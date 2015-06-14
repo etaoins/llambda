@@ -18,19 +18,8 @@ class ExternalCompilerException extends Exception
   * in a total of 6 entry functions.
   */
 object Compiler {
-  private lazy val platformClangFlags : List[String] =
-    if (scala.util.Properties.isMac) {
-      // Force use of libc++ on Mac OS X
-      // This matches the logic of runtime/CMakeLists.txt
-      List("-stdlib=libc++")
-    }
-    else {
-      scala.util.Properties.osName match {
-        case "Linux" =>   List("-lpthread")
-        case "FreeBSD" => List("-pthread")
-        case _ =>         Nil
-      }
-    }
+  private lazy val platformClangFlags : Seq[String] =
+    scala.io.Source.fromFile("build/required-clang-flags").mkString.split(";").filterNot(_.isEmpty)
 
   /** Returns a list of compiler flags to link the passed required libraries */
   private def libraryClangFlags(nativeLibraries : Set[NativeLibrary]) : List[String] = {

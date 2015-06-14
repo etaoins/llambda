@@ -150,13 +150,6 @@ endif()
 # Enable C++11
 ADD_DEFINITIONS(-std=c++11)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	# Mac OS X < 10.9 used an old version of libstdc++ as the default C++ stdlib. It did not support C++11.
-	# Explicitly use libc++ to enable full C++11 support
-	# This workaround and the matching one in codegen can be removed once Mac OS X 10.8 is unsupported.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-endif()
-
 # Force colour output so Clang++ prints pretty errors in Ninja
 if (${CMAKE_GENERATOR} STREQUAL "Ninja" AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 	ADD_DEFINITIONS(-fcolor-diagnostics)
@@ -211,3 +204,5 @@ foreach( test_name ${ALL_TEST_NAMES} )
 
 	add_test(${test_name} test-${test_name})
 endforeach()
+
+file(WRITE "${CMAKE_BINARY_DIR}/required-clang-flags" "${CMAKE_THREAD_LIBS_INIT}")
