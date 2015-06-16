@@ -41,16 +41,4 @@
 
     (define set-supervisor-strategy (world-function llactor "llactor_set_supervisor_strategy" (-> <supervisor-strategy> <unit>)))
 
-    ; This is private at the moment
-    (define sleep (native-function llactor "llactor_sleep" (-> <native-int64> <unit>)))
-
-    (: schedule-once (-> <duration> <mailbox> <any> <unit>))
-    (define (schedule-once duration actor msg)
-      (act (lambda ()
-             ; Make sure we run in a background thread
-             (tell (self) 'start)
-
-             (lambda (msg)
-               (sleep duration)
-               (tell actor msg)
-               (stop (self))))))))
+    (define schedule-once (world-function llactor "llactor_schedule_once" (-> <native-int64> <mailbox> <any> <unit>)))))

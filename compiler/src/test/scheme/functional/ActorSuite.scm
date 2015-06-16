@@ -681,3 +681,33 @@
                (tell supervisor 'go))))))
 
   (assert-equal "FIRST ERROR" (ask supervisor-supervisor 'go (seconds 2)))))
+
+(define-test "(schedule-once)" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  (define test-actor (act
+                       (lambda ()
+                         (define received-messages '())
+                         (define result-sender #f)
+                         (define target-length 6)
+
+                         (schedule-once (milliseconds 50) (self) 5)
+                         (schedule-once (milliseconds 10) (self) 1)
+                         (schedule-once (milliseconds 30) (self) 3)
+                         (schedule-once (milliseconds 20) (self) 2)
+                         (schedule-once (milliseconds 40) (self) 4)
+                         (schedule-once (milliseconds 0) (self) 0)
+
+                         (lambda (msg)
+                           (if (equal? msg 'get-result)
+                             (if (= (length received-messages) target-length)
+                               (tell (sender) received-messages)
+                               (set! result-sender (sender)))
+                             (begin
+                               (set! received-messages (append received-messages (list msg)))
+                               (if (and result-sender (= (length received-messages) target-length))
+                                 (tell result-sender received-messages))))))))
+
+  (define result (ask test-actor 'get-result (milliseconds 250)))
+  (assert-equal '(0 1 2 3 4 5) result)))

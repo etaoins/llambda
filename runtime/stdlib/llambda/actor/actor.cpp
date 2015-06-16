@@ -16,9 +16,37 @@
 #include "actor/Runner.h"
 #include "actor/cloneCell.h"
 
+#include "sched/TimerList.h"
+
 #include "core/error.h"
 
 using namespace lliby;
+
+namespace
+{
+	actor::Message *createTellMessage(World &world, const char *procName, AnyCell *messageCell)
+	{
+		std::shared_ptr<actor::Mailbox> senderMailbox;
+		actor::ActorContext *context = world.actorContext();
+
+		// If we don't have an actor context leave the sender mailbox unset. This will eat all messages and return #f
+		// for (mailbox-open?)
+		if (context)
+		{
+			senderMailbox = context->mailbox();
+		}
+
+		try
+		{
+			actor::Message *msg = actor::Message::createFromCell(messageCell, senderMailbox);
+			return msg;
+		}
+		catch(actor::UnclonableCellException &e)
+		{
+			e.signalSchemeError(world, procName);
+		}
+	}
+}
 
 extern "C"
 {
@@ -41,31 +69,40 @@ void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 {
 	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->lockedMailbox());
 
-	if (!destMailbox)
+	if (destMailbox)
 	{
-		// Destination has gone away
+		destMailbox->tell(createTellMessage(world, "(tell)", messageCell));
+	}
+}
+
+void llactor_schedule_once(World &world, std::int64_t delayUsecs, MailboxCell *destMailboxCell, AnyCell *messageCell)
+{
+	std::weak_ptr<actor::Mailbox> mailboxRef = destMailboxCell->mailboxRef();
+
+	if (mailboxRef.expired())
+	{
+		// Already expired; skip the enqueue
 		return;
 	}
 
-	std::shared_ptr<actor::Mailbox> senderMailbox;
-	actor::ActorContext *context = world.actorContext();
+	const std::chrono::microseconds delay(delayUsecs);
+	actor::Message *msg = createTellMessage(world, "(schedule-once)", messageCell);
 
-	// If we don't have an actor context leave the sender mailbox unset. This will eat all messages and return #f for
-	// (mailbox-open?)
-	if (context)
+	auto workFunction = [=] ()
 	{
-		senderMailbox = context->mailbox();
-	}
+		std::shared_ptr<actor::Mailbox> destMailbox = mailboxRef.lock();
 
-	try
-	{
-		actor::Message *msg = actor::Message::createFromCell(messageCell, senderMailbox);
+		if (!destMailbox)
+		{
+			// Expired while we were sleeping
+			delete msg;
+			return;
+		}
+
 		destMailbox->tell(msg);
-	}
-	catch(actor::UnclonableCellException &e)
-	{
-		e.signalSchemeError(world, "(tell)");
-	}
+	};
+
+	sched::TimerList::defaultInstance().enqueueDelayedWork(workFunction, delay);
 }
 
 void llactor_forward(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
@@ -218,12 +255,6 @@ void llactor_set_supervisor_strategy(World &world, actor::SupervisorStrategyCell
 	}
 
 	context->setSupervisorStrategy(strategy);
-}
-
-void llactor_sleep(std::int64_t sleepUsecs)
-{
-	const std::chrono::microseconds timeout(sleepUsecs);
-	std::this_thread::sleep_for(timeout);
 }
 
 }

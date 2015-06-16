@@ -35,6 +35,14 @@ public:
 		return m_mailbox.lock();
 	}
 
+	/**
+	 * Returns a weak reference to the the Mailbox
+	 */
+	const std::weak_ptr<actor::Mailbox>& mailboxRef() const
+	{
+		return m_mailbox;
+	}
+
 	static MailboxCell* createInstance(World &world, const std::weak_ptr<actor::Mailbox> &mailbox);
 
 	void finalizeMailbox();
