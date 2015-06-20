@@ -267,7 +267,7 @@ object PlanLambdaPolymorph {
       (Some(ps.WorldPtrValue), initialSignature.copy(returnType=returnType))
     }
 
-    val procSignature = if (planResult.values eq UnreachableValue) {
+    val procSignature = if (planResult.values == UnreachableValue) {
       strippedWorldPtrSignature.copy(
         attributes=strippedWorldPtrSignature.attributes + ProcedureAttribute.NoReturn
       )

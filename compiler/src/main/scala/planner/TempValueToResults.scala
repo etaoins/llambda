@@ -10,6 +10,9 @@ object TempValueToResults {
       resultTemp : ps.TempValue
   )(implicit plan : PlanWriter) : ResultValues =
     returnType match {
+      case vt.ReturnType.UnreachableValue =>
+        UnreachableValue
+
       case vt.ReturnType.SingleValue(valueType) =>
         val singleValue = TempValueToIntermediate(valueType, resultTemp)(plan.config)
         SingleValue(singleValue)

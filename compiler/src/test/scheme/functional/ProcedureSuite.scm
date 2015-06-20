@@ -489,3 +489,14 @@
 
   (assert-equal 'success (takes-world 'success))
   (assert-equal 'success ((typeless-cell takes-world) 'success))))
+
+(define-test "casting procedures with unreachable return" (expect-success
+  (import (llambda typed))
+
+  (assert-raises error-object?
+    (: resolve-symbol-thunk (-> (-> <symbol>) <symbol>))
+    (define (resolve-symbol-thunk thunk)
+      (thunk))
+
+    (resolve-symbol-thunk (lambda ()
+      (error "Return unreachable!"))))))

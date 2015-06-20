@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.ast
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -148,8 +148,10 @@ private[planner] object PlanProcedureTrampoline {
       restTemps=outRestArgTempOpt
     )(plan)
 
-    val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan)
-    plan.steps += ps.Return(returnTempOpt)
+    if (!outSignature.attributes.contains(ProcedureAttribute.NoReturn)) {
+      val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan)
+      plan.steps += ps.Return(returnTempOpt)
+    }
 
     val irCommentOpt =
       for(targetProcLoc <- targetProcLocOpt;

@@ -33,7 +33,7 @@ sealed abstract class ResultValues {
   def toReturnTempValue(
       returnType : vt.ReturnType.ReturnType[vt.ValueType]
   )(implicit plan : PlanWriter) : Option[ps.TempValue] = returnType match {
-    case vt.ReturnType.SingleValue(vt.UnitType) =>
+    case vt.ReturnType.SingleValue(vt.UnitType) | vt.ReturnType.UnreachableValue =>
       None
 
     case vt.ReturnType.SingleValue(resultType) =>
@@ -60,7 +60,7 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
   def toMultipleValueList()(implicit plan : PlanWriter) =
     ValuesToList(List(value), capturable=false)
 
-  def returnType =
+  def returnType : vt.ReturnType.ReturnType[vt.ValueType] =
     vt.ReturnType.SingleValue(value.schemeType)
 
   def preferredReturnType =
@@ -151,14 +151,24 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
   *
   * This can safely be treated as a unit value but we can special case this for optimisation purposes
   */
-object UnreachableValue extends SingleValue(iv.UnitValue) {
-  override def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
+object UnreachableValue extends ResultValues {
+  def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue =
+    iv.UnitValue
+
+  def toMultipleValueList()(implicit plan : PlanWriter) =
+    ValuesToList(List(iv.UnitValue), capturable=false)
+
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
     this
 
-  override def castToReturnType(
+  def castToReturnType(
       targetType : vt.ReturnType.ReturnType[vt.SchemeType]
   )(implicit plan : PlanWriter) : ResultValues =
     this
+
+  def preferredReturnType = vt.ReturnType.UnreachableValue
+
+  def returnType = vt.ReturnType.UnreachableValue
 }
 
 object ResultValues {

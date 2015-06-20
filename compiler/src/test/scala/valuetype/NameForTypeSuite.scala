@@ -162,6 +162,16 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(procedureType) === "(-> <any> * *)")
   }
 
+  test("(-> <any> <unit> (unreachable))") {
+    val procedureType = ProcedureType(
+      fixedArgTypes=List(AnySchemeType),
+      restArgMemberTypeOpt=None,
+      returnType=ReturnType.UnreachableValue
+    )
+
+    assert(NameForType(procedureType) === "(-> <any> <unit> (unreachable))")
+  }
+
   test("(case-> (-> <number>) (-> <number> <number>))") {
     val caseProcType = CaseProcedureType(List(
       ProcedureType(

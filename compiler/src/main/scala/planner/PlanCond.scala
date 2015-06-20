@@ -128,7 +128,7 @@ object PlanCond {
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
         val falseValues = falseResult.values
 
-        if (trueValues eq UnreachableValue) {
+        if (trueValues == UnreachableValue) {
           // True branch terminates unconditionally; place it inside the branch and move the false branch after so we
           // can avoid the phi
           val unitTemp = iv.UnitValue.toTempValue(vt.UnitType)
@@ -139,7 +139,7 @@ object PlanCond {
           plan.steps ++= falseWriter.steps
           falseResult
         }
-        else if (falseValues eq UnreachableValue) {
+        else if (falseValues == UnreachableValue) {
           val unitTemp = iv.UnitValue.toTempValue(vt.UnitType)
           val resultTemp = ps.Temp(vt.UnitType)
 

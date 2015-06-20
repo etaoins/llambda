@@ -84,4 +84,22 @@ object ReturnType {
 
   /** Represents an arbitrary number of return values of any type */
   object ArbitraryValues extends MultipleValues(UniformProperListType(AnySchemeType))
+
+  /** Represents the return type of a procedure that cannot return
+    *
+    * This is distinct from the NoReturn ProcedureSignature attribute as its possible for native functions to have
+    * non-void return types and also not return.
+    */
+  object UnreachableValue extends ReturnType[SchemeType] {
+    def representationTypeOpt = None
+
+    def toValueListType : SchemeType =
+      SpecificPairType(
+        carTypeRef=DirectSchemeTypeRef(UnitType),
+        cdrTypeRef=DirectSchemeTypeRef(EmptyListType)
+      )
+
+    def schemeReturnType : ReturnType[SchemeType] =
+      this
+  }
 }

@@ -193,6 +193,10 @@ object GenPlanStep {
         val block = preBarrierState.currentBlock
         val irValue = block.call(Some("ret"))(irSignature, irFuncPtr, irArguments, metadata=metadata)
 
+        if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
+          block.unreachable
+        }
+
         (preBarrierState, irValue)
       }
 

@@ -12,6 +12,10 @@ object ConvertibleToReturnType {
         // Everything is convertible to the unit type
         Some(true)
 
+      case (_, ReturnType.UnreachableValue) =>
+        // Everything is convertible from an unreachable value as the conversion will never occur
+        Some(true)
+
       case (destType, sourceType) =>
         SatisfiesType(destType.toValueListType, sourceType.toValueListType)
     }

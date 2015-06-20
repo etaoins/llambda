@@ -43,6 +43,12 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     returnType=ReturnType.SingleValue(UnitType)
   )
 
+  val symbolToUnreachableProcedure = ProcedureType(
+    fixedArgTypes=List(SymbolType),
+    restArgMemberTypeOpt=None,
+    returnType=ReturnType.UnreachableValue
+  )
+
   val symbolToStringProcedure = ProcedureType(
     fixedArgTypes=List(SymbolType),
     restArgMemberTypeOpt=None,
@@ -214,6 +220,10 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
 
   test("procedure returning unit satisfies procedure returning multiple values") {
     assert(SatisfiesType(symbolToArbitraryProcedure, symbolToUnitProcedure) === Some(true))
+  }
+
+  test("procedure with unreachable return satisfies procedure returning string") {
+    assert(SatisfiesType(symbolToStringProcedure, symbolToUnreachableProcedure) === Some(true))
   }
 
   test("the union of two identical specific procedure types is that procedure type") {

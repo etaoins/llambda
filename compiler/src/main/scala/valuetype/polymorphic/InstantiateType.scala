@@ -36,6 +36,9 @@ object InstantiateType {
       typeVars : ReconcileTypeVars.Result,
       returnType : ReturnType.ReturnType[T]
   ) : ReturnType.ReturnType[T] = returnType match {
+    case ReturnType.UnreachableValue =>
+      ReturnType.UnreachableValue
+
     case ReturnType.SingleValue(valueType) =>
       ReturnType.SingleValue(apply(typeVars, valueType))
 

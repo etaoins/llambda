@@ -22,7 +22,7 @@ private[planner] object PlanExpr {
         )
 
         exprs.foldLeft(initialResult) { case (planResult, expr) =>
-          if (planResult.values eq UnreachableValue) {
+          if (planResult.values == UnreachableValue) {
             // This code is unreachable - check if the code is valid but keep track of the fact we're not reachable
             apply(planResult.state)(expr).copy(values=UnreachableValue)
           }

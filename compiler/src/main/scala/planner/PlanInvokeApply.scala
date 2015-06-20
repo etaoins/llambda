@@ -37,6 +37,10 @@ object PlanInvokeApply {
     val discardable = !invokableProc.hasSideEffects(fixedTemps.length)
 
     signature.returnType match {
+      case vt.ReturnType.UnreachableValue =>
+        plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps, discardable=discardable)
+        UnreachableValue
+
       case vt.ReturnType.SingleValue(vt.UnitType) =>
         plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps, discardable=discardable)
 
