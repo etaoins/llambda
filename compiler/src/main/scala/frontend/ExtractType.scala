@@ -291,6 +291,9 @@ object ExtractType {
 
   def extractReturnSchemeType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.SchemeType] =
     extractReturnValueType(datum) match {
+      case vt.ReturnType.UnreachableValue =>
+        vt.ReturnType.UnreachableValue
+
       case vt.ReturnType.SingleValue(schemeType : vt.SchemeType) =>
         vt.ReturnType.SingleValue(schemeType)
 

@@ -13,6 +13,9 @@ object StabiliseReturnType {
       returnType : ReturnType.ReturnType[SchemeType],
       schemeDialect : dialect.Dialect
   ) : ReturnType.ReturnType[SchemeType] = returnType match {
+    case ReturnType.UnreachableValue =>
+      ReturnType.UnreachableValue
+
     case ReturnType.SingleValue(valueType) =>
       ReturnType.SingleValue[SchemeType](StabiliseType(valueType, schemeDialect))
 
