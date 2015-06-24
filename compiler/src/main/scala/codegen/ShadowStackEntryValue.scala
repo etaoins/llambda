@@ -15,7 +15,7 @@ object ShadowStackEntryValue extends StructureValue("shadowStackEntry") {
   val cellCountField = StructureField(
     name="cellCount",
     index=1,
-    irType=IntegerType(64),
+    irType=IntegerType(32),
     tbaaNode=NumberedMetadata(4)
   )
 

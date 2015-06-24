@@ -66,10 +66,10 @@ class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, ne
 
     // Store our size
     ShadowStackEntryValue.genStoreToCellCount(entryBlock)(
-      IntegerConstant(IntegerType(64), slotCount),
+      IntegerConstant(IntegerType(32), slotCount),
       shadowStackEntry
     )
-      
+
     val rootsArray = ShadowStackEntryValue.genPointerToRoots(entryBlock)(shadowStackEntry)
 
     // Initialize all the variables
@@ -78,7 +78,7 @@ class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, ne
 
     for((variable, index) <- slotVariables.zipWithIndex) { 
       // Calculate our slot's index
-      val gepIndices = List(0, index).map(IntegerConstant(IntegerType(64), _))
+      val gepIndices = List(0, index).map(IntegerConstant(IntegerType(32), _))
       val slotPtr = entryBlock.getelementptr(variable)(PointerType(ct.AnyCell.irType), rootsArray, gepIndices, inbounds=true)
       
       // Initialize the field to null

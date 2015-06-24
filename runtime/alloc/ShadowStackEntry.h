@@ -16,7 +16,7 @@ namespace alloc
 struct ShadowStackEntry
 {
 	ShadowStackEntry *next;
-	std::uint64_t cellCount;
+	std::uint32_t cellCount;
 	AnyCell* roots[];
 };
 
