@@ -144,6 +144,34 @@ namespace
 	{
 		return (num == std::numeric_limits<std::int64_t>::min()) && (denom == -1);
 	}
+
+	/**
+	 * Determines if a float value can be exactly converted to the specified integer type
+	 *
+	 * This checks that the value is within the floating point type's contiguous integer range and that it would not
+	 * overflow the target integer type.
+	 */
+	template<typename F, typename I>
+	bool floatValueCanBeExactlyConverted(F value)
+	{
+		static_assert(!std::numeric_limits<I>::is_iec559, "Float conversion source must be a floating point type");
+		static_assert(std::numeric_limits<I>::is_integer, "Float conversion target must an integer");
+
+		auto floatRadixBits = std::numeric_limits<F>::digits;
+
+		if (floatRadixBits >= std::numeric_limits<I>::digits)
+		{
+			// The floating point type can represent more contiguous integer values than the integer type
+			return (value >= std::numeric_limits<I>::min()) &&
+				   (value <= std::numeric_limits<I>::max());
+		}
+		else
+		{
+			// Ensure that we are within the floating point value's contiguous integer range
+			return (value >= -(1LL << floatRadixBits)) &&
+				   (value <= (1LL << floatRadixBits));
+		}
+	}
 }
 
 extern "C"
@@ -499,19 +527,30 @@ std::int64_t llbase_floor_remainder(World &world, std::int64_t numerator, std::i
 
 NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 {
-	const bool mustBeExact = base->isExact() && power->isExact();
+	const bool bothExact = base->isExact() && power->isExact();
+
+	if (bothExact)
+	{
+		auto exactBase = static_cast<ExactIntegerCell*>(base)->value();
+		auto exactPower = static_cast<ExactIntegerCell*>(power)->value();
+
+		// Allow most powers of two to be exactly handled even on platforms with 64bit doubles
+		if ((exactBase == 2) && (exactPower >= 0) && (exactPower <= 62))
+		{
+			return ExactIntegerCell::fromValue(world, 1LL << exactPower);
+		}
+	}
 
 	// Convert to long double to give us 80bits on x86-64 which allow us to have an extended range of exactly
 	// represented integers
 	const long double floatBase = base->toLongDouble();
 	const long double floatPower = power->toLongDouble();
 
-	const long double floatResult = pow(floatBase, floatPower);
+	const long double floatResult = powl(floatBase, floatPower);
 
-	if (mustBeExact)
+	if (bothExact)
 	{
-		if ((floatResult < std::numeric_limits<std::int64_t>::min()) ||
-		    (floatResult > std::numeric_limits<std::int64_t>::max()))
+		if (!floatValueCanBeExactlyConverted<long double, std::int64_t>(floatResult))
 		{
 			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (expt)");
 		}
