@@ -1,16 +1,18 @@
 package io.llambda.llvmir
 
 private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
-  def alloca(resultDest : ResultDestination)(irType : IrType, numElements : Int = 1, alignment : Int = 0) : LocalVariable = {
+  def alloca(resultDest : ResultDestination)(
+      irType : IrType,
+      numElements : IrValue = IntegerConstant(IntegerType(32), 1),
+      alignment : Int = 0
+  ) : LocalVariable = {
     val resultVar = resultDest.asLocalVariable(nameSource, PointerType(irType))
 
     val baseAlloc = s"${resultVar.toIr} = alloca ${irType.toIr}"
 
-    val numElementsOptIr = if (numElements == 1) {
-      None
-    }
-    else {
-      Some(s"i32 ${numElements}")
+    val numElementsOptIr = numElements match {
+      case IntegerConstant(_, 1L) => None
+      case _ => Some(numElements.toIrWithType)
     }
 
     val alignOptIr = if (alignment == 0) {

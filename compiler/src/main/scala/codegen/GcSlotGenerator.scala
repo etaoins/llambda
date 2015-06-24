@@ -31,15 +31,22 @@ class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, ne
 
       return
     }
-    
-    // The stack shadow stack header is {next*, i64} 
-    // On 32bit we need 3 pointer widths for this, while 64bit is 2 pointers
-    val headerPointerCount = 1 + (64 / targetPlatform.pointerBits)
+
+    // This is a tricky sizeof() to deal with the variable number of slots
+    val requiredBytes = PtrToIntConstant(
+      value=ElementPointerConstant(
+        elementType=PointerType(ct.AnyCell.irType),
+        basePointer=NullPointerConstant(PointerType(ShadowStackEntryValue.irType)),
+        indices=List(0, ShadowStackEntryValue.rootsField.index, slotCount)
+      ),
+      toType=IntegerType(32)
+    )
 
     // Get the raw space for the shadow stack entry
     val shadowStackSpace = entryBlock.alloca("shadowStackSpace")(
-      irType=PointerType(IntegerType(8)),
-      numElements=headerPointerCount + slotCount
+      irType=IntegerType(8),
+      numElements=requiredBytes,
+      alignment=targetPlatform.pointerBits / 8
     )
 
     // Cast this to a shadow stack entry

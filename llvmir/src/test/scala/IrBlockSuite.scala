@@ -46,10 +46,10 @@ class IrBlockSuite extends IrTestSuite {
       "a" -> NumberedMetadata(1),
       "b" -> NumberedMetadata(2)
     )) {
-      block.alloca("unused")(DoubleType, 4)
+      block.alloca("unused")(DoubleType, IntegerConstant(IntegerType(32), 4))
 
       testFunction.withMetadata(Map("b" -> NumberedMetadata(15))) {
-        block.alloca("unused")(FloatType, 6)
+        block.alloca("unused")(FloatType, IntegerConstant(IntegerType(32), 6))
       }
 
       block.retVoid

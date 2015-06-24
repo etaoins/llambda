@@ -12,15 +12,15 @@ class MemoryInstrsSuite extends IrTestSuite {
     assert(resultVar.irType === PointerType(IntegerType(32)))
     assertInstr(block, "%trivial1 = alloca i32")
   }
-  
+
   test("alloca with number of elements") {
     val block = createTestBlock()
-    val resultVar = block.alloca("numel")(IntegerType(32), numElements=4)
+    val resultVar = block.alloca("numel")(IntegerType(32), numElements=IntegerConstant(IntegerType(16), 5))
 
     assert(resultVar.irType === PointerType(IntegerType(32)))
-    assertInstr(block, "%numel1 = alloca i32, i32 4")
+    assertInstr(block, "%numel1 = alloca i32, i16 5")
   }
-  
+
   test("alloca with alignment") {
     val block = createTestBlock()
     val resultVar = block.alloca("align")(IntegerType(32), alignment=1024)
@@ -28,15 +28,15 @@ class MemoryInstrsSuite extends IrTestSuite {
     assert(resultVar.irType === PointerType(IntegerType(32)))
     assertInstr(block, "%align1 = alloca i32, align 1024")
   }
-  
+
   test("alloca with number of elements, alignment") {
     val block = createTestBlock()
     val resultVar = block.alloca("numelalign")(
-      IntegerType(32), numElements=4, alignment=1024
+      IntegerType(32), numElements=IntegerConstant(IntegerType(64), 4), alignment=1024
     )
 
     assert(resultVar.irType === PointerType(IntegerType(32)))
-    assertInstr(block, "%numelalign1 = alloca i32, i32 4, align 1024")
+    assertInstr(block, "%numelalign1 = alloca i32, i64 4, align 1024")
   }
 
   test("trivial load") {
