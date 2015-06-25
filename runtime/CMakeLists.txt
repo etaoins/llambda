@@ -206,4 +206,15 @@ foreach( test_name ${ALL_TEST_NAMES} )
 	add_test(${test_name} test-${test_name})
 endforeach()
 
-file(WRITE "${CMAKE_BINARY_DIR}/required-clang-flags" "${CMAKE_THREAD_LIBS_INIT}")
+# Write metadata information for the Llambda compiler
+set(SEPARATE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+separate_arguments(SEPARATE_CXX_FLAGS)
+
+file(WRITE "${CMAKE_BINARY_DIR}/required-clang-flags" "${CMAKE_THREAD_LIBS_INIT};${SEPARATE_CXX_FLAGS}")
+
+execute_process(
+	COMMAND echo "int main(int argc, char *argv[]) { return 0; }"
+	COMMAND clang++ -x c++ - ${SEPARATE_CXX_FLAGS} -emit-llvm -S -o -
+	COMMAND sed -n "/^target /p"
+	OUTPUT_FILE "llvm-target"
+)
