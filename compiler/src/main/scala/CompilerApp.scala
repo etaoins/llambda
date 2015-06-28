@@ -117,7 +117,7 @@ object CompilerApp extends App {
   parser.parse(args, Config()) map { config =>
     // Determine our target platform
     val targetPlatform = config.targetPlatformOpt getOrElse {
-      platform.DetectJvmPlatform()
+      platform.DetectTargetPlatform()
     }
 
     config.inputFile match {

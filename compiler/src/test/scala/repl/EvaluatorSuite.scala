@@ -7,7 +7,7 @@ import org.scalatest.FunSuite
 import llambda.compiler.SchemeStringImplicits._
 
 class EvaluatorSuite extends FunSuite {
-  private val targetPlatform = platform.DetectJvmPlatform()
+  private val targetPlatform = platform.DetectTargetPlatform()
 
   private def testEvaluator(schemeDialect : dialect.Dialect = dialect.Dialect.default) : Evaluator =
     new Evaluator(targetPlatform, schemeDialect)

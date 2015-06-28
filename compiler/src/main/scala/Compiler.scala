@@ -19,17 +19,17 @@ class ExternalCompilerException extends Exception
   */
 object Compiler {
   private lazy val platformClangFlags : Seq[String] =
-    scala.io.Source.fromFile("build/required-clang-flags").mkString.split(";").filterNot(_.isEmpty)
+    RuntimeBuildFiles.clangFlags.split(";").filterNot(_.isEmpty)
 
   /** Returns a list of compiler flags to link the passed required libraries */
   private def libraryClangFlags(nativeLibraries : Set[NativeLibrary]) : List[String] = {
-    val systemFlags = List("build/libllcore.a")
+    val systemFlags = List(RuntimeBuildFiles.llcorePath)
 
     // Note that order matters here. The core library needs to come after the stdlib libraries to satisfy their
     // symbols
     (nativeLibraries collect {
       case NativeStaticLibrary(baseName) =>
-        s"build/lib${baseName}.a"
+        s"${RuntimeBuildFiles.buildDirectory}lib${baseName}.a"
     }).toList ++ systemFlags
   }
 

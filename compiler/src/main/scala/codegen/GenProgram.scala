@@ -17,7 +17,7 @@ object GenProgram {
 
   def preludeIr : String = {
     List(
-      scala.io.Source.fromFile("build/llvm-target").mkString,
+      RuntimeBuildFiles.llvmTarget,
       resourceAsString("generated/cellTypes.ll"),
       resourceAsString("defines.ll")
     ) mkString "\n"
