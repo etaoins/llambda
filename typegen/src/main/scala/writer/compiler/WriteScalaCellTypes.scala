@@ -317,9 +317,9 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     // Expand our template
     val rootClassFieldsTrait = processedTypes.rootCellClass.names.scalaFieldsTraitName
     val expandedTemplate = (initialTemplate
-      .replaceAllLiterally("${ROOT_CLASS_FIELDS_TRAIT}", rootClassFieldsTrait)
-      .replaceAllLiterally("${NEXT_METADATA_INDEX}", processedTypes.nextMetadataIndex.toString)
-      .replaceAllLiterally("${TYPE_TAG_FIELD_NAME}", processedTypes.rootCellClass.typeTagField.name)
+      .replaceAllLiterally("$" + "{ROOT_CLASS_FIELDS_TRAIT}", rootClassFieldsTrait)
+      .replaceAllLiterally("$" + "{NEXT_METADATA_INDEX}", processedTypes.nextMetadataIndex.toString)
+      .replaceAllLiterally("$" + "{TYPE_TAG_FIELD_NAME}", processedTypes.rootCellClass.typeTagField.name)
     )
 
     // Make a source builder
