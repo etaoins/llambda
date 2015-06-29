@@ -10,7 +10,7 @@ object WorldValue extends StructureValue("world") {
   val shadowStackHeadField = StructureField(
     name="shadowStackHead",
     index=0,
-    irType=PointerType(UserDefinedType("shadowStackEntry")),
+    irType=PointerType(ShadowStackEntryHeaderValue.irType),
     tbaaNode=NumberedMetadata(0)
   )
 
