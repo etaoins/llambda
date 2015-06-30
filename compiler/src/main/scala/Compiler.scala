@@ -45,7 +45,10 @@ object Compiler {
   ) : Boolean = {
     val optimiseArg = s"-O${optimiseLevel}"
 
-    val llcCmd = List("llc", "-tailcallopt", optimiseArg)
+    // llc -O0 miscompiles on ARM32/LLVM 3.6.1 while it works correctly without any optimisation flags. As -O0 is
+    // intended primarily to test our own optimisation passes simply removing it is sufficient.
+    val llcCmd = List("llc", "-tailcallopt") ++ (if (optimiseLevel > 0) List(optimiseArg) else Nil)
+
     val clangCmd = List("clang++", optimiseArg) ++
       platformClangFlags ++
       List("-x", "assembler", "-") ++
