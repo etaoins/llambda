@@ -15,9 +15,8 @@ namespace
 		int entryRange;
 	};
 
-	// This assumes that we only map ASCII characters to other ASCII characters
-	// This seems reasonable and if it's violated -Werror will fail our compile
-	// due to integer truncation
+	// This assumes that we only map ASCII characters to other ASCII characters This seems reasonable and if it's
+	// violated -Werror will fail our compile due to integer truncation
 	typedef std::int8_t AsciiTableEntry;
 
 	struct NonAsciiHashChain
@@ -64,7 +63,7 @@ namespace
 		}
 
 		// Note this unsigned overflow in both intentional and defined in C++
-		unsigned int targetBucket = std::uint32_t(codePoint * 2654435761) % hash.nonAsciiHashSize; 
+		unsigned int targetBucket = std::uint32_t(codePoint * 2654435761) % hash.nonAsciiHashSize;
 		const NonAsciiHashBucket &bucket = hash.nonAsciiHash[targetBucket];
 
 		if (bucket.chain == nullptr)
@@ -79,7 +78,7 @@ namespace
 			{
 				return bucket.inlineBucket.value;
 			}
-			
+
 			return defaultValue;
 		}
 
@@ -112,8 +111,7 @@ namespace
 
 		if (useInitial)
 		{
-			// The Python database generator picks an entry point biased towards 
-			// ASCII values
+			// The Python database generator picks an entry point biased towards ASCII values
 			testIndex = rangeSet.entryRange;
 		}
 		else
@@ -122,7 +120,7 @@ namespace
 		}
 
 		const UnicodeRange &testRange = rangeSet.ranges[testIndex];
-		
+
 		if (codePoint < testRange.startCodePoint)
 		{
 			// We're on the left hand side
@@ -130,16 +128,14 @@ namespace
 		}
 		else if (codePoint > testRange.endCodePoint)
 		{
-			// Test the very next range to make sure we're not in the gap
-			// between ranges.
+			// Test the very next range to make sure we're not in the gap between ranges.
 			//
-			// This is an optimisation that takes advantage of the fact our tree
-			// is biased towards ASCII values and that there's usually a large
-			// gap after the ASCII ranges before their Unicode counterparts  
-			// start. With this most ASCII queries finish after 1-2 iterations.
-			// 
-			// This should be mostly harmless for non-ASCII values as the next
-			// range has a high likelihood of being in cache
+			// This is an optimisation that takes advantage of the fact our tree is biased towards ASCII values and that
+			// there's usually a large gap after the ASCII ranges before their Unicode counterparts start. With this
+			// most ASCII queries finish after 1-2 iterations.
+			//
+			// This should be mostly harmless for non-ASCII values as the next range has a high likelihood of being in
+			// cache.
 			if (testIndex < (rangeSet.rangeCount - 1))
 			{
 				const UnicodeRange &nextRange = rangeSet.ranges[testIndex + 1];
@@ -163,7 +159,7 @@ namespace
 
 	bool codePointInRangeSet(std::int32_t codePoint, const UnicodeRangeSet &rangeSet)
 	{
-		return codePointInRangeSet(codePoint, rangeSet, 0, rangeSet.rangeCount - 1, true); 
+		return codePointInRangeSet(codePoint, rangeSet, 0, rangeSet.rangeCount - 1, true);
 	}
 }
 
