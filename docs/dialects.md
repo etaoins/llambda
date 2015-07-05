@@ -11,7 +11,7 @@ All dialects are variations on a core shared language implementation. The [Schem
 The ``llambda`` dialect is extremely similar to the standard R7RS language with two important differences:
 
 1. All pairs are immutable; ``(set-car!)``, ``(set-cdr!)`` and ``(list-set!)`` are not defined. This is used to implement efficient types for pairs and lists. See the [types documentation](types.md#value-type-constructors) for more information.
-2. Multiple top-level ``(defines)`` of the same identifier are not allowed. If an identifier needs to be bound to a new value then ``(set!)`` should be used explicitly.
+2. Multiple top-level ``(define)``s of the same identifier are not allowed. If an identifier needs to be bound to a new value then ``(set!)`` should be used explicitly.
 
 ``r7rs``
 --------
