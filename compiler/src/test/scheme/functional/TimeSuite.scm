@@ -8,6 +8,18 @@
   (assert-true (> cur-second 946684800))
   (assert-true (< cur-second 4102444800))))
 
+(define-test "(current-unix-time)" (expect-success
+  (import (llambda time))
+  (define cur-time (current-unix-time))
+
+  (assert-true (inexact? cur-time))
+
+  ; Make sure the returned time is in the 21st century
+  (assert-true (> cur-time 946684800))
+  (assert-true (< cur-time 4102444800))
+
+  (assert-within (current-second) 200 (current-unix-time))))
+
 (define-test "(current-jiffy), (jiffies-per-second)" (expect-success
   (import (scheme time))
   (define cur-jiffy (current-jiffy))

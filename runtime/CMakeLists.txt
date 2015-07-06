@@ -77,6 +77,10 @@ add_library(ll_llambda_error
 	stdlib/llambda/error/error.cpp
 )
 
+add_library(ll_llambda_time
+	stdlib/llambda/time/time.cpp
+)
+
 add_library(ll_scheme_base
 	stdlib/scheme/base/arithmetic.cpp
 	stdlib/scheme/base/boolean.cpp
