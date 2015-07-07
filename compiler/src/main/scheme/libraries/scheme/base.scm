@@ -47,10 +47,10 @@
                        (let* ((name2 val2) ...)
                          body1 body2 ...)))))
 
-    ; R7RS has a macro definition for (letrec*) that assigns locations a special "uninitialized" value and then
-    ; implements multiple body (define)s in terms of (letrec*)
-    ; Llambda takes the opposite approach of handling multiple body (define)s in the compiler frontend and then uses
-    ; the macro below to implement (letrec*) in terms of body defines. The result should be equivalent.
+    #| R7RS has a macro definition for (letrec*) that assigns locations a special "uninitialized" value and then
+       implements multiple body (define)s in terms of (letrec*)
+       Llambda takes the opposite approach of handling multiple body (define)s in the compiler frontend and then uses
+       the macro below to implement (letrec*) in terms of body defines. The result should be equivalent. |#
     (define-syntax letrec*
       (syntax-rules ()
                     ((letrec* ((name : <type> val) ...) body1 body2 ...)
@@ -62,10 +62,10 @@
                         (define name val) ...
                         body1 body2 ...)))))
 
-    ; XXX: This isn't quite right
-    ; It's legal to refer to values earlier in the initializer list in (letrec*) but not in (letrec)
-    ; This means all valid (letrec) initializers are valid (letrec*) initializers but not the converse. 
-    ; We should be more strict with invalid (letrec) uses in the future
+    #| XXX: This isn't quite right
+       It's legal to refer to values earlier in the initializer list in (letrec*) but not in (letrec)
+       This means all valid (letrec) initializers are valid (letrec*) initializers but not the converse.
+       We should be more strict with invalid (letrec) uses in the future |#
     (define-syntax letrec
       (syntax-rules ()
                     ((letrec ((name : <type> val) ...) body1 body2 ...)
@@ -247,9 +247,9 @@
     ; Internal helper types
     (define-type (Alistof A B) (Listof (Pairof A B)))
 
-    ; Defines a procedure that operates on a slice of a given type with optional start and end indicies
-    ; native-proc should accept a value of <source-type> and a start and end index
-    ; source-length-proc should accept a value of <source-type> and return its length
+    #| Defines a procedure that operates on a slice of a given type with optional start and end indicies
+       native-proc should accept a value of <source-type> and a start and end index
+       source-length-proc should accept a value of <source-type> and return its length |#
     (define-syntax define-slice-proc
       (syntax-rules ()
         ((define-slice-proc name native-proc <source-type> source-length-proc)
@@ -381,9 +381,9 @@
         (if (< num 0)
           (- num)
           num)
-        ; This generates less efficient code than fabs()
-        ; However, this has two important benefits: it can be statically evaluated without any explicit (abs) planning
-        ; in the compiler and it avoid a cell allocation for positive values.
+        #| This generates less efficient code than fabs()
+           However, this has two important benefits: it can be statically evaluated without any explicit (abs) planning
+           in the compiler and it avoid a cell allocation for positive values. |#
         (if (zero? num)
           0.0
           (if (< num 0.0)
@@ -593,8 +593,8 @@
     (define native-string->utf8 (world-function llbase "llbase_string_to_utf8" (-> <string> <native-int64> <native-int64> <bytevector>)))
     (define-slice-proc string->utf8 native-string->utf8 <string> string-length)
 
-    ; Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
-    ; name defined in R7RS
+    #| Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
+       name defined in R7RS |#
     (define-r7rs substring (world-function llbase "llbase_substring" (-> <string> <native-int64> <native-int64> <string>)))
     (define-slice-proc string-copy substring <string> string-length)
 
@@ -776,8 +776,8 @@
     (define-r7rs file-error? (native-function llbase "llbase_is_file_error" (-> <any> <native-bool>)))
     (define-r7rs read-error? (native-function llbase "llbase_is_read_error" (-> <any> <native-bool>)))
 
-    ; This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient
-    ; native code implementation
+    #| This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient native
+       native code implementation |#
     (define guard-kernel (world-function llbase "llbase_guard_kernel" (-> (-> <any> *) (-> *) *)))
 
     (define-syntax guard
@@ -788,7 +788,7 @@
                          (guard-aux (raise var) clause ...))
                        (lambda () e1 e2 ...)))))
 
-    ; This is taken directly from R7RS   
+    ; This is taken directly from R7RS
     (define-syntax guard-aux
       (syntax-rules (else =>)
                     ((guard-aux reraise (else result1 result2 ...))
