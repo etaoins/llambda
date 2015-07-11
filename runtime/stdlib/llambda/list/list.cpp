@@ -270,6 +270,8 @@ ProperList<AnyCell>* lllist_list_tabulate(World &world, std::uint32_t count, Tab
 	alloc::StrongRef<TabulateProc> initProc(world, initProcRaw);
 	alloc::StrongRefVector<AnyCell> resultVec(world);
 
+	resultVec.reserve(count);
+
 	for(std::uint32_t i = 0; i < count; i++)
 	{
 		resultVec.push_back(initProc->apply(world, i));
