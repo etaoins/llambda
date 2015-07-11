@@ -201,12 +201,7 @@ namespace
 
 	AnyCell *uncachedClone(alloc::Heap &heap, AnyCell *cell, Context &context)
 	{
-		if (cell->isGlobalConstant())
-		{
-			// This is a global constant; return it directly instead of copying as it accessible from all Worlds
-			return cell;
-		}
-		else if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
+		if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
 		{
 			auto placement = heap.allocate();
 			return new (placement) ExactIntegerCell(exactIntCell->value());
@@ -281,6 +276,11 @@ namespace
 
 	AnyCell *cachedClone(alloc::Heap &heap, AnyCell *cell, Context &context)
 	{
+		if (cell->isGlobalConstant())
+		{
+			return cell;
+		}
+
 		auto cachedIt = context.clonedCells.find(cell);
 
 		if (cachedIt != context.clonedCells.end())
@@ -301,6 +301,11 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell, State *captureState)
 {
 	Context context;
 	context.captureState = captureState;
+
+	if (cell->isGlobalConstant())
+	{
+		return cell;
+	}
 
 	// Don't bother searching for and caching the top-level cell
 	return uncachedClone(heap, cell, context);
