@@ -22,24 +22,16 @@ private[planner] object ValuesToList {
       memberValues : List[iv.IntermediateValue],
       tailValue : iv.IntermediateValue = iv.EmptyListValue,
       capturable : Boolean = true
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = 
-    memberValues match {
-      case carValue :: restValues =>
-        // Recurse down our cdr
-        val cdrValue = apply(restValues, tailValue, capturable)
+  )(implicit plan : PlanWriter) : iv.IntermediateValue =
+    memberValues.foldRight(tailValue) { case(carValue, cdrValue) =>
+      val listLengthOpt = cdrValue match {
+        case knownListElement : iv.KnownListElement =>
+          knownListElement.listLengthOpt.map(_ + 1)
 
-        val listLengthOpt = tailValue match {
-          case knownListElement : iv.KnownListElement =>
-            knownListElement.listLengthOpt.map(_ + memberValues.length)
+        case _ =>
+          None
+      }
 
-          case _ =>
-            None
-        }
-
-        ValuesToPair(carValue, cdrValue, listLengthOpt, capturable)
-
-      case Nil =>
-        // No more list values
-        tailValue
+      ValuesToPair(carValue, cdrValue, listLengthOpt, capturable)
     }
 }
