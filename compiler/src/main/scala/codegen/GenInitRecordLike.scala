@@ -4,6 +4,7 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 
 object GenInitRecordLike {
   def apply(
@@ -65,8 +66,9 @@ object GenInitRecordLike {
         block.bitcastTo("castRecordData")(voidRecordData, PointerType(recordDataIrType))
     }
 
-    if (initStep.isUndefined) {
-      cellType.genStoreToIsUndefined(block)(IntegerConstant(cellType.isUndefinedIrType, 1), recordCell)
+    if (cellType == ct.RecordCell) {
+      val isUndefinedIr = IntegerConstant(cellType.isUndefinedIrType, if (initStep.isUndefined) 1 else 0)
+      cellType.genStoreToIsUndefined(block)(isUndefinedIr, recordCell)
     }
 
     for((field, valueTemp) <- initStep.fieldValues) {

@@ -583,14 +583,14 @@ object GenPlanStep {
     case ps.InitPair(resultTemp, listLengthOpt) =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
-      
+
       val (newAllocation, resultIr) = allocation.consumeCells(block)(1, ct.PairCell)
 
-      for(listLength <- listLengthOpt) {
-        val listLengthIr = IntegerConstant(ct.PairCell.listLengthIrType, listLength)
-        ct.PairCell.genStoreToListLength(state.currentBlock)(listLengthIr, resultIr)
-      }
-      
+      // List length of zero means unknown
+      val listLengthToStore = listLengthOpt.getOrElse(0L)
+      val listLengthIr = IntegerConstant(ct.PairCell.listLengthIrType, listLengthToStore)
+      ct.PairCell.genStoreToListLength(state.currentBlock)(listLengthIr, resultIr)
+
       state.copy(
         currentAllocation=newAllocation
       ).withTempValue(resultTemp -> resultIr)

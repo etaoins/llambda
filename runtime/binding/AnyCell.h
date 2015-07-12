@@ -55,14 +55,7 @@ public:
 	void finalize();
 
 protected:
-	// Used for normal allocations
-	// alloc::allocateCons already returns the correct garbage state
-	AnyCell(CellTypeId typeId) : m_typeId(typeId)
-	{
-	}
-
-	// Used for constant allocations
-	AnyCell(CellTypeId typeId, GarbageState gcState) :
+	AnyCell(CellTypeId typeId, GarbageState gcState = GarbageState::AllocatedCell) :
 		m_typeId(typeId),
 		m_gcState(gcState)
 	{

@@ -15,6 +15,7 @@ class PairCell : public ListElementCell
 public:
 	PairCell(AnyCell *car, AnyCell *cdr) :
 		ListElementCell(CellTypeId::Pair),
+		m_listLength(0),
 		m_car(car),
 		m_cdr(cdr)
 	{

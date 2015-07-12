@@ -28,7 +28,9 @@ class CellAllocation(basePointer : IrValue, currentOffset : Int, totalSize : Int
     val pointerName = s"cell${currentOffset}${asType.llvmName.capitalize}Ptr"
     val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
 
-    // We will already have our state set to Allocated when it comes off the heap 
+    // Set its garbage state
+    val garbageState = IntegerConstant(ct.AnyCell.gcStateIrType, 0)
+    asType.genStoreToGcState(block)(garbageState, typedPointer)
 
     // Set its type
     val typeId = IntegerConstant(ct.AnyCell.typeIdIrType, asType.typeId)
