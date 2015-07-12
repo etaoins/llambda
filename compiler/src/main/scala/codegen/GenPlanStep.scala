@@ -580,7 +580,7 @@ object GenPlanStep {
       val resultIr = block.icmp("compResult")(IComparisonCond.Equal, None, val1IntCastIr, val2IntCastIr)
       state.withTempValue(resultTemp -> resultIr)
 
-    case ps.InitPair(resultTemp, listLengthOpt) =>
+    case ps.InitPair(resultTemp, carValueTemp, cdrValueTemp, listLengthOpt) =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
@@ -590,6 +590,12 @@ object GenPlanStep {
       val listLengthToStore = listLengthOpt.getOrElse(0L)
       val listLengthIr = IntegerConstant(ct.PairCell.listLengthIrType, listLengthToStore)
       ct.PairCell.genStoreToListLength(state.currentBlock)(listLengthIr, resultIr)
+
+      val carValueIr = state.liveTemps(carValueTemp)
+      ct.PairCell.genStoreToCar(state.currentBlock)(carValueIr, resultIr)
+
+      val cdrValueIr = state.liveTemps(cdrValueTemp)
+      ct.PairCell.genStoreToCdr(state.currentBlock)(cdrValueIr, resultIr)
 
       state.copy(
         currentAllocation=newAllocation

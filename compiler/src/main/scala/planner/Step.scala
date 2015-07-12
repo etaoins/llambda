@@ -798,16 +798,18 @@ case class Return(returnValue : Option[TempValue]) extends Step {
   override def alwaysTerminates = true
 }
 
-/** Initialises a new pair with an undefined car and cdr
-  *
-  * SetPairCar and SetPairCdr must be called on the new pair before it is accessed or the next GC barrier
-  */
-case class InitPair(result : TempValue, listLengthOpt : Option[Long] = None) extends Step with CellConsumer {
-  val inputValues = Set[TempValue]()
+/** Initialises a new pair with an undefined car and cdr */
+case class InitPair(
+    result : TempValue,
+    carValue : TempValue,
+    cdrValue : TempValue,
+    listLengthOpt : Option[Long] = None
+) extends DiscardableStep with CellConsumer {
+  lazy val inputValues = Set(carValue, cdrValue)
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    InitPair(f(result), listLengthOpt).assignLocationFrom(this)
+    InitPair(f(result), f(carValue), f(cdrValue), listLengthOpt).assignLocationFrom(this)
 }
 
 /** Asserts that a pair is mutable
