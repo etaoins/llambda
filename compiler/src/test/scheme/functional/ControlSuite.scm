@@ -145,6 +145,15 @@
   (call-with-values return-multiple
                     (lambda values-list values-list))))
 
+(define-test "(values) converted to type with incompatible arg and return fails" (expect-compile-error type-error?
+  (import (llambda typed))
+
+  (: convert-string (-> <string> (-> <string> <symbol>) <symbol>))
+  (define (convert-string str converter)
+    (converter str))
+
+  (convert-string "Hello" values)))
+
 (define-test "captured continuation called multiple times" (expect (0 1 2 3 4 5 6 7 8 9 10)
   (define result-list '())
   (define captured-cont #!unit)
@@ -168,6 +177,7 @@
   (assert-equal #(b e h) (vector-map cadr '#((a b) (d e) (g h))))
   (assert-equal #(1 4 27 256 3125) (vector-map (lambda (n) (expt n n)) '#(1 2 3 4 5)))
   (assert-equal #(5 7 9) (vector-map + '#(1 2 3) '#(4 5 6 7)))
+  (assert-equal #(1 2 3) (vector-map values '#(1 2 3)))
 
   (assert-equal #(1 2)
                 (let ((count 0))
@@ -176,6 +186,9 @@
                       (set! count (+ count 1))
                       count)
                     '#(a b))))))
+
+(define-test "(vector-map) with multiple value return fails" (expect-error arity-error?
+  (vector-map values #(1 2 3) #(4 5 6))))
 
 (define-test "(vector-for-each)" (expect-success
   (import (llambda typed))
@@ -202,6 +215,7 @@
   (assert-equal '(b e h) (map cadr '((a b) (d e) (g h))))
   (assert-equal '(1 4 27 256 3125) (map (lambda (n) (expt n n)) '(1 2 3 4 5)))
   (assert-equal '(5 7 9) (map + '(1 2 3) '(4 5 6 7)))
+  (assert-equal '(1 2 3) (map values '(1 2 3)))
 
   (assert-equal '(1 2)
                 (let ((count 0))
@@ -225,6 +239,9 @@
        (guard (condition
                 (else 'ignore))
               (map mapper-proc input-list)))))))
+
+(define-test "(map) with multiple value return fails" (expect-error arity-error?
+  (map values '(1 2 3) '(4 5 6))))
 
 (define-test "(for-each)" (expect-success
   (import (llambda typed))

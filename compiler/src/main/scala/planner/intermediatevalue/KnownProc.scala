@@ -35,6 +35,13 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
   override def procedureSignatureOpt =
     Some(polySignature.upperBound)
 
+  /** Returns if this procedure is an identity procedure
+    *
+    * The most general identity procedure is (values). However, identity procedures have have more restrictive argument
+    * or return types and may signal type errors if their argument doesn't satisfy their return type.
+    */
+  protected def isIdentityProcedure : Boolean = false
+
   /** Returns the native symbol for this function
     *
     * If the procedure is lazily planned it should be planned here
@@ -81,8 +88,14 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
       val trampolineSymbol = plan.allocSymbol(s"${nativeSymbol} ${targetType} Trampoline")
 
       // Plan the trampoline
-      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, locationOpt)
-      plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
+      val plannedProc = if (isIdentityProcedure) {
+        PlanIdentityProcedure(requiredSignature)
+      }
+      else {
+        PlanProcedureTrampoline(requiredSignature, this, locationOpt)
+      }
+
+      plan.plannedFunctions += trampolineSymbol -> plannedProc
 
       trampolineSymbol
     })

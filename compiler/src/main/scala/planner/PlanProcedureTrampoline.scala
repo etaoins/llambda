@@ -1,10 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import collection.mutable
-
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
-import llambda.compiler.ast
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
