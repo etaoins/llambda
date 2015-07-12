@@ -77,6 +77,10 @@ add_library(ll_llambda_error
 	stdlib/llambda/error/error.cpp
 )
 
+add_library(ll_llambda_random
+	stdlib/llambda/random/random.cpp
+)
+
 add_library(ll_llambda_time
 	stdlib/llambda/time/time.cpp
 )
