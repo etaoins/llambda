@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
+import llambda.compiler.planner.PlanWriter
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.RuntimeErrorMessage
@@ -20,7 +20,7 @@ trait UninvokableValue extends IntermediateValue {
     impossibleConversion(message)
   }
 
-  def toInvokableProcedure()(implicit plan : PlanWriter) : InvokableProcedure =
+  def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc =
     throw new ValueNotApplicableException(plan.activeContextLocated, typeDescription)
 }
 

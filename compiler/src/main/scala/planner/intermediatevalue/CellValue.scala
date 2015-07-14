@@ -37,12 +37,12 @@ class CellValue(
   
   def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
     boxedValue
-  
-  def toInvokableProcedure()(implicit plan : PlanWriter) : InvokableProcedure =  {
+
+  def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc =  {
     schemeType.applicableTypeOpt match {
       case Some(procedureType) =>
         val boxedProcTemp = toProcedureTempValue(procedureType, None)
-        new InvokableProcedureCell(procedureType, boxedProcTemp)
+        new BoxedProcCell(procedureType, boxedProcTemp)
 
       case None =>
         // This is definitely not applicable
@@ -93,7 +93,7 @@ class CellValue(
 
     // Prepare a trampoline for this procedure conversion
     val targetProcTemp = boxedValue.castToCellTempValue(ct.ProcedureCell)
-    val invokableTarget = new InvokableProcedureCell(applicableType, targetProcTemp)
+    val invokableTarget = new BoxedProcCell(applicableType, targetProcTemp)
 
     val trampolineKey = (invokableTarget.signature, requiredSignature)
     val trampolineSymbol = plan.adapterProcTrampolines.getOrElseUpdate(trampolineKey, {

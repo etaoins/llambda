@@ -91,7 +91,7 @@ private[planner] object PlanApplication {
     val procResult = PlanExpr(initialState)(procExpr)
     val procValue = procResult.values.toSingleValue().toApplicableValueForArgs(args.map(_._2.schemeType))
 
-    val invokableProc = procValue.toInvokableProcedure()
+    val invokableProc = procValue.toInvokableProc()
 
     // Resolve our polymorphic procedure type
     val argTypes = args.map(_._2.schemeType)
@@ -153,7 +153,7 @@ private[planner] object PlanApplication {
             val isOnlyUse = procExpr match {
               case et.VarRef(storageLoc) =>
                 // Does this only have a single use, including its self procedure cell?
-                (plan.config.analysis.varUses(storageLoc) == 1) &&
+                (plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1) &&
                  !schemeProc.selfTempOpt.isDefined
 
               case _ =>
@@ -220,7 +220,7 @@ private[planner] object PlanApplication {
       case None =>
         val procResult = PlanExpr(initialState)(procExpr)
         val invokableProc = plan.withContextLocation(procExpr) {
-          procResult.values.toSingleValue.toInvokableProcedure
+          procResult.values.toSingleValue.toInvokableProc
         }
 
         PlanResult(

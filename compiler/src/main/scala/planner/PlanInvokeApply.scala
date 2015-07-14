@@ -11,7 +11,7 @@ import llambda.compiler.valuetype.Implicits._
 
 object PlanInvokeApply {
   def withTempValues(
-      invokableProc : InvokableProcedure,
+      invokableProc : iv.InvokableProc,
       fixedTemps : Seq[ps.TempValue],
       restTemps : Option[ps.TempValue]
   )(implicit plan : PlanWriter) : ResultValues = {
@@ -60,7 +60,7 @@ object PlanInvokeApply {
   }
 
   def withArgumentList(
-      invokableProc : InvokableProcedure,
+      invokableProc : iv.InvokableProc,
       argListValue : iv.IntermediateValue
   )(implicit plan : PlanWriter) : ResultValues = {
     val signature = invokableProc.polySignature.upperBound
@@ -103,7 +103,7 @@ object PlanInvokeApply {
   }
 
   def withIntermediateValues(
-      invokableProc : InvokableProcedure,
+      invokableProc : iv.InvokableProc,
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : ResultValues = {
     val signature = invokableProc.polySignature.upperBound

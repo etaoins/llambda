@@ -31,9 +31,6 @@ class KnownUserProc(
     new KnownUserProc(polySignature, plannedSymbol, selfTempOpt, Some(newReportName))
   }
 
-  override def isIdentityProcedure : Boolean =
-    reportNameOpt == Some("values")
-
   override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc = {
     new KnownUserProc(polySignature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }

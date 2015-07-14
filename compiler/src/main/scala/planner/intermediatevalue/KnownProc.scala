@@ -14,13 +14,13 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   * These procedures can be called directly without going through a costly trampoline. If this is converted to a
   * ct.ProcedureCell a trampoline will be dynamically built to give it an adapted signature. Adapted signatures are the
   * same for all procedures so they can be called without specific knowledge of the backing procedure. These adapted
-  * procedure values are represented by InvokableProcedureCell
+  * procedure values are represented by BoxedProcCell
   *
   * @param selfTempOpt   For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
+abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProc {
   val typeDescription = "procedure"
 
   val schemeType : vt.ApplicableType = polySignature.upperBound.toSchemeProcedureType
@@ -34,13 +34,6 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
 
   override def procedureSignatureOpt =
     Some(polySignature.upperBound)
-
-  /** Returns if this procedure is an identity procedure
-    *
-    * The most general identity procedure is (values). However, identity procedures have have more restrictive argument
-    * or return types and may signal type errors if their argument doesn't satisfy their return type.
-    */
-  protected def isIdentityProcedure : Boolean = false
 
   /** Returns the native symbol for this function
     *
@@ -88,13 +81,7 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
       val trampolineSymbol = plan.allocSymbol(s"${nativeSymbol} ${targetType} Trampoline")
 
       // Plan the trampoline
-      val plannedProc = if (isIdentityProcedure) {
-        PlanIdentityProcedure(requiredSignature)
-      }
-      else {
-        PlanProcedureTrampoline(requiredSignature, this, locationOpt)
-      }
-
+      val plannedProc = PlanProcedureTrampoline(requiredSignature, this, locationOpt)
       plan.plannedFunctions += trampolineSymbol -> plannedProc
 
       trampolineSymbol
@@ -120,10 +107,10 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
 
     adapterProcTemp
   }
-  
-  def toInvokableProcedure()(implicit plan : PlanWriter) : InvokableProcedure = 
+
+  def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc =
     this
-  
+
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, polySignature.upperBound, nativeSymbol)

@@ -2,9 +2,10 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
+import llambda.compiler.planner.{intermediatevalue => iv}
 
 object ArityRuntimeErrorMessage {
-  def insufficientArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
+  def insufficientArgs(invokableProc : iv.InvokableProc)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
     val signature = invokableProc.polySignature.template
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     val fixedArgCount = signature.fixedArgTypes.length
@@ -25,7 +26,7 @@ object ArityRuntimeErrorMessage {
     }
   }
 
-  def tooManyArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
+  def tooManyArgs(invokableProc : iv.InvokableProc)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
     val signature = invokableProc.polySignature.template
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     val fixedArgCount = signature.fixedArgTypes.length

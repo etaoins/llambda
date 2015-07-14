@@ -1,27 +1,28 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute, StorageLocation}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.et
 import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 
 import llambda.compiler.valuetype.Implicits._
 
 private[planner] object PlanProcedureTrampoline {
-  /** Plans a trampoline for the passed procedure 
-    * 
+  /** Plans a trampoline for the passed procedure
+    *
     * @param  trampolineSignature  The required signature for the trampoline function
     * @param  targetProc           The target procedure. The trampoline will ensure the arguments it's passed satisfy
     *                              the target procedure's signature and perform any required type conversions.
-    * @param  targetProcLocOpt     Source location of the target procedure. This is used to generate a comment in the 
+    * @param  targetProcLocOpt     Source location of the target procedure. This is used to generate a comment in the
     *                              output IR identifying the trampoline.
     */
   def apply(
       trampolineSignature : ProcedureSignature,
-      targetProc : InvokableProcedure,
+      targetProc : iv.InvokableProc,
       targetProcLocOpt : Option[ContextLocated] = None
   )(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val inSelfTemp = ps.CellTemp(ct.ProcedureCell)
@@ -29,99 +30,8 @@ private[planner] object PlanProcedureTrampoline {
 
     // Make some aliases
     val inSignature = trampolineSignature
-    val outSignature = targetProc.polySignature.upperBound
 
-    val inFixedArgCount = inSignature.fixedArgTypes.length
-    val outFixedArgCount = outSignature.fixedArgTypes.length
-
-    val inHasRestArg = inSignature.restArgMemberTypeOpt.isDefined
-    val outHasRestArg = outSignature.restArgMemberTypeOpt.isDefined
-    
-    // Create our rest arg temp if we have one
-    val inRestArgTempOpt = inSignature.restArgMemberTypeOpt map { _ =>
-      ps.CellTemp(ct.ListElementCell)
-    }
-    
-    val inRestArgValueOpt = inRestArgTempOpt map { inRestArgTemp =>
-      val inRestArgType = vt.UniformProperListType(trampolineSignature.restArgMemberTypeOpt.get)
-      new iv.CellValue(inRestArgType, BoxedValue(ct.ListElementCell, inRestArgTemp))
-    }
-
-    // Directly map our fixed args
-    val mappedFixedArgs = inSignature.fixedArgTypes.zip(outSignature.fixedArgTypes).map {
-      case (trampolineType, targetType) =>
-        val inTemp = ps.Temp(trampolineType)
-        val inValue = TempValueToIntermediate(trampolineType, inTemp)(plan.config)
-
-        val outTemp = inValue.toTempValue(targetType)(plan)
-
-        (inTemp -> outTemp) 
-    }
-
-    val (extraOutFixedArgTemps, extraInFixedArgTemps, outRestArgValueOpt) = if (outFixedArgCount > inFixedArgCount) {
-      // We need to pull members off of our in rest argument to pass as out fixed arguments
-      val extraOutFixedArgTypes = outSignature.fixedArgTypes.drop(inFixedArgCount)
-      
-      val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(targetProc)(plan)
-
-      val destructuredArgs = DestructureList(
-        listValue=inRestArgValueOpt.get,
-        memberTypes=extraOutFixedArgTypes,
-        insufficientLengthMessage=insufficientArgsMessage
-      )(plan)
-
-      (destructuredArgs.memberTemps, Nil, Some(destructuredArgs.listTailValue))
-    }
-    else if (outFixedArgCount < inFixedArgCount) {
-      // We need to add in fixed arguments to our out rest argument
-      val extraInFixedArgTypes = inSignature.fixedArgTypes.drop(outFixedArgCount)
-
-      val outRestArgTail = inRestArgValueOpt.getOrElse(iv.EmptyListValue)
-
-      val extraInFixedArgTemps = extraInFixedArgTypes.map { fixedArgType =>
-        ps.Temp(fixedArgType)
-      }
-
-      val extraInFixedArgValues = extraInFixedArgTypes.zip(extraInFixedArgTemps) map {
-        case (fixedArgType, fixedArgTemp) =>
-          TempValueToIntermediate(fixedArgType, fixedArgTemp)(plan.config)
-      }
-
-      val outRestArgValue = ValuesToList(
-        memberValues=extraInFixedArgValues,
-        tailValue=outRestArgTail,
-        capturable=false
-      )(plan)
-
-      (Nil, extraInFixedArgTemps, Some(outRestArgValue))
-    }
-    else {
-      // Our fixed arg arity matches exactly
-      (Nil, Nil, inRestArgValueOpt)
-    }
-
-    val outRestArgTempOpt = outRestArgValueOpt match {
-      case Some(outRestArgValue) if !outHasRestArg =>
-        // Make sure out out rest arg is empty
-        val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(targetProc)(plan)
-        outRestArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan)
-        None
-
-      case Some(outRestArgValue) if outHasRestArg =>
-        // Make sure the out rest arg has the right type
-        val expectedType = vt.UniformProperListType(outSignature.restArgMemberTypeOpt.get)
-        outRestArgValue.castToSchemeType(expectedType)(plan)
-
-        Some(outRestArgValue.toTempValue(vt.ListElementType)(plan))
-
-      case None if !outHasRestArg =>
-        None
-
-      case None if outHasRestArg =>
-        Some(iv.EmptyListValue.toTempValue(vt.ListElementType)(plan))
-    }
-
-    val updatedInvokable = if (outSignature.hasSelfArg) {
+    val updatedProc = if (targetProc.polySignature.upperBound.hasSelfArg) {
       // Load the real target proc
       val closureDataTemp = ps.RecordLikeDataTemp()
       plan.steps += ps.LoadRecordLikeData(closureDataTemp, inSelfTemp, AdapterProcType)
@@ -135,19 +45,37 @@ private[planner] object PlanProcedureTrampoline {
       targetProc
     }
 
-    // Collect all of our arguments now
-    val allInFixedArgTemps = mappedFixedArgs.map(_._1) ++ extraInFixedArgTemps  
-    val allOutFixedArgTemps = mappedFixedArgs.map(_._2) ++ extraOutFixedArgTemps  
+    val (fixedArgTemps, fixedArgValues) = inSignature.fixedArgTypes.map({ fixedArgType =>
+      val fixedArgTemp = ps.Temp(fixedArgType)
+      val fixedArgValue = TempValueToIntermediate(fixedArgType, fixedArgTemp)(plan.config)
 
-    val resultValues = PlanInvokeApply.withTempValues(
-      invokableProc=updatedInvokable,
-      fixedTemps=allOutFixedArgTemps,
-      restTemps=outRestArgTempOpt
-    )(plan)
+      (fixedArgTemp, fixedArgValue)
+    }).unzip
 
-    if (!outSignature.attributes.contains(ProcedureAttribute.NoReturn)) {
-      val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan)
-      plan.steps += ps.Return(returnTempOpt)
+    val (restArgTempIter, restArgValueIter) = inSignature.restArgMemberTypeOpt.map({ restArgMemberType =>
+      val restArgTemp = ps.CellTemp(ct.ListElementCell)
+      val restArgType = vt.UniformProperListType(restArgMemberType)
+      val restArgValue = new iv.CellValue(restArgType, BoxedValue(ct.ListElementCell, restArgTemp))
+
+      (restArgTemp, restArgValue)
+    }).unzip
+
+    val argTail = if (restArgValueIter.isEmpty) iv.EmptyListValue else restArgValueIter.head
+    val argList = ValuesToList(fixedArgValues, argTail, capturable=false)(plan)
+
+    // This is a bit of a hack - create a state containing our self argument as a bound variable
+    val selfLoc = new StorageLocation("self")
+    val procState = PlannerState(Map(selfLoc -> ImmutableValue(updatedProc)))
+
+    // Plan the target
+    val applyResult = PlanApplication.planWithArgList(procState)(et.VarRef(selfLoc), argList)(plan)
+
+    applyResult.values match {
+      case UnreachableValue =>
+
+      case resultValues =>
+        val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan)
+        plan.steps += ps.Return(returnTempOpt)
     }
 
     val irCommentOpt =
@@ -159,9 +87,9 @@ private[planner] object PlanProcedureTrampoline {
     val inNamedArguments = List(
       ("world"   -> ps.WorldPtrValue),
       ("closure" -> inSelfTemp)
-    ) ++ allInFixedArgTemps.zipWithIndex.map { case (fixedArgTemp, index) =>
+    ) ++ fixedArgTemps.zipWithIndex.map { case (fixedArgTemp, index) =>
       s"fixedArg${index}" -> fixedArgTemp
-    } ++ inRestArgTempOpt.toList.map { case restArgTemp =>
+    } ++ restArgTempIter.toList.map { case restArgTemp =>
       "restArg" -> restArgTemp
     }
 
