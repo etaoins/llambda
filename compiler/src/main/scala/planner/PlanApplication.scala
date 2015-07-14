@@ -223,6 +223,17 @@ private[planner] object PlanApplication {
           procResult.values.toSingleValue.toInvokableProc
         }
 
+        // (values) returns its argument list as a multiple values list
+        // This allows it to be inlined even if the length and members of the argument list are unknown
+        invokableProc match {
+          case knownUserProc : iv.KnownUserProc if knownUserProc.reportNameOpt == Some("values") =>
+            if (vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), argList.schemeType) == Some(true)) {
+              return PlanResult(initialState, MultipleValues(argList))
+            }
+
+          case _ =>
+        }
+
         PlanResult(
           state=procResult.state,
           PlanInvokeApply.withArgumentList(invokableProc, argList)
