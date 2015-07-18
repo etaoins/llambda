@@ -15,6 +15,8 @@ object IrFunction {
   case object SignExt extends ParameterAttribute("signext")
   case object NoAlias extends ParameterAttribute("noalias")
   case object NoCapture extends ParameterAttribute("nocapture")
+  case object NonNull extends ParameterAttribute("nonnull")
+  case class Dereferenceable(bytes : Int) extends ParameterAttribute(s"dereferenceable(${bytes})")
 
   case class Result(irType : ReturnableType, attributes : Set[ParameterAttribute] = Set()) {
     def toIr : String = {

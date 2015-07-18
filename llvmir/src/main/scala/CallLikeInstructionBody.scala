@@ -5,9 +5,12 @@ private[llvmir] object CallLikeInstructionBody {
     // Add our calling convention if we're using a non-default one
     val callingConvIrOpt = signature.callingConv.toOptIr
 
-    // Only zeroext, signext, inreg are allowed here
-    // We don't support inreg
-    val filteredRetAttrs = signature.result.attributes.intersect(Set(IrFunction.ZeroExt, IrFunction.SignExt))
+    // Only certain attributes are allowed on return values
+    val filteredRetAttrs = signature.result.attributes.filter {
+      case IrFunction.ZeroExt | IrFunction.SignExt | IrFunction.NonNull | IrFunction.Dereferenceable(_) => true
+      case _ => false
+    }
+
     val retAttrIrs = filteredRetAttrs.map(_.toIr)
 
     val resultTypeIr = signature.result.irType.toIr
@@ -29,7 +32,7 @@ private[llvmir] object CallLikeInstructionBody {
         throw new InconsistentIrException(s"Argument passed with ${arg.irType}, signature as ${argDecl.irType}")
       }
     }
-    
+
     val argIr = arguments.map(_.toIrWithType).mkString(", ")
 
     // Only noreturn, nounwind, readnone, and readonly are allowed here

@@ -147,9 +147,10 @@ class IrFunctionSuite extends FunSuite {
 
   test("christmas tree decl") {
     val result = IrFunction.Result(IntegerType(32), Set(ZeroExt))
-    val arguments = IrFunction.Argument(PointerType(IntegerType(8)), Set(NoCapture, NoAlias)) ::
-                    IrFunction.Argument(ArrayType(40, IntegerType(32)), Set(ZeroExt)) :: 
-                    Nil
+    val arguments = List(
+      IrFunction.Argument(PointerType(IntegerType(8)), Set(NoCapture, NoAlias, NonNull, Dereferenceable(8))),
+      IrFunction.Argument(ArrayType(40, IntegerType(32)), Set(ZeroExt))
+    )
 
     assert(IrFunctionDecl(
         result=result,
@@ -162,6 +163,6 @@ class IrFunctionSuite extends FunSuite {
         unnamedAddr=true,
         attributes=Set(IrFunction.Cold, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly),
         linkage=Linkage.ExternallyAvailable
-      ).toIr === "declare externally_available protected coldcc zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext, ...) unnamed_addr cold nounwind readnone readonly gc \"shadow\"")
+      ).toIr === "declare externally_available protected coldcc zeroext i32 @superfunc(i8* dereferenceable(8) noalias nocapture nonnull, [40 x i32] zeroext, ...) unnamed_addr cold nounwind readnone readonly gc \"shadow\"")
   }
 }
