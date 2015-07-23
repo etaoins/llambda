@@ -65,6 +65,9 @@ public:
 	 */
 	static size_t recordDataInstanceCount();
 
+	// TypeGenerator.scala always allocates this first
+	static const RecordClassIdType EmptyRecordLikeClassId = 0;
+
 protected:
 	RecordLikeCell(CellTypeId typeId, RecordClassIdType recordClassId, bool dataIsInline, void *recordData) :
 		AnyCell(typeId),
@@ -83,9 +86,6 @@ protected:
 		m_recordData(recordData)
 	{
 	}
-
-	// TypeGenerator.scala always allocates this first
-	static const RecordClassIdType EmptyRecordLikeClassId = 0;
 };
 
 }
