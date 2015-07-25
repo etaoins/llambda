@@ -14,9 +14,9 @@ namespace lliby
  */
 struct DatumHash
 {
-	using HashResultType = std::uint32_t;
+	using ResultType = std::uint32_t;
 
- 	HashResultType operator()(AnyCell *) const;
+ 	ResultType operator()(AnyCell *) const;
 };
 
 }

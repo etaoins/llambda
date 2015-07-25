@@ -50,6 +50,7 @@ add_library(llcore
 	dynamic/ParameterProcedureCell.cpp
 	dynamic/init.cpp
 	hash/DatumHash.cpp
+	hash/DatumHashTree.cpp
 	platform/memory.cpp
 	platform/time.cpp
 	port/StandardInputPort.cpp
@@ -198,6 +199,7 @@ set(ALL_TEST_NAMES
 	displaydatumwriter
 	externalformdatumwriter
 	datumhash
+	datumhashtree
 	implicitsharing
 	flonum
 	listelement

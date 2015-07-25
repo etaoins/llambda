@@ -23,7 +23,7 @@
 
 namespace
 {
-using HashResultType = lliby::DatumHash::HashResultType;
+using ResultType = lliby::DatumHash::ResultType;
 
 std::uint32_t djb2StringHash(const std::uint8_t *data, std::size_t length)
 {
@@ -37,13 +37,13 @@ std::uint32_t djb2StringHash(const std::uint8_t *data, std::size_t length)
 }
 
 template<typename T>
-HashResultType convertToHashResultType(T value)
+ResultType convertToResultType(T value)
 {
-	if (sizeof(T) == sizeof(HashResultType))
+	if (sizeof(T) == sizeof(ResultType))
 	{
-		return *reinterpret_cast<HashResultType*>(&value);
+		return *reinterpret_cast<ResultType*>(&value);
 	}
-	else if ((sizeof(T) == 8) && (sizeof(HashResultType) == 4))
+	else if ((sizeof(T) == 8) && (sizeof(ResultType) == 4))
 	{
 		auto intValue = *reinterpret_cast<std::uint64_t*>(&value);
 		return (intValue >> 33) ^ intValue;
@@ -52,7 +52,7 @@ HashResultType convertToHashResultType(T value)
 	assert(false);
 }
 
-HashResultType combineHash(HashResultType seed, HashResultType value)
+ResultType combineHash(ResultType seed, ResultType value)
 {
 	return seed ^ value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
@@ -63,7 +63,7 @@ HashResultType combineHash(HashResultType seed, HashResultType value)
 namespace lliby
 {
 
-DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
+DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 {
 	if (auto stringCell = cell_cast<StringCell>(datum))
 	{
@@ -86,7 +86,7 @@ DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto exactIntCell = cell_cast<ExactIntegerCell>(datum))
 	{
-		return convertToHashResultType(exactIntCell->value()) ^ 0x392ed847;
+		return convertToResultType(exactIntCell->value()) ^ 0x392ed847;
 	}
 	else if (auto flonumCell = cell_cast<FlonumCell>(datum))
 	{
@@ -98,20 +98,20 @@ DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
 			return 0x44645abf;
 		}
 
-		return convertToHashResultType(floatValue) ^ 0x8bc111e4;
+		return convertToResultType(floatValue) ^ 0x8bc111e4;
 	}
 	else if (auto procCell = cell_cast<ProcedureCell>(datum))
 	{
 		if (!procCell->capturesVariables())
 		{
-			return convertToHashResultType(procCell->entryPoint()) ^ 0x1be73aa7;
+			return convertToResultType(procCell->entryPoint()) ^ 0x1be73aa7;
 		}
 
-		return convertToHashResultType(procCell) ^ 0xf181f9bf;
+		return convertToResultType(procCell) ^ 0xf181f9bf;
 	}
 	else if (auto charCell = cell_cast<CharCell>(datum))
 	{
-		return convertToHashResultType(charCell->unicodeChar().codePoint()) ^ 0x90a39786;
+		return convertToResultType(charCell->unicodeChar().codePoint()) ^ 0x90a39786;
 	}
 	else if (auto bvCell = cell_cast<BytevectorCell>(datum))
 	{
@@ -130,7 +130,7 @@ DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto vectorCell = cell_cast<VectorCell>(datum))
 	{
-		HashResultType runningHash = 0xb45537fa;
+		ResultType runningHash = 0xb45537fa;
 
 		for(VectorCell::LengthType i = 0; i < vectorCell->length(); i++)
 		{
@@ -141,7 +141,7 @@ DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto mailboxCell = cell_cast<MailboxCell>(datum))
 	{
-		return convertToHashResultType(mailboxCell->lockedMailbox().get()) ^ 0x7f3bc1fa;
+		return convertToResultType(mailboxCell->lockedMailbox().get()) ^ 0x7f3bc1fa;
 	}
 	else if (UnitCell::isInstance(datum))
 	{
@@ -150,7 +150,7 @@ DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
 	else if (auto recordCell = cell_cast<RecordCell>(datum))
 	{
 		// There isn't much entropy in the pointer's lower bits; mix in the class ID which should help
-		return convertToHashResultType(recordCell) ^ recordCell->recordClassId() ^ 0x46f38277;
+		return convertToResultType(recordCell) ^ recordCell->recordClassId() ^ 0x46f38277;
 	}
 	else if (EofObjectCell::isInstance(datum))
 	{
@@ -158,13 +158,13 @@ DatumHash::HashResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto portCell = cell_cast<PortCell>(datum))
 	{
-		return convertToHashResultType(portCell) ^ 0x3982978b;
+		return convertToResultType(portCell) ^ 0x3982978b;
 	}
 	else if (auto errObjCell = cell_cast<ErrorObjectCell>(datum))
 	{
 		// Use the error category to add some entropy to the lower bits
-		return convertToHashResultType(errObjCell) ^
-			static_cast<HashResultType>(errObjCell->category()) ^
+		return convertToResultType(errObjCell) ^
+			static_cast<ResultType>(errObjCell->category()) ^
 			0x969cc581;
 	}
 	else
