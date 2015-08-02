@@ -47,8 +47,7 @@ std::uint8_t* utf8Bytes(const char *str)
 
 bool hasUnstableHash(AnyCell *cell)
 {
-	return MailboxCell::isInstance(cell) || RecordCell::isInstance(cell) || PortCell::isInstance(cell) ||
-		ErrorObjectCell::isInstance(cell);
+	return MailboxCell::isInstance(cell) || PortCell::isInstance(cell);
 }
 
 void testAll(World &world)
@@ -130,6 +129,13 @@ void testAll(World &world)
 
 	elements = new AnyCell*[6] {testValues[4], testValues[3], testValues[2], testValues[1], testValues[0]};
 	testValues.push_back(VectorCell::fromElements(world, elements, 5));
+
+	testValues.push_back(ProcedureCell::createInstance(
+				world,
+				ProcedureCell::EmptyRecordLikeClassId,
+				true,
+				nullptr,
+				reinterpret_cast<void*>(1)));
 
 	testValues.push_back(ProcedureCell::createInstance(
 				world,

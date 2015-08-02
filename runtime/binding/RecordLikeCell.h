@@ -35,6 +35,38 @@ public:
 		return &m_recordData;
 	}
 
+	void*const* recordDataRef() const
+	{
+		return &m_recordData;
+	}
+
+	/**
+	 * Returns a pointer to the start of the record's data storage
+	 */
+	const void *dataBasePointer() const
+	{
+		if (dataIsInline())
+		{
+			return recordDataRef();
+		}
+		else
+		{
+			return recordData();
+		}
+	}
+
+	void *dataBasePointer()
+	{
+		if (dataIsInline())
+		{
+			return recordDataRef();
+		}
+		else
+		{
+			return recordData();
+		}
+	}
+
 	const RecordClassMap* classMap() const;
 	RecordLikeDataStorage dataStorage() const;
 

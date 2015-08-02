@@ -269,3 +269,108 @@
   (assert-true (equal? (make-bytevector 5 200) (make-bytevector 5 200)))
   (assert-false (equal? (make-bytevector 5 200) (make-bytevector 6 200)))
   (assert-false (equal? (make-bytevector 5 100) (make-bytevector 5 200)))))
+
+(define-test "dynamic error object (equal?)" (expect-success
+  (import (llambda error))
+
+  (define error-1 (guard (e (else e)) (raise-file-error "one")))
+  (define error-2 (guard (e (else e)) (raise-file-error "two")))
+  (define error-3 (guard (e (else e)) (raise-file-error "one" 1 2 3)))
+  (define error-4 (guard (e (else e)) (raise-read-error "one")))
+  (define error-5 (guard (e (else e)) (raise-file-error "one")))
+
+  (assert-true  (equal? error-1 error-1))
+  (assert-false (equal? error-1 error-2))
+  (assert-false (equal? error-1 error-3))
+  (assert-false (equal? error-1 error-3))
+  (assert-false (equal? error-1 error-4))
+  (assert-true  (equal? error-1 error-5))
+
+  (assert-true  (equal? error-2 error-2))
+  (assert-false (equal? error-2 error-3))
+  (assert-false (equal? error-2 error-4))
+  (assert-false (equal? error-2 error-5))
+
+  (assert-true  (equal? error-3 error-3))
+  (assert-false (equal? error-3 error-4))
+  (assert-false (equal? error-3 error-5))
+
+  (assert-true  (equal? error-4 error-4))
+  (assert-false (equal? error-4 error-5))
+
+  (assert-true  (equal? error-5 error-5))))
+
+(define-test "static record (equal?)" (expect-static-success
+  (import (llambda typed))
+
+  (define-record-type <constant-empty> (constant-empty) constant-empty?)
+
+  (define-record-type <constant-inline> (constant-inline field1) constant-inline?
+                      ([field1 : <flonum>] constant-inline-field1))
+
+  (define-record-type <constant-ool> (constant-ool field1 field2 field3 field4) constant-ool?
+                      ([field1 : <flonum>] constant-ool-field1)
+                      ([field2 : <exact-integer>] constant-ool-field2)
+                      ([field3 : <flonum>] constant-ool-field3)
+                      ([field4 : <vector>] constant-ool-field4))
+
+  (assert-true  (equal? (constant-empty) (constant-empty)))
+
+  (assert-true  (equal? (constant-inline 1.0) (constant-inline 1.0)))
+  (assert-true  (equal? (constant-inline +nan.0) (constant-inline +nan.0)))
+  (assert-false (equal? (constant-inline 1.0) (constant-inline -1.0)))
+  (assert-false (equal? (constant-inline 1.0) (constant-inline +nan.0)))
+
+  (assert-true  (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 2 3.0 #(4))))
+  (assert-false (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 2 3.0 #(5))))
+  (assert-false (equal? (constant-ool 1.0 2 +nan.0 #(4)) (constant-ool 1.0 2 3.0 #(4))))
+  (assert-false (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 3 3.0 #(4))))))
+
+(define-test "dynamic record (equal?)" (expect-success
+  (import (llambda typed))
+
+  (define-record-type <unboxed-inline> (unboxed-inline field1) unboxed-inline?
+                      ([field1 : <flonum>] unboxed-inline-field1))
+
+  (define-record-type <unboxed-ool> (unboxed-ool field1 field2 field3 field4) unboxed-ool?
+                      ([field1 : <flonum>] unboxed-ool-field1)
+                      ([field2 : <exact-integer>] unboxed-ool-field2)
+                      ([field3 : <flonum>] unboxed-ool-field3)
+                      ([field4 : <exact-integer>] unboxed-ool-field4))
+
+  (define-record-type <boxed-inline> (boxed-inline field1) boxed-inline?
+                      ([field1 : <bytevector>] boxed-inline-field1))
+
+  (define-record-type <boxed-ool> (boxed-ool field1 field2 field3 field4) boxed-ool?
+                      ([field1 : <flonum>] boxed-ool-field1)
+                      ([field2 : <exact-integer>] boxed-ool-field2)
+                      ([field3 : <flonum>] boxed-ool-field3)
+                      ([field4 : <vector>] boxed-ool-field4))
+
+  (define-record-type <mutable-inline> (mutable-inline field1) mutable-inline?
+                      ([field1 : <exact-integer>] mutable-inline-field1 set-mutable-inline-field1!))
+
+  (assert-true  (equal? (unboxed-inline 1.0) (unboxed-inline (typeless-cell 1.0))))
+  (assert-true  (equal? (unboxed-inline (typeless-cell +nan.0)) (unboxed-inline +nan.0)))
+  (assert-false (equal? (unboxed-inline 1.0) (unboxed-inline (typeless-cell -1.0))))
+  (assert-false (equal? (unboxed-inline (typeless-cell 1.0)) (unboxed-inline +nan.0)))
+
+  (assert-true  (equal? (unboxed-ool (typeless-cell 1.0) 2 3.0 4) (unboxed-ool 1.0 2 3.0 4)))
+  (assert-false (equal? (unboxed-ool 1.0 2 3.0 4) (unboxed-ool 1.0 (typeless-cell 2) 3.0 5)))
+  (assert-false (equal? (unboxed-ool 1.0 2 (typeless-cell +nan.0) 4) (unboxed-ool 1.0 2 3.0 4)))
+  (assert-false (equal? (unboxed-ool 1.0 2 3.0 4) (unboxed-ool 1.0 3 3.0 (typeless-cell 4))))
+
+  (assert-true  (equal? (boxed-inline (typeless-cell #u8(1 2 3))) (boxed-inline #u8(1 2 3))))
+  (assert-false (equal? (boxed-inline (typeless-cell #u8(1 2 3))) (boxed-inline #u8(3 2 1))))
+
+  (assert-true  (equal? (boxed-ool (typeless-cell 1.0) 2 3.0 #(4)) (boxed-ool 1.0 2 3.0 #(4))))
+  (assert-false (equal? (boxed-ool 1.0 2 3.0 #(4)) (boxed-ool 1.0 (typeless-cell 2) 3.0 #(5))))
+  (assert-false (equal? (boxed-ool 1.0 2 (typeless-cell +nan.0) #(4)) (boxed-ool 1.0 2 3.0 #(4))))
+  (assert-false (equal? (boxed-ool 1.0 2 3.0 #(4)) (boxed-ool 1.0 3 3.0 (typeless-cell #(4)))))
+
+  (define mutable1 (mutable-inline 1))
+  (define mutable2 (mutable-inline 2))
+
+  (assert-false (equal? mutable1 mutable2))
+  (set-mutable-inline-field1! mutable1 2)
+  (assert-true (equal? mutable1 mutable2))))

@@ -66,6 +66,17 @@ private[reportproc] object StaticValueEqv {
       case (iv.ConstantBytevectorValue(elements1), iv.ConstantBytevectorValue(elements2)) =>
         Some(elements1 == elements2)
 
+      case (iv.ConstantRecordValue(recordType1, fieldValues1, false),
+            iv.ConstantRecordValue(recordType2, fieldValues2, false)) =>
+        if (recordType1 == recordType2) {
+          val fields = recordType1.fields
+
+          elementsAreEqual(fields.map(fieldValues1), fields.map(fieldValues2))
+        }
+        else {
+          Some(false)
+        }
+
       case _ =>
         valuesAreEqv(val1, val2)
     }

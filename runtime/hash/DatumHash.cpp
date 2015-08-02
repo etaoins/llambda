@@ -21,6 +21,8 @@
 #include "binding/PortCell.h"
 #include "binding/ErrorObjectCell.h"
 
+#include "classmap/RecordClassMap.h"
+
 namespace
 {
 using ResultType = lliby::DatumHash::ResultType;
@@ -102,12 +104,7 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto procCell = cell_cast<ProcedureCell>(datum))
 	{
-		if (!procCell->capturesVariables())
-		{
-			return convertToResultType(procCell->entryPoint()) ^ 0x1be73aa7;
-		}
-
-		return convertToResultType(procCell) ^ 0xf181f9bf;
+		return convertToResultType(procCell->entryPoint()) ^ hashRecordLike(procCell) ^ 0x466e8954;
 	}
 	else if (auto charCell = cell_cast<CharCell>(datum))
 	{
@@ -149,8 +146,7 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto recordCell = cell_cast<RecordCell>(datum))
 	{
-		// There isn't much entropy in the pointer's lower bits; mix in the class ID which should help
-		return convertToResultType(recordCell) ^ recordCell->recordClassId() ^ 0x46f38277;
+		return hashRecordLike(recordCell) ^ 0xb851fff0;
 	}
 	else if (EofObjectCell::isInstance(datum))
 	{
@@ -158,20 +154,42 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto portCell = cell_cast<PortCell>(datum))
 	{
-		return convertToResultType(portCell) ^ 0x3982978b;
+		return convertToResultType(portCell->port()) ^ 0x3982978b;
 	}
 	else if (auto errObjCell = cell_cast<ErrorObjectCell>(datum))
 	{
-		// Use the error category to add some entropy to the lower bits
-		return convertToResultType(errObjCell) ^
-			static_cast<ResultType>(errObjCell->category()) ^
-			0x969cc581;
+		auto messageHash = (*this)(errObjCell->message());
+		auto irritantsHash = (*this)(errObjCell->irritants());
+
+		return combineHash(messageHash, irritantsHash) ^ static_cast<ResultType>(errObjCell->category());
 	}
 	else
 	{
 		assert(false);
 		return 0;
 	}
+}
+
+ResultType DatumHash::hashRecordLike(RecordLikeCell *recordLike) const
+{
+	ResultType h = recordLike->recordClassId();
+
+	const RecordClassMap *classMap = recordLike->classMap();
+	auto dataBase = static_cast<const std::uint8_t*>(recordLike->dataBasePointer());
+
+	std::size_t currentByte = 0;
+	for(std::uint32_t i = 0; i < classMap->offsetCount; i++)
+	{
+		std::size_t nextCellOffset = classMap->offsets[i];
+		auto cellValue = *reinterpret_cast<AnyCell*const*>(dataBase + nextCellOffset);
+
+		h = combineHash(h, djb2StringHash(&dataBase[currentByte], nextCellOffset - currentByte));
+		h = combineHash(h, (*this)(cellValue));
+
+		currentByte = nextCellOffset + sizeof(AnyCell*);
+	}
+
+	return combineHash(h, djb2StringHash(&dataBase[currentByte], classMap->totalSize - currentByte));
 }
 
 }

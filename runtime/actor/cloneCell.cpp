@@ -84,17 +84,7 @@ namespace
 		const bool dataIsInline = recordLikeCell->dataIsInline();
 
 		// Get a pointer to the old data
-		void *oldData;
-
-		if (dataIsInline)
-		{
-			// If our data is inline it starts at the record data pointer
-			oldData = recordLikeCell->recordDataRef();
-		}
-		else
-		{
-			oldData = recordLikeCell->recordData();
-		}
+		void *oldData = recordLikeCell->dataBasePointer();
 
 		// Create the new record data if we're out-of-line
 		void *newData = nullptr;

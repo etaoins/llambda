@@ -99,17 +99,7 @@ visitEntry:
 			for(std::uint32_t i = 0; i < classMap->offsetCount; i++)
 			{
 				const std::uint32_t byteOffset = classMap->offsets[i];
-				std::uint8_t *cellRef;
-
-				if (recordLikeCell->dataIsInline())
-				{
-					// The data is stored inline inside the cell
-					cellRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordDataRef()) + byteOffset;
-				}
-				else
-				{
-					cellRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordData()) + byteOffset;
-				}
+				auto cellRef = static_cast<std::uint8_t*>(recordLikeCell->dataBasePointer()) + byteOffset;
 
 				visitCell(reinterpret_cast<AnyCell**>(cellRef), visitor);
 			}

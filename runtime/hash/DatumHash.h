@@ -7,6 +7,7 @@
 
 namespace lliby
 {
+class RecordLikeCell;
 
 /** Function object for calculatng the hash of AnyCell objects for (equals?) equality
  *
@@ -17,6 +18,9 @@ struct DatumHash
 	using ResultType = std::uint32_t;
 
  	ResultType operator()(AnyCell *) const;
+
+private:
+	ResultType hashRecordLike(RecordLikeCell *recordLike) const;
 };
 
 }
