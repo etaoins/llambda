@@ -182,6 +182,14 @@ object SatisfiesType {
 
         mergeNonUnionMemberTypeResults(memberResults)
 
+      case (superHashMap : HashMapType, testingHashMap : HashMapType) =>
+        val memberResults = Set(
+          stackedSatisfiesType(superHashMap.keyType :: superStack, testingHashMap.keyType :: testingStack),
+          stackedSatisfiesType(superHashMap.valueType :: superStack, testingHashMap.valueType :: testingStack)
+        )
+
+        mergeNonUnionMemberTypeResults(memberResults)
+
       case (superApplicable : ApplicableType, testingApplicable : ApplicableType) =>
         satifiesApplicableType(superApplicable, testingApplicable)
 

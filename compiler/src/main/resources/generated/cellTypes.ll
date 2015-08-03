@@ -160,3 +160,9 @@
 !91 = !{!"Any::typeId->Mailbox", !10}
 !92 = !{!"Any::gcState->Mailbox", !11}
 !93 = !{!"Mailbox::mailbox"}
+
+; {supertype, datumHashTree}
+%hashMap = type {%any, i8*}
+!94 = !{!"Any::typeId->HashMap", !10}
+!95 = !{!"Any::gcState->HashMap", !11}
+!96 = !{!"HashMap::datumHashTree"}

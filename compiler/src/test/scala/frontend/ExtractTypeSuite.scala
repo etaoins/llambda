@@ -327,6 +327,16 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
 
+  test("defining hash map types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <string-to-symbol-hash-map> (HashMap <string> <symbol>))")(scope)
+    assert(scope("<string-to-symbol-hash-map>") === BoundType(vt.HashMapType(vt.StringType, vt.SymbolType)))
+
+    bodyFor("(define-type <empty-hash-map> (HashMap (U) (U)))")(scope)
+    assert(scope("<empty-hash-map>") === BoundType(vt.HashMapType(vt.EmptySchemeType, vt.EmptySchemeType)))
+  }
+
   test("defining recursive types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val stringListType = vt.UniformProperListType(vt.StringType)

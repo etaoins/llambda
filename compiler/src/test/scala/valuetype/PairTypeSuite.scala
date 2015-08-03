@@ -36,7 +36,7 @@ class PairTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(specificPairType, AnyPairType) === None)
   }
 
-  test("the any pair type satisfies the unit type") {
+  test("the any pair type is convertable to the unit type") {
     assert(ConvertibleToType(UnitType, AnyPairType) === Some(true))
   }
 

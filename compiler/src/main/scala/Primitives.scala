@@ -50,6 +50,7 @@ object Primitives {
   object CaseProcedureType extends PrimitiveTypeConstructor
   object PolymorphicType extends PrimitiveTypeConstructor
   object ExternalRecordType extends PrimitiveTypeConstructor
+  object HashMapType extends PrimitiveTypeConstructor
 
   object PatternMatch extends PrimitiveExpr
 
@@ -99,6 +100,7 @@ object Primitives {
       "case->" -> CaseProcedureType,
       "All" -> PolymorphicType,
       "ExternalRecord" -> ExternalRecordType,
+      "HashMap" -> HashMapType,
 
       "match" -> PatternMatch
     )

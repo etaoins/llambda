@@ -160,4 +160,17 @@ class ResolveTypeVarsSuite extends FunSuite {
       polyC -> BooleanType
     ))
   }
+
+  test("resolve a hash map type") {
+    val polyHashMap = HashMapType(polyA, polyB)
+
+    val evidence = HashMapType(ExactIntegerType, FlonumType)
+
+    val result = ResolveTypeVars(Set(polyA, polyB), polyHashMap, evidence)
+
+    assert(result.values === Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
+    ))
+  }
 }

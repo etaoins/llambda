@@ -143,6 +143,18 @@ class ExternalRecordType(
   val parentType = SchemeTypeAtom(ct.RecordCell)
 }
 
+/** Represents a hash map type */
+case class HashMapType(
+    keyType : SchemeType,
+    valueType : SchemeType
+) extends CellValueType with NonRecursiveType with DerivedSchemeType {
+  val cellType = ct.HashMapCell
+  val isGcManaged = true
+  val parentType = SchemeTypeAtom(ct.HashMapCell)
+}
+
+object AnyHashMapType extends HashMapType(AnySchemeType, AnySchemeType)
+
 /** Types visible to Scheme programs without using the NFI */
 sealed abstract trait SchemeType extends CellValueType {
   val schemeType = this

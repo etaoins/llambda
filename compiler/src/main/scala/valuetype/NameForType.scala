@@ -56,6 +56,12 @@ object NameForType {
 
         s"(Pairof ${carName} ${cdrName})"
 
+      case HashMapType(keyType, valueType) =>
+        val keyName = stackedNameForType(keyType :: typeStack, recurseVarNames)
+        val valueName = stackedNameForType(valueType :: typeStack, recurseVarNames)
+
+        s"(HashMap ${keyName} ${valueName})"
+
       case recordType : RecordType =>
         recordType.sourceName
 

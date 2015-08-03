@@ -54,7 +54,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 97L
+  val nextMetadataIndex = 100L
 }
 
 sealed trait AnyFields {
@@ -123,7 +123,7 @@ object AnyCell extends CellType with AnyFields {
   val llvmName = "any"
   val irType = UserDefinedType("any")
   val schemeName = "<any>"
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell, EofObjectCell, MailboxCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell, EofObjectCell, MailboxCell, HashMapCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -1864,6 +1864,67 @@ object MailboxCell extends ConcreteCellType with MailboxFields {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
       mailbox
+    ), userDefinedType=Some(irType))
+  }
+}
+
+sealed trait HashMapFields extends AnyFields {
+  val irType : FirstClassType
+
+  val datumHashTreeIrType = PointerType(IntegerType(8))
+  val datumHashTreeTbaaNode : Metadata
+  val datumHashTreeGepIndices : List[Int]
+
+  def genPointerToDatumHashTree(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("datumHashTreePtr")(
+      elementType=datumHashTreeIrType,
+      basePointer=valueCell,
+      indices=datumHashTreeGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToDatumHashTree(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+    val datumHashTreePtr = genPointerToDatumHashTree(block)(valueCell)
+    val allMetadata = metadata ++ Map("tbaa" -> datumHashTreeTbaaNode)
+    block.store(toStore, datumHashTreePtr, metadata=allMetadata)
+  }
+
+  def genLoadFromDatumHashTree(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+    val datumHashTreePtr = genPointerToDatumHashTree(block)(valueCell)
+    val allMetadata = Map("tbaa" -> datumHashTreeTbaaNode) ++ metadata
+    block.load("datumHashTree")(datumHashTreePtr, metadata=allMetadata)
+  }
+}
+
+object HashMapCell extends ConcreteCellType with HashMapFields {
+  val llvmName = "hashMap"
+  val irType = UserDefinedType("hashMap")
+  val schemeName = "<hash-map>"
+  val directSubtypes = Set[CellType]()
+
+  val typeId = 18L
+
+  val typeIdGepIndices = List(0, 0, 0)
+  val gcStateGepIndices = List(0, 0, 1)
+  val datumHashTreeGepIndices = List(0, 1)
+
+  val typeIdTbaaNode = NumberedMetadata(94L)
+  val gcStateTbaaNode = NumberedMetadata(95L)
+  val datumHashTreeTbaaNode = NumberedMetadata(96L)
+
+  def createConstant(datumHashTree : IrConstant) : StructureConstant = {
+    if (datumHashTree.irType != datumHashTreeIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field datumHashTree")
+    }
+
+    StructureConstant(List(
+      AnyCell.createConstant(typeId=typeId),
+      datumHashTree
     ), userDefinedType=Some(irType))
   }
 }

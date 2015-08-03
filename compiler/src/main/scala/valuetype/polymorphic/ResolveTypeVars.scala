@@ -90,6 +90,10 @@ object ResolveTypeVars {
       visitTypeRef(typeVars, polyPair.carTypeRef, newPolyStack, evidencePair.carTypeRef, newEvidenceStack) ++
         visitTypeRef(typeVars, polyPair.cdrTypeRef, newPolyStack, evidencePair.cdrTypeRef, newEvidenceStack)
 
+    case (HashMapType(polyKey, polyValue), HashMapType(evidenceKey, evidenceValue)) =>
+      visitType(typeVars, polyKey, Nil, evidenceKey, Nil) ++
+        visitType(typeVars, polyValue, Nil, evidenceValue, Nil)
+
     case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
       // Intentionally do not use the formals to resolve polymorphic variables. The formals aren't "evidence" of types
       // as they're passed input from other polymorphic collections. For example, the signature for (filter) might be:

@@ -206,4 +206,12 @@ class NameForTypeSuite extends FunSuite {
     // Make sure this doesn't infinitely recurse in the proper list special casing code
     assert(NameForType(recursiveProperList) === "(Rec A (U (Pairof A A) <empty-list>))")
   }
+
+  test("(HashMap <any> <any>)") {
+    assert(NameForType(AnyHashMapType) === "(HashMap <any> <any>)")
+  }
+
+  test("(HashMap <pair> <unit>)") {
+    assert(NameForType(HashMapType(AnyPairType, UnitType)) === "(HashMap <pair> <unit>)")
+  }
 }

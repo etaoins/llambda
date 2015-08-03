@@ -12,6 +12,10 @@ fieldtype AbstractPort : uint8 {
 	extern cppname = AbstractPort;
 };
 
+fieldtype DatumHashTree : uint8 {
+	extern cppname = DatumHashTree;
+};
+
 // C++ has a special ProperList type for known proper lists
 cell ListElement;
 fieldtype ProperList : ListElement {
@@ -147,6 +151,10 @@ preconstructed cell EofObject : Any {
 
 concrete cell Mailbox : Any {
 	MailboxRef mailbox;
+};
+
+concrete internal cell HashMap : Any {
+	DatumHashTree *datumHashTree;
 };
 
 // Internal runtime-only cell to track dynamic states with the garbage collector

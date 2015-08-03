@@ -34,6 +34,7 @@ class ErrorObjectCell;
 class PortCell;
 class EofObjectCell;
 class MailboxCell;
+class HashMapCell;
 class DynamicStateCell;
 
 }

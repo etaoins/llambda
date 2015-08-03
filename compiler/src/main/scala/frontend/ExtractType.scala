@@ -36,7 +36,7 @@ object ExtractType {
 
   private def applyProcedureTypeConstructor(located : SourceLocated, args : List[sst.ScopedDatum]) : vt.ProcedureType = {
     // Explicitly recursive types cannot cross procedure boundaries due to lack of testing and use cases
-    val noRecursiveVars  = RecursiveVars()
+    val noRecursiveVars = RecursiveVars()
 
     // Parse the constructor in to its components
     val parsed = ParseProcedureTypeConstructor(located, args)
@@ -157,6 +157,20 @@ object ExtractType {
       case Primitives.ExternalRecordType =>
         val sourceNameOpt = recursiveVars.variables.find(_._2 == 0).map(_._1)
         ExtractExternalRecordType(constructorName, sourceNameOpt, args)
+
+      case Primitives.HashMapType =>
+        val noRecursiveVars = RecursiveVars()
+
+        args match {
+          case List(keyTypeDatum, valueTypeDatum) =>
+            val keyType = extractSchemeType(keyTypeDatum, noRecursiveVars)
+            val valueType = extractSchemeType(valueTypeDatum, noRecursiveVars)
+
+            vt.HashMapType(keyType, valueType)
+
+          case _ =>
+            throw new BadSpecialFormException(constructorName, "HashMap requires a key type and value type as arguments")
+        }
 
       case LiteralTypeConstructor =>
         args match {

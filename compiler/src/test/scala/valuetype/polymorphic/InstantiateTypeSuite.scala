@@ -148,4 +148,17 @@ class InstantiateTypeSuite extends FunSuite {
 
     assert(InstantiateType(reconciled, polyCaseProc) == expected)
   }
+
+  test("instantiating a hash map type") {
+    val polyHashMap = HashMapType(polyA, polyB)
+
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
+    ))
+
+    val expected = HashMapType(ExactIntegerType, FlonumType)
+
+    assert(InstantiateType(reconciled, polyHashMap) === expected)
+  }
 }

@@ -84,6 +84,9 @@ object InstantiateType {
       // they're bound to a type
       recordType
 
+    case HashMapType(keyType, valueType) =>
+      HashMapType(apply(typeVars, keyType), apply(typeVars, valueType))
+
     case _ : LeafType =>
       poly
   }

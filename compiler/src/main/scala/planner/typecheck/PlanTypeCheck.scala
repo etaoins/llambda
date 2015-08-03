@@ -171,11 +171,20 @@ object PlanTypeCheck {
         }))
 
       case vt.SchemeTypeAtom(cellType) =>
-        val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes) 
+        val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes)
 
         val isCellTypePred = ps.Temp(vt.Predicate)
         plan.steps += ps.TestCellType(isCellTypePred, checkValue.tempValue, cellType, possibleCellTypes)
         DynamicResult(isCellTypePred)
+
+      case vt.AnyHashMapType =>
+        testNonUnionType(plan, checkValue, valueType, vt.SchemeTypeAtom(ct.HashMapCell))
+
+      case _ : vt.HashMapType  =>
+        throw new TypeException(
+          located=plan.activeContextLocated,
+          message=s"Value of type ${valueType} does not statically satisfy hash map type ${testType}"
+        )
 
       case _ : vt.ApplicableType =>
         throw new TypeException(
