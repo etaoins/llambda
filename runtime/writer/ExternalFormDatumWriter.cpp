@@ -23,6 +23,7 @@
 #include "binding/PortCell.h"
 #include "binding/EofObjectCell.h"
 #include "binding/MailboxCell.h"
+#include "binding/HashMapCell.h"
 
 #include "dynamic/ParameterProcedureCell.h"
 #include "dynamic/EscapeProcedureCell.h"
@@ -243,6 +244,10 @@ void ExternalFormDatumWriter::render(const AnyCell *datum, int defaultRadix)
 	else if (auto value = cell_cast<MailboxCell>(datum))
 	{
 		renderMailbox(value);
+	}
+	else if (auto value = cell_cast<HashMapCell>(datum))
+	{
+		renderHashMap(value);
 	}
 	else
 	{
@@ -583,6 +588,11 @@ void ExternalFormDatumWriter::renderEofObject(const EofObjectCell *value)
 void ExternalFormDatumWriter::renderMailbox(const MailboxCell *value)
 {
 	m_outStream << "#!mailbox";
+}
+
+void ExternalFormDatumWriter::renderHashMap(const HashMapCell *value)
+{
+	m_outStream << "#!hash-map";
 }
 
 }

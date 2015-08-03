@@ -17,6 +17,10 @@
 #include "MailboxCell.h"
 #include "ErrorObjectCell.h"
 #include "RecordCell.h"
+#include "HashMapCell.h"
+
+#include "hash/DatumHashTree.h"
+
 #include "classmap/RecordClassMap.h"
 
 namespace lliby
@@ -246,6 +250,25 @@ bool AnyCell::isEqual(const AnyCell *other) const
 			return recordLikeIsEqual(thisProcedure, otherProcedure);
 		}
 	}
+	else if (auto thisHashMap = cell_cast<HashMapCell>(this))
+	{
+		if (auto otherHashMap = cell_cast<HashMapCell>(other))
+		{
+			auto thisHashTree = thisHashMap->datumHashTree();
+			auto otherHashTree = otherHashMap->datumHashTree();
+
+			if (DatumHashTree::size(thisHashTree) != DatumHashTree::size(otherHashTree))
+			{
+				return false;
+			}
+
+			return DatumHashTree::every(thisHashTree, [=] (AnyCell *key, AnyCell *thisValue)
+			{
+				AnyCell *otherValue = DatumHashTree::find(otherHashTree, key);
+				return otherValue && thisValue->isEqual(otherValue);
+			});
+		}
+	}
 
 	return false;
 }
@@ -283,6 +306,10 @@ void AnyCell::finalize()
 	else if (auto thisMailbox = cell_cast<MailboxCell>(this))
 	{
 		thisMailbox->finalizeMailbox();
+	}
+	else if (auto thisHashMap = cell_cast<HashMapCell>(this))
+	{
+		thisHashMap->finalizeHashMap();
 	}
 }
 

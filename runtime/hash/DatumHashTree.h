@@ -12,6 +12,11 @@ namespace lliby
 {
 class AnyCell;
 
+namespace alloc
+{
+class CellRefWalker;
+}
+
 /**
  * Persistent hash tree for mapping data keys to values
  *
@@ -24,6 +29,7 @@ class AnyCell;
  */
 class DatumHashTree
 {
+	friend class alloc::CellRefWalker;
 public:
 	/**
 	 * Creates a new empty tree
@@ -75,14 +81,16 @@ public:
 	static std::size_t size(const DatumHashTree *tree);
 
 	/**
-	 * Calls the passed function for each {key, value} pair in the tree
+	 * Calls the passed function for each {key, value} pair in the tree until it returns false
 	 *
 	 * The tree will be walked in an undefined order.
 	 *
-	 * @param  tree    Tree to walk
-	 * @param  walker  Function to call for each {key, value} pair
+	 * @param  tree  Tree to walk
+	 * @param  pred  Predicate function to call for each {key, value} pair. If this function returns false the walk will
+	 *               be aborted and every() will return false.
+	 * @return True if the walker returned true for every {key, value} pair
 	 */
-	static void walk(const DatumHashTree *tree, const std::function<void(AnyCell*, AnyCell*)> &walker);
+	static bool every(const DatumHashTree *tree, const std::function<bool(AnyCell*, AnyCell*)> &pred);
 
 	/**
 	 * Increases the reference count of the passed tree and returns it
@@ -113,6 +121,10 @@ public:
 	 * with through another mechanism.
 	 */
 	static std::size_t instanceCount();
+
+
+protected:
+	static void walkCellRefs(DatumHashTree *tree, alloc::CellRefWalker &walker, const std::function<void(AnyCell**, AnyCell**)> &visitor);
 
 protected:
 	explicit DatumHashTree(std::uint32_t bitmapIndex);

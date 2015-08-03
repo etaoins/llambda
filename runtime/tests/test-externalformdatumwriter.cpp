@@ -22,6 +22,9 @@
 #include "binding/PortCell.h"
 #include "binding/EofObjectCell.h"
 #include "binding/MailboxCell.h"
+#include "binding/HashMapCell.h"
+
+#include "hash/DatumHashTree.h"
 
 #include "port/StandardOutputPort.h"
 #include "actor/Mailbox.h"
@@ -310,6 +313,11 @@ void testMailbox(World &world)
 	assertForm(MailboxCell::createInstance(world, testMailbox), "#!mailbox");
 }
 
+void testHashMap(World &world)
+{
+	assertForm(HashMapCell::createEmptyInstance(world), "#!hash-map");
+}
+
 void testAll(World &world)
 {
 	testUnit();
@@ -329,6 +337,7 @@ void testAll(World &world)
 	testPort(world);
 	testEofObject();
 	testMailbox(world);
+	testHashMap(world);
 }
 
 }

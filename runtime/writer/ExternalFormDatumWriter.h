@@ -35,6 +35,7 @@ protected:
 	virtual void renderPort(const PortCell *value);
 	virtual void renderEofObject(const EofObjectCell *value);
 	virtual void renderMailbox(const MailboxCell *value);
+	virtual void renderHashMap(const HashMapCell *value);
 
 	std::ostream &m_outStream;
 };

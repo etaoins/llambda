@@ -24,6 +24,7 @@
 #include "binding/EofObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/ErrorObjectCell.h"
+#include "binding/HashMapCell.h"
 
 #include "port/StringOutputPort.h"
 #include "actor/Mailbox.h"
@@ -31,6 +32,7 @@
 #include "alloc/StrongRefVector.h"
 #include "alloc/cellref.h"
 #include "hash/DatumHash.h"
+#include "hash/DatumHashTree.h"
 #include "writer/ExternalFormDatumWriter.h"
 
 #include "stubdefinitions.h"
@@ -48,6 +50,21 @@ std::uint8_t* utf8Bytes(const char *str)
 bool hasUnstableHash(AnyCell *cell)
 {
 	return MailboxCell::isInstance(cell) || PortCell::isInstance(cell);
+}
+
+HashMapCell* hashMapCellFromValues(World &world, std::initializer_list<std::pair<AnyCell *&, AnyCell *&>> values)
+{
+	HashMapCell *hashMapCell = HashMapCell::createEmptyInstance(world);
+
+	for(const auto &pair : values)
+	{
+		DatumHashTree *newTree = DatumHashTree::assoc(hashMapCell->datumHashTree() , pair.first, pair.second);
+
+		DatumHashTree::unref(hashMapCell->datumHashTree());
+		hashMapCell->setDatumHashTree(newTree);
+	}
+
+	return hashMapCell;
 }
 
 void testAll(World &world)
@@ -209,6 +226,36 @@ void testAll(World &world)
 				EmptyListCell::asProperList<AnyCell>(),
 				ErrorCategory::Arity));
 
+	testValues.push_back(hashMapCellFromValues(world, {}));
+
+	testValues.push_back(hashMapCellFromValues(world, {
+				{testValues[0], testValues[1]},
+				{testValues[2], testValues[3]},
+				{testValues[4], testValues[5]},
+				{testValues[6], testValues[7]},
+	}));
+
+	testValues.push_back(hashMapCellFromValues(world, {
+				{testValues[6], testValues[7]},
+				{testValues[4], testValues[5]},
+				{testValues[2], testValues[3]},
+				{testValues[0], testValues[1]},
+	}));
+
+	testValues.push_back(hashMapCellFromValues(world, {
+				{testValues[4], testValues[5]},
+				{testValues[6], testValues[7]},
+				{testValues[0], testValues[1]},
+				{testValues[2], testValues[3]},
+	}));
+
+
+	testValues.push_back(hashMapCellFromValues(world, {
+				{testValues[8], testValues[9]},
+				{testValues[10], testValues[11]},
+				{testValues[12], testValues[13]},
+				{testValues[14], testValues[15]},
+	}));
 
 	for(std::size_t i = 0; i < testValues.size(); i++)
 	{

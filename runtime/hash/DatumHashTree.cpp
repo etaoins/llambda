@@ -1,6 +1,8 @@
 #include "hash/DatumHashTree.h"
 #include "binding/AnyCell.h"
 
+#include "alloc/CellRefWalker.h"
+
 #include <algorithm>
 
 namespace lliby
@@ -9,12 +11,9 @@ namespace lliby
 namespace
 {
 
-namespace
-{
 #ifdef _LLIBY_CHECK_LEAKS
-	std::atomic<std::size_t> allocationCount(0);
+std::atomic<std::size_t> allocationCount(0);
 #endif
-}
 
 std::uint32_t bitmapPopCount(std::uint32_t bitmap)
 {
@@ -456,11 +455,11 @@ std::size_t DatumHashTree::size(const DatumHashTree *tree)
 	}
 }
 
-void DatumHashTree::walk(const DatumHashTree *tree, const std::function<void(AnyCell*, AnyCell*)> &walker)
+bool DatumHashTree::every(const DatumHashTree *tree, const std::function<bool(AnyCell*, AnyCell*)> &pred)
 {
 	if (tree == nullptr)
 	{
-		return;
+		return true;
 	}
 	else if (tree->isLeafNode())
 	{
@@ -469,7 +468,10 @@ void DatumHashTree::walk(const DatumHashTree *tree, const std::function<void(Any
 		for(std::size_t i = 0; i < leafNode->entryCount(); i++)
 		{
 			auto &entry = leafNode->entries()[i];
-			walker(entry.key, entry.value);
+			if (!pred(entry.key, entry.value))
+			{
+				return false;
+			}
 		}
 	}
 	else
@@ -478,7 +480,44 @@ void DatumHashTree::walk(const DatumHashTree *tree, const std::function<void(Any
 
 		for(std::uint32_t i = 0; i < arrayNode->childCount(); i++)
 		{
-			walk(arrayNode->children()[i], walker);
+			if (!every(arrayNode->children()[i], pred))
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+void DatumHashTree::walkCellRefs(DatumHashTree *tree, alloc::CellRefWalker &walker, const std::function<void(AnyCell**, AnyCell**)> &visitor)
+{
+	if (tree == nullptr)
+	{
+		return;
+	}
+	else if (tree->isLeafNode())
+	{
+		auto leafNode = static_cast<LeafNode*>(tree);
+
+		if (!walker.shouldVisitDatumHashSubtree(tree))
+		{
+			return;
+		}
+
+		for(std::size_t i = 0; i < leafNode->entryCount(); i++)
+		{
+			auto &entry = leafNode->entries()[i];
+			visitor(&entry.key, &entry.value);
+		}
+	}
+	else
+	{
+		auto arrayNode = static_cast<const ArrayNode*>(tree);
+
+		for(std::uint32_t i = 0; i < arrayNode->childCount(); i++)
+		{
+			walkCellRefs(arrayNode->children()[i], walker, visitor);
 		}
 	}
 }

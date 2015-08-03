@@ -20,7 +20,9 @@
 #include "binding/EofObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/ErrorObjectCell.h"
+#include "binding/HashMapCell.h"
 
+#include "hash/DatumHashTree.h"
 #include "classmap/RecordClassMap.h"
 
 namespace
@@ -162,6 +164,19 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 		auto irritantsHash = (*this)(errObjCell->irritants());
 
 		return combineHash(messageHash, irritantsHash) ^ static_cast<ResultType>(errObjCell->category());
+	}
+	else if (auto hashMapCell = cell_cast<HashMapCell>(datum))
+	{
+		auto runningHash = 0x8eb51105;
+
+		DatumHashTree::every(hashMapCell->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+		{
+			// Note that we don't combine the running hash so the order of iteration does not matter
+			runningHash ^= combineHash((*this)(key), (*this)(value));
+			return true;
+		});
+
+		return runningHash;
 	}
 	else
 	{

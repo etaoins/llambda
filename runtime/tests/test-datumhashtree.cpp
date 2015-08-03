@@ -52,9 +52,10 @@ void testBasicImmutable(World &world)
 		ASSERT_NULL(DatumHashTree::find(emptyTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(emptyTree, stringThree));
 
-		DatumHashTree::walk(emptyTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(emptyTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			ASSERT_TRUE(false);
+			return true;
 		});
 	};
 
@@ -118,7 +119,7 @@ void testBasicImmutable(World &world)
 		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringThree), intThree.data());
 
 		bool seenValues[4] = {false};
-		DatumHashTree::walk(fourValueTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(value)->value();
 
@@ -126,6 +127,7 @@ void testBasicImmutable(World &world)
 			ASSERT_FALSE(seenValues[intValue]);
 
 			seenValues[intValue] = true;
+			return true;
 		});
 
 		for(std::size_t i = 0; i < 4; i++)
@@ -153,7 +155,7 @@ void testBasicImmutable(World &world)
 		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringThree), intZero.data());
 
 		bool seenValues[4] = {false};
-		DatumHashTree::walk(fourValueTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(value)->value();
 
@@ -161,6 +163,7 @@ void testBasicImmutable(World &world)
 			ASSERT_FALSE(seenValues[intValue]);
 
 			seenValues[intValue] = true;
+			return true;
 		});
 
 		for(std::size_t i = 0; i < 4; i++)
@@ -233,9 +236,10 @@ void testBasicImmutable(World &world)
 		ASSERT_NULL(DatumHashTree::find(fourRemovedTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(fourRemovedTree, stringThree));
 
-		DatumHashTree::walk(fourRemovedTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(fourRemovedTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			ASSERT_TRUE(false);
+			return true;
 		});
 	};
 
@@ -355,7 +359,7 @@ void testLargeImmutableTree(World &world)
 			}
 		}
 
-		DatumHashTree::walk(oddFalseTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(oddFalseTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(key)->value();
 
@@ -367,6 +371,8 @@ void testLargeImmutableTree(World &world)
 			{
 				ASSERT_EQUAL(value, BooleanCell::trueInstance());
 			}
+
+			return true;
 		});
 	};
 
@@ -403,10 +409,11 @@ void testLargeImmutableTree(World &world)
 			}
 		}
 
-		DatumHashTree::walk(removedEvenTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(removedEvenTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(key)->value();
 			ASSERT_TRUE(intValue % 2);
+			return true;
 		});
 	};
 
@@ -432,9 +439,10 @@ void testLargeImmutableTree(World &world)
 			ASSERT_NULL(DatumHashTree::find(removedAllTree, intCell));
 		}
 
-		DatumHashTree::walk(removedAllTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(removedAllTree, [&] (AnyCell *key, AnyCell *value)
 		{
 			ASSERT_TRUE(false);
+			return true;
 		});
 	};
 

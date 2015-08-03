@@ -7,7 +7,7 @@
 
 #include "alloc/GarbageState.h"
 #include "alloc/AllocCell.h"
-#include "alloc/cellvisitor.h"
+#include "alloc/CellRefWalker.h"
 #include "alloc/CellRootList.h"
 #include "alloc/Heap.h"
 
@@ -74,6 +74,8 @@ size_t collect(World &world, Heap &newHeap)
 {
 	size_t reachableCells = 0;
 
+	CellRefWalker walker;
+
 	auto rootVisitor = [&] (AnyCell **cellRef) -> bool
 	{
 		AnyCell *oldCellLocation = *cellRef;
@@ -114,35 +116,35 @@ size_t collect(World &world, Heap &newHeap)
 	};
 
 	// Visit each runtime GC root
-	visitCellRootList(world.strongRoots(), rootVisitor);
+	walker.visitCellRootList(world.strongRoots(), rootVisitor);
 
 	// Visit each compiler GC root
-	visitShadowStack(world.shadowStackHead, rootVisitor);
+	walker.visitShadowStack(world.shadowStackHead, rootVisitor);
 
 	// Visit the dynamic state
 	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
 	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
-	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell()), rootVisitor);
+	walker.visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell()), rootVisitor);
 
 	// Is this world an actor?
 	if (world.actorContext())
 	{
-		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->closureRef()), rootVisitor);
+		walker.visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->closureRef()), rootVisitor);
 
 		if (world.actorContext()->behaviour())
 		{
-			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
+			walker.visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
 		}
 
 		if (world.actorContext()->supervisorStrategy())
 		{
-			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->supervisorStrategyRef()), rootVisitor);
+			walker.visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->supervisorStrategyRef()), rootVisitor);
 		}
 	}
 
 	// Visit each runtime weak root
-	visitCellRootList(world.weakRoots(), weakRefVisitor);
+	walker.visitCellRootList(world.weakRoots(), weakRefVisitor);
 
 	return reachableCells;
 }
