@@ -12,7 +12,7 @@ namespace alloc
 
 MemoryBlock* MemoryBlock::create(std::size_t size)
 {
-	MemoryBlock *newAlloc = static_cast<MemoryBlock*>(calloc(1, size));
+	MemoryBlock *newAlloc = static_cast<MemoryBlock*>(malloc(size));
 
 	if (newAlloc == nullptr)
 	{
