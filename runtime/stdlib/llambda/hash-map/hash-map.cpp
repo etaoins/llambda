@@ -13,6 +13,8 @@ extern "C"
 
 using namespace lliby;
 
+using FoldProc = TypedProcedureCell<AnyCell*, AnyCell*, AnyCell*, AnyCell*>;
+
 HashMapCell *llhashmap_make_hash_map(World &world)
 {
 	return HashMapCell::createEmptyInstance(world);
@@ -113,6 +115,33 @@ ProperList<AnyCell> *llhashmap_hash_map_values(World &world, HashMapCell *hashMa
 	});
 
 	return ProperList<AnyCell>::create(world, values);
+}
+
+void llhashmap_hash_map_for_each(World &world, TypedProcedureCell<void, AnyCell *, AnyCell *> *walkerRaw, HashMapCell *hashMapRaw)
+{
+	alloc::HashMapRef hashMap(world, hashMapRaw);
+	alloc::StrongRef<TypedProcedureCell<void, AnyCell *, AnyCell *>> walker(world, walkerRaw);
+
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	{
+		walker->apply(world, key, value);
+		return true;
+	});
+}
+
+AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folderRaw, AnyCell *initialValue, HashMapCell *hashMapRaw)
+{
+	alloc::HashMapRef hashMap(world, hashMapRaw);
+	alloc::StrongRef<FoldProc> folder(world, folderRaw);
+	AnyCell *accum = initialValue;
+
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	{
+		accum = folder->apply(world, key, value, accum);
+		return true;
+	});
+
+	return accum;
 }
 
 }

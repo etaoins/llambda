@@ -129,3 +129,42 @@
   (assert-false (not (member 'two number-values)))
   (assert-false (not (member 'three number-values)))
   (assert-false (member 'four number-values))))
+
+(define-test "(hash-map-for-each)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
+
+  (define seen-1 #f)
+  (define seen-2 #f)
+  (define seen-3 #f)
+
+  (hash-map-for-each (lambda (key value)
+                       (case key
+                         ((1)
+                          (assert-false seen-1)
+                          (set! seen-1 #t))
+                         ((2)
+                          (assert-false seen-2)
+                          (set! seen-2 #t))
+                         ((3)
+                          (assert-false seen-3)
+                          (set! seen-3 #t))
+                         (else (error "Unexpected key" key)))) number-hash-map)
+
+  (assert-true seen-1)
+  (assert-true seen-2)
+  (assert-true seen-3)))
+
+(define-test "(hash-map-fold)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (define number-hash-map (alist->hash-map '((1 . "one") (2 . "one") (3 . "three") (2 . "two"))))
+
+  (define total (hash-map-fold (lambda (key value accum)
+                                 {accum + key + {(string-length value) * 10}}
+                                 ) 0 number-hash-map))
+
+  (assert-equal 116 total)))
