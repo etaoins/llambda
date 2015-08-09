@@ -2,6 +2,7 @@
 
 #include "binding/HashMapCell.h"
 #include "binding/ProperList.h"
+#include "binding/PairCell.h"
 #include "binding/TypedProcedureCell.h"
 
 #include "hash/DatumHashTree.h"
@@ -70,6 +71,48 @@ HashMapCell *llhashmap_alist_to_hash_map(World &world, ProperList<PairCell> *ali
 
 	newHashMap->setDatumHashTree(DatumHashTree::fromAssocList(alist));
 	return newHashMap;
+}
+
+ProperList<PairCell> *llhashmap_hash_map_to_alist(World &world, HashMapCell *hashMapRaw)
+{
+	alloc::HashMapRef hashMap(world, hashMapRaw);
+	alloc::StrongRefVector<PairCell> assocPairs(world);
+
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	{
+		assocPairs.push_back(PairCell::createInstance(world, key, value));
+		return true;
+	});
+
+	return ProperList<PairCell>::create(world, assocPairs);
+}
+
+ProperList<AnyCell> *llhashmap_hash_map_keys(World &world, HashMapCell *hashMapRaw)
+{
+	alloc::HashMapRef hashMap(world, hashMapRaw);
+	alloc::StrongRefVector<AnyCell> keys(world);
+
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	{
+		keys.push_back(key);
+		return true;
+	});
+
+	return ProperList<AnyCell>::create(world, keys);
+}
+
+ProperList<AnyCell> *llhashmap_hash_map_values(World &world, HashMapCell *hashMapRaw)
+{
+	alloc::HashMapRef hashMap(world, hashMapRaw);
+	alloc::StrongRefVector<AnyCell> values(world);
+
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	{
+		values.push_back(value);
+		return true;
+	});
+
+	return ProperList<AnyCell>::create(world, values);
 }
 
 }

@@ -3,6 +3,7 @@
 
 #include "ListElementCell.h"
 #include <cassert>
+#include <utility>
 
 namespace lliby
 {
@@ -22,7 +23,7 @@ public:
 	}
 
 	/**
-	 * Creates a new instance of PairCell 
+	 * Creates a new instance of PairCell
 	 *
 	 * @param  world  World to allocate the pair in
 	 * @param  car    car value of the new pair. This will be GC rooted internally.
@@ -35,15 +36,15 @@ public:
 		assert(!isGlobalConstant());
 		m_car = obj;
 	}
-	
+
 	void setCdr(AnyCell *obj)
 	{
 		assert(!isGlobalConstant());
 		m_cdr = obj;
 	}
-	
+
 	// These are used by the garbage collector to update the car and cdr pointers during compaction
-	
+
 	AnyCell** carRef()
 	{
 		return &m_car;

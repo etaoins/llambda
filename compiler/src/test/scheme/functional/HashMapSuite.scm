@@ -81,3 +81,51 @@
   (assert-equal 'two (hash-map-ref/default number-hash-map 2 #f))
   (assert-equal 'three (hash-map-ref/default number-hash-map 3 #f))
   (assert-equal #f (hash-map-ref/default number-hash-map 4 #f))))
+
+(define-test "(hash-map->alist)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
+
+  (define number-assoc (hash-map->alist number-hash-map))
+  (ann number-assoc (Listof (Pairof <exact-integer> <symbol>)))
+
+  (assert-equal 3 (length number-assoc))
+
+  (assert-equal 'one (cdr (assoc 1 number-assoc)))
+  (assert-equal 'two (cdr (assoc 2 number-assoc)))
+  (assert-equal 'three (cdr (assoc 3 number-assoc)))
+  (assert-equal #f (assoc 4 number-assoc))))
+
+(define-test "(hash-map-keys)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
+
+  (define number-keys (hash-map-keys number-hash-map))
+  (ann number-keys (Listof <exact-integer>))
+
+  (assert-equal 3 (length number-keys))
+
+  (assert-false (not (member 1 number-keys)))
+  (assert-false (not (member 2 number-keys)))
+  (assert-false (not (member 3 number-keys)))
+  (assert-false (member 4 number-keys))))
+
+(define-test "(hash-map-values)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
+
+  (define number-values (hash-map-values number-hash-map))
+  (ann number-values (Listof <symbol>))
+
+  (assert-equal 3 (length number-values))
+
+  (assert-false (not (member 'one number-values)))
+  (assert-false (not (member 'two number-values)))
+  (assert-false (not (member 'three number-values)))
+  (assert-false (member 'four number-values))))
