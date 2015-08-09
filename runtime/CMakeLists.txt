@@ -80,6 +80,11 @@ add_library(ll_llambda_error
 	stdlib/llambda/error/error.cpp
 )
 
+add_library(ll_llambda_hashmap
+	stdlib/llambda/hash-map/hash-map.cpp
+)
+
+
 add_library(ll_llambda_random
 	stdlib/llambda/random/random.cpp
 )
