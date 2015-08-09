@@ -82,6 +82,23 @@
   (assert-equal 'three (hash-map-ref/default number-hash-map 3 #f))
   (assert-equal #f (hash-map-ref/default number-hash-map 4 #f))))
 
+(define-test "(hash-map-ref)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+  (import (llambda error))
+
+  (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
+  (ann number-hash-map (HashMap <exact-integer> <symbol>))
+
+  (assert-equal 3 (hash-map-size number-hash-map))
+  (assert-equal 'one (hash-map-ref number-hash-map 1))
+  (assert-equal 'two (hash-map-ref number-hash-map 2))
+  (assert-equal 'three (hash-map-ref number-hash-map 3))
+  (assert-equal 'four (hash-map-ref number-hash-map 4 (lambda () 'four)))
+
+  (assert-raises invalid-argument-error?
+    (assert-equal #f (hash-map-ref number-hash-map 4)))))
+
 (define-test "(hash-map->alist)" (expect-success
   (import (llambda hash-map))
   (import (llambda typed))

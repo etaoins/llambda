@@ -14,6 +14,7 @@ extern "C"
 using namespace lliby;
 
 using FoldProc = TypedProcedureCell<AnyCell*, AnyCell*, AnyCell*, AnyCell*>;
+using DefaultProc = TypedProcedureCell<AnyCell*>;
 
 HashMapCell *llhashmap_make_hash_map(World &world)
 {
@@ -49,6 +50,20 @@ AnyCell *llhashmap_hash_map_ref_default(HashMapCell *hashMap, AnyCell *key, AnyC
 	if (treeValue == nullptr)
 	{
 		return defaultValue;
+	}
+	else
+	{
+		return treeValue;
+	}
+}
+
+AnyCell *llhashmap_hash_map_ref(World &world, HashMapCell *hashMap, AnyCell *key, DefaultProc *defaultProc)
+{
+	AnyCell *treeValue = DatumHashTree::find(hashMap->datumHashTree(), key);
+
+	if (treeValue == nullptr)
+	{
+		return defaultProc->apply(world);
 	}
 	else
 	{
