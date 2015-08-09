@@ -34,10 +34,18 @@ case class ProcedureSignature(
   def toPolymorphic =
     PolymorphicSignature(Set(), this)
 
-  def toSchemeProcedureType =
+  def toSchemeProcedureType = {
+    val schemeReturnType = if (attributes.contains(ProcedureAttribute.NoReturn)) {
+      vt.ReturnType.SingleValue(vt.EmptySchemeType)
+    }
+    else {
+      returnType.schemeReturnType
+    }
+
     vt.ProcedureType(
       fixedArgTypes=fixedArgTypes.map(_.schemeType),
       restArgMemberTypeOpt=restArgMemberTypeOpt,
-      returnType=returnType.schemeReturnType
+      returnType=schemeReturnType
     )
+  }
 }
