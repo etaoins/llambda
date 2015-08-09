@@ -185,3 +185,18 @@
                                  ) 0 number-hash-map))
 
   (assert-equal 116 total)))
+
+(define-test "(hash)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (assert-equal (hash "One") (hash "One"))
+  (assert-equal (hash 'One) (hash 'One))
+  (assert-equal (hash 1) (hash 1))
+  (assert-equal (hash #(1)) (hash #(1)))
+  (assert-equal (hash '(1)) (hash '(1)))
+
+  (assert-true (< (hash "Japan" 1) 1))
+  (assert-true (< (hash "France" 2) 2))
+  (assert-true (< (hash "United Kingdom" 3) 3))
+  (assert-true (< (hash "Germany" 4) 4))))

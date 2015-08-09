@@ -6,6 +6,7 @@
 #include "binding/TypedProcedureCell.h"
 
 #include "hash/DatumHashTree.h"
+#include "hash/DatumHash.h"
 #include "alloc/cellref.h"
 
 extern "C"
@@ -157,6 +158,12 @@ AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folderRaw, AnyCell *ini
 	});
 
 	return accum;
+}
+
+std::uint32_t llhashmap_hash(AnyCell *datum, std::int64_t bound)
+{
+	DatumHash hasher;
+	return hasher(datum) % bound;
 }
 
 }
