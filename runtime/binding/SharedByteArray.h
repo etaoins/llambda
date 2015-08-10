@@ -7,6 +7,8 @@
 #include <limits>
 #include <atomic>
 
+#include "hash/SharedByteHash.h"
+
 namespace lliby
 {
 
@@ -19,6 +21,8 @@ namespace lliby
 class SharedByteArray
 {
 public:
+	using HashValueType = SharedByteHash::ResultType;
+
 	constexpr static std::size_t maximumCapacity()
 	{
 		// We're limited by the maximum allocation size
@@ -133,6 +137,24 @@ public:
 	}
 
 	/**
+	 * Returns the hash value for the SharedByteArray data
+	 *
+	 * This will lazily calculate the value and cache it on the instance.
+	 *
+	 * @param  bytes  Size in bytes of the byte array
+	 *
+	 * @sa cachedHashValue()
+	 */
+	HashValueType hashValue(std::size_t size) const;
+
+	/**
+	 * Compares the contents of this byte array with another for equality
+	 *
+	 * This will may use the hash value of the byte arrays as an optimisation.
+	 */
+	bool isEqual(const SharedByteArray *other, std::size_t size) const;
+
+	/**
 	 * Returns the number of active SharedByteArray instances
 	 *
 	 * If leak checking is disabled this always returns 0
@@ -161,6 +183,7 @@ private:
 #endif
 
 	std::atomic<RefCountType> m_refCount;
+	mutable HashValueType m_cachedHashValue;
 	std::uint8_t m_data[];
 };
 

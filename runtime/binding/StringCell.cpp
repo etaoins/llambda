@@ -605,7 +605,7 @@ std::vector<UnicodeChar> StringCell::unicodeChars(SliceIndexType start, SliceInd
 
 	return ret;
 }
-	
+
 bool StringCell::operator==(const StringCell &other) const
 {
 	if (byteLength() != other.byteLength())
@@ -613,13 +613,25 @@ bool StringCell::operator==(const StringCell &other) const
 		return false;
 	}
 
-	if (constUtf8Data() == other.constUtf8Data())
+	if (dataIsInline())
 	{
-		// We're either the same cell or implicitly sharing the same data
-		return true;
+		auto thisInlineString = static_cast<const InlineStringCell*>(this);
+		auto otherInlineString = static_cast<const InlineStringCell*>(&other);
+
+		return memcmp(
+				thisInlineString->inlineData(),
+				otherInlineString->inlineData(),
+				thisInlineString->inlineByteLength()) == 0;
 	}
-	
-	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
+	else
+	{
+		auto thisHeapString = static_cast<const HeapStringCell*>(this);
+
+		auto thisByteArray = thisHeapString->heapByteArray();
+		auto otherByteArray = static_cast<const HeapStringCell*>(&other)->heapByteArray();
+
+		return thisByteArray->isEqual(otherByteArray, thisHeapString->heapByteLength());
+	}
 }
 
 int StringCell::compare(const StringCell *other) const
@@ -715,6 +727,22 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (*converter)
 	}
 
 	return builder.result(world);
+}
+
+SharedByteHash::ResultType StringCell::sharedByteHash() const
+{
+	if (dataIsInline())
+	{
+		auto inlineString = static_cast<const InlineStringCell*>(this);
+
+		SharedByteHash byteHasher;
+		return byteHasher(inlineString->inlineData(), inlineString->inlineByteLength());
+	}
+	else
+	{
+		auto heapString = static_cast<const HeapStringCell*>(this);
+		return heapString->heapByteArray()->hashValue(heapString->heapByteLength());
+	}
 }
 
 void StringCell::finalizeString()

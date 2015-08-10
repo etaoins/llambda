@@ -23,22 +23,12 @@
 #include "binding/HashMapCell.h"
 
 #include "hash/DatumHashTree.h"
+#include "hash/SharedByteHash.h"
 #include "classmap/RecordClassMap.h"
 
 namespace
 {
 using ResultType = lliby::DatumHash::ResultType;
-
-std::uint32_t djb2StringHash(const std::uint8_t *data, std::size_t length)
-{
-	std::uint32_t h = 5381;
-	for(std::size_t i = 0; i < length; i++)
-	{
-		h = (h * 33) + data[i];
-	}
-
-	return h;
-}
 
 template<typename T>
 ResultType convertToResultType(T value)
@@ -71,11 +61,11 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 {
 	if (auto stringCell = cell_cast<StringCell>(datum))
 	{
-		return djb2StringHash(stringCell->constUtf8Data(), stringCell->byteLength()) ^ 0x50b778f2;
+		return stringCell->sharedByteHash() ^ 0x50b778f2;
 	}
 	else if (auto symbolCell = cell_cast<SymbolCell>(datum))
 	{
-		return djb2StringHash(symbolCell->constUtf8Data(), symbolCell->byteLength()) ^ 0x636720ec;
+		return symbolCell->sharedByteHash() ^ 0x636720ec;
 	}
 	else if (auto booleanCell = cell_cast<BooleanCell>(datum))
 	{
@@ -114,7 +104,7 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 	}
 	else if (auto bvCell = cell_cast<BytevectorCell>(datum))
 	{
-		return djb2StringHash(bvCell->byteArray()->data(), bvCell->length()) ^ 0x2bd5dbe9;
+		return bvCell->byteArray()->hashValue(bvCell->length()) ^ 0x2bd5dbe9;
 	}
 	else if (EmptyListCell::isInstance(datum))
 	{
@@ -187,6 +177,7 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 
 ResultType DatumHash::hashRecordLike(RecordLikeCell *recordLike) const
 {
+	SharedByteHash byteHasher;
 	ResultType h = recordLike->recordClassId();
 
 	const RecordClassMap *classMap = recordLike->classMap();
@@ -198,13 +189,13 @@ ResultType DatumHash::hashRecordLike(RecordLikeCell *recordLike) const
 		std::size_t nextCellOffset = classMap->offsets[i];
 		auto cellValue = *reinterpret_cast<AnyCell*const*>(dataBase + nextCellOffset);
 
-		h = combineHash(h, djb2StringHash(&dataBase[currentByte], nextCellOffset - currentByte));
+		h = combineHash(h, byteHasher(&dataBase[currentByte], nextCellOffset - currentByte));
 		h = combineHash(h, (*this)(cellValue));
 
 		currentByte = nextCellOffset + sizeof(AnyCell*);
 	}
 
-	return combineHash(h, djb2StringHash(&dataBase[currentByte], classMap->totalSize - currentByte));
+	return combineHash(h, byteHasher(&dataBase[currentByte], classMap->totalSize - currentByte));
 }
 
 }

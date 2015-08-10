@@ -51,10 +51,24 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     constantDataDef.variable
   }
 
+  private val uninitialisedHashValue = 0
+  private val uninitialisedHashRemapValue = 0x86b2bb0d
+
+  private def sharedShortHash(bytes : Seq[Short]) : Int = {
+    val hash = bytes.foldLeft(5381) { (hash, byte) => (hash * 33) + byte }
+    if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
+  }
+
+  private def sharedByteHash(bytes : Seq[Byte]) : Int = {
+    val hash = bytes.foldLeft(5381) { (hash, byte) => (hash * 33) + (byte & 0xff) }
+    if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
+  }
+
   private def genHeapUtf8Constant(module : IrModuleBuilder)(baseName : String, utf8Data : Array[Byte]) : IrConstant = {
     val innerConstantName = baseName + ".strByteArray"
     val innerConstantInitializer = StructureConstant(List(
       IntegerConstant(IntegerType(32), sharedConstantRefCount),
+      IntegerConstant(IntegerType(32), sharedByteHash(utf8Data)),
       StringConstant(utf8Data)
     ))
 
@@ -88,10 +102,11 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
     val elementsName = baseName + ".elementsByteArray"
     val elementsInitializer = StructureConstant(List(
-      IntegerConstant(IntegerType(32), sharedConstantRefCount), 
+      IntegerConstant(IntegerType(32), sharedConstantRefCount),
+      IntegerConstant(IntegerType(32), sharedShortHash(elements)),
       ArrayConstant(IntegerType(8), elementIrs)
     ))
-    
+
     val elementsValue = defineConstantData(module)(elementsName, elementsInitializer)
 
     val bytevectorCellName = baseName + ".cell"

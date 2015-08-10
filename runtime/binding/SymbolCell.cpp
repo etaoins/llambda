@@ -108,13 +108,25 @@ bool SymbolCell::operator==(const SymbolCell &other) const
 		return false;
 	}
 
-	if (constUtf8Data() == other.constUtf8Data())
+	if (dataIsInline())
 	{
-		// We're either the same cell or implicitly sharing the same data
-		return true;
-	}
+		auto thisInlineSymbol = static_cast<const InlineSymbolCell*>(this);
+		auto otherInlineSymbol = static_cast<const InlineSymbolCell*>(&other);
 
-	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
+		return memcmp(
+				thisInlineSymbol->inlineData(),
+				otherInlineSymbol->inlineData(),
+				thisInlineSymbol->inlineByteLength()) == 0;
+	}
+	else
+	{
+		auto thisHeapSymbol = static_cast<const HeapSymbolCell*>(this);
+
+		auto thisByteArray = thisHeapSymbol->heapByteArray();
+		auto otherByteArray = static_cast<const HeapSymbolCell*>(&other)->heapByteArray();
+
+		return thisByteArray->isEqual(otherByteArray, thisHeapSymbol->heapByteLength());
+	}
 }
 
 SymbolCell* SymbolCell::copy(alloc::Heap &heap)
@@ -143,6 +155,22 @@ SymbolCell* SymbolCell::copy(alloc::Heap &heap)
 				heapThis->heapByteLength(),
 				heapThis->heapCharLength()
 		);
+	}
+}
+
+SharedByteHash::ResultType SymbolCell::sharedByteHash() const
+{
+	if (dataIsInline())
+	{
+		auto inlineSymbol = static_cast<const InlineSymbolCell*>(this);
+
+		SharedByteHash byteHasher;
+		return byteHasher(inlineSymbol->inlineData(), inlineSymbol->inlineByteLength());
+	}
+	else
+	{
+		auto heapSymbol = static_cast<const HeapSymbolCell*>(this);
+		return heapSymbol->heapByteArray()->hashValue(heapSymbol->heapByteLength());
 	}
 }
 

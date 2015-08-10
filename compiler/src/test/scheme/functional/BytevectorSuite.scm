@@ -167,3 +167,15 @@
   (define a (bytevector 1 2 3 4 5))
   (define b (bytevector 10 20 30 40 50))
   (bytevector-copy! b 2 a 1)))
+
+(define-test "bytevector (hash)" (expect-success
+  (import (llambda hash-map))
+
+  (define test-bv (make-bytevector 20 0))
+
+  ; Calculate a hash value and make sure its stable
+  (define first-hash-value (hash test-bv))
+  (assert-equal first-hash-value (hash test-bv))
+
+  (bytevector-u8-set! test-bv 0 50)
+  (assert-false (equal? first-hash-value (hash test-bv)))))

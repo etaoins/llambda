@@ -9,7 +9,8 @@ namespace lliby
 {
 class RecordLikeCell;
 
-/** Function object for calculatng the hash of AnyCell objects for (equals?) equality
+/**
+ * Function object for calculatng the hash of AnyCell objects for (equals?) equality
  *
  * This can be used directly as a Hash function for STL containers
  */

@@ -77,6 +77,13 @@ public:
 	 */
 	std::uint32_t charLength() const;
 
+	/**
+	 * Returns the shared byte hash for the UTF-8 data of the string
+	 *
+	 * This is not the same as the datum hash. Use DatumHash to hash the StringCell itself.
+	 */
+	SharedByteHash::ResultType sharedByteHash() const;
+
 	void finalizeSymbol();
 
 protected:

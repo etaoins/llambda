@@ -202,12 +202,7 @@ bool AnyCell::isEqual(const AnyCell *other) const
 				return false;
 			}
 
-			// Compare the data byte for byte
-			return memcmp(
-					thisBytevector->byteArray()->data(),
-					otherBytevector->byteArray()->data(),
-					thisBytevector->length()
-				) == 0;
+			return thisBytevector->byteArray()->isEqual(otherBytevector->byteArray(), thisBytevector->length());
 		}
 	}
 	else if (auto thisMailboxCell = cell_cast<MailboxCell>(this))

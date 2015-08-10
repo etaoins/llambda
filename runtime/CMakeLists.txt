@@ -52,6 +52,7 @@ add_library(llcore
 	dynamic/init.cpp
 	hash/DatumHash.cpp
 	hash/DatumHashTree.cpp
+	hash/SharedByteHash.cpp
 	platform/memory.cpp
 	platform/time.cpp
 	port/StandardInputPort.cpp

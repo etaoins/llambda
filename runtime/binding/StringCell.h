@@ -10,6 +10,7 @@
 #include <string>
 #include <limits>
 
+#include "hash/SharedByteHash.h"
 #include "unicode/UnicodeChar.h"
 
 namespace lliby
@@ -143,6 +144,13 @@ public:
 	{
 		return std::string(reinterpret_cast<const char*>(constUtf8Data()), byteLength());
 	}
+
+	/**
+	 * Returns the shared byte hash for the UTF-8 data of the string
+	 *
+	 * This is not the same as the datum hash. Use DatumHash to hash the StringCell itself.
+	 */
+	SharedByteHash::ResultType sharedByteHash() const;
 
 	void finalizeString();
 

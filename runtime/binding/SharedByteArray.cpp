@@ -28,7 +28,8 @@ namespace
 
 
 SharedByteArray::SharedByteArray(RefCountType initialRefCount) :
-	m_refCount(initialRefCount)
+	m_refCount(initialRefCount),
+	m_cachedHashValue(SharedByteHash::ImpossibleResultValue)
 {
 	incrementInstanceCount();
 }
@@ -59,7 +60,8 @@ SharedByteArray* SharedByteArray::asWritable(std::size_t bytes)
 {
 	if (isExclusive())
 	{
-		// We have an exclusive copy
+		// We have an exclusive copy. Make sure we invalidate our hash value before modification.
+		m_cachedHashValue = SharedByteHash::ImpossibleResultValue;
 		return this;
 	}
 	else
@@ -73,6 +75,36 @@ SharedByteArray* SharedByteArray::asWritable(std::size_t bytes)
 
 		return duplicateCopy;
 	}
+}
+
+SharedByteArray::HashValueType SharedByteArray::hashValue(std::size_t size) const
+{
+	if (m_cachedHashValue == SharedByteHash::ImpossibleResultValue)
+	{
+		SharedByteHash byteHasher;
+		m_cachedHashValue = byteHasher(m_data, size);
+	}
+
+	return m_cachedHashValue;
+}
+
+bool SharedByteArray::isEqual(const SharedByteArray *other, std::size_t size) const
+{
+	if (this == other)
+	{
+		return true;
+	}
+
+	if ((m_cachedHashValue != SharedByteHash::ImpossibleResultValue) &&
+			(other->m_cachedHashValue != SharedByteHash::ImpossibleResultValue))
+	{
+		if (m_cachedHashValue != other->m_cachedHashValue)
+		{
+			return false;
+		}
+	}
+
+	return memcmp(m_data, other->m_data, size) == 0;
 }
 
 bool SharedByteArray::unref()

@@ -22,4 +22,4 @@
 %shadowStackEntryHeader = type {%shadowStackEntryHeader*, i32}
 
 ; {refcount, data}
-%sharedByteArray = type {i32, [0 x i8]}
+%sharedByteArray = type {i32, i32, [0 x i8]}

@@ -330,3 +330,15 @@
 (define-test "(string-fill!) past end of string fails" (expect-error range-error?
   (define test-string (string-copy "01234567"))
   (string-fill! test-string #\☃ 9)))
+
+(define-test "string (hash)" (expect-success
+  (import (llambda hash-map))
+
+  (define test-string (make-string 20 #\a))
+
+  ; Calculate a hash value and make sure its stable
+  (define first-hash-value (hash test-string))
+  (assert-equal first-hash-value (hash test-string))
+
+  (string-set! test-string 0 #\b)
+  (assert-false (equal? first-hash-value (hash test-string)))))

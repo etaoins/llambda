@@ -25,7 +25,7 @@ object GenLoadSymbolByte {
       val sharedByteArrayIr = ct.HeapSymbolCell.genLoadFromHeapByteArray(block)(heapSymbolIr)
 
       // Load our byte
-      val gepIndices = List(0, 1).map(IntegerConstant(IntegerType(32), _)) :+ offsetIr
+      val gepIndices = List(0, 2).map(IntegerConstant(IntegerType(32), _)) :+ offsetIr
       block.getelementptr("bytePtr")(IntegerType(8), sharedByteArrayIr, gepIndices)
     }
 
