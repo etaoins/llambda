@@ -96,11 +96,11 @@ size_t forceCollection(World &world)
 	// Collect in to the new world
 	const size_t reachableCells = collect(world, nextCellHeap);
 
-	/* We can normally finalize memory in a background thread for better concurrency. However,  NO_ADDR_REUSE
+	/* We can normally finalize memory in a background thread for better concurrency. However,  ALWAYS_GC
 	 * immediately marks the memory as inaccessible which means the finalizer must be done with it before we return
 	 * from collection.
 	 */
-#if !defined(_LLIBY_NO_ADDR_REUSE)
+#if !defined(_LLIBY_ALWAYS_GC)
 	finalizer->finalizeHeapAsync(world.cellHeap);
 #else
 	finalizer->finalizeHeapSync(world.cellHeap);
