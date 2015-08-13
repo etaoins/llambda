@@ -54,13 +54,16 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
   private val uninitialisedHashValue = 0
   private val uninitialisedHashRemapValue = 0x86b2bb0d
 
+  private val FNV1APrime = 0x1000193
+  private val FNV1AOffsetBasis = -0x7EE3623B // 0x811C9DC5 as signed 32bit
+
   private def sharedShortHash(bytes : Seq[Short]) : Int = {
-    val hash = bytes.foldLeft(5381) { (hash, byte) => (hash * 33) + byte }
+    val hash = bytes.foldLeft(FNV1AOffsetBasis) { (hash, byte) => (hash ^ (byte & 0xff)) * FNV1APrime }
     if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
   }
 
   private def sharedByteHash(bytes : Seq[Byte]) : Int = {
-    val hash = bytes.foldLeft(5381) { (hash, byte) => (hash * 33) + (byte & 0xff) }
+    val hash = bytes.foldLeft(FNV1AOffsetBasis) { (hash, byte) => (hash ^ (byte & 0xff)) * FNV1APrime }
     if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
   }
 

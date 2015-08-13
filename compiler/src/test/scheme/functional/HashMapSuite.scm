@@ -196,6 +196,17 @@
   (assert-equal (hash #(1)) (hash #(1)))
   (assert-equal (hash '(1)) (hash '(1)))
 
+  ; Ensure the runtime and compile time hashes match
+  (assert-equal
+    (hash "Hello world! What's up?")
+    (hash (string-append (typeless-cell "Hello world! ") (typeless-cell "What's up?"))))
+
+  ; Ensure strings and bytevectors use compatible hashing
+  (assert-equal
+    (hash "Hello world! What's up?")
+    (hash (utf8->string (typeless-cell
+                          #u8(72 101 108 108 111 32 119 111 114 108 100 33 32 87 104 97 116 39 115 32 117 112 63)))))
+
   (assert-true (< (hash "Japan" 1) 1))
   (assert-true (< (hash "France" 2) 2))
   (assert-true (< (hash "United Kingdom" 3) 3))
