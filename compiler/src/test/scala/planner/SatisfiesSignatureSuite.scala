@@ -381,4 +381,21 @@ class SatisfiesSignatureSuite extends FunSuite {
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
   }
+
+  test("procedure returning void does not satisfy procedure returning value") {
+    val derivedSignature = ProcedureSignature(
+      hasWorldArg=false,
+      hasSelfArg=false,
+      fixedArgTypes=List(vt.NumberType),
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      attributes=Set()
+    )
+
+    val superSignature = derivedSignature.copy(
+      returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+    )
+
+    assert(SatisfiesSignature(superSignature, derivedSignature) === false)
+  }
 }

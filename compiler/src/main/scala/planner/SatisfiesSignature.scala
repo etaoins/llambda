@@ -84,9 +84,13 @@ object SatisfiesSignature {
     }
 
     val returnTypeSatisfies = (superSignature.returnType, derivedSignature.returnType) match {
+      case (superReturnType, derivedReturnType)
+          if superReturnType.representationTypeOpt.isDefined != derivedReturnType.representationTypeOpt.isDefined =>
+        false
+
       case (vt.ReturnType.SingleValue(superSingle), vt.ReturnType.SingleValue(derivedSingle)) =>
         satisfiesRepresentation(superSingle, derivedSingle)
-      
+
       case (vt.ReturnType.MultipleValues(superList), vt.ReturnType.MultipleValues(derivedList)) =>
         vt.SatisfiesType(superList, derivedList) == Some(true)
 
