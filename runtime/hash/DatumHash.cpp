@@ -159,10 +159,10 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 	{
 		auto runningHash = 0x8eb51105;
 
-		DatumHashTree::every(hashMapCell->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(hashMapCell->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
 		{
 			// Note that we don't combine the running hash so the order of iteration does not matter
-			runningHash ^= combineHash((*this)(key), (*this)(value));
+			runningHash ^= combineHash(hashValue, (*this)(value));
 			return true;
 		});
 

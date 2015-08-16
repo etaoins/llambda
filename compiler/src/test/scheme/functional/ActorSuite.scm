@@ -105,6 +105,7 @@
   (import (llambda error))
   (import (llambda typed))
   (import (llambda duration))
+  (import (llambda hash-map))
 
   (define ping-pong-actor
     (act (lambda ()
@@ -229,6 +230,10 @@
   (assert-equal (current-input-port) (ping-pong (current-input-port)))
   (assert-equal (current-output-port) (ping-pong (current-output-port)))
   (assert-equal (current-error-port) (ping-pong (current-error-port)))
+
+  ; Hash maps
+  (define test-hash-map (alist->hash-map '((one . 1) (two . 2) (three . 3))))
+  (assert-equal test-hash-map (ping-pong test-hash-map))
 
   ; Cloning preserves (eqv?)
   (define same-elem-vec (ping-pong (vector test-vec test-vec test-vec)))

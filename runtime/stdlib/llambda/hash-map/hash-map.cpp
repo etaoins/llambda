@@ -96,7 +96,7 @@ ProperList<PairCell> *llhashmap_hash_map_to_alist(World &world, HashMapCell *has
 	alloc::HashMapRef hashMap(world, hashMapRaw);
 	alloc::StrongRefVector<PairCell> assocPairs(world);
 
-	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
 		assocPairs.push_back(PairCell::createInstance(world, key, value));
 		return true;
@@ -110,7 +110,7 @@ ProperList<AnyCell> *llhashmap_hash_map_keys(World &world, HashMapCell *hashMapR
 	alloc::HashMapRef hashMap(world, hashMapRaw);
 	alloc::StrongRefVector<AnyCell> keys(world);
 
-	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
 		keys.push_back(key);
 		return true;
@@ -124,7 +124,7 @@ ProperList<AnyCell> *llhashmap_hash_map_values(World &world, HashMapCell *hashMa
 	alloc::HashMapRef hashMap(world, hashMapRaw);
 	alloc::StrongRefVector<AnyCell> values(world);
 
-	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
 		values.push_back(value);
 		return true;
@@ -138,7 +138,7 @@ void llhashmap_hash_map_for_each(World &world, TypedProcedureCell<void, AnyCell 
 	alloc::HashMapRef hashMap(world, hashMapRaw);
 	alloc::StrongRef<TypedProcedureCell<void, AnyCell *, AnyCell *>> walker(world, walkerRaw);
 
-	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
 		walker->apply(world, key, value);
 		return true;
@@ -151,7 +151,7 @@ AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folderRaw, AnyCell *ini
 	alloc::StrongRef<FoldProc> folder(world, folderRaw);
 	AnyCell *accum = initialValue;
 
-	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value)
+	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
 		accum = folder->apply(world, key, value, accum);
 		return true;

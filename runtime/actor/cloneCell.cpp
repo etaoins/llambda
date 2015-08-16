@@ -21,10 +21,13 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/ErrorCategory.h"
+#include "binding/HashMapCell.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 #include "dynamic/ParameterProcedureCell.h"
 #include "dynamic/State.h"
+
+#include "hash/DatumHashTree.h"
 
 #include "classmap/RecordClassMap.h"
 
@@ -189,6 +192,27 @@ namespace
 		return new (placement) ErrorObjectCell(message, irritants, errorObjectCell->category());
 	}
 
+	HashMapCell *cloneHashMap(alloc::Heap &heap, HashMapCell *hashMapCell, Context &context)
+	{
+		DatumHashTree *tree = DatumHashTree::createEmpty();
+
+		DatumHashTree::every(hashMapCell->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
+		{
+			AnyCell *newKey = cachedClone(heap, key, context);
+			AnyCell *newValue = cachedClone(heap, value, context);
+
+			DatumHashTree *newTree = DatumHashTree::assoc(tree, newKey, newValue, hashValue);
+
+			DatumHashTree::unref(tree);
+			tree = newTree;
+
+			return true;
+		});
+
+		auto placement = heap.allocate();
+		return new (placement) HashMapCell(tree);
+	}
+
 	AnyCell *uncachedClone(alloc::Heap &heap, AnyCell *cell, Context &context)
 	{
 		if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
@@ -258,6 +282,10 @@ namespace
 		else if (auto portCell = cell_cast<PortCell>(cell))
 		{
 			throw UnclonableCellException(portCell, "Ports cannot be cloned");
+		}
+		else if (auto hashMapCell = cell_cast<HashMapCell>(cell))
+		{
+			return cloneHashMap(heap, hashMapCell, context);
 		}
 
 		assert(false);

@@ -52,7 +52,7 @@ void testBasicImmutable(World &world)
 		ASSERT_NULL(DatumHashTree::find(emptyTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(emptyTree, stringThree));
 
-		DatumHashTree::every(emptyTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(emptyTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			ASSERT_TRUE(false);
 			return true;
@@ -119,7 +119,7 @@ void testBasicImmutable(World &world)
 		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringThree), intThree.data());
 
 		bool seenValues[4] = {false};
-		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(value)->value();
 
@@ -155,7 +155,7 @@ void testBasicImmutable(World &world)
 		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringThree), intZero.data());
 
 		bool seenValues[4] = {false};
-		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(value)->value();
 
@@ -236,7 +236,7 @@ void testBasicImmutable(World &world)
 		ASSERT_NULL(DatumHashTree::find(fourRemovedTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(fourRemovedTree, stringThree));
 
-		DatumHashTree::every(fourRemovedTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(fourRemovedTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			ASSERT_TRUE(false);
 			return true;
@@ -359,7 +359,7 @@ void testLargeImmutableTree(World &world)
 			}
 		}
 
-		DatumHashTree::every(oddFalseTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(oddFalseTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(key)->value();
 
@@ -409,7 +409,7 @@ void testLargeImmutableTree(World &world)
 			}
 		}
 
-		DatumHashTree::every(removedEvenTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(removedEvenTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			std::int64_t intValue = cell_cast<ExactIntegerCell>(key)->value();
 			ASSERT_TRUE(intValue % 2);
@@ -439,7 +439,7 @@ void testLargeImmutableTree(World &world)
 			ASSERT_NULL(DatumHashTree::find(removedAllTree, intCell));
 		}
 
-		DatumHashTree::every(removedAllTree, [&] (AnyCell *key, AnyCell *value)
+		DatumHashTree::every(removedAllTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
 			ASSERT_TRUE(false);
 			return true;

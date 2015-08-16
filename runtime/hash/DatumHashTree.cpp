@@ -208,7 +208,7 @@ public:
 	 *
 	 * Tge key must have the same hash value as the existing leaf node
 	 */
-	LeafNode* assocLeaf(AnyCell *key, DatumHash::ResultType hashValue, AnyCell *value)
+	LeafNode* assocLeaf(AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
 	{
 		// Check if the key is already in the hash
 		for(std::uint32_t i = 0; i < entryCount(); i++)
@@ -413,22 +413,19 @@ DatumHashTree* DatumHashTree::fromAssocList(ProperList<PairCell> *list)
 	return tree;
 }
 
-DatumHashTree* DatumHashTree::assoc(DatumHashTree *tree, AnyCell *key, AnyCell *value)
+DatumHashTree* DatumHashTree::assoc(DatumHashTree *tree, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
 {
-	DatumHash hashFunction;
-	return assocInternal(tree, 0, key, hashFunction(key), value);
+	return assocInternal(tree, 0, key, value, hashValue);
 }
 
-AnyCell* DatumHashTree::find(DatumHashTree *tree, AnyCell *key)
+AnyCell* DatumHashTree::find(DatumHashTree *tree, AnyCell *key, DatumHash::ResultType hashValue)
 {
-	DatumHash hashFunction;
-	return findInternal(tree, 0, key, hashFunction(key));
+	return findInternal(tree, 0, key, hashValue);
 }
 
-DatumHashTree* DatumHashTree::without(DatumHashTree *tree, AnyCell *key)
+DatumHashTree* DatumHashTree::without(DatumHashTree *tree, AnyCell *key, DatumHash::ResultType hashValue)
 {
-	DatumHash hashFunction;
-	return withoutInternal(tree, 0, key, hashFunction(key));
+	return withoutInternal(tree, 0, key, hashValue);
 }
 
 std::size_t DatumHashTree::size(const DatumHashTree *tree)
@@ -455,7 +452,7 @@ std::size_t DatumHashTree::size(const DatumHashTree *tree)
 	}
 }
 
-bool DatumHashTree::every(const DatumHashTree *tree, const std::function<bool(AnyCell*, AnyCell*)> &pred)
+bool DatumHashTree::every(const DatumHashTree *tree, const std::function<bool(AnyCell*, AnyCell*, DatumHash::ResultType)> &pred)
 {
 	if (tree == nullptr)
 	{
@@ -468,7 +465,7 @@ bool DatumHashTree::every(const DatumHashTree *tree, const std::function<bool(An
 		for(std::size_t i = 0; i < leafNode->entryCount(); i++)
 		{
 			auto &entry = leafNode->entries()[i];
-			if (!pred(entry.key, entry.value))
+			if (!pred(entry.key, entry.value, leafNode->hashValue()))
 			{
 				return false;
 			}
@@ -522,7 +519,7 @@ void DatumHashTree::walkCellRefs(DatumHashTree *tree, alloc::CellRefWalker &walk
 	}
 }
 
-DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue, AnyCell *value)
+DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
 {
 	if (tree == nullptr)
 	{
@@ -538,7 +535,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 
 		if (leafNode->hashValue() == hashValue)
 		{
-			return leafNode->assocLeaf(key, hashValue, value);
+			return leafNode->assocLeaf(key, value, hashValue);
 		}
 
 		// Create an array node with a single value. Note we don't want to directly create a node with two values as
@@ -547,7 +544,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 		ArrayNode *newArrayNode = ArrayNode::fromSingleChild(childIndex, leafNode->ref());
 
 		// Note that we don't increase the level here because we're creating a new node on the current level
-		DatumHashTree *mergedArrayNode = assocInternal(newArrayNode, level, key, hashValue, value);
+		DatumHashTree *mergedArrayNode = assocInternal(newArrayNode, level, key, value, hashValue);
 		newArrayNode->unref();
 
 		return mergedArrayNode;
@@ -559,7 +556,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 		auto childIndex = ArrayNode::childIndex(level, hashValue);
 		DatumHashTree* childNode = arrayNode->childAtIndex(childIndex);
 
-		DatumHashTree *newChildNode = assocInternal(childNode, level + LevelShiftSize, key, hashValue, value);
+		DatumHashTree *newChildNode = assocInternal(childNode, level + LevelShiftSize, key, value, hashValue);
 
 		if (childNode == newChildNode)
 		{

@@ -257,9 +257,9 @@ bool AnyCell::isEqual(const AnyCell *other) const
 				return false;
 			}
 
-			return DatumHashTree::every(thisHashTree, [=] (AnyCell *key, AnyCell *thisValue)
+			return DatumHashTree::every(thisHashTree, [=] (AnyCell *key, AnyCell *thisValue, DatumHash::ResultType hashValue)
 			{
-				AnyCell *otherValue = DatumHashTree::find(otherHashTree, key);
+				AnyCell *otherValue = DatumHashTree::find(otherHashTree, key, hashValue);
 				return otherValue && thisValue->isEqual(otherValue);
 			});
 		}
