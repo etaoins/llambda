@@ -160,6 +160,27 @@ AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folderRaw, AnyCell *ini
 	return accum;
 }
 
+HashMapCell* llhashmap_hash_map_merge(World &world, HashMapCell *sourceHashMapRaw, HashMapCell *overrideHashMapRaw)
+{
+	alloc::HashMapRef sourceHashMap(world, sourceHashMapRaw);
+	alloc::HashMapRef overrideHashMap(world, overrideHashMapRaw);
+
+	DatumHashTree *resultTree = DatumHashTree::ref(sourceHashMap->datumHashTree());
+	void *placement = alloc::allocateCells(world);
+
+	DatumHashTree::every(overrideHashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
+	{
+		DatumHashTree *newTree = DatumHashTree::assoc(resultTree, key, value, hashValue);
+		DatumHashTree::unref(resultTree);
+
+		resultTree = newTree;
+
+		return true;
+	});
+
+	return new (placement) HashMapCell(resultTree);
+}
+
 std::uint32_t llhashmap_hash(AnyCell *datum, std::int64_t bound)
 {
 	DatumHash hasher;

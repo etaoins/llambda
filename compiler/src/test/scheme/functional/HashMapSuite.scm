@@ -186,6 +186,21 @@
 
   (assert-equal 116 total)))
 
+(define-test "(hash-map-merge)" (expect-success
+  (import (llambda hash-map))
+  (import (llambda typed))
+
+  (define source-hash-map-1 (alist->hash-map '((1 . #f) (2 . #f) (3 . #f))))
+  (define source-hash-map-2 (alist->hash-map '((1 . #t) (3 . #t) (4 . #f))))
+
+  (define actual-hash-map (hash-map-merge source-hash-map-1 source-hash-map-2))
+  (define expected-hash-map (alist->hash-map '((1 . #t) (2 . #f) (3 . #t) (4 . #f))))
+
+  (ann actual-hash-map (HashMap <exact-integer> <boolean>))
+
+  (assert-equal 4 (hash-map-size actual-hash-map))
+  (assert-equal actual-hash-map expected-hash-map)))
+
 (define-test "(hash)" (expect-success
   (import (llambda hash-map))
   (import (llambda typed))
@@ -300,6 +315,10 @@
   (assert-equal 3 (hash-table-ref reverse-hash 'three))
   (assert-equal 8 (hash-table-ref reverse-hash 'four))
   (assert-equal 25 (hash-table-ref reverse-hash 'five))
+
+  (define merged-hash (hash-table-merge! reverse-hash (alist->hash-table '((two . 4) (six . 36)))))
+  (assert-equal 4 (hash-table-ref merged-hash 'two))
+  (assert-equal 36 (hash-table-ref merged-hash 'six))
 
   (assert-equal number-hash-table-copy (alist->hash-table '((1 . one) (2 . two) (3 . three))))
 

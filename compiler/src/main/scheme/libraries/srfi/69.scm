@@ -8,8 +8,8 @@
   (export make-hash-table hash-table? hash-table-equivalence-function hash-table-hash-function alist->hash-table
           hash-table-ref hash-table-ref/default hash-table-set! hash-table-delete! hash-table-exists?
           hash-table-update! hash-table-update!/default hash-table-size hash-table-keys hash-table-values
-          hash-table-walk hash-table-fold hash-table->alist hash-table-copy hash string-hash string-ci-hash
-          hash-by-identity)
+          hash-table-walk hash-table-fold hash-table->alist hash-table-copy hash-table-merge! hash string-hash
+          string-ci-hash hash-by-identity)
 
   (begin
     (define-record-type <hash-table> (make-hash-table-internal hash-map) hash-table?
@@ -91,6 +91,10 @@
 
     (define (hash-table-copy [hash-table : <hash-table>])
       (make-hash-table-internal (hash-table-hash-map hash-table)))
+
+    (define (hash-table-merge! [hash-table-1 : <hash-table>] [hash-table-2 : <hash-table>])
+      (define merged-hash-map (hash-map-merge (hash-table-hash-map hash-table-1) (hash-table-hash-map hash-table-2)))
+      (make-hash-table-internal merged-hash-map))
 
     (define (string-hash [str : <string>]) (hash str))
     (define (string-ci-hash [str : <string>]) (hash (string-foldcase str)))
