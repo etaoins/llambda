@@ -561,6 +561,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 		if (childNode == newChildNode)
 		{
 			// Nothing to do!
+			DatumHashTree::unref(childNode);
 			return arrayNode->ref();
 		}
 		else

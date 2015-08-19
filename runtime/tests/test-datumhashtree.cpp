@@ -76,6 +76,21 @@ void testBasicImmutable(World &world)
 
 	verifyOneValueTree();
 
+	// Replace that mapping with itself
+	pivotTree(tree, DatumHashTree::assoc(tree, stringZero, intZero));
+	DatumHashTree *replacedOneValueTree = DatumHashTree::ref(tree);
+
+	auto verifyReplacedOneValueTree = [&]
+	{
+		ASSERT_EQUAL(DatumHashTree::size(replacedOneValueTree), 1);
+		ASSERT_EQUAL(DatumHashTree::find(replacedOneValueTree, stringZero), intZero.data());
+		ASSERT_NULL(DatumHashTree::find(replacedOneValueTree, stringOne));
+		ASSERT_NULL(DatumHashTree::find(replacedOneValueTree, stringTwo));
+		ASSERT_NULL(DatumHashTree::find(replacedOneValueTree, stringThree));
+	};
+
+	verifyReplacedOneValueTree();
+
 	// Add a second mapping
 	pivotTree(tree, DatumHashTree::assoc(tree, stringOne, intOne));
 	DatumHashTree *twoValueTree = DatumHashTree::ref(tree);
@@ -248,6 +263,7 @@ void testBasicImmutable(World &world)
 	// Check all of the trees again
 	verifyEmptyTree();
 	verifyOneValueTree();
+	verifyReplacedOneValueTree();
 	verifyTwoValueTree();
 	verifyThreeValueTree();
 	verifyFourValueTree();
@@ -262,6 +278,7 @@ void testBasicImmutable(World &world)
 	verifyOneValueTree();
 
 	DatumHashTree::unref(oneValueTree);
+	DatumHashTree::unref(replacedOneValueTree);
 	DatumHashTree::unref(twoValueTree);
 	DatumHashTree::unref(threeValueTree);
 	DatumHashTree::unref(fourValueTree);
@@ -478,8 +495,9 @@ void testToFromAssocList(World &world)
 	alloc::PairRef pairThree(world, PairCell::createInstance(world, stringThree, intThree));
 	alloc::PairRef pairFour(world, PairCell::createInstance(world, stringFour, intFour));
 	alloc::PairRef pairFive(world, PairCell::createInstance(world, stringZero, intZero));
+	alloc::PairRef pairSix(world, PairCell::createInstance(world, stringFour, intFour));
 
-	auto assocList = ProperList<PairCell>::create(world, {pairZero, pairOne, pairTwo, pairThree, pairFour, pairFive});
+	auto assocList = ProperList<PairCell>::create(world, {pairZero, pairOne, pairTwo, pairThree, pairFour, pairFive, pairSix});
 
 	DatumHashTree *tree = DatumHashTree::fromAssocList(assocList);
 
