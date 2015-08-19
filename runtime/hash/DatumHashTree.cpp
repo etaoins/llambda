@@ -74,27 +74,36 @@ public:
 		return bitmapPopCount(m_bitmapIndex);
 	}
 
-	ArrayNode *withReplacedChild(std::uint32_t childIndex, DatumHashTree *newChildNode)
+	ArrayNode *withReplacedChild(std::uint32_t childIndex, DatumHashTree *newChildNode, bool inPlace = false)
 	{
 		ArrayNode *newArrayNode;
 
 		if (newChildNode)
 		{
+			if (inPlace && hasChildAtIndex(childIndex))
+			{
+				auto offset = childOffsetForIndex(childIndex);
+
+				DatumHashTree::unref(m_children[offset]);
+				m_children[offset] = newChildNode;
+				ref();
+				return this;
+			}
+
 			std::uint32_t newBitmapIndex = m_bitmapIndex | (1 << childIndex);
 			newArrayNode = ArrayNode::createInstance(newBitmapIndex);
 
 			for(std::uint32_t i = 0; i < LevelNodeCount; i++)
 			{
+				auto newChildOffset = newArrayNode->childOffsetForIndex(i);
+
 				if (i == childIndex)
 				{
-					auto newChildOffset = newArrayNode->childOffsetForIndex(i);
 					newArrayNode->m_children[newChildOffset] = newChildNode;
 				}
 				else if (hasChildAtIndex(i))
 				{
 					auto oldChildOffset = childOffsetForIndex(i);
-					auto newChildOffset = newArrayNode->childOffsetForIndex(i);
-
 					newArrayNode->m_children[newChildOffset] = DatumHashTree::ref(m_children[oldChildOffset]);
 				}
 			}
@@ -208,7 +217,7 @@ public:
 	 *
 	 * Tge key must have the same hash value as the existing leaf node
 	 */
-	LeafNode* assocLeaf(AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
+	LeafNode* assocLeaf(AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace = false)
 	{
 		// Check if the key is already in the hash
 		for(std::uint32_t i = 0; i < entryCount(); i++)
@@ -220,6 +229,13 @@ public:
 				if (value == entry.value)
 				{
 					// This value is already in the node; avoid creating a new hash
+					ref();
+					return this;
+				}
+				else if (inPlace)
+				{
+					entry.value = value;
+
 					ref();
 					return this;
 				}
@@ -402,9 +418,12 @@ DatumHashTree* DatumHashTree::createEmpty()
 DatumHashTree* DatumHashTree::fromAssocList(ProperList<PairCell> *list)
 {
 	DatumHashTree *tree = nullptr;
+	DatumHash hasher;
+
 	for(auto pair : *list)
 	{
-		DatumHashTree *newTree = DatumHashTree::assoc(tree, pair->car(), pair->cdr());
+		auto hashValue = hasher(pair->car());
+		DatumHashTree *newTree = DatumHashTree::assocInternal(tree, 0, pair->car(), pair->cdr(), hashValue, true);
 		DatumHashTree::unref(tree);
 
 		tree = newTree;
@@ -519,7 +538,7 @@ void DatumHashTree::walkCellRefs(DatumHashTree *tree, alloc::CellRefWalker &walk
 	}
 }
 
-DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
+DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace)
 {
 	if (tree == nullptr)
 	{
@@ -544,7 +563,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 		ArrayNode *newArrayNode = ArrayNode::fromSingleChild(childIndex, leafNode->ref());
 
 		// Note that we don't increase the level here because we're creating a new node on the current level
-		DatumHashTree *mergedArrayNode = assocInternal(newArrayNode, level, key, value, hashValue);
+		DatumHashTree *mergedArrayNode = assocInternal(newArrayNode, level, key, value, hashValue, true);
 		newArrayNode->unref();
 
 		return mergedArrayNode;
@@ -556,7 +575,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 		auto childIndex = ArrayNode::childIndex(level, hashValue);
 		DatumHashTree* childNode = arrayNode->childAtIndex(childIndex);
 
-		DatumHashTree *newChildNode = assocInternal(childNode, level + LevelShiftSize, key, value, hashValue);
+		DatumHashTree *newChildNode = assocInternal(childNode, level + LevelShiftSize, key, value, hashValue, inPlace);
 
 		if (childNode == newChildNode)
 		{
@@ -567,7 +586,7 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 		else
 		{
 			// Allocate a new array node
-			return arrayNode->withReplacedChild(childIndex, newChildNode);
+			return arrayNode->withReplacedChild(childIndex, newChildNode, inPlace);
 		}
 	}
 }

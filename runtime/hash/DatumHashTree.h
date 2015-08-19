@@ -160,7 +160,7 @@ protected:
 
 	bool isLeafNode() const;
 
-	static DatumHashTree* assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue);
+	static DatumHashTree* assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace = false);
 	static AnyCell* findInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue);
 	static DatumHashTree* withoutInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValueg);
 
