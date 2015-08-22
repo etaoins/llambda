@@ -15,19 +15,40 @@ namespace
 std::atomic<std::size_t> allocationCount(0);
 #endif
 
+/**
+ * Returns the number of bits set to 1 in the passed bitmap
+ *
+ * Note that x86 only gained a POPCNT instruction in SSE 4.2. Using appropriate compiler flags can cause a large speedup
+ * here.
+ */
 std::uint32_t bitmapPopCount(std::uint32_t bitmap)
 {
 	return __builtin_popcount(bitmap);
 }
 
+/**
+ * The number of bits we shift our hash code at each level to calculate child node indices
+ */
 const std::uint32_t LevelShiftSize = 5;
-const std::uint32_t LevelHashMask = (1 << LevelShiftSize) - 1;
-const std::uint32_t LevelNodeCount = 1 << LevelShiftSize;
 
-class ArrayNode : public DatumHashTree
+/**
+ * The number of bits we mask off the shifted hash code to calculate our child node indices
+ */
+const std::uint32_t LevelHashMask = (1 << LevelShiftSize) - 1;
+
+
+template<class T, class S>
+void copyWithoutIndex(T *source, S index, S oldSize, T *dest)
+{
+	std::copy_n(&source[0], index, &dest[0]);
+	std::copy_n(&source[index + 1], oldSize - index - 1, &dest[index]);
+}
+
+
+class InternalNode : public DatumHashTree
 {
 public:
-	~ArrayNode()
+	~InternalNode()
 	{
 		for(std::uint32_t i = 0; i < childCount(); i++)
 		{
@@ -35,28 +56,68 @@ public:
 		}
 	}
 
-	static ArrayNode* createInstance(std::uint32_t bitmapIndex)
-	{
-		void *placement = malloc(sizeForBitmapIndex(bitmapIndex));
-		return new (placement) ArrayNode(bitmapIndex);
-	}
-
-	static ArrayNode* fromSingleChild(std::uint32_t childIndex, DatumHashTree *newChildNode)
+	/**
+	 * Creates a new internal node with a single child at the specified index
+	 *
+	 * @param  childIndex  Index of the new child
+	 * @param  childNode   Non-empty tree to place at the specified index
+	 */
+	static InternalNode* fromSingleChild(std::uint32_t childIndex, DatumHashTree *childNode)
 	{
 		void *placement = malloc(sizeForChildCount(1));
 
-		std::uint32_t bitmapIndex = 1 << childIndex;
-		ArrayNode *newNode = new (placement) ArrayNode(bitmapIndex);
-		newNode->m_children[0] = newChildNode;
+		std::uint32_t childBitmap = 1 << childIndex;
+		InternalNode *newNode = new (placement) InternalNode(childBitmap);
+		newNode->m_children[0] = childNode;
 
 		return newNode;
 	}
 
+	/**
+	 * Creates a new internal node with two childiren at the specified indiciesx
+	 *
+	 * @param  childIndex1  Index of the first child
+	 * @param  childNode1   Non-empty tree to place at childIndex1
+	 * @param  childIndex2  Index of the second child
+	 * @param  childNode2   Non-empty tree to place at childIndex2
+	 */
+	static InternalNode* fromTwoChildren(std::uint32_t childIndex1, DatumHashTree *childNode1, std::uint32_t childIndex2, DatumHashTree *childNode2)
+	{
+		assert(childIndex1 != childIndex2);
+		void *placement = malloc(sizeForChildCount(2));
+
+		std::uint32_t childBitmap = (1 << childIndex1) | (1 << childIndex2);
+
+		InternalNode *newNode = new (placement) InternalNode(childBitmap);
+
+		if (childIndex1 < childIndex2)
+		{
+			newNode->m_children[0] = childNode1;
+			newNode->m_children[1] = childNode2;
+		}
+		else
+		{
+			newNode->m_children[0] = childNode2;
+			newNode->m_children[1] = childNode1;
+		}
+
+		return newNode;
+	}
+
+	/**
+	 * Returns the index for a child with a given hash code
+	 *
+	 * @param  level     Level of this internal node
+	 * @param  hashCode  Hash code of the child
+	 */
 	static std::uint32_t childIndex(std::uint32_t level, std::uint32_t hashCode)
 	{
 		return (hashCode >> level) & LevelHashMask;
 	}
 
+	/**
+	 * Returns the child at the given index or nullptr if no child exists
+	 */
 	DatumHashTree* childAtIndex(std::uint32_t index)
 	{
 		if (!hasChildAtIndex(index))
@@ -69,94 +130,147 @@ public:
 		return child;
 	}
 
+	/**
+	 * Returns the number of children of this node
+	 */
 	std::uint32_t childCount() const
 	{
-		return bitmapPopCount(m_bitmapIndex);
+		return bitmapPopCount(m_childBitmap);
 	}
 
-	ArrayNode *withReplacedChild(std::uint32_t childIndex, DatumHashTree *newChildNode, bool inPlace = false)
+	/**
+	 * Returns a new InternalNode with the non-empty child node placed at the given index
+	 *
+	 * @param  childIndex    Index of the new child node
+	 * @param  newChildNode  Non-empty child node
+	 * @param  inPlace       Indicates if the internal node can be modified in place
+	 */
+	InternalNode *assocChild(std::uint32_t childIndex, DatumHashTree *newChildNode, bool inPlace = false)
 	{
-		ArrayNode *newArrayNode;
+		std::uint32_t newChildBitmap = m_childBitmap | (1 << childIndex);
+		auto offset = childOffsetForIndex(childIndex);
+		assert(newChildNode);
 
-		if (newChildNode)
+		if (newChildBitmap == m_childBitmap)
 		{
-			if (inPlace && hasChildAtIndex(childIndex))
+			// We are staying the same size
+			if (inPlace)
 			{
-				auto offset = childOffsetForIndex(childIndex);
-
+				// We can perform this replacement in-place by replacing and unreferencing the original node.
 				DatumHashTree::unref(m_children[offset]);
 				m_children[offset] = newChildNode;
 				ref();
 				return this;
 			}
 
-			std::uint32_t newBitmapIndex = m_bitmapIndex | (1 << childIndex);
-			newArrayNode = ArrayNode::createInstance(newBitmapIndex);
+			InternalNode *newInternalNode = InternalNode::createInstance(newChildBitmap);
+			std::copy_n(m_children, childCount(), newInternalNode->m_children);
 
-			for(std::uint32_t i = 0; i < LevelNodeCount; i++)
+			for(std::uint32_t i = 0; i < childCount(); i++)
 			{
-				auto newChildOffset = newArrayNode->childOffsetForIndex(i);
-
-				if (i == childIndex)
+				if (i == offset)
 				{
-					newArrayNode->m_children[newChildOffset] = newChildNode;
+					newInternalNode->m_children[i] = newChildNode;
 				}
-				else if (hasChildAtIndex(i))
+				else
 				{
-					auto oldChildOffset = childOffsetForIndex(i);
-					newArrayNode->m_children[newChildOffset] = DatumHashTree::ref(m_children[oldChildOffset]);
+					DatumHashTree::ref(newInternalNode->m_children[i]);
 				}
 			}
+
+			return newInternalNode;
 		}
 		else
 		{
-			std::uint32_t newBitmapIndex = m_bitmapIndex & ~(1 << childIndex);
-			newArrayNode = ArrayNode::createInstance(newBitmapIndex);
+			// We are adding an additional child
+			InternalNode *newInternalNode = InternalNode::createInstance(newChildBitmap);
 
-			for(std::uint32_t i = 0; i < LevelNodeCount; i++)
+			for(std::uint32_t i = 0; i < offset; i++)
 			{
-				if ((i != childIndex) && hasChildAtIndex(i))
-				{
-					auto oldChildOffset = childOffsetForIndex(i);
-					auto newChildOffset = newArrayNode->childOffsetForIndex(i);
-
-					newArrayNode->m_children[newChildOffset] = DatumHashTree::ref(m_children[oldChildOffset]);
-				}
+				newInternalNode->m_children[i] = DatumHashTree::ref(m_children[i]);
 			}
+
+			newInternalNode->m_children[offset] = newChildNode;
+
+			for(std::uint32_t i = offset; i < childCount(); i++)
+			{
+				newInternalNode->m_children[i + 1] = DatumHashTree::ref(m_children[i]);
+			}
+
+			return newInternalNode;
 		}
 
-		return newArrayNode;
 	}
 
+	/**
+	 * Returns a new InternalNode with the child node removed at the given index
+	 *
+	 * @param  childIndex    Index of the new child node
+	 * @param  newChildNode  Non-empty child node
+	 * @param  inPlace       Indicates if the internal node can be modified in place
+	 */
+	InternalNode *withoutChild(std::uint32_t childIndex)
+	{
+		std::uint32_t newChildBitmap = m_childBitmap & ~(1 << childIndex);
+		assert(newChildBitmap != m_childBitmap);
+
+		auto oldChildCount = childCount();
+		auto newChildCount = oldChildCount - 1;
+
+		auto removedOffset = childOffsetForIndex(childIndex);
+
+		InternalNode *newInternalNode = InternalNode::createInstance(newChildBitmap);
+
+		copyWithoutIndex(m_children, removedOffset, oldChildCount, newInternalNode->m_children);
+
+		for(std::uint32_t i = 0; i < newChildCount; i++)
+		{
+			DatumHashTree::ref(newInternalNode->m_children[i]);
+		}
+
+		return newInternalNode;
+	}
+
+	/**
+	 * Returns all children of this node
+	 *
+	 * This is a contiguous array of non-empty children of size childCount()
+	 */
 	DatumHashTree*const* children() const
 	{
 		return m_children;
 	}
 
 private:
-	ArrayNode(std::uint32_t bitmapIndex) : DatumHashTree(bitmapIndex)
+	InternalNode(std::uint32_t childBitmap) : DatumHashTree(childBitmap)
 	{
-		assert(bitmapIndex != LeafNodeBitmapIndex);
+		assert(childBitmap != LeafNodeChildBitmap);
+	}
+
+	static InternalNode* createInstance(std::uint32_t childBitmap)
+	{
+		void *placement = malloc(sizeForBitmapIndex(childBitmap));
+		return new (placement) InternalNode(childBitmap);
 	}
 
 	bool hasChildAtIndex(std::uint32_t childIndex)
 	{
-		return m_bitmapIndex & (1 << childIndex);
+		return m_childBitmap & (1 << childIndex);
 	}
 
 	std::uint32_t childOffsetForIndex(std::uint32_t childIndex)
 	{
-		return bitmapPopCount(m_bitmapIndex & ((1 << childIndex) - 1));
+		return bitmapPopCount(m_childBitmap & ((1 << childIndex) - 1));
 	}
 
-	static std::size_t sizeForBitmapIndex(std::uint32_t bitmapIndex)
+	static std::size_t sizeForBitmapIndex(std::uint32_t childBitmap)
 	{
-		return sizeForChildCount(bitmapPopCount(bitmapIndex));
+		return sizeForChildCount(bitmapPopCount(childBitmap));
 	}
 
 	static std::size_t sizeForChildCount(std::size_t childCount)
 	{
-		return sizeof(ArrayNode) + (sizeof(DatumHashTree*) * childCount);
+		return sizeof(InternalNode) + (sizeof(DatumHashTree*) * childCount);
 	}
 
 	DatumHashTree* m_children[];
@@ -177,6 +291,9 @@ public:
 		return new (placement) LeafNode(hashValue, entryCount);
 	}
 
+	/**
+	 * Returns the shared hash value of entries in this leaf node
+	 */
 	DatumHash::ResultType hashValue() const
 	{
 		return m_hashValue;
@@ -197,7 +314,13 @@ public:
 		return m_entries;
 	}
 
-	AnyCell* findLeaf(AnyCell *key, DatumHash::ResultType hashValue)
+	/**
+	 * Finds a value with the given key or nullptr if one does not exist
+	 *
+	 * @param  key        Key to find
+	 * @return Pointer to the value or nullptr if it does not exist
+	 */
+	AnyCell* findLeaf(AnyCell *key)
 	{
 		for(std::uint32_t i = 0; i < entryCount(); i++)
 		{
@@ -213,11 +336,16 @@ public:
 	}
 
 	/**
-	 * Adds a new entry to this leaf node
+	 * Return a new leaf node with an additional value
 	 *
-	 * Tge key must have the same hash value as the existing leaf node
+	 * The key must have the same hash value as the leaf node
+	 *
+	 * @param  key      Key of the new value. If the key exists the value will be replaced.
+	 * @param  value    Value to add
+	 * @param  inPlace  Indicates if the leaf node can be modified in place
+	 * @return LeafNode instance with the new value
 	 */
-	LeafNode* assocLeaf(AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace = false)
+	LeafNode* assocLeaf(AnyCell *key, AnyCell *value, bool inPlace = false)
 	{
 		// Check if the key is already in the hash
 		for(std::uint32_t i = 0; i < entryCount(); i++)
@@ -228,7 +356,7 @@ public:
 			{
 				if (value == entry.value)
 				{
-					// This value is already in the node; avoid creating a new hash
+					// This value is already in the node; avoid allocating a new node
 					ref();
 					return this;
 				}
@@ -242,7 +370,7 @@ public:
 				else
 				{
 					// Create a new leaf node with the value replaced
-					LeafNode *newLeafNode = LeafNode::createInstance(hashValue, m_entryCount);
+					LeafNode *newLeafNode = LeafNode::createInstance(hashValue(), m_entryCount);
 					std::copy(&m_entries[0], &m_entries[m_entryCount], &newLeafNode->entries()[0]);
 
 					newLeafNode->entries()[i].value = value;
@@ -253,7 +381,7 @@ public:
 		}
 
 		// No existing value; we need to append
-		LeafNode *newLeafNode = LeafNode::createInstance(hashValue, m_entryCount + 1);
+		LeafNode *newLeafNode = LeafNode::createInstance(hashValue(), m_entryCount + 1);
 		std::copy(&m_entries[0], &m_entries[m_entryCount], &newLeafNode->entries()[0]);
 
 		newLeafNode->entries()[m_entryCount] = {.key = key, .value = value};
@@ -261,7 +389,15 @@ public:
 		return newLeafNode;
 	}
 
-	DatumHashTree* withoutLeaf(AnyCell *key, DatumHash::ResultType hashValue)
+	/**
+	 * Return a new leaf node without a key
+	 *
+	 * The key must have the same hash value as the leaf node
+	 *
+	 * @param  key      Key to remove
+	 * @return LeafNode instance without the key
+	 */
+	DatumHashTree* withoutLeaf(AnyCell *key)
 	{
 		// Check if the key is already in the hash
 		for(std::uint32_t i = 0; i < entryCount(); i++)
@@ -278,17 +414,8 @@ public:
 					return nullptr;
 				}
 
-				LeafNode *newLeafNode = LeafNode::createInstance(hashValue, newEntryCount);
-
-				for(std::uint32_t j = 0; j < i; j++)
-				{
-					newLeafNode->entries()[j] = entries()[j];
-				}
-
-				for(std::uint32_t j = i + 1; j < m_entryCount; j++)
-				{
-					newLeafNode->entries()[j - 1] = entries()[j];
-				}
+				LeafNode *newLeafNode = LeafNode::createInstance(hashValue(), newEntryCount);
+				copyWithoutIndex(entries(), i, entryCount(), newLeafNode->entries());
 
 				return newLeafNode;
 			}
@@ -301,7 +428,7 @@ public:
 
 private:
 	LeafNode(DatumHash::ResultType hashValue, std::uint32_t entryCount) :
-		DatumHashTree(LeafNodeBitmapIndex),
+		DatumHashTree(LeafNodeChildBitmap),
 		m_hashValue(hashValue),
 		m_entryCount(entryCount)
 	{
@@ -320,9 +447,9 @@ private:
 
 }
 
-DatumHashTree::DatumHashTree(std::uint32_t bitmapIndex) :
+DatumHashTree::DatumHashTree(std::uint32_t childBitmap) :
 	m_refCount(1),
-	m_bitmapIndex(bitmapIndex)
+	m_childBitmap(childBitmap)
 {
 #ifdef _LLIBY_CHECK_LEAKS
 	allocationCount.fetch_add(1, std::memory_order_relaxed);
@@ -379,7 +506,7 @@ void DatumHashTree::unref()
 
 	if (previousRefCount != 1)
 	{
-		// We're an empty tree or still have references
+		// We still have references
 		return;
 	}
 
@@ -392,7 +519,7 @@ void DatumHashTree::unref()
 	}
 	else
 	{
-		delete static_cast<ArrayNode*>(this);
+		delete static_cast<InternalNode*>(this);
 	}
 }
 
@@ -407,12 +534,7 @@ std::size_t DatumHashTree::instanceCount()
 
 bool DatumHashTree::isLeafNode() const
 {
-	return m_bitmapIndex == LeafNodeBitmapIndex;
-}
-
-DatumHashTree* DatumHashTree::createEmpty()
-{
-	return nullptr;
+	return m_childBitmap == LeafNodeChildBitmap;
 }
 
 DatumHashTree* DatumHashTree::fromAssocList(ProperList<PairCell> *list)
@@ -423,7 +545,7 @@ DatumHashTree* DatumHashTree::fromAssocList(ProperList<PairCell> *list)
 	for(auto pair : *list)
 	{
 		auto hashValue = hasher(pair->car());
-		DatumHashTree *newTree = DatumHashTree::assocInternal(tree, 0, pair->car(), pair->cdr(), hashValue, true);
+		DatumHashTree *newTree = DatumHashTree::assocAtLevel(tree, 0, pair->car(), pair->cdr(), hashValue, true);
 		DatumHashTree::unref(tree);
 
 		tree = newTree;
@@ -434,17 +556,17 @@ DatumHashTree* DatumHashTree::fromAssocList(ProperList<PairCell> *list)
 
 DatumHashTree* DatumHashTree::assoc(DatumHashTree *tree, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue)
 {
-	return assocInternal(tree, 0, key, value, hashValue);
+	return assocAtLevel(tree, 0, key, value, hashValue);
 }
 
 AnyCell* DatumHashTree::find(DatumHashTree *tree, AnyCell *key, DatumHash::ResultType hashValue)
 {
-	return findInternal(tree, 0, key, hashValue);
+	return findAtLevel(tree, 0, key, hashValue);
 }
 
 DatumHashTree* DatumHashTree::without(DatumHashTree *tree, AnyCell *key, DatumHash::ResultType hashValue)
 {
-	return withoutInternal(tree, 0, key, hashValue);
+	return withoutAtLevel(tree, 0, key, hashValue);
 }
 
 std::size_t DatumHashTree::size(const DatumHashTree *tree)
@@ -461,10 +583,10 @@ std::size_t DatumHashTree::size(const DatumHashTree *tree)
 	{
 		std::size_t accum = 0;
 
-		const ArrayNode *arrayNode = static_cast<const ArrayNode*>(tree);
-		for(std::uint32_t i = 0; i < arrayNode->childCount(); i++)
+		const InternalNode *internalNode = static_cast<const InternalNode*>(tree);
+		for(std::uint32_t i = 0; i < internalNode->childCount(); i++)
 		{
-			accum += size(arrayNode->children()[i]);
+			accum += size(internalNode->children()[i]);
 		}
 
 		return accum;
@@ -481,7 +603,7 @@ bool DatumHashTree::every(const DatumHashTree *tree, const std::function<bool(An
 	{
 		auto leafNode = static_cast<const LeafNode*>(tree);
 
-		for(std::size_t i = 0; i < leafNode->entryCount(); i++)
+		for(std::uint32_t i = 0; i < leafNode->entryCount(); i++)
 		{
 			auto &entry = leafNode->entries()[i];
 			if (!pred(entry.key, entry.value, leafNode->hashValue()))
@@ -492,11 +614,11 @@ bool DatumHashTree::every(const DatumHashTree *tree, const std::function<bool(An
 	}
 	else
 	{
-		auto arrayNode = static_cast<const ArrayNode*>(tree);
+		auto internalNode = static_cast<const InternalNode*>(tree);
 
-		for(std::uint32_t i = 0; i < arrayNode->childCount(); i++)
+		for(std::uint32_t i = 0; i < internalNode->childCount(); i++)
 		{
-			if (!every(arrayNode->children()[i], pred))
+			if (!every(internalNode->children()[i], pred))
 			{
 				return false;
 			}
@@ -529,16 +651,16 @@ void DatumHashTree::walkCellRefs(DatumHashTree *tree, alloc::CellRefWalker &walk
 	}
 	else
 	{
-		auto arrayNode = static_cast<const ArrayNode*>(tree);
+		auto internalNode = static_cast<const InternalNode*>(tree);
 
-		for(std::uint32_t i = 0; i < arrayNode->childCount(); i++)
+		for(std::uint32_t i = 0; i < internalNode->childCount(); i++)
 		{
-			walkCellRefs(arrayNode->children()[i], walker, visitor);
+			walkCellRefs(internalNode->children()[i], walker, visitor);
 		}
 	}
 }
 
-DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace)
+DatumHashTree* DatumHashTree::assocAtLevel(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace)
 {
 	if (tree == nullptr)
 	{
@@ -554,44 +676,58 @@ DatumHashTree* DatumHashTree::assocInternal(DatumHashTree *tree, std::uint32_t l
 
 		if (leafNode->hashValue() == hashValue)
 		{
-			return leafNode->assocLeaf(key, value, hashValue);
+			return leafNode->assocLeaf(key, value, inPlace);
 		}
 
-		// Create an array node with a single value. Note we don't want to directly create a node with two values as
-		// both leaf nodes might be assigned the same slot and require a second level array node.
-		auto childIndex = ArrayNode::childIndex(level, leafNode->hashValue());
-		ArrayNode *newArrayNode = ArrayNode::fromSingleChild(childIndex, leafNode->ref());
+		auto oldChildIndex = InternalNode::childIndex(level, leafNode->hashValue());
+		auto newChildIndex = InternalNode::childIndex(level, hashValue);
 
-		// Note that we don't increase the level here because we're creating a new node on the current level
-		DatumHashTree *mergedArrayNode = assocInternal(newArrayNode, level, key, value, hashValue, true);
-		newArrayNode->unref();
+		if (oldChildIndex == newChildIndex)
+		{
+			// These children would appear at the name index in the array node. In the worst case this can happen
+			// at the following levels so we can't build a final internal node directly here. Instead build an internal
+			// node with the existing leaf node and call ourselves recursively.
+			InternalNode *newInternalNode = InternalNode::fromSingleChild(oldChildIndex, leafNode->ref());
 
-		return mergedArrayNode;
+			DatumHashTree *mergedInternalNode = assocAtLevel(newInternalNode, level, key, value, hashValue, true);
+			newInternalNode->unref();
+
+			return mergedInternalNode;
+		}
+		else
+		{
+			// The children would appear in different indices. Build a new leaf node and directly create an internal
+			// node the new leaf and existing leaf as children.
+			LeafNode *newLeafNode = LeafNode::createInstance(hashValue, 1);
+			newLeafNode->entries()[0] = {.key = key, .value = value};
+
+			return InternalNode::fromTwoChildren(oldChildIndex, leafNode->ref(), newChildIndex, newLeafNode);
+		}
 	}
 	else
 	{
-		ArrayNode *arrayNode = static_cast<ArrayNode*>(tree);
+		InternalNode *internalNode = static_cast<InternalNode*>(tree);
 
-		auto childIndex = ArrayNode::childIndex(level, hashValue);
-		DatumHashTree* childNode = arrayNode->childAtIndex(childIndex);
+		auto childIndex = InternalNode::childIndex(level, hashValue);
+		DatumHashTree* childNode = internalNode->childAtIndex(childIndex);
 
-		DatumHashTree *newChildNode = assocInternal(childNode, level + LevelShiftSize, key, value, hashValue, inPlace);
+		DatumHashTree *newChildNode = assocAtLevel(childNode, level + LevelShiftSize, key, value, hashValue, inPlace);
 
 		if (childNode == newChildNode)
 		{
 			// Nothing to do!
 			DatumHashTree::unref(childNode);
-			return arrayNode->ref();
+			return internalNode->ref();
 		}
 		else
 		{
-			// Allocate a new array node
-			return arrayNode->withReplacedChild(childIndex, newChildNode, inPlace);
+			// Allocate a new internal node
+			return internalNode->assocChild(childIndex, newChildNode, inPlace);
 		}
 	}
 }
 
-AnyCell* DatumHashTree::findInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue)
+AnyCell* DatumHashTree::findAtLevel(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue)
 {
 	if (tree == nullptr)
 	{
@@ -607,24 +743,24 @@ AnyCell* DatumHashTree::findInternal(DatumHashTree *tree, std::uint32_t level, A
 			return nullptr;
 		}
 
-		return leafNode->findLeaf(key, hashValue);
+		return leafNode->findLeaf(key);
 	}
 	else
 	{
-		ArrayNode *arrayNode = static_cast<ArrayNode*>(tree);
+		InternalNode *internalNode = static_cast<InternalNode*>(tree);
 
-		DatumHashTree *childNode = arrayNode->childAtIndex(ArrayNode::childIndex(level, hashValue));
+		DatumHashTree *childNode = internalNode->childAtIndex(InternalNode::childIndex(level, hashValue));
 
 		if (childNode == nullptr)
 		{
 			return nullptr;
 		}
 
-		return findInternal(childNode, level + LevelShiftSize, key, hashValue);
+		return findAtLevel(childNode, level + LevelShiftSize, key, hashValue);
 	}
 }
 
-DatumHashTree* DatumHashTree::withoutInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue)
+DatumHashTree* DatumHashTree::withoutAtLevel(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue)
 {
 	if (tree == nullptr)
 	{
@@ -640,21 +776,21 @@ DatumHashTree* DatumHashTree::withoutInternal(DatumHashTree *tree, std::uint32_t
 			return tree->ref();
 		}
 
-		return leafNode->withoutLeaf(key, hashValue);
+		return leafNode->withoutLeaf(key);
 	}
 	else
 	{
-		ArrayNode *arrayNode = static_cast<ArrayNode*>(tree);
+		InternalNode *internalNode = static_cast<InternalNode*>(tree);
 
-		auto childIndex = ArrayNode::childIndex(level, hashValue);
-		DatumHashTree *childNode = arrayNode->childAtIndex(childIndex);
+		auto childIndex = InternalNode::childIndex(level, hashValue);
+		DatumHashTree *childNode = internalNode->childAtIndex(childIndex);
 
 		if (childNode == nullptr)
 		{
 			return tree->ref();
 		}
 
-		auto newChildNode = withoutInternal(childNode, level + LevelShiftSize, key, hashValue);
+		auto newChildNode = withoutAtLevel(childNode, level + LevelShiftSize, key, hashValue);
 
 		if (childNode == newChildNode)
 		{
@@ -662,19 +798,25 @@ DatumHashTree* DatumHashTree::withoutInternal(DatumHashTree *tree, std::uint32_t
 			DatumHashTree::unref(newChildNode);
 			return tree->ref();
 		}
-		else if ((arrayNode->childCount() == 1) && (newChildNode == nullptr))
+		else if ((internalNode->childCount() == 1) && (newChildNode == nullptr))
 		{
 			// No more children - return the empty tree
 			return nullptr;
 		}
-		else if ((arrayNode->childCount() == 1) && (newChildNode->isLeafNode()))
+		else if ((internalNode->childCount() == 1) && (newChildNode->isLeafNode()))
 		{
 			// Single leaf node left - collapse
 			return newChildNode;
 		}
+		else if (newChildNode)
+		{
+			// Note that if our remaining child is an internal node we cannot collapse it to our level. Child indices
+			// are based on the node's level so moving an internal node involves rebuilding it recursively.
+			return internalNode->assocChild(childIndex, newChildNode);
+		}
 		else
 		{
-			return arrayNode->withReplacedChild(childIndex, newChildNode);
+			return internalNode->withoutChild(childIndex);
 		}
 	}
 }
