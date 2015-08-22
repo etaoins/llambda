@@ -36,7 +36,10 @@ public:
 	 *
 	 * Note that empty trees are represented by a nullptr. Callers should handle nullptr as a valid DatumHashTree.
 	 */
-	static DatumHashTree* createEmpty();
+	static DatumHashTree* createEmpty()
+	{
+		return nullptr;
+	}
 
 	/**
 	 * Creates a tree from an association list
@@ -144,7 +147,6 @@ public:
 	 */
 	static std::size_t instanceCount();
 
-
 protected:
 	static void walkCellRefs(DatumHashTree *tree, alloc::CellRefWalker &walker, const std::function<void(AnyCell**, AnyCell**)> &visitor);
 
@@ -160,14 +162,14 @@ protected:
 
 	bool isLeafNode() const;
 
-	static DatumHashTree* assocInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace = false);
-	static AnyCell* findInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue);
-	static DatumHashTree* withoutInternal(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValueg);
+	static DatumHashTree* assocAtLevel(DatumHashTree *tree, std::uint32_t level, AnyCell *key, AnyCell *value, DatumHash::ResultType hashValue, bool inPlace = false);
+	static AnyCell* findAtLevel(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValue);
+	static DatumHashTree* withoutAtLevel(DatumHashTree *tree, std::uint32_t level, AnyCell *key, DatumHash::ResultType hashValueg);
 
-	static const std::uint32_t LeafNodeBitmapIndex = 0;
+	static const std::uint32_t LeafNodeChildBitmap = 0;
 
 	std::atomic<std::uint32_t> m_refCount;
-	std::uint32_t m_bitmapIndex;
+	const std::uint32_t m_childBitmap;
 };
 
 
