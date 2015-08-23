@@ -37,11 +37,11 @@ object SatisfiesType {
 
   private def satifiesProcedureType(superType : ProcedureType, testingType : ProcedureType) : Option[Boolean] =
     (superType, testingType) match {
-      case (ProcedureType(superFixedArgTypes, superRestArgMemberTypeOpt, superReturnType),
-            ProcedureType(testingFixedArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
+      case (ProcedureType(superMandatoryArgTypes, superOptionalArgTypes, superRestArgMemberTypeOpt, superReturnType),
+            ProcedureType(testingMandatoryArgTypes, testingOptionalArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
         // Construct a list type based on our arguments
-        val superArgList = FormalsToListType(superFixedArgTypes, superRestArgMemberTypeOpt)
-        val testingArgList = FormalsToListType(testingFixedArgTypes, testingRestArgMemberTypeOpt)
+        val superArgList = FormalsToListType(superMandatoryArgTypes, superOptionalArgTypes, superRestArgMemberTypeOpt)
+        val testingArgList = FormalsToListType(testingMandatoryArgTypes, testingOptionalArgTypes, testingRestArgMemberTypeOpt)
         // Test the list type - note that super/test is reversed because argument types are contravariant
         val argListResult = apply(testingArgList, superArgList)
 

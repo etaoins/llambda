@@ -114,47 +114,52 @@ class NameForTypeSuite extends FunSuite {
 
   test("(-> <number>)") {
     val procedureType = ProcedureType(
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=ReturnType.SingleValue(NumberType)
     )
 
     assert(NameForType(procedureType) === "(-> <number>)")
   }
-  
+
   test("(-> <string> <symbol> <number>)") {
     val procedureType = ProcedureType(
-      fixedArgTypes=List(StringType, SymbolType),
+      mandatoryArgTypes=List(StringType, SymbolType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=ReturnType.SingleValue(NumberType)
     )
 
   assert(NameForType(procedureType) === "(-> <string> <symbol> <number>)")
   }
-  
+
   test("(-> <string> <symbol> * <number>)") {
     val procedureType = ProcedureType(
-      fixedArgTypes=List(StringType),
+      mandatoryArgTypes=List(StringType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(SymbolType),
       returnType=ReturnType.SingleValue(NumberType)
     )
 
     assert(NameForType(procedureType) === "(-> <string> <symbol> * <number>)")
   }
-  
+
   test("(-> <string> <symbol> * (values <port> <unit>)") {
     val procedureType = ProcedureType(
-      fixedArgTypes=List(StringType),
+      mandatoryArgTypes=List(StringType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(SymbolType),
       returnType=ReturnType.SpecificValues(List(PortType, UnitType))
     )
 
     assert(NameForType(procedureType) === "(-> <string> <symbol> * (values <port> <unit>))")
   }
-  
+
   test("(-> <any> * *)") {
     val procedureType = ProcedureType(
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(AnySchemeType),
       returnType=ReturnType.ArbitraryValues
     )
@@ -164,7 +169,8 @@ class NameForTypeSuite extends FunSuite {
 
   test("(-> <any> <unit> (unreachable))") {
     val procedureType = ProcedureType(
-      fixedArgTypes=List(AnySchemeType),
+      mandatoryArgTypes=List(AnySchemeType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=ReturnType.UnreachableValue
     )
@@ -172,15 +178,39 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(procedureType) === "(-> <any> <unit> (unreachable))")
   }
 
+  test("(->* (<string>) (<symbol>) <number>)") {
+    val procedureType = ProcedureType(
+      mandatoryArgTypes=List(StringType),
+      optionalArgTypes=List(SymbolType),
+      restArgMemberTypeOpt=None,
+      returnType=ReturnType.SingleValue(NumberType)
+    )
+
+    assert(NameForType(procedureType) === "(->* (<string>) (<symbol>) <number>)")
+  }
+
+  test("(->* () (<boolean> <symbol>) <port> * <number>)") {
+    val procedureType = ProcedureType(
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=List(BooleanType, SymbolType),
+      restArgMemberTypeOpt=Some(PortType),
+      returnType=ReturnType.SingleValue(NumberType)
+    )
+
+    assert(NameForType(procedureType) === "(->* () (<boolean> <symbol>) <port> * <number>)")
+  }
+
   test("(case-> (-> <number>) (-> <number> <number>))") {
     val caseProcType = CaseProcedureType(List(
       ProcedureType(
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(NumberType)
       ),
       ProcedureType(
-        fixedArgTypes=List(NumberType),
+        mandatoryArgTypes=List(NumberType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(NumberType)
       )

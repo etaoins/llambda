@@ -8,99 +8,128 @@ import Implicits._
 
 class ProcedureTypeSuite extends SchemeTypeSuite {
   val twoStringToNumberProcedure = ProcedureType(
-    fixedArgTypes=List(StringType, StringType),
+    mandatoryArgTypes=List(StringType, StringType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(NumberType)
   )
-  
+
   val twoStringToExactIntProcedure = ProcedureType(
-    fixedArgTypes=List(StringType, StringType),
+    mandatoryArgTypes=List(StringType, StringType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(ExactIntegerType)
   )
 
   val twoStringToPortProcedure = ProcedureType(
-    fixedArgTypes=List(StringType, StringType),
+    mandatoryArgTypes=List(StringType, StringType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(PortType)
   )
-  
+
   val anyStringToNumberProcedure = ProcedureType(
-    fixedArgTypes=Nil,
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(StringType),
     returnType=ReturnType.SingleValue(NumberType)
   )
 
   val listElementToUnitProcedure = ProcedureType(
-    fixedArgTypes=List(ListElementType),
+    mandatoryArgTypes=List(ListElementType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
-  
+
   val pairToUnitProcedure = ProcedureType(
-    fixedArgTypes=List(AnyPairType),
+    mandatoryArgTypes=List(AnyPairType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
 
   val symbolToUnreachableProcedure = ProcedureType(
-    fixedArgTypes=List(SymbolType),
+    mandatoryArgTypes=List(SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.UnreachableValue
   )
 
   val symbolToStringProcedure = ProcedureType(
-    fixedArgTypes=List(SymbolType),
+    mandatoryArgTypes=List(SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(StringType)
   )
 
   val symbolToMultipleStringProcedure = ProcedureType(
-    fixedArgTypes=List(SymbolType),
+    mandatoryArgTypes=List(SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SpecificValues(List(StringType, StringType))
   )
 
   val symbolToArbitraryProcedure = ProcedureType(
-    fixedArgTypes=List(SymbolType),
+    mandatoryArgTypes=List(SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.ArbitraryValues
   )
 
   val symbolToUnitProcedure = ProcedureType(
-    fixedArgTypes=List(SymbolType),
+    mandatoryArgTypes=List(SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
 
   val listElementsToUnitProcedure = ProcedureType(
-    fixedArgTypes=Nil,
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(ListElementType),
     returnType=ReturnType.SingleValue(UnitType)
   )
-  
+
   val pairsToUnitProcedure = ProcedureType(
-    fixedArgTypes=Nil,
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(AnyPairType),
     returnType=ReturnType.SingleValue(UnitType)
   )
-  
+
   val symbolsToUnitProcedure = ProcedureType(
-    fixedArgTypes=Nil,
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(SymbolType),
     returnType=ReturnType.SingleValue(UnitType)
   )
 
   val higherOrderProcedure = ProcedureType(
-    fixedArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
+    mandatoryArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(listElementToUnitProcedure),
     returnType=ReturnType.SingleValue(twoStringToExactIntProcedure)
+  )
+
+  val optionalStringToNumberProcedure = ProcedureType(
+    mandatoryArgTypes=List(StringType),
+    optionalArgTypes=List(StringType),
+    restArgMemberTypeOpt=None,
+    returnType=ReturnType.SingleValue(NumberType)
+  )
+
+  val oneStringToNumberProcedure = ProcedureType(
+    mandatoryArgTypes=List(StringType),
+    optionalArgTypes=Nil,
+    restArgMemberTypeOpt=None,
+    returnType=ReturnType.SingleValue(NumberType)
   )
 
   test("specific procedure type satisfies itself") {
     assert(SatisfiesType(twoStringToNumberProcedure, twoStringToNumberProcedure) === Some(true))
   }
-  
+
   test("specific procedure type's applicable type is itself") {
     assert(twoStringToNumberProcedure.applicableTypeOpt === Some(twoStringToNumberProcedure))
   }
@@ -124,11 +153,11 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("specific procedure type may satisfy top procedure type") {
     assert(SatisfiesType(TopProcedureType, twoStringToNumberProcedure) === None)
   }
-  
+
   test("specific procedure type definitely satisfies procedure atom type") {
     assert(SatisfiesType(SchemeTypeAtom(ct.ProcedureCell), twoStringToNumberProcedure) === Some(true))
   }
-  
+
   test("specific procedure type definitely satisfies <any> type") {
     assert(SatisfiesType(AnySchemeType, twoStringToNumberProcedure) === Some(true))
   }
@@ -136,19 +165,19 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("higher order procedure type may satisfy top procedure type") {
     assert(SatisfiesType(TopProcedureType, higherOrderProcedure) === None)
   }
-  
+
   test("higher order procedure type definitely satisfies procedure type atom") {
     assert(SatisfiesType(SchemeTypeAtom(ct.ProcedureCell), higherOrderProcedure) === Some(true))
   }
-  
+
   test("higher order procedure type definitely satisfies <any> type") {
     assert(SatisfiesType(AnySchemeType, higherOrderProcedure) === Some(true))
   }
-  
+
   test("top procedure type may satisfy specific procedure type") {
     assert(SatisfiesType(twoStringToNumberProcedure, TopProcedureType) === None)
   }
-  
+
   test("top procedure type's applicable type is itself") {
     assert(TopProcedureType.applicableTypeOpt === Some(TopProcedureType))
   }
@@ -156,7 +185,7 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("procedure with fixed args may satisfy procedure with compatible rest args") {
     assert(SatisfiesType(anyStringToNumberProcedure, twoStringToNumberProcedure) === None)
   }
-  
+
   test("procedure with rest args definitely satisfies procedure with compatible fixed args") {
     assert(SatisfiesType(twoStringToNumberProcedure, anyStringToNumberProcedure) === Some(true))
   }
@@ -164,23 +193,23 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("procedure definitely satisfies procedure with more specific fixed arg type") {
     assert(SatisfiesType(pairToUnitProcedure, listElementToUnitProcedure) === Some(true))
   }
-  
+
   test("procedure may satisfy procedure with less specific fixed arg type") {
     assert(SatisfiesType(listElementToUnitProcedure, pairToUnitProcedure) === None)
   }
-  
+
   test("procedure definitely doesn't satisfy procedure with disjoint fixed arg type") {
     assert(SatisfiesType(listElementToUnitProcedure, symbolToUnitProcedure) === Some(false))
   }
-  
+
   test("procedure definitely satisfies procedure with more specific rest arg type") {
     assert(SatisfiesType(pairsToUnitProcedure, listElementsToUnitProcedure) === Some(true))
   }
-  
+
   test("procedure may satisfy procedure with less specific rest arg type") {
     assert(SatisfiesType(listElementsToUnitProcedure, pairsToUnitProcedure) === None)
   }
-  
+
   test("procedure may satisfy procedure with disjoint rest arg type") {
     // These are compatible as long as no rest args are passed
     assert(SatisfiesType(listElementsToUnitProcedure, symbolsToUnitProcedure) === None)
@@ -189,7 +218,7 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("procedure definitely satisfies procedure with less specific return type") {
     assert(SatisfiesType(twoStringToNumberProcedure, twoStringToExactIntProcedure) === Some(true))
   }
-  
+
   test("procedure may satisfy procedure with more specific return type") {
     assert(SatisfiesType(twoStringToExactIntProcedure, twoStringToNumberProcedure) === None)
   }
@@ -238,26 +267,42 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(symbolToStringProcedure, symbolToMultipleStringProcedure) === Some(false))
   }
 
+  test("procedure with optional string definitely satisfies procedure with mandatory string argument") {
+    assert(SatisfiesType(twoStringToNumberProcedure, optionalStringToNumberProcedure) === Some(true))
+  }
+
+  test("procedure with mandatory string definitely satisfies procedure with optional string argument") {
+    assert(SatisfiesType(optionalStringToNumberProcedure, twoStringToNumberProcedure) === None)
+  }
+
+  test("procedure with optional string may satisfy procedure without corresponding argument") {
+    assert(SatisfiesType(oneStringToNumberProcedure, optionalStringToNumberProcedure) === Some(true))
+  }
+
+  test("procedure without corresponding arguemnt may satisfy procedure with optional string argument") {
+    assert(SatisfiesType(optionalStringToNumberProcedure, oneStringToNumberProcedure) === None)
+  }
+
   test("the union of two unrelated specific procedure types is the top procedure type") {
     assert((twoStringToPortProcedure + anyStringToNumberProcedure) === TopProcedureType)
   }
-  
+
   test("the union of two related specific procedure types is the most general procedure type") {
     assert((twoStringToNumberProcedure + twoStringToExactIntProcedure) === twoStringToNumberProcedure)
   }
-  
+
   test("the union of a specific procedure type and the top procedure type is the top procedure type") {
     assert((twoStringToPortProcedure + TopProcedureType) === TopProcedureType)
   }
-  
+
   test("the union of a specific procedure type and the string type has the applicable type of the specific procedure type") {
     assert((twoStringToPortProcedure + StringType).applicableTypeOpt === Some(twoStringToPortProcedure))
   }
-  
+
   test("the union of two non-procedure types has no procedure type") {
     assert((NumberType + StringType).applicableTypeOpt === None)
   }
-  
+
   test("the procedure type atom has the applicable type of the top procedure type") {
     assert(SchemeTypeAtom(ct.ProcedureCell).applicableTypeOpt === Some(TopProcedureType))
   }
@@ -269,19 +314,19 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("replacing the applicable type of a non-procedure type") {
     assert(NumberType.replaceApplicableType(listElementToUnitProcedure) === NumberType)
   }
-  
+
   test("replacing the applicable type of the procedure type atom") {
     val replacedType = SchemeTypeAtom(ct.ProcedureCell).replaceApplicableType(listElementToUnitProcedure)
     assert(replacedType === listElementToUnitProcedure)
   }
-  
+
   test("replacing the applicable type of a procedure type") {
     val replacedType = twoStringToPortProcedure.replaceApplicableType(listElementToUnitProcedure)
     assert(replacedType === listElementToUnitProcedure)
   }
 
   test("replacing the applicable type of a type union") {
-    val replacedType = (twoStringToPortProcedure + NumberType).replaceApplicableType(listElementToUnitProcedure) 
+    val replacedType = (twoStringToPortProcedure + NumberType).replaceApplicableType(listElementToUnitProcedure)
     assert(replacedType === (listElementToUnitProcedure + NumberType))
   }
 }

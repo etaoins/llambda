@@ -10,7 +10,8 @@ import Implicits._
 
 class StabiliseTypeSuite extends FunSuite {
   val StringToStringProcedure = ProcedureType(
-    fixedArgTypes=List(StringType),
+    mandatoryArgTypes=List(StringType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(StringType)
   )

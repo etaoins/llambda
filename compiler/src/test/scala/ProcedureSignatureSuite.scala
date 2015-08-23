@@ -18,6 +18,7 @@ class ProcedureSignatureSuite extends FunSuite {
 
     assert(returningSignature.toSchemeProcedureType === vt.ProcedureType(
       List(vt.FlonumType),
+      Nil,
       None,
       vt.ReturnType.SingleValue(vt.ExactIntegerType)
     ))
@@ -35,6 +36,7 @@ class ProcedureSignatureSuite extends FunSuite {
 
     assert(returningSignature.toSchemeProcedureType === vt.ProcedureType(
       List(vt.FlonumType),
+      Nil,
       None,
       vt.ReturnType.SingleValue(vt.EmptySchemeType)
     ))

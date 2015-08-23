@@ -80,7 +80,8 @@ object ReduceCallCc {
       }
       else if (ContainsImmediateReturn(dereturnedBodyExpr)) {
         val selfApplyProcType = vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         ).toPolymorphic

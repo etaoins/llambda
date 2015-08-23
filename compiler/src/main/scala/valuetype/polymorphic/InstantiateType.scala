@@ -24,9 +24,10 @@ object InstantiateType {
       typeVars : ReconcileTypeVars.Result,
       procType : ProcedureType
   ) : ProcedureType = procType match {
-    case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
+    case ProcedureType(mandatoryArgTypes, optionalArgTypes, restArgMemberTypeOpt, returnType) =>
       ProcedureType(
-        fixedArgTypes=fixedArgTypes.map(apply(typeVars, _)),
+        mandatoryArgTypes=mandatoryArgTypes.map(apply(typeVars, _)),
+        optionalArgTypes=optionalArgTypes.map(apply(typeVars, _)),
         restArgMemberTypeOpt=restArgMemberTypeOpt.map(apply(typeVars, _)),
         returnType=instantiateReturnType(typeVars, returnType)
       )

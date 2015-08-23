@@ -65,7 +65,8 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
 
     // Can we select a more specific polymorph or case lambda clause?
     targetType.signatures match {
-      case List(vt.ProcedureType(fixedTypes, None, _)) =>
+      // OPTTODO: Select optional argument polymorphs
+      case List(vt.ProcedureType(fixedTypes, Nil, None, _)) =>
         val selectedPolymorph = toApplicableValueForArgs(fixedTypes)
 
         if (!(selectedPolymorph eq this)) {

@@ -94,7 +94,7 @@ object ResolveTypeVars {
       visitType(typeVars, polyKey, Nil, evidenceKey, Nil) ++
         visitType(typeVars, polyValue, Nil, evidenceValue, Nil)
 
-    case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
+    case (ProcedureType(_, _, polyRestOpt, polyReturn), ProcedureType(_, _, evidenceRestOpt, evidenceReturn)) =>
       // Intentionally do not use the formals to resolve polymorphic variables. The formals aren't "evidence" of types
       // as they're passed input from other polymorphic collections. For example, the signature for (filter) might be:
       // (All (A) (-> A <boolean>) (Listof A) (Listof A))

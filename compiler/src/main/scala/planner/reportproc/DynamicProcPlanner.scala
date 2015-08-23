@@ -26,7 +26,8 @@ object DynamicProcPlanner extends ReportProcPlanner {
 
       val converterTemp = plan.withContextLocation(converterProc._1) {
         val converterProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.AnySchemeType),
+          mandatoryArgTypes=List(vt.AnySchemeType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         )

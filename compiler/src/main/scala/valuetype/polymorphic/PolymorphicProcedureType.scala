@@ -7,7 +7,8 @@ import llambda.compiler.SourceLocated
 case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : ProcedureType) {
   private def instantiate(reconciled : ReconcileTypeVars.Result) : ProcedureType = {
     template.copy(
-      fixedArgTypes=template.fixedArgTypes.map(InstantiateType(reconciled, _)),
+      mandatoryArgTypes=template.mandatoryArgTypes.map(InstantiateType(reconciled, _)),
+      optionalArgTypes=template.optionalArgTypes.map(InstantiateType(reconciled, _)),
       restArgMemberTypeOpt=template.restArgMemberTypeOpt.map(InstantiateType(reconciled, _)),
       returnType=InstantiateType.instantiateReturnType(reconciled, template.returnType)
     )
@@ -19,13 +20,15 @@ case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : Procedur
       return template
     }
 
-    val fixedArgResults = (template.fixedArgTypes zip args) map { case (polyArg, evidenceArg) =>
+    val fixedArgTypes = template.mandatoryArgTypes ++ template.optionalArgTypes
+
+    val fixedArgResults = (fixedArgTypes zip args) map { case (polyArg, evidenceArg) =>
       ResolveTypeVars(typeVars, polyArg, evidenceArg)
     }
 
     val restArgResults = template.restArgMemberTypeOpt match {
       case Some(polyMemberType) =>
-        args.drop(template.fixedArgTypes.length) map { evidenceMemberType =>
+        args.drop(fixedArgTypes.length) map { evidenceMemberType =>
           ResolveTypeVars(typeVars, polyMemberType, evidenceMemberType)
         }
 

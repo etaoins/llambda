@@ -22,20 +22,31 @@ object NameForType {
   }
 
   private def nameForProcedureType(procType : ProcedureType) : String = procType match {
-    case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
-      val fixedArgNames = fixedArgTypes.map { fixedArgType =>
-        apply(fixedArgType)
-      }
+    // OPTTODO: Support for (->*)
+    case ProcedureType(mandatoryArgTypes, Nil, restArgMemberTypeOpt, returnType) =>
+      val mandatoryArgNames = mandatoryArgTypes.map(apply(_))
 
       val restArgNames = restArgMemberTypeOpt map { restArgMemberType =>
         apply(restArgMemberType) + " *"
       }
 
       val returnTypeName = NameForReturnType(returnType)
-      
-      "(-> " + (fixedArgNames ++ restArgNames :+ returnTypeName).mkString(" ") + ")"
+
+      "(-> " + (mandatoryArgNames ++ restArgNames :+ returnTypeName).mkString(" ") + ")"
+
+    case ProcedureType(mandatoryArgTypes, optionalArgTypes, restArgMemberTypeOpt, returnType) =>
+      val mandatoryArgList = "(" + mandatoryArgTypes.map(apply(_)).mkString(" ") + ")"
+      val optionalArgList = "(" + optionalArgTypes.map(apply(_)).mkString(" ") + ")"
+
+      val restArgList = (restArgMemberTypeOpt map { restArgMemberType =>
+        " " + apply(restArgMemberType) + " *"
+      }).getOrElse("")
+
+      val returnTypeName = NameForReturnType(returnType)
+
+      s"(->* ${mandatoryArgList} ${optionalArgList}${restArgList} ${returnTypeName})"
   }
-  
+
   private[valuetype] def stackedNameForNonRecurseType(typeStack : SchemeType.Stack, recurseVarNames : Map[SchemeType, Char]) : String = {
     typeStack.head match {
       case LiteralBooleanType(false) =>

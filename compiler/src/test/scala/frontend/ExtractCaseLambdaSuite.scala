@@ -28,14 +28,16 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     )(scope)) {
       case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
         val firstProcType = vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
         val secondProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.AnySchemeType),
+          mandatoryArgTypes=List(vt.AnySchemeType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
@@ -63,14 +65,16 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     )(scope)) {
       case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
         val firstProcType = vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
         val secondProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.ExactIntegerType),
+          mandatoryArgTypes=List(vt.ExactIntegerType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
@@ -98,14 +102,16 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     )(scope)) {
       case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
         val firstProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.AnySchemeType),
+          mandatoryArgTypes=List(vt.AnySchemeType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
         val secondProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.AnySchemeType),
+          mandatoryArgTypes=List(vt.AnySchemeType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
         )
@@ -133,14 +139,16 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     )(scope)) {
       case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
         val firstProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.AnySchemeType),
+          mandatoryArgTypes=List(vt.AnySchemeType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
         val secondProcType = vt.ProcedureType(
-          fixedArgTypes=List(),
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
         )
@@ -168,14 +176,16 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     )(scope)) {
       case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
         val firstProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.SymbolType),
+          mandatoryArgTypes=List(vt.SymbolType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
         val secondProcType = vt.ProcedureType(
-          fixedArgTypes=List(vt.StringType),
+          mandatoryArgTypes=List(vt.StringType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.PortType),
           returnType=vt.ReturnType.ArbitraryValues
         )

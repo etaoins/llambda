@@ -10,7 +10,8 @@ object ExtractPatternMatch {
     * This takes the value to match and returns the result of the match expression
     */
   private val clauseLambdaType = vt.ProcedureType(
-    fixedArgTypes=List(vt.AnySchemeType),
+    mandatoryArgTypes=List(vt.AnySchemeType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.ArbitraryValues
   )

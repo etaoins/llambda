@@ -34,7 +34,10 @@ object ExtractType {
   }
 
 
-  private def applyProcedureTypeConstructor(located : SourceLocated, args : List[sst.ScopedDatum]) : vt.ProcedureType = {
+  private def applyProcedureTypeConstructor(
+      located : SourceLocated,
+      args : List[sst.ScopedDatum]
+  ) : vt.ProcedureType = {
     // Explicitly recursive types cannot cross procedure boundaries due to lack of testing and use cases
     val noRecursiveVars = RecursiveVars()
 
@@ -42,11 +45,41 @@ object ExtractType {
     val parsed = ParseProcedureTypeConstructor(located, args)
 
     // Resolve the types
-    val fixedArgTypes = parsed.fixedArgData.map(extractNonEmptySchemeType(_, noRecursiveVars))
+    val mandatoryArgTypes = parsed.fixedArgData.map(extractNonEmptySchemeType(_, noRecursiveVars))
     val restArgMemberType = parsed.restArgMemberDatumOpt.map(extractNonEmptySchemeType(_, noRecursiveVars))
     val returnType = extractReturnSchemeType(parsed.returnDatum)
 
-    vt.ProcedureType(fixedArgTypes, restArgMemberType, returnType)
+    vt.ProcedureType(mandatoryArgTypes, Nil, restArgMemberType, returnType)
+  }
+
+  private def applyOptionalProcedureTypeConstructor(
+      located : SourceLocated,
+      args : List[sst.ScopedDatum]
+  ) : vt.ProcedureType = args match {
+    case List(
+      sst.ScopedProperList(mandatoryArgData),
+      sst.ScopedProperList(optionalArgData),
+      restArgMemberDatum,
+      sst.ScopedSymbol(_, "*"),
+      returnDatum
+    ) =>
+      val mandatoryArgTypes = mandatoryArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
+      val optionalArgTypes = optionalArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
+      val restArgMemberType = extractNonEmptySchemeType(restArgMemberDatum, RecursiveVars())
+      val returnType = extractReturnSchemeType(returnDatum)
+
+      vt.ProcedureType(mandatoryArgTypes, optionalArgTypes, Some(restArgMemberType), returnType)
+
+    case List(sst.ScopedProperList(mandatoryArgData), sst.ScopedProperList(optionalArgData), returnDatum) =>
+      val mandatoryArgTypes = mandatoryArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
+      val optionalArgTypes = optionalArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
+      val returnType = extractReturnSchemeType(returnDatum)
+
+      vt.ProcedureType(mandatoryArgTypes, optionalArgTypes, None, returnType)
+
+    case _ =>
+      throw new BadSpecialFormException(located,
+        "(->* (mandatory...) (optional...) return) or (->* (mandatory...) (optional...) rest * return) expected")
   }
 
   private def applyCaseProcedureTypeConstructor(located : SourceLocated, args : List[sst.ScopedDatum]) : vt.SchemeType = {
@@ -150,6 +183,9 @@ object ExtractType {
 
       case Primitives.ProcedureType =>
         applyProcedureTypeConstructor(constructorName, args)
+
+      case Primitives.OptionalProcedureType =>
+        applyOptionalProcedureTypeConstructor(constructorName, args)
 
       case Primitives.CaseProcedureType =>
         applyCaseProcedureTypeConstructor(constructorName, args)
