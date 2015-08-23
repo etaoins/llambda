@@ -122,13 +122,15 @@ class ResolveTypeVarsSuite extends FunSuite {
 
   test("resolving procedure type from procedure type with identical arity") {
     val polyProc = ProcedureType(
-      fixedArgTypes=List(polyA, polyB),
+      mandatoryArgTypes=List(polyA, polyB),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(polyA),
       returnType=ReturnType.SingleValue(polyC)
     )
 
     val evidence = ProcedureType(
-      fixedArgTypes=List(ExactIntegerType, FlonumType),
+      mandatoryArgTypes=List(ExactIntegerType, FlonumType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(FlonumType),
       returnType=ReturnType.SingleValue(PortType)
     )
@@ -142,13 +144,15 @@ class ResolveTypeVarsSuite extends FunSuite {
 
   test("resolving procedure type from procedure type with different but compatible arity") {
     val polyProc = ProcedureType(
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(polyA),
       returnType=ReturnType.SpecificValues(List(polyB, polyC))
     )
 
     val evidence = ProcedureType(
-      fixedArgTypes=List(ExactIntegerType, ExactIntegerType),
+      mandatoryArgTypes=List(ExactIntegerType, ExactIntegerType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(FlonumType),
       returnType=ReturnType.SpecificValues(List(PortType, BooleanType))
     )

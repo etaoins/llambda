@@ -47,6 +47,7 @@ object Primitives {
   object RecType extends PrimitiveTypeConstructor
   object ValuesType extends PrimitiveTypeConstructor
   object ProcedureType extends PrimitiveTypeConstructor
+  object OptionalProcedureType extends PrimitiveTypeConstructor
   object CaseProcedureType extends PrimitiveTypeConstructor
   object PolymorphicType extends PrimitiveTypeConstructor
   object ExternalRecordType extends PrimitiveTypeConstructor
@@ -97,6 +98,7 @@ object Primitives {
       "Rec" -> RecType,
       "Values" -> ValuesType,
       "->" -> ProcedureType,
+      "->*" -> OptionalProcedureType,
       "case->" -> CaseProcedureType,
       "All" -> PolymorphicType,
       "ExternalRecord" -> ExternalRecordType,

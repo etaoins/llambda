@@ -9,9 +9,11 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
   val polyA = new TypeVar("A")
   val polyB = new TypeVar("B", NumberType)
 
+  // OPTTODO: Test for polymorphic with optional arguments
   test("(-> <number>)") {
     val polyType = ProcedureType(
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=ReturnType.SingleValue(NumberType)
     ).toPolymorphic
@@ -23,7 +25,8 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
     val polyType = PolymorphicProcedureType(
       typeVars=Set(polyA),
       template=ProcedureType(
-        fixedArgTypes=List(polyA),
+        mandatoryArgTypes=List(polyA),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(NumberType)
       )
@@ -36,12 +39,27 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
     val polyType = PolymorphicProcedureType(
       typeVars=Set(polyA, polyB),
       template=ProcedureType(
-        fixedArgTypes=List(polyA),
+        mandatoryArgTypes=List(polyA),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(polyB)
       )
     )
 
     assert(NameForPolymorphicProcedureType(polyType) === "(All (A [B : <number>]) (-> A B))")
+  }
+
+  test("(All (A) (->* (A) ((Listof A)) <number>))") {
+    val polyType = PolymorphicProcedureType(
+      typeVars=Set(polyA),
+      template=ProcedureType(
+        mandatoryArgTypes=List(polyA),
+        optionalArgTypes=List(UniformProperListType(polyA)),
+        restArgMemberTypeOpt=None,
+        returnType=ReturnType.SingleValue(NumberType)
+      )
+    )
+
+    assert(NameForPolymorphicProcedureType(polyType) === "(All (A) (->* (A) ((Listof A)) <number>))")
   }
 }

@@ -49,7 +49,8 @@ object ExtractLambda {
     }
 
     typeDeclaration match {
-      case MonomorphicDeclaration(vt.ProcedureType(fixedArgAnns, restArgAnnOpt, returnTypeAnn)) =>
+      // OPTTODO: Work with optional args
+      case MonomorphicDeclaration(vt.ProcedureType(fixedArgAnns, Nil, restArgAnnOpt, returnTypeAnn)) =>
         validateArity(
           located=located,
           formalsFixedArgs=formalsFixedArgTypes.length,
@@ -78,7 +79,8 @@ object ExtractLambda {
         } : Option[(sst.ScopedSymbol, vt.SchemeType)]
 
         val polyType = vt.ProcedureType(
-          fixedArgTypes=combinedFixedArgs.map(_._2),
+          mandatoryArgTypes=combinedFixedArgs.map(_._2),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=combinedRestArgOpt.map(_._2),
           returnType=returnTypeAnn
         ).toPolymorphic
@@ -88,7 +90,8 @@ object ExtractLambda {
       case PolymorphicProcedureDeclaration(polyType @ pm.PolymorphicProcedureType(typeVars, template)) =>
         val upperBound = polyType.upperBound
 
-        val fixedArgAnns = upperBound.fixedArgTypes
+        // OPTTODO: Work with optional args
+        val fixedArgAnns = upperBound.mandatoryArgTypes
         val restArgAnnOpt = upperBound.restArgMemberTypeOpt
         val returnTypeAnn = upperBound.returnType
 
@@ -119,8 +122,10 @@ object ExtractLambda {
         ReconciledTypes(checkedFixedArgs, checkedRestArgOpt, returnTypeAnn, polyType)
 
       case _ =>
+        // OPTTODO: Work with optional args
         val polyType = vt.ProcedureType(
-          fixedArgTypes=formalsFixedArgTypes.map(_._2),
+          mandatoryArgTypes=formalsFixedArgTypes.map(_._2),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=formalsRestArgMemberTypeOpt.map(_._2),
           returnType=vt.ReturnType.ArbitraryValues
         ).toPolymorphic

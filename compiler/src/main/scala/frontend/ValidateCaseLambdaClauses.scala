@@ -13,16 +13,21 @@ private[frontend] object ValidateCaseLambdaClauses {
     if (clauses.length > 1) {
       clauses.tail.scanLeft(clauses.head._2) {
         case (prevSignature, (located, signature)) =>
-          val prevFixedArgCount = prevSignature.fixedArgTypes.length
-          val fixedArgCount = signature.fixedArgTypes.length 
+          if (signature.optionalArgTypes.length > 0) {
+            // OPTTODO: Test this case
+            throw new BadSpecialFormException(located, "Default arguments cannot be used with case lambdas")
+          }
+
+          val prevMandatoryArgCount = prevSignature.mandatoryArgTypes.length
+          val mandatoryArgCount = signature.mandatoryArgTypes.length
 
           if (prevSignature.restArgMemberTypeOpt.isDefined) {
             val message = "Case unreachable; previous case had a rest argument"
-            throw new BadSpecialFormException(located, message) 
+            throw new BadSpecialFormException(located, message)
           }
-          else if ((fixedArgCount <= prevFixedArgCount) && !signature.restArgMemberTypeOpt.isDefined) {
-            val message = s"Case unreachable; has ${fixedArgCount} fixed arguments while previous case has ${prevFixedArgCount}"
-            throw new BadSpecialFormException(located, message) 
+          else if ((mandatoryArgCount <= prevMandatoryArgCount) && !signature.restArgMemberTypeOpt.isDefined) {
+            val message = s"Case unreachable; has ${mandatoryArgCount} fixed arguments while previous case has ${prevMandatoryArgCount}"
+            throw new BadSpecialFormException(located, message)
           }
 
           signature

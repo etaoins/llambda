@@ -13,7 +13,8 @@ private[frontend] object FeaturesProcedure {
     val featuresList = frontendConfig.featureIdentifiers.toList.sorted
 
     val featuresProcType = vt.ProcedureType(
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.UniformProperListType(vt.SymbolType))
     )

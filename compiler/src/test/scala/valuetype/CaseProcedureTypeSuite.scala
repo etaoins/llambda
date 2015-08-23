@@ -8,31 +8,36 @@ import Implicits._
 
 class CaseProcedureTypeSuite extends SchemeTypeSuite {
   val oneUnitToPortProcedure = ProcedureType(
-    fixedArgTypes=List(UnitType),
+    mandatoryArgTypes=List(UnitType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(PortType)
   )
 
   val twoStringToNumberProcedure = ProcedureType(
-    fixedArgTypes=List(StringType, StringType),
+    mandatoryArgTypes=List(StringType, StringType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(NumberType)
   )
-  
+
   val twoStringToExactIntProcedure = ProcedureType(
-    fixedArgTypes=List(StringType, StringType),
+    mandatoryArgTypes=List(StringType, StringType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(ExactIntegerType)
   )
-  
+
   val threeSymbolToNullProcedure = ProcedureType(
-    fixedArgTypes=List(SymbolType, SymbolType, SymbolType),
+    mandatoryArgTypes=List(SymbolType, SymbolType, SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(ListElementType)
   )
-  
+
   val fourPortToNullProcedure = ProcedureType(
-    fixedArgTypes=List(PortType, PortType, PortType, PortType),
+    mandatoryArgTypes=List(PortType, PortType, PortType, PortType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(ListElementType)
   )

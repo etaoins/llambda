@@ -226,7 +226,8 @@ case class RecordConstructor(recordType : vt.RecordType, initializedFields : Lis
     RecordConstructor(recordType, initializedFields).assignLocationFrom(this)
   
   override def schemeType = vt.ProcedureType(
-    fixedArgTypes=initializedFields.map(recordType.typeForField).map(_.schemeType),
+    mandatoryArgTypes=initializedFields.map(recordType.typeForField).map(_.schemeType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(recordType)
   )
@@ -237,7 +238,8 @@ case class RecordAccessor(recordType : vt.RecordType, field : vt.RecordField) ex
     RecordAccessor(recordType, field).assignLocationFrom(this)
   
   override def schemeType = vt.ProcedureType(
-    fixedArgTypes=List(recordType),
+    mandatoryArgTypes=List(recordType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(recordType.typeForField(field).schemeType)
   )
@@ -248,7 +250,8 @@ case class RecordMutator(recordType : vt.RecordType, field : vt.RecordField) ext
     RecordMutator(recordType, field).assignLocationFrom(this)
 
   override def schemeType = vt.ProcedureType(
-    fixedArgTypes=List(recordType, recordType.typeForField(field).schemeType),
+    mandatoryArgTypes=List(recordType, recordType.typeForField(field).schemeType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType)
   )

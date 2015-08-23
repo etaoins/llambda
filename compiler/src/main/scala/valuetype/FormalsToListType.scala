@@ -3,8 +3,12 @@ import io.llambda
 
 object FormalsToListType {
   /** Converts a formals definition in to a list type that matches the formal's expected args */
-  def apply(fixedArgs : List[SchemeType], restArgMemberTypeOpt : Option[SchemeType]) : SchemeType = {
-    val fixedArgCdr = restArgMemberTypeOpt match {
+  def apply(
+      mandatoryArgs : List[SchemeType],
+      optionalArgs : List[SchemeType],
+      restArgMemberTypeOpt : Option[SchemeType]
+  ) : SchemeType = {
+    val restArgListType = restArgMemberTypeOpt match {
       case None =>
         EmptyListType
 
@@ -12,7 +16,17 @@ object FormalsToListType {
         UniformProperListType(memberType)
     }
 
-    fixedArgs.foldRight(fixedArgCdr) { case (fixedArgType, cdrType) =>
+    val restAndOptionalListType = optionalArgs.foldRight(restArgListType) { (optionalArgType, cdrType) =>
+      UnionType(Set(
+        SpecificPairType(
+          DirectSchemeTypeRef(optionalArgType),
+          DirectSchemeTypeRef(cdrType)
+        ),
+        EmptyListType
+      ))
+    }
+
+    mandatoryArgs.foldRight(restAndOptionalListType) { case (fixedArgType, cdrType) =>
       SpecificPairType(
         DirectSchemeTypeRef(fixedArgType),
         DirectSchemeTypeRef(cdrType)

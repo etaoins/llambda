@@ -95,7 +95,8 @@ class InstantiateTypeSuite extends FunSuite {
 
   test("instantiating a procedure type") {
     val polyProc = ProcedureType(
-      fixedArgTypes=List(polyA, PortType),
+      mandatoryArgTypes=List(polyA, PortType),
+      optionalArgTypes=List(PortType, polyA),
       restArgMemberTypeOpt=Some(polyB),
       returnType=ReturnType.SpecificValues(List(polyA, StringType))
     )
@@ -106,7 +107,8 @@ class InstantiateTypeSuite extends FunSuite {
     ))
 
     val expected = ProcedureType(
-      fixedArgTypes=List(ExactIntegerType, PortType),
+      mandatoryArgTypes=List(ExactIntegerType, PortType),
+      optionalArgTypes=List(PortType, ExactIntegerType),
       restArgMemberTypeOpt=Some(FlonumType),
       returnType=ReturnType.SpecificValues(List(ExactIntegerType, StringType))
     )
@@ -117,12 +119,14 @@ class InstantiateTypeSuite extends FunSuite {
   test("instantiating a case procedure type") {
     val polyCaseProc = CaseProcedureType(List(
       ProcedureType(
-        fixedArgTypes=List(polyA),
+        mandatoryArgTypes=List(polyA),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(polyB)
       ),
       ProcedureType(
-        fixedArgTypes=List(polyA, polyB),
+        mandatoryArgTypes=List(polyA, polyB),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(polyA)
       )
@@ -135,12 +139,14 @@ class InstantiateTypeSuite extends FunSuite {
 
     val expected = CaseProcedureType(List(
       ProcedureType(
-        fixedArgTypes=List(ExactIntegerType),
+        mandatoryArgTypes=List(ExactIntegerType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(FlonumType)
       ),
       ProcedureType(
-        fixedArgTypes=List(ExactIntegerType, FlonumType),
+        mandatoryArgTypes=List(ExactIntegerType, FlonumType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=ReturnType.SingleValue(ExactIntegerType)
       )

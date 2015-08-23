@@ -221,7 +221,8 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     bodyFor("(define-type <string-proc> (-> <string>))")(scope)
     assert(scope("<string-proc>") === BoundType(
       vt.ProcedureType(
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.StringType)
       )
@@ -230,35 +231,58 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     bodyFor("(define-type <values-to-string-proc> (-> <port> <symbol> <string>))")(scope)
     assert(scope("<values-to-string-proc>") === BoundType(
       vt.ProcedureType(
-        fixedArgTypes=List(vt.PortType, vt.SymbolType),
+        mandatoryArgTypes=List(vt.PortType, vt.SymbolType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.StringType)
       )
     ))
-    
+
     bodyFor("(define-type <symbol-to-values-proc> (-> <symbol> (Values <exact-integer> <flonum>)))")(scope)
     assert(scope("<symbol-to-values-proc>") === BoundType(
       vt.ProcedureType(
-        fixedArgTypes=List(vt.SymbolType),
+        mandatoryArgTypes=List(vt.SymbolType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.MultipleValues(
           vt.SpecificProperListType(List(vt.ExactIntegerType, vt.FlonumType))
         )
       )
     ))
-    
+
     bodyFor("(define-type <values-with-rest-to-arbitrary-proc> (-> <port> <symbol> <pair> * *))")(scope)
     assert(scope("<values-with-rest-to-arbitrary-proc>") === BoundType(
       vt.ProcedureType(
-        fixedArgTypes=List(vt.PortType, vt.SymbolType),
+        mandatoryArgTypes=List(vt.PortType, vt.SymbolType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.AnyPairType),
         returnType=vt.ReturnType.ArbitraryValues
       )
     ))
-    
+
     intercept[BadSpecialFormException] {
       bodyFor("(define-type <insufficient-args> (->))")(scope)
     }
+
+    bodyFor("(define-type <optional-string-proc> (->* () (<string>) <string>))")(scope)
+    assert(scope("<optional-string-proc>") === BoundType(
+      vt.ProcedureType(
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=List(vt.StringType),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.StringType)
+      )
+    ))
+
+    bodyFor("(define-type <optional-with-rest-proc> (->* (<symbol>) (<string> <port>) <number> * <string>))")(scope)
+    assert(scope("<optional-with-rest-proc>") === BoundType(
+      vt.ProcedureType(
+        mandatoryArgTypes=List(vt.SymbolType),
+        optionalArgTypes=List(vt.StringType, vt.PortType),
+        restArgMemberTypeOpt=Some(vt.NumberType),
+        returnType=vt.ReturnType.SingleValue(vt.StringType)
+      )
+    ))
   }
 
   test("defining case procedure types") {
@@ -271,7 +295,8 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     assert(scope("<one-case-proc>") === BoundType(
       vt.CaseProcedureType(List(
         vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.StringType)
         )
@@ -282,12 +307,14 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     assert(scope("<two-case-proc>") === BoundType(
       vt.CaseProcedureType(List(
         vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.NumberType)
         ),
         vt.ProcedureType(
-          fixedArgTypes=List(vt.StringType),
+          mandatoryArgTypes=List(vt.StringType),
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.NumberType)
         )
@@ -298,12 +325,14 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     assert(scope("<two-case-with-rest-proc>") === BoundType(
       vt.CaseProcedureType(List(
         vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.NumberType)
         ),
         vt.ProcedureType(
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.StringType),
           returnType=vt.ReturnType.SingleValue(vt.NumberType)
         )

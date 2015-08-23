@@ -43,7 +43,8 @@ case class ProcedureSignature(
     }
 
     vt.ProcedureType(
-      fixedArgTypes=fixedArgTypes.map(_.schemeType),
+      mandatoryArgTypes=fixedArgTypes.map(_.schemeType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=restArgMemberTypeOpt,
       returnType=schemeReturnType
     )

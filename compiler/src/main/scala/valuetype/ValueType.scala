@@ -395,7 +395,8 @@ sealed abstract trait ApplicableType extends NonUnionSchemeType with NonRecursiv
 }
 
 case class ProcedureType(
-    fixedArgTypes : List[SchemeType],
+    mandatoryArgTypes : List[SchemeType],
+    optionalArgTypes : List[SchemeType],
     restArgMemberTypeOpt : Option[SchemeType],
     returnType : ReturnType.ReturnType[SchemeType]
 ) extends DerivedSchemeType with ApplicableType {
@@ -430,7 +431,7 @@ case class CaseProcedureType(
     Some(this)
 }
 
-object TopProcedureType extends ProcedureType(Nil, Some(AnySchemeType), ReturnType.ArbitraryValues)
+object TopProcedureType extends ProcedureType(Nil, Nil, Some(AnySchemeType), ReturnType.ArbitraryValues)
 
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))

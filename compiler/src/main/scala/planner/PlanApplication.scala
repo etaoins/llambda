@@ -9,6 +9,19 @@ import llambda.compiler.ArityException
 import llambda.compiler.codegen.CostForPlanSteps
 
 private[planner] object PlanApplication {
+  private def requiredArityDescription(mandatoryArgs : Int, optionalArgs : Int, hasRestArg : Boolean) : String = {
+    if (hasRestArg) {
+      s"at least ${mandatoryArgs} arguments"
+    }
+    else if (optionalArgs == 0) {
+      s"exactly ${mandatoryArgs} arguments"
+    }
+    else {
+      s"between ${mandatoryArgs} and ${mandatoryArgs + optionalArgs} arguments"
+    }
+
+  }
+
   def apply(state : PlannerState)(
       procExpr : et.Expr,
       argExprs : List[et.Expr]
@@ -51,7 +64,8 @@ private[planner] object PlanApplication {
     val constraint = ConstrainType.IntersectType(procedureType)
     val postProcState = ConstrainType(state)(procValue, constraint)(plan.config)
 
-    val fixedArgTypes = procedureType.fixedArgTypes
+    // OPTTODO: Test this with optional arguments
+    val fixedArgTypes = procedureType.mandatoryArgTypes ++ procedureType.optionalArgTypes
     val postFixedArgState = args.zip(fixedArgTypes).foldLeft(postProcState) {
       case (state, (fixedArgValue, argType)) =>
         val constraint = ConstrainType.IntersectType(argType)
@@ -99,19 +113,19 @@ private[planner] object PlanApplication {
 
     val procedureType = signature.toSchemeProcedureType
 
-    // Ensure our arity is sane
-    if (procedureType.restArgMemberTypeOpt.isDefined) {
-      if (args.length < procedureType.fixedArgTypes.length) {
-        throw new ArityException(
-          located=plan.activeContextLocated,
-          message=s"Called procedure with ${args.length} arguments; requires at least ${procedureType.fixedArgTypes.length} arguments"
-        )
-      }
-    }
-    else if (procedureType.fixedArgTypes.length != args.length) {
+    val mandatoryArgCount = procedureType.mandatoryArgTypes.length
+    val optionalArgCount = procedureType.optionalArgTypes.length
+    val hasRestArg = procedureType.restArgMemberTypeOpt.isDefined
+
+    val hasCompatibleArity = (args.length >= mandatoryArgCount) &&
+      ((args.length <= (mandatoryArgCount + optionalArgCount)) || hasRestArg)
+
+    if (!hasCompatibleArity) {
+      val requiredArity = requiredArityDescription(mandatoryArgCount, optionalArgCount, hasRestArg)
+
       throw new ArityException(
         located=plan.activeContextLocated,
-        message=s"Called procedure with ${args.length} arguments; requires exactly ${procedureType.fixedArgTypes.length} arguments"
+        message=s"Called procedure with ${args.length} arguments; requires ${requiredArity}"
       )
     }
 
