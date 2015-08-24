@@ -117,10 +117,7 @@ private[planner] object PlanApplication {
     val optionalArgCount = procedureType.optionalArgTypes.length
     val hasRestArg = procedureType.restArgMemberTypeOpt.isDefined
 
-    val hasCompatibleArity = (args.length >= mandatoryArgCount) &&
-      ((args.length <= (mandatoryArgCount + optionalArgCount)) || hasRestArg)
-
-    if (!hasCompatibleArity) {
+    if (!HasCompatibleArity(args.length, mandatoryArgCount, optionalArgCount, hasRestArg)) {
       val requiredArity = requiredArityDescription(mandatoryArgCount, optionalArgCount, hasRestArg)
 
       throw new ArityException(

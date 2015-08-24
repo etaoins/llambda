@@ -88,7 +88,9 @@ object PlanLambdaPolymorph {
 
     val parentState = manifest.parentState
 
-    val fixedArgLocs = lambdaExpr.fixedArgs
+    // For the purposes of planning the procedure mandatory and optional args are indistinguishable. Only the
+    // application sites  are concerned with optional args and their default values.
+    val fixedArgLocs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
     val restArgLoc = lambdaExpr.restArgOpt
 
     // Determine if we have a closure
@@ -102,8 +104,8 @@ object PlanLambdaPolymorph {
     // See if we can retype some of our args
     val argTypeMapping = RetypeLambdaArgs(lambdaExpr, polymorphType)(parentState, parentPlan.config)
 
-    // OPTTODO: Work with optional arguments
-    val retypedFixedArgs = fixedArgLocs.zip(polymorphType.mandatoryArgTypes) map {
+    val fixedArgTypes = polymorphType.mandatoryArgTypes ++ polymorphType.optionalArgTypes
+    val retypedFixedArgs = fixedArgLocs.zip(fixedArgTypes) map {
       case (argLoc, declType) =>
         val retypedType = argTypeMapping.get(argLoc) match {
           case Some(discoveredType) =>

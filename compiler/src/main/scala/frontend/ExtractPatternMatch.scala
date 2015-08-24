@@ -266,10 +266,11 @@ object ExtractPatternMatch {
     )
 
     et.Lambda(
-      clauseLambdaType.toPolymorphic,
-      List(evidenceLoc),
-      None,
-      bodyExpr
+      polyType=clauseLambdaType.toPolymorphic,
+      mandatoryArgs=List(evidenceLoc),
+      optionalArgs=Nil,
+      restArgOpt=None,
+      body=bodyExpr
     )
   }
 
@@ -306,7 +307,7 @@ object ExtractPatternMatch {
           parsePattern(innerValLoc, patternDatum, successExpr, failExpr, Nil)
         )
 
-        et.Lambda(clauseLambdaType.toPolymorphic, List(innerValLoc), None, clauseBodyExpr)
+        et.Lambda(clauseLambdaType.toPolymorphic, List(innerValLoc), Nil, None, clauseBodyExpr)
 
       case (_, otherClause) =>
         throw new BadSpecialFormException(otherClause, "Invalid match clause syntax; (pattern body ...) expected")

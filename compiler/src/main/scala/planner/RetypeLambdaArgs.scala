@@ -177,10 +177,11 @@ private[planner] object RetypeLambdaArgs {
       lambdaExpr : et.Lambda,
       procType : vt.ProcedureType
   )(implicit state : PlannerState, planConfig : PlanConfig) : ArgTypes = {
-    // OPTTODO: Handle optional arguments
-    val initialArgTypes = (lambdaExpr.fixedArgs zip procType.mandatoryArgTypes).filter({
-      case (storageLoc, fixedArgType) =>
-        !planConfig.analysis.mutableVars.contains(storageLoc)
+    val fixedArgs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
+    val fixedArgTypes = procType.mandatoryArgTypes ++ procType.optionalArgTypes
+
+    val initialArgTypes = (fixedArgs zip fixedArgTypes).filter({ case (storageLoc, fixedArgType) =>
+      !planConfig.analysis.mutableVars.contains(storageLoc)
     }).toMap
 
     try {
