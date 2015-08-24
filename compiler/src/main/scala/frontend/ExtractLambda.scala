@@ -179,7 +179,8 @@ object ExtractLambda {
 
     et.Lambda(
       polyType=reconciledTypes.polymorphicType,
-      fixedArgs=boundFixedArgs.map(_._2),
+      mandatoryArgs=boundFixedArgs.map(_._2),
+      optionalArgs=Nil,
       restArgOpt=boundRestArgOpt.map(_._2),
       body=bodyExpr,
       debugContextOpt=subprogramDebugContextOpt

@@ -61,7 +61,8 @@ object ReduceCallCc {
   }
 
   def apply(located : ContextLocated, args : List[et.Expr])(implicit planConfig : PlanConfig) : CallCcReduction = args match {
-    case List(originalLambdaExpr @ et.Lambda(_, List(exitProc), None, bodyExpr, _)) if !planConfig.analysis.mutableVars.contains(exitProc) =>
+    case List(originalLambdaExpr @ et.Lambda(_, List(exitProc), Nil, None, bodyExpr, _))
+        if !planConfig.analysis.mutableVars.contains(exitProc) =>
       // Try to convert all uses of the exit proc in to a return
       val replacedBodyExpr = replaceExitProcWithReturn(bodyExpr, exitProc)
 
@@ -89,7 +90,7 @@ object ReduceCallCc {
         // We converted all uses of the exit proc to et.Return. We can strip out the (call/cc) completely
         // This can be a big efficiency win
         StrippedCallCc(et.Apply(
-          et.Lambda(selfApplyProcType, Nil, None, dereturnedBodyExpr).assignLocationFrom(originalLambdaExpr),
+          et.Lambda(selfApplyProcType, Nil, Nil, None, dereturnedBodyExpr).assignLocationFrom(originalLambdaExpr),
           Nil
         ).assignLocationFrom(located))
       }

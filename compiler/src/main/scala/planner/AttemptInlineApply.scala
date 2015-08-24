@@ -21,15 +21,18 @@ private[planner] object AttemptInlineApply {
       manifestOpt : Option[LambdaManifest] = None
   )(implicit plan : PlanWriter) : Option[ResultValues] = {
     val mutableVars = plan.config.analysis.mutableVars
-    val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArgOpt
+    val allArgs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc) ++ lambdaExpr.restArgOpt
 
     if (!(mutableVars & allArgs.toSet).isEmpty) {
       // Not supported yet
       return None
     }
 
-    if ((args.length < lambdaExpr.fixedArgs.length) ||
-        ((args.length > lambdaExpr.fixedArgs.length) && !lambdaExpr.restArgOpt.isDefined)) {
+    if (!HasCompatibleArity(
+        args.length,
+        lambdaExpr.mandatoryArgs.length,
+        lambdaExpr.optionalArgs.length,
+        lambdaExpr.restArgOpt.isDefined)) {
       // Incompatible arity - let PlanInvokeApply fail this
       return None
     }
@@ -84,7 +87,7 @@ private[planner] object AttemptInlineApply {
     val importedValues = directValues ++ closureValues
 
     // Convert our arguments to ImmutableValues
-    val fixedArgImmutables = (lambdaExpr.fixedArgs.zip(args).map { case (storageLoc, (_, argValue)) =>
+    val mandatoryArgImmutables = (lambdaExpr.mandatoryArgs.zip(args).map { case (storageLoc, (_, argValue)) =>
       if (vt.SatisfiesType(storageLoc.schemeType, argValue.schemeType) != Some(true)) {
         // This type cast could fail at runtime
         return None
@@ -93,9 +96,11 @@ private[planner] object AttemptInlineApply {
       (storageLoc -> ImmutableValue(argValue))
     })(breakOut) : Map[StorageLocation, LocationValue]
 
+    // OPTTODO: Handle optional args
+
     val restArgImmutables = lambdaExpr.restArgOpt.zip(lambdaExpr.schemeType.restArgMemberTypeOpt) map {
       case (storageLoc, memberType) =>
-        val restValues = args.drop(lambdaExpr.fixedArgs.length).map(_._2)
+        val restValues = args.drop(lambdaExpr.mandatoryArgs.length).map(_._2)
 
         for (restValue <- restValues)  {
           if (vt.SatisfiesType(memberType, restValue.schemeType) != Some(true)) {
@@ -109,7 +114,7 @@ private[planner] object AttemptInlineApply {
 
     // Map our input immutables to their new storage locations
     val inlineBodyState = PlannerState(
-      values=fixedArgImmutables ++ restArgImmutables ++ importedValues,
+      values=mandatoryArgImmutables ++ restArgImmutables ++ importedValues,
       inlineDepth=inlineState.inlineDepth + 1
     )
 

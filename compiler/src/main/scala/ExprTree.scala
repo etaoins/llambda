@@ -117,9 +117,12 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends Expr {
   override def schemeType = trueExpr.schemeType + falseExpr.schemeType
 }
 
+case class OptionalArg(storageLoc : StorageLocation, defaultExpr : Expr)
+
 case class Lambda(
     polyType : pm.PolymorphicProcedureType,
-    fixedArgs : List[StorageLocation],
+    mandatoryArgs : List[StorageLocation],
+    optionalArgs : List[OptionalArg],
     restArgOpt : Option[StorageLocation],
     body : Expr,
     debugContextOpt : Option[debug.SubprogramContext] = None
@@ -128,8 +131,13 @@ case class Lambda(
 
   val subexprs = List(body)
 
-  def map(f : Expr => Expr) : Lambda =
-    Lambda(polyType, fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
+  def map(f : Expr => Expr) : Lambda = {
+    val mappedOptionalArgs = optionalArgs.map { case OptionalArg(storageLoc, defaultExpr) =>
+      OptionalArg(storageLoc, f(defaultExpr))
+    }
+
+    Lambda(polyType, mandatoryArgs, mappedOptionalArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
+  }
 }
 
 case class CaseLambda(

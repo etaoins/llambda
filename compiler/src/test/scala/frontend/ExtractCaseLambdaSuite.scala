@@ -46,11 +46,11 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
         assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
 
         inside(firstLambda) {
-          case et.Lambda(`firstProcTypePoly`, Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
+          case et.Lambda(`firstProcTypePoly`, Nil, Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
         }
 
         inside(secondLambda) {
-          case et.Lambda(`secondProcTypePoly`, List(_), None, et.Literal(ast.BooleanLiteral(false)), _) =>
+          case et.Lambda(`secondProcTypePoly`, List(_), Nil, None, et.Literal(ast.BooleanLiteral(false)), _) =>
         }
     }
   }
@@ -83,11 +83,11 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
         assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
 
         inside(firstLambda) {
-          case et.Lambda(`firstProcTypePoly`, Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
+          case et.Lambda(`firstProcTypePoly`, Nil, Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
         }
 
         inside(secondLambda) {
-          case et.Lambda(`secondProcTypePoly`, List(_), None, et.Literal(ast.BooleanLiteral(false)), _) =>
+          case et.Lambda(`secondProcTypePoly`, List(_), Nil, None, et.Literal(ast.BooleanLiteral(false)), _) =>
         }
     }
   }
@@ -120,11 +120,11 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
         assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
 
         inside(firstLambda) {
-          case et.Lambda(`firstProcTypePoly`, List(_), None, et.Literal(ast.BooleanLiteral(true)), _) =>
+          case et.Lambda(`firstProcTypePoly`, List(_), Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
         }
 
         inside(secondLambda) {
-          case et.Lambda(`secondProcTypePoly`, List(_), Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
+          case et.Lambda(`secondProcTypePoly`, List(_), Nil, Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
         }
     }
   }
@@ -157,11 +157,11 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
         assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
 
         inside(firstLambda) {
-          case et.Lambda(`firstProcTypePoly`, List(_), None, et.Literal(ast.BooleanLiteral(true)), _) =>
+          case et.Lambda(`firstProcTypePoly`, List(_), Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
         }
 
         inside(secondLambda) {
-          case et.Lambda(`secondProcTypePoly`, Nil, Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
+          case et.Lambda(`secondProcTypePoly`, Nil, Nil, Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
         }
     }
   }
@@ -194,11 +194,11 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
         assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
 
         inside(firstLambda) {
-          case et.Lambda(`firstProcTypePoly`, List(_), None, et.Literal(ast.BooleanLiteral(true)), _) =>
+          case et.Lambda(`firstProcTypePoly`, List(_), Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
         }
 
         inside(secondLambda) {
-          case et.Lambda(`secondProcTypePoly`, List(_), Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
+          case et.Lambda(`secondProcTypePoly`, List(_), Nil, Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
         }
     }
   }

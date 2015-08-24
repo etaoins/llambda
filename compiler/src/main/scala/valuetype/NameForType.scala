@@ -22,7 +22,6 @@ object NameForType {
   }
 
   private def nameForProcedureType(procType : ProcedureType) : String = procType match {
-    // OPTTODO: Support for (->*)
     case ProcedureType(mandatoryArgTypes, Nil, restArgMemberTypeOpt, returnType) =>
       val mandatoryArgNames = mandatoryArgTypes.map(apply(_))
 
