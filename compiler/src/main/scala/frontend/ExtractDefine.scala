@@ -48,9 +48,9 @@ object ExtractDefine {
       argTerminator : sst.ScopedDatum,
       initialiserDatum : sst.ScopedDatum
   )(implicit context : FrontendContext) : ExtractedVarsDefine = {
-    val parsedFormals = ParseFormals(argList, argTerminator)
+    val parsedFormals = ParseFormals(argList, argTerminator, allowOptionals=false)
 
-    val fixedValueTargets = parsedFormals.fixedArgs map { case (symbol, schemeTypeOpt) =>
+    val fixedValueTargets = parsedFormals.mandatoryArgs map { case (symbol, schemeTypeOpt) =>
       ValueTarget(symbol, schemeTypeOpt)
     }
 

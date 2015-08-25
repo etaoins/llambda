@@ -9,7 +9,8 @@ import llambda.compiler.valuetype.Implicits._
 
 object ExtractLambda {
   private case class ReconciledTypes(
-    fixedArgTypes : List[(sst.ScopedSymbol, vt.SchemeType)],
+    mandatoryArgTypes : List[(sst.ScopedSymbol, vt.SchemeType)],
+    optionalArgTypes : List[(sst.ScopedSymbol, vt.SchemeType)],
     restArgMemberTypeOpt : Option[(sst.ScopedSymbol, vt.SchemeType)],
     returnType : vt.ReturnType.ReturnType[vt.SchemeType],
     polymorphicType : pm.PolymorphicProcedureType
@@ -17,13 +18,19 @@ object ExtractLambda {
 
   private def validateArity(
       located : SourceLocated,
-      formalsFixedArgs : Int,
+      formalsMandatoryArgs : Int,
+      formalsOptionalArgs : Int,
       formalsRestArg : Boolean,
-      declFixedArgs : Int,
+      declMandatoryArgs : Int,
+      declOptionalArgs : Int,
       declRestArg : Boolean
   ) : Unit = {
-    if (formalsFixedArgs != declFixedArgs) {
-      throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${declFixedArgs} fixed arguments")
+    if (formalsMandatoryArgs != declMandatoryArgs) {
+      throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${declMandatoryArgs} mandatory arguments")
+    }
+
+    if (formalsOptionalArgs != declOptionalArgs) {
+      throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${declOptionalArgs} optional arguments")
     }
 
     if (!formalsRestArg && declRestArg) {
@@ -40,7 +47,11 @@ object ExtractLambda {
       parsedFormals : ParsedFormals,
       typeDeclaration : LocTypeDeclaration
   ) : ReconciledTypes = {
-    val formalsFixedArgTypes = parsedFormals.fixedArgs map { case (symbol, typeOpt) =>
+    val formalsMandatoryArgTypes = parsedFormals.mandatoryArgs map { case (symbol, typeOpt) =>
+      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
+    }
+
+    val formalsOptionalArgTypes = parsedFormals.optionalArgs map { case ParsedOptional(symbol, typeOpt, _) =>
       symbol -> typeOpt.getOrElse(vt.AnySchemeType)
     }
 
@@ -49,13 +60,14 @@ object ExtractLambda {
     }
 
     typeDeclaration match {
-      // OPTTODO: Work with optional args
-      case MonomorphicDeclaration(vt.ProcedureType(fixedArgAnns, Nil, restArgAnnOpt, returnTypeAnn)) =>
+      case MonomorphicDeclaration(vt.ProcedureType(mandatoryArgAnns, optionalArgAnns, restArgAnnOpt, returnTypeAnn)) =>
         validateArity(
           located=located,
-          formalsFixedArgs=formalsFixedArgTypes.length,
+          formalsMandatoryArgs=formalsMandatoryArgTypes.length,
+          formalsOptionalArgs=formalsOptionalArgTypes.length,
           formalsRestArg=formalsRestArgMemberTypeOpt.isDefined,
-          declFixedArgs=fixedArgAnns.length,
+          declMandatoryArgs=mandatoryArgAnns.length,
+          declOptionalArgs=optionalArgAnns.length,
           declRestArg=restArgAnnOpt.isDefined
         )
 
@@ -70,8 +82,14 @@ object ExtractLambda {
         }
 
         // Combine the type declaration with the signature types
-        val combinedFixedArgs = formalsFixedArgTypes.zip(fixedArgAnns) map { case ((symbol, signatureType), annType) =>
-          symbol -> combineArgTypes(symbol, signatureType, annType)
+        val combinedMandatoryArgs = formalsMandatoryArgTypes.zip(mandatoryArgAnns) map {
+          case ((symbol, signatureType), annType) =>
+            symbol -> combineArgTypes(symbol, signatureType, annType)
+        }
+
+        val combinedOptionalArgs = formalsOptionalArgTypes.zip(optionalArgAnns) map {
+          case ((symbol, signatureType), annType) =>
+            symbol -> combineArgTypes(symbol, signatureType, annType)
         }
 
         val combinedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
@@ -79,27 +97,29 @@ object ExtractLambda {
         } : Option[(sst.ScopedSymbol, vt.SchemeType)]
 
         val polyType = vt.ProcedureType(
-          mandatoryArgTypes=combinedFixedArgs.map(_._2),
-          optionalArgTypes=Nil,
+          mandatoryArgTypes=combinedMandatoryArgs.map(_._2),
+          optionalArgTypes=combinedOptionalArgs.map(_._2),
           restArgMemberTypeOpt=combinedRestArgOpt.map(_._2),
           returnType=returnTypeAnn
         ).toPolymorphic
 
-        ReconciledTypes(combinedFixedArgs, combinedRestArgOpt, returnTypeAnn, polyType)
+        ReconciledTypes(combinedMandatoryArgs, combinedOptionalArgs, combinedRestArgOpt, returnTypeAnn, polyType)
 
       case PolymorphicProcedureDeclaration(polyType @ pm.PolymorphicProcedureType(typeVars, template)) =>
         val upperBound = polyType.upperBound
 
-        // OPTTODO: Work with optional args
-        val fixedArgAnns = upperBound.mandatoryArgTypes
+        val mandatoryArgAnns = upperBound.mandatoryArgTypes
+        val optionalArgAnns = upperBound.optionalArgTypes
         val restArgAnnOpt = upperBound.restArgMemberTypeOpt
         val returnTypeAnn = upperBound.returnType
 
         validateArity(
           located=located,
-          formalsFixedArgs=formalsFixedArgTypes.length,
+          formalsMandatoryArgs=formalsMandatoryArgTypes.length,
+          formalsOptionalArgs=formalsOptionalArgTypes.length,
           formalsRestArg=formalsRestArgMemberTypeOpt.isDefined,
-          declFixedArgs=fixedArgAnns.length,
+          declMandatoryArgs=mandatoryArgAnns.length,
+          declOptionalArgs=optionalArgAnns.length,
           declRestArg=restArgAnnOpt.isDefined
         )
 
@@ -111,26 +131,36 @@ object ExtractLambda {
           annType
         }
 
-        val checkedFixedArgs = formalsFixedArgTypes.zip(fixedArgAnns) map { case ((symbol, signatureType), annType) =>
-          symbol -> checkForArgTypes(symbol, signatureType, annType)
+        val checkedMandatoryArgs = formalsMandatoryArgTypes.zip(mandatoryArgAnns) map {
+          case ((symbol, signatureType), annType) =>
+            symbol -> checkForArgTypes(symbol, signatureType, annType)
+        }
+
+        val checkedOptionalArgs = formalsOptionalArgTypes.zip(optionalArgAnns) map {
+          case ((symbol, signatureType), annType) =>
+            symbol -> checkForArgTypes(symbol, signatureType, annType)
         }
 
         val checkedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
           symbol -> checkForArgTypes(symbol, signatureType, restArgAnnOpt.get)
         } : Option[(sst.ScopedSymbol, vt.SchemeType)]
 
-        ReconciledTypes(checkedFixedArgs, checkedRestArgOpt, returnTypeAnn, polyType)
+        ReconciledTypes(checkedMandatoryArgs, checkedOptionalArgs, checkedRestArgOpt, returnTypeAnn, polyType)
 
       case _ =>
-        // OPTTODO: Work with optional args
         val polyType = vt.ProcedureType(
-          mandatoryArgTypes=formalsFixedArgTypes.map(_._2),
-          optionalArgTypes=Nil,
+          mandatoryArgTypes=formalsMandatoryArgTypes.map(_._2),
+          optionalArgTypes=formalsOptionalArgTypes.map(_._2),
           restArgMemberTypeOpt=formalsRestArgMemberTypeOpt.map(_._2),
           returnType=vt.ReturnType.ArbitraryValues
         ).toPolymorphic
 
-        ReconciledTypes(formalsFixedArgTypes, formalsRestArgMemberTypeOpt, vt.ReturnType.ArbitraryValues, polyType)
+        ReconciledTypes(
+          formalsMandatoryArgTypes,
+          formalsOptionalArgTypes,
+          formalsRestArgMemberTypeOpt,
+          vt.ReturnType.ArbitraryValues,
+          polyType)
     }
   }
 
@@ -148,9 +178,15 @@ object ExtractLambda {
     // Process our type declaration
     val reconciledTypes = reconcileTypes(located, parsedFormals, typeDeclaration)
 
-    val boundFixedArgs = reconciledTypes.fixedArgTypes.map { case (symbol, finalType) =>
+    val boundMandatoryArgs = reconciledTypes.mandatoryArgTypes.map { case (symbol, finalType) =>
       val storageLoc = new StorageLocation(symbol.name, finalType)
       symbol -> storageLoc
+    }
+
+    val boundOptionalArgs = (reconciledTypes.optionalArgTypes zip parsedFormals.optionalArgs).map {
+      case ((symbol, finalType), ParsedOptional(_, _, defaultDatum)) =>
+        val storageLoc = new StorageLocation(symbol.name, finalType)
+        symbol -> et.OptionalArg(storageLoc, ExtractExpr(defaultDatum)(parentContext))
     }
 
     val boundRestArgOpt = reconciledTypes.restArgMemberTypeOpt map { case (symbol, memberType : vt.SchemeType) =>
@@ -172,15 +208,16 @@ object ExtractLambda {
     val bodyContext = parentContext.copy(debugContext=bodyDebugContext)
 
     // Extract the body
-    val bodyExpr = ExtractBodyDefinition(
-      args=boundFixedArgs ++ boundRestArgOpt,
-      definition=definition
-    )(bodyContext)
+    val args = boundMandatoryArgs ++
+      boundOptionalArgs.map({ case (symbol, optArg) => symbol -> optArg.storageLoc}) ++
+      boundRestArgOpt
+
+    val bodyExpr = ExtractBodyDefinition(args, definition)(bodyContext)
 
     et.Lambda(
       polyType=reconciledTypes.polymorphicType,
-      mandatoryArgs=boundFixedArgs.map(_._2),
-      optionalArgs=Nil,
+      mandatoryArgs=boundMandatoryArgs.map(_._2),
+      optionalArgs=boundOptionalArgs.map(_._2),
       restArgOpt=boundRestArgOpt.map(_._2),
       body=bodyExpr,
       debugContextOpt=subprogramDebugContextOpt
