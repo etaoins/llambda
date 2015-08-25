@@ -4,15 +4,30 @@ import io.llambda
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
+case class ParsedOptional(
+    symbol : sst.ScopedSymbol,
+    schemeTypeOpt : Option[vt.SchemeType],
+    defaultDatum : sst.ScopedDatum
+)
+
+
 case class ParsedFormals(
-    fixedArgs : List[(sst.ScopedSymbol, Option[vt.SchemeType])],
+    mandatoryArgs : List[(sst.ScopedSymbol, Option[vt.SchemeType])],
+    optionalArgs : List[ParsedOptional],
     restArgOpt : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
 )
 
 object ParseFormals {
+  private case class ParsedFixed(
+      symbol : sst.ScopedSymbol,
+      schemeTypeOpt : Option[vt.SchemeType],
+      defaultDatumOpt : Option[sst.ScopedDatum]
+  )
+
   def apply(
       argList : List[sst.ScopedDatum],
-      argTerminator : sst.ScopedDatum
+      argTerminator : sst.ScopedDatum,
+      allowOptionals : Boolean = true
   ) : ParsedFormals = {
     val (fixedArgData, restArgNameOpt, restArgMemberTypeOpt) =
       (argList.reverse, argTerminator) match {
@@ -45,16 +60,63 @@ object ParseFormals {
       case sst.ScopedProperList(List(
           scopedSymbol : sst.ScopedSymbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
+          typeDatum,
+          defaultDatum
+      )) if allowOptionals =>
+        ParsedFixed(
+          symbol=scopedSymbol,
+          schemeTypeOpt=Some(ExtractType.extractNonEmptySchemeType(typeDatum)),
+          defaultDatumOpt=Some(defaultDatum)
+        )
+
+      case sst.ScopedProperList(List(
+          scopedSymbol : sst.ScopedSymbol,
+          sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
           typeDatum
       )) =>
-        scopedSymbol -> Some(ExtractType.extractNonEmptySchemeType(typeDatum))
+        ParsedFixed(
+          symbol=scopedSymbol,
+          schemeTypeOpt=Some(ExtractType.extractNonEmptySchemeType(typeDatum)),
+          defaultDatumOpt=None
+        )
+
+      case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, defaultDatum)) if allowOptionals =>
+        ParsedFixed(
+          symbol=scopedSymbol,
+          schemeTypeOpt=None,
+          defaultDatumOpt=Some(defaultDatum)
+        )
 
       case scopedSymbol : sst.ScopedSymbol =>
-        scopedSymbol -> None
+        ParsedFixed(
+          symbol=scopedSymbol,
+          schemeTypeOpt=None,
+          defaultDatumOpt=None
+        )
 
       case datum =>
-        val message = s"Unrecognized argument definition. Must be either identifier or [identifier : <type>]."
+        val message = if (allowOptionals) {
+          s"Unrecognised argument definition. Must be either identifier, [identifier default], [identifier : <type>] or [identifier : <type> default]."
+        }
+        else {
+          s"Unrecognised argument definition. Must be either identifier or [identifier : <type>]."
+        }
+
         throw new BadSpecialFormException(datum, message)
+    }
+
+    val (noDefaultFixed, maybeDefaultFixed) = fixedArgs.span(!_.defaultDatumOpt.isDefined)
+
+    val mandatoryArgs = noDefaultFixed map { case ParsedFixed(symbol, schemeTypeOpt, _) =>
+      symbol -> schemeTypeOpt
+    }
+
+    val optionalArgs = maybeDefaultFixed map {
+      case ParsedFixed(symbol, schemeTypeOpt, Some(defaultDatum)) =>
+        ParsedOptional(symbol, schemeTypeOpt, defaultDatum)
+
+      case ParsedFixed(symbol, _, _) =>
+        throw new BadSpecialFormException(symbol, "All arguments following an optional argument must have a default")
     }
 
     val restArgOpt = restArgNameOpt map { restArgName =>
@@ -62,7 +124,8 @@ object ParseFormals {
     } : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
 
     ParsedFormals(
-      fixedArgs=fixedArgs,
+      mandatoryArgs=mandatoryArgs,
+      optionalArgs=optionalArgs,
       restArgOpt=restArgOpt
     )
   }
