@@ -129,7 +129,7 @@ case class Lambda(
 ) extends Expr {
   override val schemeType = polyType.upperBound
 
-  val subexprs = List(body)
+  val subexprs = List(body) ++ optionalArgs.map(_.defaultExpr)
 
   def map(f : Expr => Expr) : Lambda = {
     val mappedOptionalArgs = optionalArgs.map { case OptionalArg(storageLoc, defaultExpr) =>
