@@ -48,6 +48,42 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
   }
 
+  test("type declaration for untyped optionals lambda with compatible arity") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: string-to-symbol (->* (<string>) (<number>) <symbol>))
+         (define (string-to-symbol x [y 1]) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+        val expectedType = vt.ProcedureType(
+          mandatoryArgTypes=List(vt.StringType),
+          optionalArgTypes=List(vt.NumberType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(polyType === expectedType.toPolymorphic)
+    }
+
+    inside(exprFor(
+      """(: strings-to-symbol (-> <string> <string> * <symbol>))
+         (define (strings-to-symbol x . rest) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+        val expectedType = vt.ProcedureType(
+          mandatoryArgTypes=List(vt.StringType),
+          optionalArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(polyType === expectedType.toPolymorphic)
+    }
+  }
+
   test("polymorphic type declaration for untyped lambda with compatible arity") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -67,7 +103,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         assert(storageLoc.schemeType ===
           vt.ProcedureType(
             mandatoryArgTypes=List(vt.NumberType),
-          optionalArgTypes=Nil,
+            optionalArgTypes=Nil,
             restArgMemberTypeOpt=None,
             returnType=vt.ReturnType.SingleValue(vt.SymbolType)
           )
@@ -75,13 +111,51 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
   }
 
-  test("type declaration for untyped lambda with incompatible fixed arg arity fails") {
+  test("polymorphic type declaration for untyped optionals lambda with compatible arity") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: string-to-symbol (All ([A : <number>]) (->* () (A) <number>)))
+         (define (string-to-symbol [x 5]) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+        inside(polyType) {
+          case pm.PolymorphicProcedureType(typeVars,
+            vt.ProcedureType(Nil, List(polyVarA : pm.TypeVar), None, vt.ReturnType.SingleValue(vt.NumberType))
+          ) =>
+            assert(polyVarA.upperBound === vt.NumberType)
+            assert(typeVars === Set(polyVarA))
+        }
+
+        assert(storageLoc.schemeType ===
+          vt.ProcedureType(
+            mandatoryArgTypes=Nil,
+            optionalArgTypes=List(vt.NumberType),
+            restArgMemberTypeOpt=None,
+            returnType=vt.ReturnType.SingleValue(vt.NumberType)
+          )
+        )
+    }
+  }
+
+  test("type declaration for untyped lambda with incompatible mandatory arg arity fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     intercept[BadSpecialFormException] {
       exprFor(
         """(: string-to-symbol (-> <string> <symbol>))
            (define (string-to-symbol x y) x)"""
+      )(scope)
+    }
+  }
+
+  test("type declaration for untyped lambda with incompatible optional arg arity fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <symbol>))
+           (define (string-to-symbol x [y "Hello"]) x)"""
       )(scope)
     }
   }
@@ -143,6 +217,26 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(polyType === expectedType.toPolymorphic)
+    }
+  }
+
+  test("type declaration for typed optionals lambda with compatible arity") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: string-to-symbol (->* () (<string>) <symbol>))
+         (define (string-to-symbol [x : <string> "Hello"]) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+        val expectedType = vt.ProcedureType(
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
         )
 
@@ -349,6 +443,27 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
   }
 
+  test("untyped optionals lambdas") {
+    val expectedDefault = et.Cond(
+      et.Literal(ast.BooleanLiteral(true)),
+      et.Literal(ast.IntegerLiteral(1)),
+      et.Literal(ast.IntegerLiteral(2))
+    )
+
+    inside(exprFor("(lambda ([x (if #t 1 2)]) #t)")) {
+      case et.Lambda(polyType, Nil, List(et.OptionalArg(argX, `expectedDefault`)), None, body, _) =>
+        assert(polyType === vt.ProcedureType(
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ).toPolymorphic)
+
+        assert(argX.schemeType === vt.AnySchemeType)
+        assert(body === et.Literal(ast.BooleanLiteral(true)))
+    }
+  }
+
   test("typed lambdas") {
     inside(exprFor("(lambda ([x : <number>]) x)")(nfiScope)) {
       case et.Lambda(polyType, List(argX), Nil, None, body, _) =>
@@ -395,6 +510,23 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           et.VarRef(argY),
           et.VarRef(restArg)
         )))
+    }
+  }
+
+  test("typed optionals lambdas") {
+    val expectedDefault = et.Literal(ast.StringLiteral("default"))
+
+    inside(exprFor("(lambda ([x : <string> \"default\"]) #t)")(nfiScope)) {
+      case et.Lambda(polyType, Nil, List(et.OptionalArg(argX, `expectedDefault`)), None, body, _) =>
+        assert(polyType === vt.ProcedureType(
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ).toPolymorphic)
+
+        assert(argX.schemeType === vt.StringType)
+        assert(body === et.Literal(ast.BooleanLiteral(true)))
     }
   }
 
@@ -468,6 +600,35 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ).toPolymorphic)
+
+        assert(fixedArg.schemeType === vt.AnySchemeType)
+        assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
+    }
+
+    inside(scope.get("return-true").value) {
+      case storageLoc : StorageLocation =>
+        assert(storageLoc.sourceName === "return-true")
+    }
+  }
+
+  test("untyped optional arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val expr = exprFor("(define (return-true [unused-param #t]) #t)")(scope)
+    val procLoc = scope.get("return-true").value
+
+    val expectedDefault = et.Literal(ast.BooleanLiteral(true))
+
+    inside(expr) {
+      case et.TopLevelDefine(et.SingleBinding(storageLoc,
+          et.Lambda(polyType, Nil, List(et.OptionalArg(fixedArg, expectedDefault)), None, bodyExpr, _)))
+          if procLoc == storageLoc =>
+        assert(polyType === vt.ProcedureType(
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
         ).toPolymorphic)

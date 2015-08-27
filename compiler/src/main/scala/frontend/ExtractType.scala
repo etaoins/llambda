@@ -237,7 +237,8 @@ object ExtractType {
   private def extractPolymorphicProcedure(
       located : SourceLocated,
       typeVarData : List[sst.ScopedDatum],
-      args : List[sst.ScopedDatum]
+      args : List[sst.ScopedDatum],
+      procedureTypeApplicator : (SourceLocated, List[sst.ScopedDatum]) => vt.ProcedureType
   ) : pm.PolymorphicProcedureType = {
     val namedTypeVars = typeVarData map ExtractTypeVar
 
@@ -249,7 +250,7 @@ object ExtractType {
     val scopeMapping = Scope.mappingForBoundValues(typeBindings)
 
     val rescopedArgs = args.map(_.rescoped(scopeMapping))
-    val template = applyProcedureTypeConstructor(located, rescopedArgs)
+    val template = procedureTypeApplicator(located, rescopedArgs)
 
     pm.PolymorphicProcedureType(namedTypeVars.map(_._2).toSet, template)
   }
@@ -360,7 +361,16 @@ object ExtractType {
       sst.ScopedProperList(typeVarData),
       sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
     )) =>
-      PolymorphicProcedureDeclaration(extractPolymorphicProcedure(datum, typeVarData, args))
+      val polyProcType = extractPolymorphicProcedure(datum, typeVarData, args, applyProcedureTypeConstructor)
+      PolymorphicProcedureDeclaration(polyProcType)
+
+    case sst.ScopedProperList(List(
+      sst.ResolvedSymbol(Primitives.PolymorphicType),
+      sst.ScopedProperList(typeVarData),
+      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.OptionalProcedureType) :: args)
+    )) =>
+      val polyProcType = extractPolymorphicProcedure(datum, typeVarData, args, applyOptionalProcedureTypeConstructor)
+      PolymorphicProcedureDeclaration(polyProcType)
 
     case _ =>
       MonomorphicDeclaration(extractSchemeType(datum))
