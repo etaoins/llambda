@@ -330,22 +330,22 @@
       (if (exact-integer? n) (< n 0) (< n 0.0)))
 
     (define native-floor (native-function system-library "floor" (-> <native-double> <native-double>)))
-    (: floor (All ([N : <number>]) N N))
+    (: floor (All ([N : <number>]) (-> N N)))
     (define-r7rs (floor n)
       (if (exact-integer? n) n (native-floor n)))
 
     (define native-ceil (native-function system-library "ceil" (-> <native-double> <native-double>)))
-    (: ceiling (All ([N : <number>]) N N))
+    (: ceiling (All ([N : <number>]) (-> N N)))
     (define-r7rs (ceiling n)
       (if (exact-integer? n) n (native-ceil n)))
 
     (define native-trunc (native-function system-library "trunc" (-> <native-double> <native-double>)))
-    (: truncate (All ([N : <number>]) N N))
+    (: truncate (All ([N : <number>]) (-> N N)))
     (define-r7rs (truncate n)
       (if (exact-integer? n) n (native-trunc n)))
 
     (define native-round (native-function system-library "round" (-> <native-double> <native-double>)))
-    (: round (All ([N : <number>]) N N))
+    (: round (All ([N : <number>]) (-> N N)))
     (define-r7rs (round n)
       (if (exact-integer? n) n (native-round n)))
 
@@ -369,11 +369,11 @@
 
     (define-r7rs expt (world-function llbase "llbase_expt" (All ([N : <number>]) (-> N N N))))
 
-    (: square (All ([N : <number>]) N N))
+    (: square (All ([N : <number>]) (-> N N)))
     (define-r7rs (square num)
       (* num num))
 
-    (: abs (All ([N : <number>]) N N))
+    (: abs (All ([N : <number>]) (-> N N)))
     (define-r7rs (abs num)
       ; Do a top-level type check to make the compiler generate a specialised version of each branch. The test itself is
       ; semantically a no-op
@@ -470,7 +470,7 @@
     (define-r7rs (cdar (x : (Pairof <pair> <any>))) (cdr (car x)))
     (define-r7rs (cddr (x : (Pairof <any> <pair>))) (cdr (cdr x)))
 
-    (: list (All (A) A * (Listof A)))
+    (: list (All (A) (-> A * (Listof A))))
     (define-r7rs (list . rest) rest)
 
     (define-r7rs append (world-function llbase "llbase_append" (-> <any> * <any>)))
@@ -488,7 +488,7 @@
 
     (define-r7rs list-tail (world-function llbase "llbase_list_tail" (All (A) (Listof A) <native-uint32> (Listof A))))
 
-    (: list-ref (All (A) (Listof A) <exact-integer> A))
+    (: list-ref (All (A) (-> (Listof A) <exact-integer> A)))
     (define-r7rs (list-ref l n)
       (define tail (list-tail l n))
       (if (pair? tail)

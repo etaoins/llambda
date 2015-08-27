@@ -50,7 +50,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     inside(exprFor(
-      """(: string-to-symbol (All ([A : <number>]) A <symbol>))
+      """(: string-to-symbol (All ([A : <number>]) (-> A <symbol>)))
          (define (string-to-symbol x) x)"""
     )(scope)) {
       case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _))) =>

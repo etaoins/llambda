@@ -319,20 +319,11 @@ object ExtractType {
     }
 
   def extractLocTypeDeclaration(datum : sst.ScopedDatum) : LocTypeDeclaration = datum match {
-    // Long form
     case sst.ScopedProperList(List(
       sst.ResolvedSymbol(Primitives.PolymorphicType),
       sst.ScopedProperList(typeVarData),
       sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
     )) =>
-      PolymorphicProcedureDeclaration(extractPolymorphicProcedure(datum, typeVarData, args))
-
-    // Shorthand
-    case sst.ScopedProperList(
-      sst.ResolvedSymbol(Primitives.PolymorphicType) ::
-      sst.ScopedProperList(typeVarData) ::
-      args
-    ) =>
       PolymorphicProcedureDeclaration(extractPolymorphicProcedure(datum, typeVarData, args))
 
     case _ =>

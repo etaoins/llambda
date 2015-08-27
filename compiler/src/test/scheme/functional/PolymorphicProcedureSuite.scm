@@ -81,7 +81,7 @@
   (define-test "recursive polymorphic Scheme procedures" (expect-success
     (import (llambda typed))
 
-    (: my-list-ref (All (A [N : <number>]) (Listof A) N A))
+    (: my-list-ref (All (A [N : <number>]) (-> (Listof A) N A)))
     (define (my-list-ref head count)
       (if (zero? count)
         (car head)
@@ -224,7 +224,7 @@
 (define-test "simple polymorphic Scheme procedure" (expect-success
   (import (llambda typed))
 
-  (: left-or-right (All (A) <boolean> A A A))
+  (: left-or-right (All (A) (-> <boolean> A A A)))
   (define (left-or-right use-left left-val right-val)
     (if use-left left-val right-val))
 
@@ -236,7 +236,7 @@
 (define-test "polymorphic Scheme procedure violating return type variable fails" (expect-compile-error type-error?
   (import (llambda typed))
 
-  (: left-or-right (All (A) <boolean> A A A))
+  (: left-or-right (All (A) (-> <boolean> A A A)))
   (define (left-or-right use-left left-val right-val)
     'not-a-number)
 
@@ -248,7 +248,7 @@
 (define-test "violating Scheme procedure's type bounds fails" (expect-compile-error type-error?
   (import (llambda typed))
 
-  (: left-or-right (All ([A : <number>]) <boolean> A A A))
+  (: left-or-right (All ([A : <number>]) (-> <boolean> A A A)))
   (define (left-or-right use-left left-val right-val)
     (if use-left left-val right-val))
 
@@ -262,7 +262,7 @@
 
   (define outer-counter 0)
 
-  (: inc-if-string (All (A) A <unit>))
+  (: inc-if-string (All (A) (-> A <unit>)))
   (define (inc-if-string possible-string)
     (when (string? possible-string)
       (set! outer-counter (+ outer-counter 1))))
@@ -280,7 +280,7 @@
 (define-test "converting polymorphic procedures to specific procedure types" (expect-success
   (import (llambda typed))
 
-  (: return-arg (All (A) A A))
+  (: return-arg (All (A) (-> A A)))
   (define (return-arg x) x)
 
   (: int-mapper (-> <exact-integer> (-> <exact-integer> <exact-integer>) <exact-integer>))
@@ -297,7 +297,7 @@
 
   (assert-equal 5
                 (begin
-                  (: return-self (All (A) A A))
+                  (: return-self (All (A) (-> A A)))
                   (define (return-self x) x)
 
                   (return-self 5)))))
@@ -305,7 +305,7 @@
 (define-test "polymorphic procedure taking parameterized procedure of wrong type fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
 
-  (: apply-single (All (A B) (-> A B) A B))
+  (: apply-single (All (A B) (-> (-> A B) A B)))
   (define (apply-single proc val)
     (proc val))
 
@@ -314,7 +314,7 @@
 (define-test "applying a polymorphic procedure checks its return type" (expect-error type-error?
   (import (llambda typed))
 
-  (: halve-number (All ([A : <number>]) A A))
+  (: halve-number (All ([A : <number>]) (-> A A)))
   (define (halve-number n)
     (/ n 2))
 
