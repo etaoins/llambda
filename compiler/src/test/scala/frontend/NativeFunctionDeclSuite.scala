@@ -18,7 +18,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
@@ -37,7 +38,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set(ProcedureAttribute.NoReturn)
@@ -56,7 +58,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=true,
         hasSelfArg=false,
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
@@ -75,7 +78,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Int8),
         attributes=Set()
@@ -94,7 +98,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Int16),
+        mandatoryArgTypes=List(vt.Int16),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
@@ -113,7 +118,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=true,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Int64, vt.Float),
+        mandatoryArgTypes=List(vt.Int64, vt.Float),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Double),
         attributes=Set()
@@ -132,7 +138,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.UInt16),
+        mandatoryArgTypes=List(vt.UInt16),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UInt32),
         attributes=Set()
@@ -151,7 +158,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Predicate),
+        mandatoryArgTypes=List(vt.Predicate),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Predicate),
         attributes=Set()
@@ -170,7 +178,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Int8),
+        mandatoryArgTypes=List(vt.Int8),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
         attributes=Set()
@@ -189,7 +198,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Double),
+        mandatoryArgTypes=List(vt.Double),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.ArbitraryValues,
         attributes=Set()
@@ -208,7 +218,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.UnionType(Set(vt.StringType, vt.SymbolType))),
+        mandatoryArgTypes=List(vt.UnionType(Set(vt.StringType, vt.SymbolType))),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SpecificValues(List(vt.StringType, vt.SymbolType)),
         attributes=Set()
@@ -227,7 +238,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.ExactIntegerType),
+        mandatoryArgTypes=List(vt.ExactIntegerType),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.FlonumType),
         attributes=Set()
@@ -246,7 +258,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.AnySchemeType),
         returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
         attributes=Set()
@@ -265,7 +278,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Predicate),
+        mandatoryArgTypes=List(vt.Predicate),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.ExactIntegerType),
         returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
@@ -284,7 +298,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=List(vt.Predicate),
+        mandatoryArgTypes=List(vt.Predicate),
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.ExactIntegerType),
         returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
@@ -307,6 +322,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             false,
             false,
             List(fixedTypeVar : pm.TypeVar),
+            Nil,
             Some(vt.ExactIntegerType),
             vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
             _
@@ -331,6 +347,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             false,
             false,
             List(fixedTypeVar : pm.TypeVar),
+            Nil,
             Some(vt.ExactIntegerType),
             vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
             _
@@ -356,6 +373,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             false,
             false,
             List(fixedTypeVar : pm.TypeVar),
+            Nil,
             Some(vt.ExactIntegerType),
             vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
             _
@@ -377,7 +395,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgTypes=Nil,
+        mandatoryArgTypes=Nil,
+        optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()

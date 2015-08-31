@@ -45,23 +45,27 @@ private[planner] object PlanProcedureTrampoline {
       targetProc
     }
 
-    val (fixedArgTemps, fixedArgValues) = inSignature.fixedArgTypes.map({ fixedArgType =>
-      val fixedArgTemp = ps.Temp(fixedArgType)
-      val fixedArgValue = TempValueToIntermediate(fixedArgType, fixedArgTemp)(plan.config)
+    val (mandatoryArgTemps, mandatoryArgValues) = inSignature.mandatoryArgTypes.map({ mandatoryArgType =>
+      val mandatoryArgTemp = ps.Temp(mandatoryArgType)
+      val mandatoryArgValue = TempValueToIntermediate(mandatoryArgType, mandatoryArgTemp)(plan.config)
 
-      (fixedArgTemp, fixedArgValue)
+      (mandatoryArgTemp, mandatoryArgValue)
     }).unzip
 
-    val (restArgTempIter, restArgValueIter) = inSignature.restArgMemberTypeOpt.map({ restArgMemberType =>
-      val restArgTemp = ps.CellTemp(ct.ListElementCell)
-      val restArgType = vt.UniformProperListType(restArgMemberType)
-      val restArgValue = new iv.CellValue(restArgType, BoxedValue(ct.ListElementCell, restArgTemp))
+    val varArgsListType = vt.VariableArgsToListType(inSignature.optionalArgTypes, inSignature.restArgMemberTypeOpt)
 
-      (restArgTemp, restArgValue)
-    }).unzip
+    val (varArgsTempOpt, varArgsValueOpt) = if (varArgsListType == vt.EmptyListType) {
+      (None, None)
+    }
+    else {
+      val varArgsTemp = ps.CellTemp(ct.ListElementCell)
+      val varArgsValue = new iv.CellValue(varArgsListType, BoxedValue(ct.ListElementCell, varArgsTemp))
 
-    val argTail = if (restArgValueIter.isEmpty) iv.EmptyListValue else restArgValueIter.head
-    val argList = ValuesToList(fixedArgValues, argTail, capturable=false)(plan)
+      (Some(varArgsTemp), Some(varArgsValue))
+    }
+
+    val argTail = varArgsValueOpt getOrElse iv.EmptyListValue
+    val argList = ValuesToList(mandatoryArgValues, argTail, capturable=false)(plan)
 
     // This is a bit of a hack - create a state containing our self argument as a bound variable
     val selfLoc = new StorageLocation("self")
@@ -87,10 +91,10 @@ private[planner] object PlanProcedureTrampoline {
     val inNamedArguments = List(
       ("world"   -> ps.WorldPtrValue),
       ("closure" -> inSelfTemp)
-    ) ++ fixedArgTemps.zipWithIndex.map { case (fixedArgTemp, index) =>
-      s"fixedArg${index}" -> fixedArgTemp
-    } ++ restArgTempIter.toList.map { case restArgTemp =>
-      "restArg" -> restArgTemp
+    ) ++ mandatoryArgTemps.zipWithIndex.map { case (mandatoryArgTemp, index) =>
+      s"mandatoryArg${index}" -> mandatoryArgTemp
+    } ++ varArgsTempOpt.map { case varArgsTemp =>
+      "varArgs" -> varArgsTemp
     }
 
     PlannedFunction(

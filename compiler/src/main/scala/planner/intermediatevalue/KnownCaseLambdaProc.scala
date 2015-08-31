@@ -93,10 +93,10 @@ class KnownCaseLambdaProc(
   def clauseForArityOpt(argCount : Int) : Option[KnownCaseLambdaClause] =
     clauses find { clause =>
       val signatureTemplate = clause.knownProc.polySignature.template
-      val fixedArgCount = signatureTemplate.fixedArgTypes.length
+      val mandatoryArgCount = signatureTemplate.mandatoryArgTypes.length
       val hasRestArg = signatureTemplate.restArgMemberTypeOpt.isDefined
 
-      (argCount == fixedArgCount) || ((argCount > fixedArgCount) && hasRestArg)
+      (argCount == mandatoryArgCount) || ((argCount > mandatoryArgCount) && hasRestArg)
     }
 
   override def toApplicableValueForArgs (

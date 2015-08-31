@@ -30,7 +30,8 @@ object ExtractNativeFunction {
     ProcedureSignature(
       hasWorldArg=hasWorldArg,
       hasSelfArg=false,
-      fixedArgTypes=fixedArgTypes,
+      mandatoryArgTypes=fixedArgTypes,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=restArgMemberTypeOpt,
       returnType=returnType,
       attributes=attributes

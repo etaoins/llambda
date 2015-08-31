@@ -10,8 +10,9 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
     ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
+      mandatoryArgTypes=List(recordType, recordType.typeForField(field)),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      fixedArgTypes=List(recordType, recordType.typeForField(field)),
       returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
     ).toPolymorphic

@@ -10,7 +10,8 @@ case class PolymorphicSignature(
 ) {
   private def instantiate(reconciled : pm.ReconcileTypeVars.Result) : ProcedureSignature = {
     template.copy(
-      fixedArgTypes=template.fixedArgTypes.map(pm.InstantiateType(reconciled, _)),
+      mandatoryArgTypes=template.mandatoryArgTypes.map(pm.InstantiateType(reconciled, _)),
+      optionalArgTypes=template.optionalArgTypes.map(pm.InstantiateType(reconciled, _)),
       restArgMemberTypeOpt=template.restArgMemberTypeOpt.map(pm.InstantiateType(reconciled, _)),
       returnType=pm.InstantiateType.instantiateReturnType(reconciled, template.returnType)
     )
@@ -23,13 +24,21 @@ case class PolymorphicSignature(
       return template
     }
 
-    val fixedArgResults = (template.fixedArgTypes zip args) map { case (polyArg, evidenceArg) =>
+    val mandatoryArgResults = (template.mandatoryArgTypes zip args) map { case (polyArg, evidenceArg) =>
       pm.ResolveTypeVars(typeVars, polyArg, evidenceArg)
     }
 
+    val argsWithoutMandatory = args.drop(template.mandatoryArgTypes.length)
+
+    val optionalArgResults = (template.optionalArgTypes zip argsWithoutMandatory) map { case (polyArg, evidenceArg) =>
+      pm.ResolveTypeVars(typeVars, polyArg, evidenceArg)
+    }
+
+    val argsWithoutFixed = argsWithoutMandatory.drop(template.optionalArgTypes.length)
+
     val restArgResults = template.restArgMemberTypeOpt match {
       case Some(polyMemberType) =>
-        args.drop(template.fixedArgTypes.length) map { evidenceMemberType =>
+        argsWithoutFixed map { evidenceMemberType =>
           pm.ResolveTypeVars(typeVars, polyMemberType, evidenceMemberType)
         }
 
@@ -37,7 +46,7 @@ case class PolymorphicSignature(
         Nil
     }
 
-    val allResults = fixedArgResults ++ restArgResults
+    val allResults = mandatoryArgResults ++ optionalArgResults ++ restArgResults
     val reducedResult = allResults.foldLeft(pm.ResolveTypeVars.Result())(_ ++ _)
 
     // Reconcile our type vars with their upper bounds

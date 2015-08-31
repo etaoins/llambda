@@ -9,10 +9,11 @@ import llambda.compiler.planner.{step => ps}
 import org.scalatest.FunSuite
 
 class FindTailCallsSuite extends FunSuite {
-  val testSignature = ProcedureSignature( 
+  val testSignature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    fixedArgTypes=List(),
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType),
     attributes=Set()

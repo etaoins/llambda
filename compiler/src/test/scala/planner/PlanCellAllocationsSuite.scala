@@ -11,7 +11,8 @@ class PlanCellAllocationsSuite extends FunSuite {
   val testSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=false,
-    fixedArgTypes=Nil,
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType),
     attributes=Set()

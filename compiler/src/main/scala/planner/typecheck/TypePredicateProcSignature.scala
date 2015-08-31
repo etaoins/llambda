@@ -3,14 +3,14 @@ import io.llambda
 
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.{valuetype => vt}
-  
+
 object TypePredicateProcSignature extends ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    restArgMemberTypeOpt=None,
     // We must be able to take any data type without erroring out
-    fixedArgTypes=List(vt.AnySchemeType),
+    mandatoryArgTypes=List(vt.AnySchemeType),
+    optionalArgTypes=Nil,
+    restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.Predicate),
     attributes=Set(ProcedureAttribute.FastCC)
 )
-  

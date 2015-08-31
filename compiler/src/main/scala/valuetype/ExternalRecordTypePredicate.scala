@@ -16,7 +16,8 @@ object ExternalRecordTypePredicate {
   val signature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    fixedArgTypes=List(AnySchemeType),
+    mandatoryArgTypes=List(AnySchemeType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(Predicate),
     attributes=Set()

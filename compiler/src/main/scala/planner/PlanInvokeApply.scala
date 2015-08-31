@@ -76,7 +76,7 @@ object PlanInvokeApply {
     // Split our arguments in to fixed args and a rest arg
     val destructuredArgs = DestructureList(
       listValue=argListValue,
-      memberTypes=signature.fixedArgTypes,
+      memberTypes=signature.mandatoryArgTypes,
       insufficientLengthMessage=insufficientArgsMessage,
       improperListMessageOpt=Some(improperListMessage)
     )
@@ -93,13 +93,13 @@ object PlanInvokeApply {
 
       case None =>
         val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(invokableProc)
-        
+
         // Make sure we're out of args by doing a check cast to an empty list
         restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))
         None
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, restArgTemps) 
+    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, restArgTemps)
   }
 
   def withIntermediateValues(
@@ -109,14 +109,14 @@ object PlanInvokeApply {
     val signature = invokableProc.polySignature.upperBound
 
     // Convert all the args
-    val fixedTemps = args.zip(signature.fixedArgTypes) map { case ((contextLocated, arg), nativeType) =>
+    val mandatoryTemps = args.zip(signature.mandatoryArgTypes) map { case ((contextLocated, arg), nativeType) =>
       plan.withContextLocation(contextLocated) {
         arg.toTempValue(nativeType)
       }
     }
 
     val restTemps = signature.restArgMemberTypeOpt map { memberType =>
-      val restArgs = args.drop(signature.fixedArgTypes.length)
+      val restArgs = args.drop(signature.mandatoryArgTypes.length)
 
       val restArgValues = restArgs map { case (contextLocated, restValue) =>
         plan.withContextLocation(contextLocated) {
@@ -127,7 +127,7 @@ object PlanInvokeApply {
       ValuesToList(restArgValues, capturable=false).toTempValue(vt.ListElementType)
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, fixedTemps, restTemps)
+    PlanInvokeApply.withTempValues(invokableProc, mandatoryTemps, restTemps)
   }
 }
 

@@ -94,25 +94,32 @@ private[planner] object RetypeLambdaArgs {
       for(knownProc <- knownProcOpt) {
         val signature = knownProc.polySignature.upperBound
 
-        val postFixedArgTypes = argExprs.zip(signature.fixedArgTypes).foldLeft(argTypes) {
+        val postMandatoryArgTypes = argExprs.zip(signature.mandatoryArgTypes).foldLeft(argTypes) {
           case (currentArgTypes, (argExpr, argValueType)) =>
             attributeTypeToExpr(argExpr, argValueType.schemeType, currentArgTypes)
         }
 
+        val varArgExprs = argExprs.drop(signature.mandatoryArgTypes.length)
+
+        val postOptionalArgTypes = varArgExprs.zip(signature.optionalArgTypes).foldLeft(postMandatoryArgTypes) {
+          case (currentArgTypes, (argExpr, argValueType)) =>
+            attributeTypeToExpr(argExpr, argValueType.schemeType, currentArgTypes)
+        }
+
+        val restArgExprs = varArgExprs.drop(signature.optionalArgTypes.length)
+
         // Do we have a typed rest arg?
-        val finalArgTypes = signature.restArgMemberTypeOpt match { 
+        val finalArgTypes = signature.restArgMemberTypeOpt match {
           case Some(memberType) =>
             // Attribute the rest arg member type to all of the rest args
-            val restArgExprs = argExprs.drop(signature.fixedArgTypes.length)
-
-            restArgExprs.foldLeft(postFixedArgTypes) {
+            restArgExprs.foldLeft(postOptionalArgTypes) {
               case (currentArgTypes, restArgExpr) =>
                 attributeTypeToExpr(restArgExpr, memberType, currentArgTypes)
             }
 
           case None =>
-            postFixedArgTypes
-        } 
+            postOptionalArgTypes
+        }
 
         if (signature.hasWorldArg) {
           // This might terminate - abort retyping

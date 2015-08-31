@@ -6,11 +6,12 @@ import io.llambda.compiler.{valuetype => vt}
 import org.scalatest.FunSuite
 
 class ProcedureSignatureSuite extends FunSuite {
-  test("returning procedure") {
+  test("returning procedure without optional or rest arg") {
     val returningSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=false,
-      fixedArgTypes=List(vt.Double),
+      mandatoryArgTypes=List(vt.Double),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.Int64),
       attributes=Set()
@@ -24,11 +25,50 @@ class ProcedureSignatureSuite extends FunSuite {
     ))
   }
 
+  test("returning procedure with optional, without rest arg") {
+    val returningSignature = ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=false,
+      mandatoryArgTypes=List(vt.Double),
+      optionalArgTypes=List(vt.ExactIntegerType),
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      attributes=Set()
+    )
+
+    assert(returningSignature.toSchemeProcedureType === vt.ProcedureType(
+      List(vt.FlonumType),
+      List(vt.ExactIntegerType),
+      None,
+      vt.ReturnType.SingleValue(vt.ExactIntegerType)
+    ))
+  }
+
+  test("returning procedure without optional, with rest arg") {
+    val returningSignature = ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=false,
+      mandatoryArgTypes=List(vt.Double),
+      optionalArgTypes=Nil,
+      restArgMemberTypeOpt=Some(vt.SymbolType),
+      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      attributes=Set()
+    )
+
+    assert(returningSignature.toSchemeProcedureType === vt.ProcedureType(
+      List(vt.FlonumType),
+      Nil,
+      Some(vt.SymbolType),
+      vt.ReturnType.SingleValue(vt.ExactIntegerType)
+    ))
+  }
+
   test("non-returning procedure") {
     val returningSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=false,
-      fixedArgTypes=List(vt.Double),
+      mandatoryArgTypes=List(vt.Double),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.Int64),
       attributes=Set(ProcedureAttribute.NoReturn)

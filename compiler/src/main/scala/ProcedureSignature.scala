@@ -20,12 +20,13 @@ object ProcedureAttribute {
 
 /** Describes the signature of an invokable function
   *
-  * This includes both native functions and generated lambdas 
+  * This includes both native functions and generated lambdas
   */
 case class ProcedureSignature(
   hasWorldArg : Boolean,
   hasSelfArg : Boolean,
-  fixedArgTypes : List[vt.ValueType],
+  mandatoryArgTypes : List[vt.ValueType],
+  optionalArgTypes : List[vt.SchemeType],
   restArgMemberTypeOpt : Option[vt.SchemeType],
   returnType : vt.ReturnType.ReturnType[vt.ValueType],
   attributes : Set[ProcedureAttribute]
@@ -43,8 +44,8 @@ case class ProcedureSignature(
     }
 
     vt.ProcedureType(
-      mandatoryArgTypes=fixedArgTypes.map(_.schemeType),
-      optionalArgTypes=Nil,
+      mandatoryArgTypes=mandatoryArgTypes.map(_.schemeType),
+      optionalArgTypes=optionalArgTypes,
       restArgMemberTypeOpt=restArgMemberTypeOpt,
       returnType=schemeReturnType
     )

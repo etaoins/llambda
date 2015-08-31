@@ -21,12 +21,11 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
             other
         }
 
-        val fixedArgTypes = procType.mandatoryArgTypes ++ procType.optionalArgTypes
-
         ProcedureSignature(
           hasWorldArg=true,
           hasSelfArg=true,
-          fixedArgTypes=fixedArgTypes.map(CompactRepresentationForType),
+          mandatoryArgTypes=procType.mandatoryArgTypes.map(CompactRepresentationForType),
+          optionalArgTypes=procType.optionalArgTypes,
           restArgMemberTypeOpt=procType.restArgMemberTypeOpt,
           returnType=compactReturnType,
           attributes=Set()
@@ -37,7 +36,8 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
         ProcedureSignature(
           hasWorldArg=true,
           hasSelfArg=true,
-          fixedArgTypes=Nil,
+          mandatoryArgTypes=Nil,
+          optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues,
           attributes=Set()

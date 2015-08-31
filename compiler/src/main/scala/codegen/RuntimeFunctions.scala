@@ -107,7 +107,8 @@ object RuntimeFunctions {
   val equivalenceProcSignature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    fixedArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
+    mandatoryArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.Predicate),
     attributes=Set()
@@ -118,7 +119,8 @@ object RuntimeFunctions {
   val symbolIsEqvSignature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    fixedArgTypes=List(vt.SymbolType, vt.SymbolType),
+    mandatoryArgTypes=List(vt.SymbolType, vt.SymbolType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.Predicate),
     attributes=Set()
@@ -127,7 +129,8 @@ object RuntimeFunctions {
   val valueForParameterSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=true,
-    fixedArgTypes=Nil,
+    mandatoryArgTypes=Nil,
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
     attributes=Set()

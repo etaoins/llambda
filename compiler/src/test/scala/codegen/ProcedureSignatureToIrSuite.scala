@@ -14,7 +14,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
@@ -38,7 +39,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgTypes=List(vt.Predicate, vt.UInt16),
+      mandatoryArgTypes=List(vt.Predicate, vt.UInt16),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.Int32),
       attributes=Set(ProcedureAttribute.FastCC)
@@ -59,11 +61,39 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     assert(result === expected)
   }
 
+  test("function taking only world and optional args") {
+    val procSignature = new ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=false,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=List(vt.SymbolType),
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      attributes=Set()
+    )
+
+    val result = ProcedureSignatureToIr(procSignature)
+
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(VoidType),
+        arguments=List(
+          Argument(PointerType(WorldValue.irType)),
+          Argument(PointerType(ct.ListElementCell.irType))
+        )
+      ),
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
+  }
+
   test("function taking only world and self args with noreturn attribute") {
     val procSignature = new ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set(ProcedureAttribute.NoReturn)
@@ -90,7 +120,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.SymbolType),
       returnType=vt.ReturnType.SingleValue(vt.UInt32),
       attributes=Set()
@@ -114,7 +145,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgTypes=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
+      mandatoryArgTypes=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.ArbitraryValues,
       attributes=Set()
@@ -138,7 +170,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      fixedArgTypes=List(vt.NumberType, vt.NumberType),
+      mandatoryArgTypes=List(vt.NumberType, vt.NumberType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.ExactIntegerType),
       returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
       attributes=Set()
@@ -169,7 +202,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=true,
-      fixedArgTypes=Nil,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SpecificValues(List(vt.FlonumType, vt.ExactIntegerType)),
       attributes=Set()

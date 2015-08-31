@@ -10,8 +10,9 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=false,
+      mandatoryArgTypes=initializedFields.map(recordType.typeForField),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      fixedArgTypes=initializedFields.map(recordType.typeForField),
       returnType=vt.ReturnType.SingleValue(recordType),
       attributes=Set()
     ).toPolymorphic

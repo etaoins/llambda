@@ -8,7 +8,8 @@ import llambda.compiler.{valuetype => vt}
 object LlambdaTopLevelSignature extends ProcedureSignature(
   hasWorldArg=true,
   hasSelfArg=false,
-  fixedArgTypes=Nil,
+  mandatoryArgTypes=Nil,
+  optionalArgTypes=Nil,
   restArgMemberTypeOpt=None,
   returnType=vt.ReturnType.SingleValue(vt.UnitType),
   attributes=Set()

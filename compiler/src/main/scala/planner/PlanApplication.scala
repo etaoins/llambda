@@ -9,19 +9,6 @@ import llambda.compiler.ArityException
 import llambda.compiler.codegen.CostForPlanSteps
 
 private[planner] object PlanApplication {
-  private def requiredArityDescription(mandatoryArgs : Int, optionalArgs : Int, hasRestArg : Boolean) : String = {
-    if (hasRestArg) {
-      s"at least ${mandatoryArgs} arguments"
-    }
-    else if (optionalArgs == 0) {
-      s"exactly ${mandatoryArgs} arguments"
-    }
-    else {
-      s"between ${mandatoryArgs} and ${mandatoryArgs + optionalArgs} arguments"
-    }
-
-  }
-
   def apply(state : PlannerState)(
       procExpr : et.Expr,
       argExprs : List[et.Expr]
@@ -118,7 +105,7 @@ private[planner] object PlanApplication {
     val hasRestArg = procedureType.restArgMemberTypeOpt.isDefined
 
     if (!HasCompatibleArity(args.length, mandatoryArgCount, optionalArgCount, hasRestArg)) {
-      val requiredArity = requiredArityDescription(mandatoryArgCount, optionalArgCount, hasRestArg)
+      val requiredArity = RequiredArityDescription.fromProcedureType(procedureType)
 
       throw new ArityException(
         located=plan.activeContextLocated,

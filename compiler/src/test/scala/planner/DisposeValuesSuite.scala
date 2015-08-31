@@ -11,7 +11,8 @@ class DisposeValuesSuite extends FunSuite {
   val testSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=true,
-    fixedArgTypes=List(vt.ExactIntegerType),
+    mandatoryArgTypes=List(vt.ExactIntegerType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(vt.SymbolType),
     returnType=vt.ReturnType.SingleValue(vt.PortType),
     attributes=Set()

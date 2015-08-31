@@ -12,7 +12,8 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   private val nonWorldSignature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    fixedArgTypes=List(vt.ExactIntegerType),
+    mandatoryArgTypes=List(vt.ExactIntegerType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType),
     attributes=Set()
@@ -21,7 +22,8 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   private val worldSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=false,
-    fixedArgTypes=List(vt.ExactIntegerType),
+    mandatoryArgTypes=List(vt.ExactIntegerType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType),
     attributes=Set()
@@ -30,7 +32,8 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   private val noReturnSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=false,
-    fixedArgTypes=List(vt.ExactIntegerType),
+    mandatoryArgTypes=List(vt.ExactIntegerType),
+    optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType),
     attributes=Set(ProcedureAttribute.NoReturn)

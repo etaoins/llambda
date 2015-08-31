@@ -5,36 +5,29 @@ import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 object ArityRuntimeErrorMessage {
-  def insufficientArgs(invokableProc : iv.InvokableProc)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
+  private def arityError(
+      errorType : String,
+      invokableProc : iv.InvokableProc
+  )(implicit plan : PlanWriter) : RuntimeErrorMessage = {
     val signature = invokableProc.polySignature.template
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
-    val fixedArgCount = signature.fixedArgTypes.length
+    val requiredArity = RequiredArityDescription.fromProcedureSignature(signature)
 
-    if (signature.restArgMemberTypeOpt.isDefined) {
-      RuntimeErrorMessage(
-        category=ErrorCategory.Arity,
-        name=s"insufficientArgsFor${nativeSymbol}RequiresAtLeast${fixedArgCount}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${fixedArgCount} arguments."
-      )
-    }
-    else {
-      RuntimeErrorMessage(
-        category=ErrorCategory.Arity,
-        name=s"insufficientArgsFor${nativeSymbol}RequiresExactly${fixedArgCount}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${fixedArgCount} arguments."
-      )
-    }
-  }
-
-  def tooManyArgs(invokableProc : iv.InvokableProc)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
-    val signature = invokableProc.polySignature.template
-    val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
-    val fixedArgCount = signature.fixedArgTypes.length
+    val compactErrorTypeName = errorType.replace(" ", "")
+    val compactArityName = requiredArity.replace(" ", "")
 
     RuntimeErrorMessage(
       category=ErrorCategory.Arity,
-      name=s"tooManyArgsFor${nativeSymbol}Requires${fixedArgCount}",
-      text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${fixedArgCount} arguments."
+      name=s"${compactErrorTypeName}For${nativeSymbol}Requires${compactArityName}",
+      text=s"Called ${nativeSymbol} with ${errorType}; requires ${requiredArity}."
     )
+  }
+
+  def insufficientArgs(invokableProc : iv.InvokableProc)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
+    arityError("insufficient arguments", invokableProc)
+  }
+
+  def tooManyArgs(invokableProc : iv.InvokableProc)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
+    arityError("too many arguments", invokableProc)
   }
 }

@@ -19,10 +19,16 @@ object PlanLambdaPolymorph {
     val valueType : vt.ValueType
   }
 
-  private case class FixedArgument(
+  private case class MandatoryArgument(
     storageLoc : StorageLocation,
     tempValue : ps.TempValue,
     valueType : vt.ValueType
+  ) extends Argument
+
+  private case class OptionalArgument(
+    storageLoc : StorageLocation,
+    tempValue : ps.TempValue,
+    valueType : vt.SchemeType
   ) extends Argument
 
   private case class RestArgument(
@@ -77,6 +83,15 @@ object PlanLambdaPolymorph {
       }
   }
 
+  private def retypeFixedArg(
+      argLoc : StorageLocation,
+      retypeMapping : Map[StorageLocation, vt.SchemeType],
+      declType : vt.SchemeType
+  ) : vt.SchemeType = retypeMapping.get(argLoc) match {
+    case Some(discoveredType) => discoveredType & declType
+    case None => declType
+  }
+
   def apply(
       nativeSymbol : String,
       manifest : LambdaManifest,
@@ -88,9 +103,8 @@ object PlanLambdaPolymorph {
 
     val parentState = manifest.parentState
 
-    // For the purposes of planning the procedure mandatory and optional args are indistinguishable. Only the
-    // application sites  are concerned with optional args and their default values.
-    val fixedArgLocs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
+    val mandatoryArgLocs = lambdaExpr.mandatoryArgs
+    val optionalArgLocs = lambdaExpr.optionalArgs.map(_.storageLoc)
     val restArgLoc = lambdaExpr.restArgOpt
 
     // Determine if we have a closure
@@ -104,24 +118,22 @@ object PlanLambdaPolymorph {
     // See if we can retype some of our args
     val argTypeMapping = RetypeLambdaArgs(lambdaExpr, polymorphType)(parentState, parentPlan.config)
 
-    val fixedArgTypes = polymorphType.mandatoryArgTypes ++ polymorphType.optionalArgTypes
-    val retypedFixedArgs = fixedArgLocs.zip(fixedArgTypes) map {
-      case (argLoc, declType) =>
-        val retypedType = argTypeMapping.get(argLoc) match {
-          case Some(discoveredType) =>
-            discoveredType & declType
+    val retypedMandatoryArgs = mandatoryArgLocs.zip(polymorphType.mandatoryArgTypes) map { case (argLoc, declType) =>
+      val schemeType = retypeFixedArg(argLoc, argTypeMapping, declType)
 
-          case None =>
-            declType
-        }
+      (argLoc -> CompactRepresentationForType(schemeType))
+    }
 
-        val compactType = CompactRepresentationForType(retypedType)
-        (argLoc -> compactType)
+    val retypedOptionalArgs = optionalArgLocs.zip(polymorphType.optionalArgTypes) map { case (argLoc, declType) =>
+      (argLoc -> retypeFixedArg(argLoc, argTypeMapping, declType))
     }
 
     // Build as list of all of our args
-    val allArgs = retypedFixedArgs.map({ case (storageLoc, schemeType) =>
-      FixedArgument(storageLoc, ps.Temp(schemeType), schemeType)
+    val allArgs = retypedMandatoryArgs.map({ case (storageLoc, valueType) =>
+      MandatoryArgument(storageLoc, ps.Temp(valueType), valueType)
+    }).toList ++
+    retypedOptionalArgs.map({case (storageLoc, schemeType) =>
+      OptionalArgument(storageLoc, ps.Temp(schemeType), schemeType)
     }).toList ++
     restArgLoc.map({ storageLoc =>
       RestArgument(storageLoc, ps.CellTemp(ct.ListElementCell), polymorphType.restArgMemberTypeOpt.get)
@@ -139,8 +151,11 @@ object PlanLambdaPolymorph {
     }).toMap
 
     val argImmutables = (immutableArgs.map {
-      case FixedArgument(storageLoc, tempValue, valueType) =>
+      case MandatoryArgument(storageLoc, tempValue, valueType) =>
         (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)(parentPlan.config)))
+
+      case _ : OptionalArgument =>
+        throw new Exception("IMPLEMENT ME")
 
       case RestArgument(storageLoc, tempValue, memberType) =>
         val restValue = new iv.CellValue(
@@ -165,8 +180,9 @@ object PlanLambdaPolymorph {
     val scalaBugSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
+      mandatoryArgTypes=retypedMandatoryArgs.map(_._2),
+      optionalArgTypes=retypedOptionalArgs.map(_._2),
       restArgMemberTypeOpt=polymorphType.restArgMemberTypeOpt,
-      fixedArgTypes=retypedFixedArgs.map(_._2),
       returnType=compactReturnType,
       attributes=Set(ProcedureAttribute.FastCC)
     ) : ProcedureSignature

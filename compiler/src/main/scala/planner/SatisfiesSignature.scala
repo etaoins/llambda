@@ -15,16 +15,17 @@ object SatisfiesSignature {
         // These must be strictly equal
         superOther == derivedOther
     }
-  
 
-  /** Determines if a super signature completely satisfies by a derived signature 
+
+  /** Determines if a super signature completely satisfies by a derived signature
     *
     * This means that all invokations of the derived signature will automatically satisfy the super signature. This
     * requires that the signatures:
     *
     * - Have the same calling convention
     * - Both either take world/self arguments or not
-    * - Have the same number of fixed arguments and they're covariant
+    * - Have the same number of mandatory arguments and they're covariant
+    * - Have the same number of optional arguments and they're covariant
     * - Have the same number of rest arguments and they're covariant
     * - Either both return a single value or both return multiple values with covariant types
     *
@@ -43,12 +44,12 @@ object SatisfiesSignature {
     if (superSignature.hasWorldArg != derivedSignature.hasWorldArg) {
       return false
     }
-    
+
     if (superSignature.hasSelfArg != derivedSignature.hasSelfArg) {
       return false
     }
 
-    if (superSignature.fixedArgTypes.length != derivedSignature.fixedArgTypes.length) {
+    if (superSignature.mandatoryArgTypes.length != derivedSignature.mandatoryArgTypes.length) {
       return false
     }
 
@@ -57,29 +58,27 @@ object SatisfiesSignature {
       return false
     }
 
-    val fixedArgsSatisfy = superSignature.fixedArgTypes.zip(derivedSignature.fixedArgTypes).forall { 
+    val mandatoryArgsSatisfy = superSignature.mandatoryArgTypes.zip(derivedSignature.mandatoryArgTypes).forall {
       case (superFixedArg, derivedFixedArg) =>
         // Do a contravariant test
         satisfiesRepresentation(derivedFixedArg, superFixedArg)
     }
 
-    if (!fixedArgsSatisfy) {
+    if (!mandatoryArgsSatisfy) {
       return false
     }
 
-    val restArgSatifies = (superSignature.restArgMemberTypeOpt, derivedSignature.restArgMemberTypeOpt) match {
-      case (Some(superRestArg), Some(derivedRestArg)) =>
-        // Do a contravariant test
-        vt.SatisfiesType(derivedRestArg, superRestArg) == Some(true)
+    val superVarArgsListType = vt.VariableArgsToListType(
+      superSignature.optionalArgTypes,
+      superSignature.restArgMemberTypeOpt
+    )
 
-      case (None, None) =>
-        true
+    val derivedVarArgsListType = vt.VariableArgsToListType(
+      derivedSignature.optionalArgTypes,
+      derivedSignature.restArgMemberTypeOpt
+    )
 
-      case _ =>
-        false
-    }
-
-    if (!restArgSatifies) {
+    if (vt.SatisfiesType(derivedVarArgsListType, superVarArgsListType) != Some(true)) {
       return false
     }
 

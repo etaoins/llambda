@@ -8,27 +8,11 @@ object FormalsToListType {
       optionalArgs : List[SchemeType],
       restArgMemberTypeOpt : Option[SchemeType]
   ) : SchemeType = {
-    val restArgListType = restArgMemberTypeOpt match {
-      case None =>
-        EmptyListType
+    val varArgsListType = VariableArgsToListType(optionalArgs, restArgMemberTypeOpt)
 
-      case Some(memberType) =>
-        UniformProperListType(memberType)
-    }
-
-    val restAndOptionalListType = optionalArgs.foldRight(restArgListType) { (optionalArgType, cdrType) =>
-      UnionType(Set(
-        SpecificPairType(
-          DirectSchemeTypeRef(optionalArgType),
-          DirectSchemeTypeRef(cdrType)
-        ),
-        EmptyListType
-      ))
-    }
-
-    mandatoryArgs.foldRight(restAndOptionalListType) { case (fixedArgType, cdrType) =>
+    mandatoryArgs.foldRight(varArgsListType) { case (mandatoryArgType, cdrType) =>
       SpecificPairType(
-        DirectSchemeTypeRef(fixedArgType),
+        DirectSchemeTypeRef(mandatoryArgType),
         DirectSchemeTypeRef(cdrType)
       )
     }

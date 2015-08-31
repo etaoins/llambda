@@ -36,19 +36,19 @@ object ProcedureSignatureToIr {
       Nil
     }
 
-    val fixedArgs = signature.fixedArgTypes map (ValueTypeToIr(_)) map {
+    val mandatoryArgs = signature.mandatoryArgTypes map (ValueTypeToIr(_)) map {
       case SignedFirstClassType(irType, signedness) =>
         IrFunction.Argument(irType, paramSignednessToAttribs(signedness))
     }
 
-    val restArgs = if (signature.restArgMemberTypeOpt.isDefined) {
+    val varArgs = if ((signature.optionalArgTypes.length > 0) || signature.restArgMemberTypeOpt.isDefined) {
       List(IrFunction.Argument(PointerType(ct.ListElementCell.irType), Set()))
     }
     else {
       Nil
-    } 
+    }
 
-    val allArgs = worldArgs ++ selfArgs ++ fixedArgs ++ restArgs
+    val allArgs = worldArgs ++ selfArgs ++ mandatoryArgs ++ varArgs
 
     val result = signature.returnType.representationTypeOpt match {
       case None =>

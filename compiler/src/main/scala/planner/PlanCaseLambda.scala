@@ -65,7 +65,7 @@ private[planner] object PlanCaseLambda {
       // See if our length matched
       val procValue = checkingClause.procValue
       val signature = procValue.polySignature.template
-      val testingLength = signature.fixedArgTypes.length
+      val testingLength = signature.mandatoryArgTypes.length
 
       val testingLengthTemp = ps.Temp(vt.UInt32)
       entryPlan.steps += ps.CreateNativeInteger(testingLengthTemp, testingLength, vt.UInt32.bits)
@@ -213,8 +213,9 @@ private[planner] object PlanCaseLambda {
     val signature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=closureRequired,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.AnySchemeType),
-      fixedArgTypes=Nil,
       returnType=returnType,
       attributes=Set(ProcedureAttribute.FastCC)
     ) : ProcedureSignature

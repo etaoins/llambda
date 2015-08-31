@@ -10,8 +10,9 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
     ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
+      mandatoryArgTypes=List(recordType),
+      optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      fixedArgTypes=List(recordType),
       returnType=vt.ReturnType.SingleValue(recordType.typeForField(field)),
       attributes=Set()
     ).toPolymorphic
