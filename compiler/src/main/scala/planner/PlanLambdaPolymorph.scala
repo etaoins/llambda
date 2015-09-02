@@ -13,31 +13,26 @@ import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.TypeException
 
 object PlanLambdaPolymorph {
-  private sealed abstract class Argument {
-    val storageLoc : StorageLocation
+  private abstract class Argument {
+    val name : String
     val tempValue : ps.TempValue
-    val valueType : vt.ValueType
   }
 
   private case class MandatoryArgument(
-    storageLoc : StorageLocation,
-    tempValue : ps.TempValue,
-    valueType : vt.ValueType
-  ) extends Argument
-
-  private case class OptionalArgument(
-    storageLoc : StorageLocation,
-    tempValue : ps.TempValue,
-    valueType : vt.SchemeType
-  ) extends Argument
-
-  private case class RestArgument(
-    storageLoc : StorageLocation,
-    tempValue : ps.TempValue,
-    memberType : vt.SchemeType
+      storageLoc : StorageLocation,
+      tempValue : ps.TempValue,
+      valueType : vt.ValueType
   ) extends Argument {
-    val valueType = vt.ListElementType
+    val name = storageLoc.sourceName
   }
+
+  private case class VarArgument(name : String, tempValue : ps.TempValue) extends Argument
+
+  private case class RetypedOptional(
+      storageLoc : StorageLocation,
+      schemeType : vt.SchemeType,
+      defaultExpr : et.Expr
+  )
 
   /** Finds the last expression in a body that corresponds a user-produced expression
     *
@@ -58,29 +53,78 @@ object PlanLambdaPolymorph {
       Some(other)
   }
 
-  private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter) : PlannerState = mutableArgs.length match {
-    case 0 =>
-      // Nothing to do
-      initialState
+  private def initLocationValue(
+      storageLoc : StorageLocation,
+      value : iv.IntermediateValue
+  )(implicit plan : PlanWriter) : LocationValue = {
+    if (plan.config.analysis.mutableVars.contains(storageLoc)) {
+      // Init the mutable
+      val mutableTemp = ps.RecordTemp()
 
-    case argCount =>
-      mutableArgs.foldLeft(initialState) { case (state, argument) =>
-        val argValue = TempValueToIntermediate(argument.valueType, argument.tempValue)(plan.config)
+      // Determine our type and convert the argument to it
+      val compactInnerType = CompactRepresentationForType(value.schemeType)
+      val mutableType = MutableType(compactInnerType)
+      val tempValue = value.toTempValue(compactInnerType)
 
-        // Init the mutable
-        val mutableTemp = ps.RecordTemp()
+      // Set the value
+      val fieldValues = Map[vt.RecordField, ps.TempValue](mutableType.recordField -> tempValue)
+      plan.steps += ps.InitRecord(mutableTemp, mutableType, fieldValues, isUndefined=false)
 
-        // Determine our type and convert the argument to it
-        val compactInnerType = CompactRepresentationForType(argument.valueType)
-        val mutableType = MutableType(compactInnerType)
-        val tempValue = argValue.toTempValue(compactInnerType)
+      MutableValue(mutableType, mutableTemp, false)
+    }
+    else {
+      ImmutableValue(value)
+    }
+  }
 
-        // Set the value
-        val fieldValues = Map[vt.RecordField, ps.TempValue](mutableType.recordField -> tempValue)
-        plan.steps += ps.InitRecord(mutableTemp, mutableType, fieldValues, isUndefined=false)
+  private def resolveOptionalArgs(state : PlannerState)(
+      varArgsListHead : iv.IntermediateValue,
+      arg : RetypedOptional
+  )(implicit plan : PlanWriter) : (iv.IntermediateValue, PlannerState) = arg match {
+    case RetypedOptional(storageLoc, schemeType, defaultExpr) =>
+      val varArgsListHeadTemp = varArgsListHead.toBoxedValue().tempValue
+      val isPairPred = ps.Temp(vt.Predicate)
+      plan.steps += ps.TestCellType(isPairPred, varArgsListHeadTemp, ct.PairCell, Set(ct.PairCell, ct.EmptyListCell))
 
-        state.withValue(argument.storageLoc -> MutableValue(mutableType, mutableTemp, false))
-      }
+      val providedValuePlan = plan.forkPlan()
+      val providedValuePair = varArgsListHead.withSchemeType(varArgsListHead.schemeType & vt.AnyPairType)
+
+      val providedValue = PlanCadr.loadCar(providedValuePair)(providedValuePlan)
+      val providedListHead = PlanCadr.loadCdr(providedValuePair)(providedValuePlan)
+
+
+      val defaultValuePlan = plan.forkPlan()
+      val defaultValueResult = PlanExpr(state)(defaultExpr)(defaultValuePlan)
+
+      val uncastDefaultValue = defaultValueResult.values.toSingleValue()(defaultValuePlan)
+      val defaultValue = uncastDefaultValue.castToSchemeType(storageLoc.schemeType)(defaultValuePlan)
+
+
+      val valuePhiResult = PlanResultValuesPhi(
+        leftPlan=providedValuePlan,
+        leftValues=SingleValue(providedValue),
+        rightPlan=defaultValuePlan,
+        rightValues=SingleValue(defaultValue)
+      )
+
+      val listHeadPhiResult = PlanResultValuesPhi(
+        leftPlan=providedValuePlan,
+        leftValues=SingleValue(providedListHead),
+        rightPlan=defaultValuePlan,
+        rightValues=SingleValue(iv.EmptyListValue)
+      )
+
+      val valuePhis = List(
+        ps.ValuePhi(valuePhiResult.resultTemp, valuePhiResult.leftTempValue, valuePhiResult.rightTempValue),
+        ps.ValuePhi(listHeadPhiResult.resultTemp, listHeadPhiResult.leftTempValue, listHeadPhiResult.rightTempValue)
+      )
+
+      plan.steps += ps.CondBranch(isPairPred, providedValuePlan.steps.toList, defaultValuePlan.steps.toList, valuePhis)
+
+      val argValue = valuePhiResult.resultValues.toSingleValue()
+      val stateWithOptionalArg = state.withValue(storageLoc -> initLocationValue(storageLoc, argValue))
+
+      (listHeadPhiResult.resultValues.toSingleValue(), stateWithOptionalArg)
   }
 
   private def retypeFixedArg(
@@ -103,9 +147,7 @@ object PlanLambdaPolymorph {
 
     val parentState = manifest.parentState
 
-    val mandatoryArgLocs = lambdaExpr.mandatoryArgs
     val optionalArgLocs = lambdaExpr.optionalArgs.map(_.storageLoc)
-    val restArgLoc = lambdaExpr.restArgOpt
 
     // Determine if we have a closure
     val innerSelfTempOpt = if (manifest.capturedVars.isEmpty) {
@@ -118,53 +160,17 @@ object PlanLambdaPolymorph {
     // See if we can retype some of our args
     val argTypeMapping = RetypeLambdaArgs(lambdaExpr, polymorphType)(parentState, parentPlan.config)
 
-    val retypedMandatoryArgs = mandatoryArgLocs.zip(polymorphType.mandatoryArgTypes) map { case (argLoc, declType) =>
-      val schemeType = retypeFixedArg(argLoc, argTypeMapping, declType)
+    val retypedMandatoryArgs = lambdaExpr.mandatoryArgs.zip(polymorphType.mandatoryArgTypes) map {
+      case (argLoc, declType) =>
+        val schemeType = retypeFixedArg(argLoc, argTypeMapping, declType)
 
-      (argLoc -> CompactRepresentationForType(schemeType))
+        (argLoc -> CompactRepresentationForType(schemeType))
     }
 
-    val retypedOptionalArgs = optionalArgLocs.zip(polymorphType.optionalArgTypes) map { case (argLoc, declType) =>
-      (argLoc -> retypeFixedArg(argLoc, argTypeMapping, declType))
+    val retypedOptionalArgs = lambdaExpr.optionalArgs.zip(polymorphType.optionalArgTypes) map {
+      case (et.OptionalArg(argLoc, defaultExpr), declType) =>
+        RetypedOptional(argLoc, retypeFixedArg(argLoc, argTypeMapping, declType), defaultExpr)
     }
-
-    // Build as list of all of our args
-    val allArgs = retypedMandatoryArgs.map({ case (storageLoc, valueType) =>
-      MandatoryArgument(storageLoc, ps.Temp(valueType), valueType)
-    }).toList ++
-    retypedOptionalArgs.map({case (storageLoc, schemeType) =>
-      OptionalArgument(storageLoc, ps.Temp(schemeType), schemeType)
-    }).toList ++
-    restArgLoc.map({ storageLoc =>
-      RestArgument(storageLoc, ps.CellTemp(ct.ListElementCell), polymorphType.restArgMemberTypeOpt.get)
-    })
-
-    // Split our args in to mutable and immutable
-    val (mutableArgs, immutableArgs) = allArgs.partition { argument =>
-      parentPlan.config.analysis.mutableVars.contains(argument.storageLoc)
-    }
-
-    // Immutable vars can be used immediately
-    val importedImmutables = (manifest.closedVars.collect {
-      case imported : ImportedImmutable =>
-        (imported.storageLoc, ImmutableValue(imported.parentIntermediate))
-    }).toMap
-
-    val argImmutables = (immutableArgs.map {
-      case MandatoryArgument(storageLoc, tempValue, valueType) =>
-        (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)(parentPlan.config)))
-
-      case _ : OptionalArgument =>
-        throw new Exception("IMPLEMENT ME")
-
-      case RestArgument(storageLoc, tempValue, memberType) =>
-        val restValue = new iv.CellValue(
-          schemeType=vt.UniformProperListType(memberType),
-          boxedValue=BoxedValue(ct.ListElementCell, tempValue)
-        )
-
-        (storageLoc, ImmutableValue(restValue))
-    }).toMap
 
     // Prefer compact return types where possible
     val compactReturnType = polymorphType.returnType match {
@@ -177,49 +183,35 @@ object PlanLambdaPolymorph {
 
     // Determine our initial signature
     // This is fun - try renaming scalaBugSignature to initialSignature and remove the assignment below
-    val scalaBugSignature = ProcedureSignature(
+    val initialSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
       mandatoryArgTypes=retypedMandatoryArgs.map(_._2),
-      optionalArgTypes=retypedOptionalArgs.map(_._2),
+      optionalArgTypes=retypedOptionalArgs.map(_.schemeType),
       restArgMemberTypeOpt=polymorphType.restArgMemberTypeOpt,
       returnType=compactReturnType,
       attributes=Set(ProcedureAttribute.FastCC)
     ) : ProcedureSignature
 
-    val initialSignature : ProcedureSignature = scalaBugSignature
-
     // If we're recursive we can't deviate from our initial signature
     val canRefineSignature = !manifest.isRecursive
 
-    // Create a value to reference ourselves recursively if required
-    val recursiveSelfImmutables = manifest.recursiveSelfLocOpt map { storageLoc =>
-      storageLoc -> ImmutableValue(
-        new iv.KnownUserProc(
-          polySignature=initialSignature.toPolymorphic,
-          plannedSymbol=nativeSymbol,
-          selfTempOpt=innerSelfTempOpt
-        )
-      )
-    }
-
-    // Start a new state for the procedure
-    val initialImmutables = argImmutables ++ importedImmutables ++ recursiveSelfImmutables
-
-    val preMutableState = PlannerState(
-      values=initialImmutables,
-      inlineDepth=parentState.inlineDepth
-    )
-
+    // Initialise our plan
     val procPlan = parentPlan.forkPlan()
+    val initialState = PlannerState(values=Map(), inlineDepth=parentState.inlineDepth)
 
-    // Initialize all of our mutable parameters
-    val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan)
+    val importedImmutablesState = manifest.closedVars.foldLeft(initialState)({
+      case (state, imported : ImportedImmutable) =>
+        state.withValue(imported.storageLoc -> ImmutableValue(imported.parentIntermediate))
+
+      case (state, _) =>
+        state
+    })
 
     // Load all of our captured variables
     val postClosureState = innerSelfTempOpt match {
       case None =>
-        postMutableState
+        importedImmutablesState
 
       case Some(innerSelfTemp) =>
         val primarySelfTemp = if (isPrimaryPolymorph) {
@@ -238,13 +230,57 @@ object PlanLambdaPolymorph {
         }
 
         val closureValues = LoadClosureData(primarySelfTemp, manifest)(procPlan)
-        postMutableState.withValues(closureValues)
+        importedImmutablesState.withValues(closureValues)
+    }
+
+    // Import all of our mandatory args
+    val mandatoryArgs = retypedMandatoryArgs.map({ case (storageLoc, valueType) =>
+      MandatoryArgument(storageLoc, ps.Temp(valueType), valueType)
+    })
+
+    val postMandatoryState = mandatoryArgs.foldLeft(postClosureState) {
+      case (state, MandatoryArgument(storageLoc, tempValue, valueType)) =>
+        val value = TempValueToIntermediate(valueType, tempValue)(procPlan.config)
+        state.withValue(storageLoc -> initLocationValue(storageLoc, value)(procPlan))
+    }
+
+    // Now the optional args
+    val varArgTemp = ps.CellTemp(ct.ListElementCell)
+    val varArgType = vt.VariableArgsToListType(
+      optionalArgs=retypedOptionalArgs.map(_.schemeType),
+      restArgMemberTypeOpt=polymorphType.restArgMemberTypeOpt
+    )
+
+    val varArgValue = new iv.CellValue(
+      schemeType=varArgType,
+      boxedValue=BoxedValue(ct.ListElementCell, varArgTemp)
+    ) : iv.IntermediateValue
+
+    val (restValue, postOptionalState) = retypedOptionalArgs.foldLeft((varArgValue, postMandatoryState)) {
+      case ((varArgValue, state), arg) =>
+        resolveOptionalArgs(state)(varArgValue, arg)(procPlan)
+    }
+
+    // And the rest argument
+    val postRestState = lambdaExpr.restArgOpt.foldLeft(postOptionalState) { (state, restArgLoc) =>
+      state.withValue(restArgLoc -> initLocationValue(restArgLoc, restValue)(procPlan))
+    }
+
+    // Finally, the self argument
+    val postSelfState = manifest.recursiveSelfLocOpt.foldLeft(postRestState) { (state, selfLoc) =>
+      val selfValue = new iv.KnownUserProc(
+        polySignature=initialSignature.toPolymorphic,
+        plannedSymbol=nativeSymbol,
+        selfTempOpt=innerSelfTempOpt
+      )
+
+      state.withValue(selfLoc -> initLocationValue(selfLoc, selfValue)(procPlan))
     }
 
     // Plan the body
-    val planResult = PlanExpr(postClosureState)(body)(procPlan)
+    val planResult = PlanExpr(postSelfState)(body)(procPlan)
 
-    val returnType = if (!canRefineSignature || ContainsImmediateReturn(body)) {
+    val finalReturnType = if (!canRefineSignature || ContainsImmediateReturn(body)) {
       // Return an arbitrary number of values with arbitrary types
       // XXX: We can be more clever here and try to find a common return type across all returns
       initialSignature.returnType
@@ -272,7 +308,7 @@ object PlanLambdaPolymorph {
 
     // Return from the function
     procPlan.withContextLocationOpt(lastExprOpt) {
-      val resultTempOpt = planResult.values.toReturnTempValue(returnType)(procPlan)
+      val resultTempOpt = planResult.values.toReturnTempValue(finalReturnType)(procPlan)
       procPlan.steps += ps.Return(resultTempOpt)
     }
 
@@ -280,10 +316,10 @@ object PlanLambdaPolymorph {
 
     val (worldPtrOpt, strippedWorldPtrSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps)) {
       // World pointer is not required, strip it out
-      (None, initialSignature.copy(hasWorldArg=false, returnType=returnType))
+      (None, initialSignature.copy(hasWorldArg=false, returnType=finalReturnType))
     }
     else {
-      (Some(ps.WorldPtrValue), initialSignature.copy(returnType=returnType))
+      (Some(ps.WorldPtrValue), initialSignature.copy(returnType=finalReturnType))
     }
 
     val procSignature = if (planResult.values == UnreachableValue) {
@@ -298,6 +334,16 @@ object PlanLambdaPolymorph {
     val argumentUniquer = new SourceNameUniquer
     argumentUniquer.reserve("world", "self")
 
+    // Make a useful name for our variable argument
+    val varArgOpt = (lambdaExpr.optionalArgs, lambdaExpr.restArgOpt) match {
+      case (Nil, None) => None
+      case (Nil, Some(restOnlyLoc)) => Some(VarArgument(restOnlyLoc.sourceName, varArgTemp))
+      case (_, None) => Some(VarArgument("optionals", varArgTemp))
+      case _ => Some(VarArgument("varArgs", varArgTemp))
+    }
+
+    val allArgs = mandatoryArgs ++ varArgOpt
+
     // Name our function arguments
     val namedArguments =
       worldPtrOpt.toList.map({ worldPtr =>
@@ -307,7 +353,7 @@ object PlanLambdaPolymorph {
         ("self" -> procSelf)
       }) ++
       (allArgs.map { argument =>
-        (argumentUniquer(argument.storageLoc.sourceName) -> argument.tempValue)
+        (argumentUniquer(argument.name) -> argument.tempValue)
       })
 
     val irCommentOpt =
