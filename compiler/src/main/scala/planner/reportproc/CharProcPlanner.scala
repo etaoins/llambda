@@ -61,7 +61,9 @@ object CharProcPlanner extends ReportProcPlanner {
     // Combine all of the native predicates together
     val resultPred = pairwiseNativePreds.reduceLeft { (nativePred, trueBranchValue) =>
       val condResult = ps.Temp(vt.Predicate)
-      plan.steps += ps.CondBranch(condResult, nativePred, Nil, trueBranchValue, Nil, nativePred)
+      val valuePhi = ps.ValuePhi(condResult, trueBranchValue, nativePred)
+
+      plan.steps += ps.CondBranch(nativePred, Nil, Nil, List(valuePhi))
 
       condResult
     }

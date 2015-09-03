@@ -85,17 +85,17 @@ sealed trait NestingStep extends Step {
 
   /** List of inner branches
     *
-    * Branches are a tuple of (steps, outputValue)
+    * Branches are a tuple of (steps, outputValues)
     */
-  def innerBranches : List[(List[Step], TempValue)]
+  def innerBranches : List[(List[Step], Set[TempValue])]
 
   /** Rewrites this step with new inner branches */
-  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) : NestingStep
+  def mapInnerBranches(mapper : (List[Step], List[TempValue]) => (List[Step], List[TempValue])) : NestingStep
 
   lazy val inputValues =
     outerInputValues ++
     innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
-    innerBranches.map(_._2)
+    innerBranches.flatMap(_._2)
 }
 
 /** Step requiring a cell from a temporary allocation */
@@ -245,37 +245,50 @@ case class DisposeValues(values : Set[TempValue]) extends Step {
     DisposeValues(values.map(f)).assignLocationFrom(this)
 }
 
-/** Conditionally branches based on a value
+/** Represents a value to be phi'ed by a branch
   *
   * @param result      location to store trueValue or falseValue when the branch completes
-  * @param test        i1 value to conditionally branch on
-  * @param trueSteps   steps to perform if the condition is true
   * @param trueValue   value to place in result after performing trueSteps
-  * @param falseSteps  steps to perform if the condition is false
   * @param falseValue  value to place in result after performing falseSteps
   */
-case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends NestingStep {
+case class ValuePhi(result : TempValue, trueValue : TempValue, falseValue : TempValue) {
+  def renamed(f : (TempValue) => TempValue) =
+    ValuePhi(f(result), f(trueValue), f(falseValue))
+}
+
+/** Conditionally branches based on a value
+  *
+  * @param test        i1 value to conditionally branch on
+  * @param trueSteps   steps to perform if the condition is true
+  * @param falseSteps  steps to perform if the condition is false
+  * @param valuePhis    values to phi from the branches
+  */
+case class CondBranch(test : TempValue, trueSteps : List[Step], falseSteps : List[Step], valuePhis : List[ValuePhi]) extends NestingStep {
   lazy val outerInputValues = Set(test)
-  lazy val innerBranches = List((trueSteps, trueValue), (falseSteps, falseValue))
+  lazy val innerBranches = List(
+    (trueSteps, valuePhis.map(_.trueValue).toSet),
+    (falseSteps, valuePhis.map(_.falseValue).toSet)
+  )
 
-  lazy val outputValues = Set(result)
+  lazy val outputValues = valuePhis.map(_.result).toSet
 
-  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
-    val (mappedTrueSteps, mappedTrueValue) = mapper(trueSteps, trueValue)
-    val (mappedFalseSteps, mappedFalseValue) = mapper(falseSteps, falseValue)
+  def mapInnerBranches(mapper : (List[Step], List[TempValue]) => (List[Step], List[TempValue])) = {
+    val (mappedTrueSteps, mappedTrueValues) = mapper(trueSteps, valuePhis.map(_.trueValue))
+    val (mappedFalseSteps, mappedFalseValues) = mapper(falseSteps, valuePhis.map(_.falseValue))
 
-    CondBranch(result, test, mappedTrueSteps, mappedTrueValue, mappedFalseSteps, mappedFalseValue)
-      .assignLocationFrom(this)
+    val mappedPhis = (valuePhis.map(_.result), mappedTrueValues, mappedFalseValues).zipped.map {
+      case (result, trueValue, falseValue) => ValuePhi(result, trueValue, falseValue)
+    }
+
+    CondBranch(test, mappedTrueSteps, mappedFalseSteps, mappedPhis).assignLocationFrom(this)
   }
 
   def renamed(f : (TempValue) => TempValue) =
     CondBranch(
-      result=f(result),
       test=f(test),
       trueSteps=trueSteps.map(_.renamed(f)),
-      trueValue=f(trueValue),
       falseSteps=falseSteps.map(_.renamed(f)),
-      falseValue=f(falseValue)
+      valuePhis=valuePhis.map(_.renamed(f))
     ).assignLocationFrom(this)
 }
 

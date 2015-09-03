@@ -171,10 +171,12 @@ class UnboxEarlySuite extends FunSuite {
     val outerSymbolTemp = ps.Temp(vt.SymbolType)
     val outerUnboxedTemp = ps.Temp(vt.Int64)
 
+    val valuePhi = ps.ValuePhi(condBranchResult, trueUnboxedTemp, falseUnboxedTemp)
+
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
       ps.BoxExactInteger(outerBoxedTemp, initialTemp),
-      ps.CondBranch(condBranchResult, outerBoxedTemp, inputTrueSteps, trueUnboxedTemp, inputFalseSteps, falseUnboxedTemp),
+      ps.CondBranch(outerBoxedTemp, inputTrueSteps, inputFalseSteps, List(valuePhi)),
       ps.CreateSymbolCell(outerSymbolTemp, "Outer"),
       ps.UnboxExactInteger(outerUnboxedTemp, outerBoxedTemp)
     )
@@ -194,7 +196,7 @@ class UnboxEarlySuite extends FunSuite {
     val expectedSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
       ps.BoxExactInteger(outerBoxedTemp, initialTemp),
-      ps.CondBranch(condBranchResult, outerBoxedTemp, expectedTrueSteps, trueUnboxedTemp, expectedFalseSteps, falseUnboxedTemp),
+      ps.CondBranch(outerBoxedTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
       ps.UnboxExactInteger(outerUnboxedTemp, outerBoxedTemp),
       ps.CreateSymbolCell(outerSymbolTemp, "Outer")
     )

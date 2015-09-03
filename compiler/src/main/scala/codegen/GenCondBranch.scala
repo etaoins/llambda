@@ -6,7 +6,7 @@ import llambda.llvmir._
 
 private[codegen] object GenCondBranch {
   def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.CondBranch) : GenResult = step match {
-    case ps.CondBranch(resultTemp, testTemp, trueSteps, trueTemp, falseSteps, falseTemp) =>
+    case ps.CondBranch(testTemp, trueSteps, falseSteps, valuePhis) =>
       val testIr = state.liveTemps(testTemp)
 
       // Make two blocks
@@ -57,25 +57,29 @@ private[codegen] object GenCondBranch {
 
         case (trueEndState : GenerationState, BlockTerminated(_)) =>
           // Only true terminated
-          trueEndState.copy(
+          val state = trueEndState.copy(
             gcState=GcState.fromBranches(trueResult.gcState, List(falseResult.gcState))
-          ).withTempValue(resultTemp -> trueEndState.liveTemps(trueTemp))
-        
+          )
+
+          valuePhis.foldLeft(state) { case (state, valuePhi) =>
+            state.withTempValue(valuePhi.result -> trueEndState.liveTemps(valuePhi.trueValue))
+          }
+
         case (BlockTerminated(_), falseEndState : GenerationState) =>
           // Only false terminated
-          falseEndState.copy(
+          val state = falseEndState.copy(
             gcState=GcState.fromBranches(falseResult.gcState, List(trueResult.gcState))
-          ).withTempValue(resultTemp -> falseEndState.liveTemps(falseTemp))
+          )
+
+          valuePhis.foldLeft(state) { case (state, valuePhi) =>
+            state.withTempValue(valuePhi.result -> falseEndState.liveTemps(valuePhi.falseValue))
+          }
 
         case (trueEndState : GenerationState, falseEndState : GenerationState) =>
           // Neither branch terminated - we need to phi
 
-          // Get the IR values from either side
           val trueEndBlock = trueEndState.currentBlock
-          val trueResultIrValue = trueEndState.liveTemps(trueTemp)
-
           val falseEndBlock = falseEndState.currentBlock
-          val falseResultIrValue = falseEndState.liveTemps(falseTemp)
 
           // Make a final block
           val irFunction = postFlushState.currentBlock.function
@@ -83,9 +87,6 @@ private[codegen] object GenCondBranch {
           val phiBlock = irFunction.startChildBlock("condPhi")
           trueEndBlock.uncondBranch(phiBlock)
           falseEndBlock.uncondBranch(phiBlock)
-
-          // Make the result phi
-          val phiResultIr = phiBlock.phi("condPhiResult")(PhiSource(trueResultIrValue, trueEndBlock), PhiSource(falseResultIrValue, falseEndBlock))
 
           // Find our common temp values in sorted order to ensure we generate stable IR
           val sortedTrueLiveTemps = trueEndState.liveTemps.tempValueToIr.toSeq.sortBy(_._2.toIr).map(_._1)
@@ -95,7 +96,7 @@ private[codegen] object GenCondBranch {
           val newTempValueToIr = sortedCommonLiveTemps map { liveTemp =>
             val trueValueIrValue = trueEndState.liveTemps(liveTemp)
             val falseValueIrValue = falseEndState.liveTemps(liveTemp)
-              
+
             if (trueValueIrValue == falseValueIrValue) {
               // This is the same in both branches which means it came from our original state
               (liveTemp -> trueValueIrValue)
@@ -108,11 +109,23 @@ private[codegen] object GenCondBranch {
           }
 
           // Make sure we preserve pointer identities or else the identity count will explode
-          postFlushState.copy(
+          val phiedLiveValuesState = postFlushState.copy(
             currentBlock=phiBlock,
             liveTemps=state.liveTemps.copy(tempValueToIr=newTempValueToIr.toMap),
             gcState=GcState.fromBranches(postFlushState.gcState, List(trueEndState.gcState, falseEndState.gcState))
-          ).withTempValue(resultTemp -> phiResultIr)
+          )
+
+          valuePhis.foldLeft(phiedLiveValuesState) { case (state, valuePhi) =>
+            val trueResultIrValue = trueEndState.liveTemps(valuePhi.trueValue)
+            val falseResultIrValue = falseEndState.liveTemps(valuePhi.falseValue)
+
+            val phiResultIr = phiBlock.phi("condPhiResult")(
+              PhiSource(trueResultIrValue, trueEndBlock),
+              PhiSource(falseResultIrValue, falseEndBlock)
+            )
+
+            state.withTempValue(valuePhi.result -> phiResultIr)
+          }
       }
   }
 }

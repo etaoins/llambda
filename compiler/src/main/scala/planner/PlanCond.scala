@@ -131,19 +131,13 @@ object PlanCond {
         if (trueValues == UnreachableValue) {
           // True branch terminates unconditionally; place it inside the branch and move the false branch after so we
           // can avoid the phi
-          val unitTemp = iv.UnitValue.toTempValue(vt.UnitType)
-          val resultTemp = ps.Temp(vt.UnitType)
-
-          plan.steps += ps.CondBranch(resultTemp, truthyPred, trueWriter.steps.toList, unitTemp, Nil, unitTemp)
+          plan.steps += ps.CondBranch(truthyPred, trueWriter.steps.toList, Nil, Nil)
 
           plan.steps ++= falseWriter.steps
           falseResult
         }
         else if (falseValues == UnreachableValue) {
-          val unitTemp = iv.UnitValue.toTempValue(vt.UnitType)
-          val resultTemp = ps.Temp(vt.UnitType)
-
-          plan.steps += ps.CondBranch(resultTemp, truthyPred, Nil, unitTemp, falseWriter.steps.toList, unitTemp)
+          plan.steps += ps.CondBranch(truthyPred, Nil, falseWriter.steps.toList, Nil)
 
           plan.steps ++= trueWriter.steps
           trueResult
@@ -152,11 +146,17 @@ object PlanCond {
           val planPhiResult = PlanResultValuesPhi(trueWriter, trueValues, falseWriter, falseValues)
           val resultValues = planPhiResult.resultValues
 
-          plan.steps += ps.CondBranch(
+          val valuesPhi = ps.ValuePhi(
             planPhiResult.resultTemp,
+            planPhiResult.leftTempValue,
+            planPhiResult.rightTempValue
+          )
+
+          plan.steps += ps.CondBranch(
             truthyPred,
-            trueWriter.steps.toList, planPhiResult.leftTempValue,
-            falseWriter.steps.toList, planPhiResult.rightTempValue
+            trueWriter.steps.toList,
+            falseWriter.steps.toList,
+            List(valuesPhi)
           )
 
           val constrainedState = constrainResultValues(testResult.state)(

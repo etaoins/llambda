@@ -5,13 +5,17 @@ import llambda.compiler.planner.{step => ps}
 
 object PrettyPrintPlan {
   private def stepToString(step : ps.Step) : String = step match {
-    case ps.CondBranch(result, test, trueSteps, trueValue, falseSteps, falseValue) =>
-      s"CondBranch(${result}, ${test}) {\n" +
+    case ps.CondBranch(test, trueSteps, falseSteps, valuesPhi) =>
+      val resultValues = valuesPhi.map(_.result).mkString(" ")
+      val trueValues = valuesPhi.map(_.trueValue).mkString(" ")
+      val falseValues = valuesPhi.map(_.falseValue).mkString(" ")
+
+      s"CondBranch(${resultValues}, ${test}) {\n" +
         trueSteps.map(stepToString).flatMap(_.split("\n")).map("  " + _).mkString("\n") + "\n" +
-      s"} => ${trueValue}\n" +
+      s"} => ${trueValues}\n" +
       "else {\n" +
         falseSteps.map(stepToString).flatMap(_.split("\n")).map("  " + _).mkString("\n") + "\n" +
-      s"} => ${falseValue}"
+      s"} => ${falseValues}"
 
     case other : ps.Step =>
       other.toString

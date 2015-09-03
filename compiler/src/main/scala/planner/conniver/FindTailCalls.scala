@@ -20,13 +20,13 @@ object FindTailCalls extends FunctionConniver {
       // We can discard the return here
       (replacedStep, true)
 
-    case ps.CondBranch(condResult, test, trueSteps, trueValue, falseSteps, falseValue)
+    case ps.CondBranch(test, trueSteps, falseSteps, valuePhis @ List(ps.ValuePhi(condResult, trueValue, falseValue)))
         if retValueOpt.isDefined && retValueOpt.get == condResult =>
       // We can replace any tail calls that appear at the end of the condition branches
       val replacedTrueSteps = replaceBranchTailCalls(trueSteps.reverse, trueValue)
       val replacedFalseSteps = replaceBranchTailCalls(falseSteps.reverse, falseValue)
 
-      val replacedStep = ps.CondBranch(condResult, test, replacedTrueSteps, trueValue, replacedFalseSteps, falseValue)
+      val replacedStep = ps.CondBranch(test, replacedTrueSteps, replacedFalseSteps, valuePhis)
         .assignLocationFrom(tailStep)
 
       // We might still need the return if one of the branches wasn't converted to a tail call

@@ -315,14 +315,12 @@ object PlanTypeCheck {
 
           // We need to phi the two type branches
           plan.steps += ps.CondBranch(
-            result=phiPred,
             test=testPred,
             trueSteps=isTypePlan.steps.toList,
-            trueValue=trueValue,
             falseSteps=isNotTypePlan.steps.toList,
-            falseValue=falseValue
+            valuePhis=List(ps.ValuePhi(phiPred, trueValue, falseValue))
           )
-          
+
           DynamicResult(phiPred)
         }
     }

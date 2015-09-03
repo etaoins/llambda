@@ -146,8 +146,10 @@ class PlanWriter(
     val resultGcManaged = trueValue.isGcManaged || falseValue.isGcManaged
     val phiTemp = new ps.TempValue(resultGcManaged)
 
+    val valuePhi = ps.ValuePhi(phiTemp, trueValue, falseValue)
+
     this.planSealed = false
-    this.steps += ps.CondBranch(phiTemp, test, truePlan.steps.toList, trueValue, falsePlan.steps.toList, falseValue)
+    this.steps += ps.CondBranch(test, truePlan.steps.toList, falsePlan.steps.toList, List(valuePhi))
 
     // Return the phi'ed value
     phiTemp

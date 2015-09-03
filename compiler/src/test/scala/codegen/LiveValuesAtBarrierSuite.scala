@@ -184,13 +184,14 @@ class LiveValuesAtBarrierSuite extends FunSuite {
 
     val testSteps = List(
       ps.CreateNamedEntryPoint(entryPointTemp, worldSignature, "test"),
-      ps.CondBranch(condResult, temp1,
+      ps.CondBranch(temp1,
         List(
           ps.Invoke(Some(trueResult), worldSignature, entryPointTemp, List(temp1), Set(temp1))
-        ), trueResult,
+        ),
         List(
           ps.Invoke(Some(trueResult), worldSignature, entryPointTemp, List(temp2), Set(temp2))
-        ), falseResult
+        ),
+        List(ps.ValuePhi(condResult, trueResult, falseResult))
       )
     )
 
@@ -212,13 +213,14 @@ class LiveValuesAtBarrierSuite extends FunSuite {
 
     val testSteps = List(
       ps.CreateNamedEntryPoint(entryPointTemp, worldSignature, "test"),
-      ps.CondBranch(condResult, temp1,
+      ps.CondBranch(temp1,
         List(
           ps.Invoke(Some(trueResult), worldSignature, entryPointTemp, List(temp1), Set())
-        ), trueResult,
+        ),
         List(
           ps.Invoke(Some(falseResult), worldSignature, entryPointTemp, List(temp2), Set())
-        ), falseResult
+        ),
+        List(ps.ValuePhi(condResult, trueResult, falseResult))
       )
     )
 
@@ -240,13 +242,14 @@ class LiveValuesAtBarrierSuite extends FunSuite {
 
     val testSteps = List(
       ps.CreateNamedEntryPoint(entryPointTemp, worldSignature, "test"),
-      ps.CondBranch(condResult, temp1,
+      ps.CondBranch(temp1,
         List(
           ps.Invoke(Some(trueResult), worldSignature, entryPointTemp, List(temp1), Set())
-        ), trueResult,
+        ),
         List(
           ps.TailCall(worldSignature, entryPointTemp, List(temp2))
-        ), falseResult
+        ),
+        List(ps.ValuePhi(condResult, trueResult, falseResult))
       )
     )
 
@@ -271,21 +274,23 @@ class LiveValuesAtBarrierSuite extends FunSuite {
 
     val testSteps = List(
       ps.CreateNamedEntryPoint(entryPointTemp, worldSignature, "test"),
-      ps.CondBranch(condResult, temp1,
+      ps.CondBranch(temp1,
         List(
           ps.DisposeValues(Set(temp1)),
-          ps.CondBranch(nestedCondResult, temp1,
+          ps.CondBranch(temp1,
             List(
               ps.Invoke(Some(nestedFalseResult), worldSignature, entryPointTemp, List(temp1), Set())
-            ), nestedFalseResult,
+            ),
             List(
               ps.Invoke(Some(nestedTrueResult), worldSignature, entryPointTemp, List(temp1), Set())
-            ), nestedTrueResult
+            ),
+            List(ps.ValuePhi(nestedCondResult, nestedTrueResult, nestedFalseResult))
           )
-        ), nestedCondResult,
+        ),
         List(
           ps.Invoke(Some(falseResult), worldSignature, entryPointTemp, List(temp2), Set())
-        ), falseResult
+        ),
+        List(ps.ValuePhi(condResult, nestedCondResult, falseResult))
       )
     )
 

@@ -55,18 +55,20 @@ object DisposeValues {
       val unusedOutputValues = nestingStep.outputValues.filter(!usedValues.contains(_))
 
       // Which branch results are from outside the branch and are no longer used?
-      val unusedBranchResults = nestingStep.innerBranches.filter({ case (steps, branchResult) =>
+      val unusedBranchResults = nestingStep.innerBranches.flatMap(_._2).filter({ branchResult =>
         !usedValues.contains(branchResult) && !innerOutputValues.contains(branchResult)
-      }).map(_._2).toSet
+      }).toSet
 
       val disposeSteps = disposeValuesToSteps(unusedOutputValues ++ unusedBranchResults)
 
       // Recurse down the branches
-      val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
+      val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValues) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
         val nestedInputValues = unusedExternalInputValues
-        (discardUnusedValues(nestedInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
+        val nestedUsedValues = usedValues ++ outputValues
+
+        (discardUnusedValues(nestedInputValues, branchSteps.reverse, nestedUsedValues, Nil), outputValues)
       }
 
       val newUsedValues = externalInputValues ++ usedValues

@@ -101,8 +101,9 @@ class DisposeValuesSuite extends FunSuite {
 
     val condResult = namedTemp(vt.Int64, "condResult")
 
+    val valuePhi = ps.ValuePhi(condResult, trueUnboxResult, falseUnboxResult)
     val testSteps = List(
-      ps.CondBranch(condResult, restArgTemp, trueSteps, trueUnboxResult, falseSteps, falseUnboxResult),
+      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi)),
       ps.Return(Some(condResult))
     )
 
@@ -122,19 +123,20 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp)),
-      ps.CondBranch(condResult, restArgTemp, expectedTrueSteps, trueUnboxResult, expectedFalseSteps, falseUnboxResult),
+      ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
       ps.Return(Some(condResult)),
       ps.DisposeValues(Set(condResult))
     )
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("condition with unused result value discards result immediately after") {
     val condResult = namedTemp(vt.Int64, "condResult")
 
+    val valuePhi = ps.ValuePhi(condResult, fixedArgTemp, fixedArgTemp)
     val testSteps = List(
-      ps.CondBranch(condResult, restArgTemp, Nil, fixedArgTemp, Nil, fixedArgTemp)
+      ps.CondBranch(restArgTemp, Nil, Nil, List(valuePhi))
     )
 
     val testFunction = functionForSteps(testSteps)
@@ -145,7 +147,7 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp)),
-      ps.CondBranch(condResult, restArgTemp, expectedBranchSteps, fixedArgTemp, expectedBranchSteps, fixedArgTemp),
+      ps.CondBranch(restArgTemp, expectedBranchSteps, expectedBranchSteps, List(valuePhi)),
       ps.DisposeValues(Set(condResult, fixedArgTemp))
     )
 
@@ -162,8 +164,9 @@ class DisposeValuesSuite extends FunSuite {
 
     val falseSteps = Nil
 
+    val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
     val testSteps = List(
-      ps.CondBranch(condResult, restArgTemp, trueSteps, trueResult, Nil, fixedArgTemp)
+      ps.CondBranch(restArgTemp, trueSteps, Nil, List(valuePhi))
     )
 
     val testFunction = functionForSteps(testSteps)
@@ -180,7 +183,7 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp)),
-      ps.CondBranch(condResult, restArgTemp, expectedTrueSteps, trueResult, expectedFalseSteps, fixedArgTemp),
+      ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
       ps.DisposeValues(Set(condResult, fixedArgTemp))
     )
 
@@ -206,9 +209,10 @@ class DisposeValuesSuite extends FunSuite {
       ps.CreateNativeInteger(falseResult, 25, 64)
     )
 
+    val valuePhi = ps.ValuePhi(condResult, trueResult, falseResult)
     val testSteps = List(
       ps.CreateExactIntegerCell(outerValue, 50),
-      ps.CondBranch(condResult, restArgTemp, trueSteps, trueResult, falseSteps, falseResult)
+      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
     )
 
     val testFunction = functionForSteps(testSteps)
@@ -231,7 +235,7 @@ class DisposeValuesSuite extends FunSuite {
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp, fixedArgTemp)),
       ps.CreateExactIntegerCell(outerValue, 50),
-      ps.CondBranch(condResult, restArgTemp, expectedTrueSteps, trueResult, expectedFalseSteps, falseResult),
+      ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
       ps.DisposeValues(Set(condResult))
     )
 

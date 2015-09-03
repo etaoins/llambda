@@ -163,7 +163,9 @@ object NumberProcPlanner extends ReportProcPlanner {
     // Combine all of the native predicates together
     val resultPred = pairwiseNativePreds.reduceLeft { (nativePred, trueBranchValue) =>
       val condResult = ps.Temp(vt.Predicate)
-      plan.steps += ps.CondBranch(condResult, nativePred, Nil, trueBranchValue, Nil, nativePred)
+      val valuePhi = ps.ValuePhi(condResult, trueBranchValue, nativePred)
+
+      plan.steps += ps.CondBranch(nativePred, Nil, Nil, List(valuePhi))
 
       condResult
     }
@@ -235,7 +237,8 @@ object NumberProcPlanner extends ReportProcPlanner {
           val trueResult = selectedLeft.toTempValue(resultType)(truePlan)
           val falseResult = selectedRight.toTempValue(resultType)(falsePlan)
 
-          comparePlan.steps += ps.CondBranch(resultTemp, nativePred, truePlan.steps.toList, trueResult, falsePlan.steps.toList, falseResult)
+          val valuePhi = ps.ValuePhi(resultTemp, trueResult, falseResult)
+          comparePlan.steps += ps.CondBranch(nativePred, truePlan.steps.toList, falsePlan.steps.toList, List(valuePhi))
 
           TempValueToIntermediate(resultType, resultTemp)(comparePlan.config)
       }

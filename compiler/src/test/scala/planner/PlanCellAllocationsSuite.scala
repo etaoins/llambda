@@ -148,12 +148,13 @@ class PlanCellAllocationsSuite extends FunSuite {
     val nativeResult = ps.Temp(vt.Int64)
     val boxedResult = ps.Temp(vt.ExactIntegerType)
     val condResult = ps.Temp(vt.Int64)
+    val valuePhi = ps.ValuePhi(condResult, nativeResult, nativeResult)
 
     val testSteps = List(
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.CondBranch(condResult, boxedResult, Nil, nativeResult, Nil, nativeResult),
+      ps.CondBranch(boxedResult, Nil, Nil, List(valuePhi)),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
@@ -164,7 +165,7 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.CondBranch(condResult, boxedResult, Nil, nativeResult, Nil, nativeResult),
+      ps.CondBranch(boxedResult, Nil, Nil, List(valuePhi)),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
@@ -175,6 +176,7 @@ class PlanCellAllocationsSuite extends FunSuite {
     val nativeResult = ps.Temp(vt.Int64)
     val boxedResult = ps.Temp(vt.ExactIntegerType)
     val condResult = ps.Temp(vt.Int64)
+    val valuePhi = ps.ValuePhi(condResult, nativeResult, nativeResult)
 
     val trueSteps = List(
       ps.BoxExactInteger(boxedResult, nativeResult),
@@ -189,7 +191,7 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.CondBranch(condResult, boxedResult, trueSteps, nativeResult, falseSteps, nativeResult),
+      ps.CondBranch(boxedResult, trueSteps, falseSteps, List(valuePhi)),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
@@ -211,7 +213,7 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.CondBranch(condResult, boxedResult, expectedTrueSteps, nativeResult, expectedFalseSteps, nativeResult),
+      ps.CondBranch(boxedResult, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
       ps.AllocateCells(1),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
