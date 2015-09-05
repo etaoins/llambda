@@ -55,11 +55,11 @@ private[planner] object FindClosedVars {
 
   def apply(
       parentState : PlannerState,
-      bodyExpr : et.Expr,
+      lambdaExpr : et.Lambda,
       recursiveSelfLoc : Option[StorageLocation]
   ) : List[ClosedVariable] = {
     // Find the variables that are closed by the parent scope
-    val refedVarsList = findRefedVariables(bodyExpr)
+    val refedVarsList = findRefedVariables(lambdaExpr)
 
     // We don't need to capture ourselves; we're passed in explicitly
     val nonSelfRefedVarsList = recursiveSelfLoc match {

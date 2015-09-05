@@ -38,9 +38,7 @@ private[planner] object PlanLambda {
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
     val nativeSymbol = parentPlan.allocSymbol(sourceName)
 
-    val body = lambdaExpr.body
-
-    val closedVars = FindClosedVars(parentState, body, recursiveSelfLocOpt)
+    val closedVars = FindClosedVars(parentState, lambdaExpr, recursiveSelfLocOpt)
 
     // Collect only the capture variables
     val capturedVariables = (closedVars collect {

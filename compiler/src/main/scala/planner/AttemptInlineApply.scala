@@ -44,7 +44,7 @@ private[planner] object AttemptInlineApply {
 
     val procType = lambdaExpr.polyType.typeForArgs(args.map(_._2.schemeType))
 
-    val closedVars = FindClosedVars(parentState, lambdaExpr.body, None)
+    val closedVars = FindClosedVars(parentState, lambdaExpr, None)
 
     val valueSources = closedVars map {
       case ImportedImmutable(storageLoc, parentIntermediate) =>
