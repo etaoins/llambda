@@ -183,10 +183,18 @@ object ExtractLambda {
       symbol -> storageLoc
     }
 
-    val boundOptionalArgs = (reconciledTypes.optionalArgTypes zip parsedFormals.optionalArgs).map {
-      case ((symbol, finalType), ParsedOptional(_, _, defaultDatum)) =>
+    val typedOptionalArgs = (reconciledTypes.optionalArgTypes zip parsedFormals.optionalArgs)
+    val boundOptionalArgs = typedOptionalArgs.foldLeft(List[(sst.ScopedSymbol, et.OptionalArg)]()) {
+      case (boundOptionalArgs, ((symbol, finalType), ParsedOptional(_, _, defaultDatum))) =>
+        val args = boundMandatoryArgs ++ boundOptionalArgs.map { case (symbol, et.OptionalArg(storageLoc, _)) =>
+          symbol -> storageLoc
+        }
+
+        val scopeMapping = Scope.mappingForBoundValues(args)
+        val scopedDefault = defaultDatum.rescoped(scopeMapping)
+
         val storageLoc = new StorageLocation(symbol.name, finalType)
-        symbol -> et.OptionalArg(storageLoc, ExtractExpr(defaultDatum)(parentContext))
+        boundOptionalArgs :+ (symbol -> et.OptionalArg(storageLoc, ExtractExpr(scopedDefault)(parentContext)))
     }
 
     val boundRestArgOpt = reconciledTypes.restArgMemberTypeOpt map { case (symbol, memberType : vt.SchemeType) =>

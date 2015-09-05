@@ -20,10 +20,11 @@
   (assert-equal 10 (proc-optional 5 5))
   (assert-equal 0 (proc-optional 5 5 -))
 
-  (define (multi-optional [a (+ 0 1)] [b (+ 0 2)] [c (+ 0 3)] . rest)
+  (define (multi-optional [a (+ 0 1)] [b (+ a 1)] [c (+ b 1)] . rest)
     (append (list a b c) rest))
 
   (assert-equal '(1 2 3) (multi-optional))
+  (assert-equal '(4 5 6 7 8 9) (multi-optional 4 5 6 7 8 9))
 
   (define (typed-optional [value : <exact-integer> 10]) value)
 
