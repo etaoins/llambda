@@ -10,10 +10,10 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.valuetype.Implicits._
 
 object PlanInvokeApply {
-  def withTempValues(
+  private def withTempValues(
       invokableProc : iv.InvokableProc,
       fixedTemps : Seq[ps.TempValue],
-      restTemps : Option[ps.TempValue]
+      varArgTempOpt : Option[ps.TempValue]
   )(implicit plan : PlanWriter) : ResultValues = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.polySignature.upperBound
@@ -32,7 +32,7 @@ object PlanInvokeApply {
       Nil
     }
 
-    val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps
+    val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ varArgTempOpt
 
     val discardable = !invokableProc.hasSideEffects(fixedTemps.length)
 
@@ -73,7 +73,7 @@ object PlanInvokeApply {
       text="Attempted application with improper list"
     )
 
-    // Split our arguments in to fixed args and a rest arg
+    // Split our arguments in to fixed args and a var arg
     val destructuredArgs = DestructureList(
       listValue=argListValue,
       memberTypes=signature.mandatoryArgTypes,
@@ -82,24 +82,27 @@ object PlanInvokeApply {
     )
 
     val fixedArgTemps = destructuredArgs.memberTemps
-    val restArgValue = destructuredArgs.listTailValue
+    val varArgValue = destructuredArgs.listTailValue
 
-    val restArgTemps = signature.restArgMemberTypeOpt match {
-      case Some(memberType) =>
-        val requiredRestArgType = vt.UniformProperListType(memberType)
-        val typeCheckedRestArg = restArgValue.toTempValue(requiredRestArgType)
+    val varArgTempOpt = if (signature.restArgMemberTypeOpt.isDefined || (signature.optionalArgTypes.length > 0)) {
+      val requiredVarArgType = vt.VariableArgsToListType(
+        signature.optionalArgTypes,
+        signature.restArgMemberTypeOpt
+      )
 
-        Some(typeCheckedRestArg)
+      val typeCheckedVarArg = varArgValue.toTempValue(requiredVarArgType)
 
-      case None =>
-        val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(invokableProc)
+      Some(typeCheckedVarArg)
+    }
+    else {
+      val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(invokableProc)
 
-        // Make sure we're out of args by doing a check cast to an empty list
-        restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))
-        None
+      // Make sure we're out of args by doing a check cast to an empty list
+      varArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))
+      None
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, restArgTemps)
+    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, varArgTempOpt)
   }
 
   def withIntermediateValues(
@@ -115,19 +118,32 @@ object PlanInvokeApply {
       }
     }
 
-    val restTemps = signature.restArgMemberTypeOpt map { memberType =>
-      val restArgs = args.drop(signature.mandatoryArgTypes.length)
+    val varArgTempOpt = if (signature.restArgMemberTypeOpt.isDefined || (signature.optionalArgTypes.length > 0)) {
+      val varArgs = args.drop(signature.mandatoryArgTypes.length)
 
-      val restArgValues = restArgs map { case (contextLocated, restValue) =>
+      val optionalArgValues = varArgs.zip(signature.optionalArgTypes).map {
+        case ((contextLocated, argValue), schemeType) =>
+          plan.withContextLocation(contextLocated) {
+            argValue.castToSchemeType(schemeType)
+          }
+      }
+
+      val restArgs = varArgs.drop(signature.optionalArgTypes.length)
+
+      val restArgValues = restArgs map { case (contextLocated, argValue) =>
         plan.withContextLocation(contextLocated) {
-          restValue.castToSchemeType(memberType)
+          argValue.castToSchemeType(signature.restArgMemberTypeOpt.get)
         }
       }
 
-      ValuesToList(restArgValues, capturable=false).toTempValue(vt.ListElementType)
+      val varArgValues = optionalArgValues ++ restArgValues
+      Some(ValuesToList(varArgValues, capturable=false).toTempValue(vt.ListElementType))
+    }
+    else {
+      None
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, mandatoryTemps, restTemps)
+    PlanInvokeApply.withTempValues(invokableProc, mandatoryTemps, varArgTempOpt)
   }
 }
 
