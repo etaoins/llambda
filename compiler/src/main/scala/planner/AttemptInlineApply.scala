@@ -84,23 +84,42 @@ private[planner] object AttemptInlineApply {
         }
     }
 
-    val importedValues = directValues ++ closureValues
+    val postClosureState = PlannerState(
+      values=(directValues ++ closureValues).toMap,
+      inlineDepth=inlineState.inlineDepth + 1
+    )
 
-    // Convert our arguments to ImmutableValues
-    val mandatoryArgImmutables = (lambdaExpr.mandatoryArgs.zip(args).map { case (storageLoc, (_, argValue)) =>
-      if (vt.SatisfiesType(storageLoc.schemeType, argValue.schemeType) != Some(true)) {
-        // This type cast could fail at runtime
-        return None
-      }
+    // Add our provided fixed arguments to the state
+    val fixedArgLocs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
+    val postFixedArgState = fixedArgLocs.zip(args).foldLeft(postClosureState) {
+      case (state, (storageLoc, (_, argValue))) =>
+        if (vt.SatisfiesType(storageLoc.schemeType, argValue.schemeType) != Some(true)) {
+          // This type cast could fail at runtime
+          return None
+        }
 
-      (storageLoc -> ImmutableValue(argValue))
-    })(breakOut) : Map[StorageLocation, LocationValue]
+        state.withValue(storageLoc -> ImmutableValue(argValue))
+    }
 
-    // OPTTODO: Handle optional args
+    val defaultedOptionalCount = (fixedArgLocs.length - args.length)
+    val postDefaultOptState = lambdaExpr.optionalArgs.takeRight(defaultedOptionalCount).foldLeft(postFixedArgState) {
+      case (state, et.OptionalArg(storageLoc, defaultExpr)) =>
+        val defaultResult = PlanExpr(state)(defaultExpr)
+        val defaultValue = defaultResult.values.toSingleValue()
+
+        if (vt.SatisfiesType(storageLoc.schemeType, defaultValue.schemeType) != Some(true)) {
+          return None
+        }
+
+        // Note we don't use the state from the default value. The lambda planner doesn't do this as this code is
+        // conditionally executed so it can't introduce bindings etc to the parent state
+        state.withValue(storageLoc -> ImmutableValue(defaultValue))
+    }
+
 
     val restArgImmutables = lambdaExpr.restArgOpt.zip(lambdaExpr.schemeType.restArgMemberTypeOpt) map {
       case (storageLoc, memberType) =>
-        val restValues = args.drop(lambdaExpr.mandatoryArgs.length).map(_._2)
+        val restValues = args.drop(fixedArgLocs.length).map(_._2)
 
         for (restValue <- restValues)  {
           if (vt.SatisfiesType(memberType, restValue.schemeType) != Some(true)) {
@@ -112,13 +131,8 @@ private[planner] object AttemptInlineApply {
         storageLoc -> ImmutableValue(ValuesToList(restValues))
     }
 
-    // Map our input immutables to their new storage locations
-    val inlineBodyState = PlannerState(
-      values=mandatoryArgImmutables ++ restArgImmutables ++ importedValues,
-      inlineDepth=inlineState.inlineDepth + 1
-    )
-
-    val planResult = PlanExpr(inlineBodyState)(lambdaExpr.body)
+    val postRestArgState = postDefaultOptState.withValues(restArgImmutables.toMap)
+    val planResult = PlanExpr(postRestArgState)(lambdaExpr.body)
 
     // Make sure our return type is of the declared type
     val stableReturnType = vt.StabiliseReturnType(procType.returnType, plan.config.schemeDialect)
