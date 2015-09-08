@@ -25,13 +25,11 @@
     (define hash-map-exists? (native-function llhashmap "llhashmap_hash_map_exists" (-> AnyHashMap <any> <native-bool>)))
     (define hash-map-ref/default (native-function llhashmap "llhashmap_hash_map_ref_default" (All (V) (HashMap <any> V) <any> V V)))
 
-    (define native-hash-map-ref (world-function llhashmap "llhashmap_hash_map_ref" (All (K V) (HashMap K V) K (-> V) V)))
-    (define hash-map-ref
-      (case-lambda
-        ((hash-map key)
-         (native-hash-map-ref hash-map key (lambda () (raise-invalid-argument-error "Key does not exist in hash" key))))
-        ((hash-map key thunk)
-         (native-hash-map-ref hash-map key thunk))))
+    (define native-hash-map-ref (world-function llhashmap "llhashmap_hash_map_ref" (All (V) (HashMap <any> V) <any> (-> V) V)))
+
+    (: hash-map-ref (All (V) (->* ((HashMap <any> V) <any>) ((-> V)) V)))
+    (define (hash-map-ref hash-map key [thunk (lambda () (raise-invalid-argument-error "Key does not exist in hash" key))])
+      (native-hash-map-ref hash-map key thunk))
 
     (define hash-map->alist (world-function llhashmap "llhashmap_hash_map_to_alist" (All (K V) (HashMap K V) (Listof (Pairof K V)))))
     (define hash-map-keys (world-function llhashmap "llhashmap_hash_map_keys" (All (K V) (HashMap K V) (Listof K))))
@@ -42,9 +40,5 @@
     (define hash-map-merge (world-function llhashmap "llhashmap_hash_map_merge" (All (K V) (-> (HashMap K V) (HashMap K V) (HashMap K V)))))
 
     (define native-hash (native-function llhashmap "llhashmap_hash" (-> <any> <native-int64> <native-uint32>)))
-    (define hash
-      (case-lambda
-        ((value)
-         (native-hash value (expt 2 32)))
-        ((value bound)
-         (native-hash value bound))))))
+    (define (hash value [bound : <exact-integer> (expt 2 32)])
+      (native-hash value bound))))

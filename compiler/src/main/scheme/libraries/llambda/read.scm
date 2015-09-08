@@ -13,8 +13,5 @@
     (define-native-library llread (static-library "ll_scheme_read"))
 
     (define native-read (world-function llread "llread_read" (-> <port> (U <readable> <eof-object>))))
-    (define-r7rs read (case-lambda
-      (()
-       (native-read (current-input-port)))
-      (([port : <port>])
-       (native-read port))))))
+    (define-r7rs (read [port : <port> (current-input-port)])
+                 (native-read port))))
