@@ -203,6 +203,17 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     }
   }
 
+  test("(case-lambda) clause with optional argument fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(case-lambda
+             (([value #t]) value))"""
+      )(scope)
+    }
+  }
+
   test("(case-lambda) clause with same arity fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 

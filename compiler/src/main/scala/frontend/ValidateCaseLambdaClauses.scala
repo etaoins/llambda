@@ -10,14 +10,15 @@ private[frontend] object ValidateCaseLambdaClauses {
     * Thie ensures that no clauses are unconditionally shadowed by the signature of a previous clause
     */
   def apply(clauses : List[(SourceLocated, vt.ProcedureType)]) {
+    for ((located, clause) <- clauses) {
+      if (clause.optionalArgTypes.length > 0) {
+        throw new BadSpecialFormException(located, "Optional arguments cannot be used with case lambdas")
+      }
+    }
+
     if (clauses.length > 1) {
       clauses.tail.scanLeft(clauses.head._2) {
         case (prevSignature, (located, signature)) =>
-          if (signature.optionalArgTypes.length > 0) {
-            // OPTTODO: Test this case
-            throw new BadSpecialFormException(located, "Default arguments cannot be used with case lambdas")
-          }
-
           val prevMandatoryArgCount = prevSignature.mandatoryArgTypes.length
           val mandatoryArgCount = signature.mandatoryArgTypes.length
 
