@@ -9,7 +9,6 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
   val polyA = new TypeVar("A")
   val polyB = new TypeVar("B", NumberType)
 
-  // OPTTODO: Test for polymorphic with optional arguments
   test("(-> <number>)") {
     val polyType = ProcedureType(
       mandatoryArgTypes=Nil,
