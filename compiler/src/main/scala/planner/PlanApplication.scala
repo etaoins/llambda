@@ -51,7 +51,6 @@ private[planner] object PlanApplication {
     val constraint = ConstrainType.IntersectType(procedureType)
     val postProcState = ConstrainType(state)(procValue, constraint)(plan.config)
 
-    // OPTTODO: Test this with optional arguments
     val fixedArgTypes = procedureType.mandatoryArgTypes ++ procedureType.optionalArgTypes
     val postFixedArgState = args.zip(fixedArgTypes).foldLeft(postProcState) {
       case (state, (fixedArgValue, argType)) =>

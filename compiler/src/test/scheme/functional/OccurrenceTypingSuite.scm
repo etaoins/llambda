@@ -1,4 +1,4 @@
-(define-test "applying fixed arg storage locs constrains their type" (expect-success
+(define-test "applying mandatory arg storage locs constrains their type" (expect-success
   (import (llambda typed))
   (define typeless-vector (typeless-cell #(1 2 3)))
   (define typeless-1 (typeless-cell 1))
@@ -8,6 +8,16 @@
   (assert-equal #(1 2 3) (ann typeless-vector <vector>))
   (assert-equal 1 (ann typeless-1 <exact-integer>))
   (assert-equal 2 ref-result)))
+
+(define-test "applying optional arg storage locs constrains their type" (expect-success
+  (import (llambda typed))
+  (define typeless-1 (typeless-cell 1))
+
+  (define (take-optional-number [val : <exact-integer> 2]) val)
+  (define take-result (take-optional-number typeless-1))
+
+  (assert-equal 1 (ann typeless-1 <exact-integer>))
+  (assert-equal 1 take-result)))
 
 (define-test "applying fixed arg storage locs to a case procedure constrains their type" (expect 4
   (import (scheme case-lambda))
