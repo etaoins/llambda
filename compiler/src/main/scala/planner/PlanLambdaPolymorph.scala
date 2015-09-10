@@ -96,8 +96,10 @@ object PlanLambdaPolymorph {
       val defaultValuePlan = plan.forkPlan()
       val defaultValueResult = PlanExpr(state)(defaultExpr)(defaultValuePlan)
 
-      val uncastDefaultValue = defaultValueResult.values.toSingleValue()(defaultValuePlan)
-      val defaultValue = uncastDefaultValue.castToSchemeType(storageLoc.schemeType)(defaultValuePlan)
+      val defaultValue = defaultValuePlan.withContextLocation(defaultExpr) {
+        val uncastDefaultValue = defaultValueResult.values.toSingleValue()(defaultValuePlan)
+        uncastDefaultValue.castToSchemeType(storageLoc.schemeType)(defaultValuePlan)
+      }
 
 
       val valuePhiResult = PlanResultValuesPhi(
