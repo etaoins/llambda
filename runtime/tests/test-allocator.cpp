@@ -333,7 +333,8 @@ void testAll(World &world)
 	// Test exact integers
 	testNonRecursiveGc<ExactIntegerCell>(world, [&world] ()
 	{
-		return ExactIntegerCell::fromValue(world, 5);
+		// Use a large value so we don't get a global constant
+		return ExactIntegerCell::fromValue(world, 10000);
 	});
 
 	// Test inexact rationals

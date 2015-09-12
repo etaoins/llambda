@@ -25,8 +25,8 @@ public:
 	bool isExact() const;
 
 protected:
-	explicit NumberCell(CellTypeId typeId) :
-		AnyCell(typeId)
+	explicit NumberCell(CellTypeId typeId, GarbageState gcState = GarbageState::AllocatedCell) :
+		AnyCell(typeId, gcState)
 	{
 	}
 };
