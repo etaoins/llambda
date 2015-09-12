@@ -18,8 +18,8 @@ object DynamicProcPlanner extends ReportProcPlanner {
 
       plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp, None)
 
-      Some(new iv.KnownParameterProc(resultTemp, hasConverter=false))
-    
+      Some(new iv.KnownParameterProc(resultTemp, initialValue._2, hasConverter=false, initialValueInScope=true))
+
     case ("make-parameter", List(initialValue, converterProc)) =>
       val resultTemp = ps.Temp(vt.TopProcedureType)
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
@@ -37,7 +37,7 @@ object DynamicProcPlanner extends ReportProcPlanner {
 
       plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp, Some(converterTemp))
 
-      Some(new iv.KnownParameterProc(resultTemp, hasConverter=true))
+      Some(new iv.KnownParameterProc(resultTemp, initialValue._2, hasConverter=true, initialValueInScope=true))
 
     case _ =>
       None

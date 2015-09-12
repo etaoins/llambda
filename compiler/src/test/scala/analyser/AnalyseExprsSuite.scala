@@ -284,4 +284,32 @@ class AnalyseExprsSuite extends FunSuite {
       constantTopLevelBindings=Nil
     ))
   }
+
+  test("parameterize") {
+    val testLocA = new StorageLocation("testLocA")
+    val testLocB = new StorageLocation("testLocB")
+
+    val testExprs = List(
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
+      et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(false)))),
+      et.Parameterize(
+        parameterValues=List((et.VarRef(testLocA), et.VarRef(testLocA))),
+        body=et.VarRef(testLocB)
+      )
+    )
+
+    assert(AnalyseExprs(testExprs) === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
+      mutableVars=Set(),
+      constantTopLevelBindings=List(
+        (testLocA -> et.Literal(ast.BooleanLiteral(true))),
+        (testLocA -> et.Literal(ast.BooleanLiteral(false)))
+      ),
+      varUses=Map(
+        testLocA -> 2,
+        testLocB -> 1
+      ),
+      parameterized=true
+    ))
+  }
 }

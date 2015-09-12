@@ -9,7 +9,8 @@ case class AnalysedExprs(
   mutableVars : Set[StorageLocation] = Set(),
   constantTopLevelBindings : List[(StorageLocation, et.Expr)] = Nil,
   varUses : Map[StorageLocation, Int] = Map(),
-  nativeSymbols : Set[String] = Set()
+  nativeSymbols : Set[String] = Set(),
+  parameterized : Boolean = false
 )
 
 object AnalyseExprs  {
@@ -37,6 +38,11 @@ object AnalyseExprs  {
       acc.copy(
         nativeSymbols=acc.nativeSymbols + nativeSymbol
       )
+
+    case parameterize : et.Parameterize =>
+      parameterize.subexprs.foldLeft(acc) { case (previousAcc, expr) =>
+        handleNestedExpr(expr, previousAcc)
+      }.copy(parameterized=true)
 
     case other =>
       // Iterate over our subexprs
