@@ -57,7 +57,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       ""
     }
     
-    addInstruction(s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}", metadata)
+    addInstruction(s"${resultVar.toIr} = load${volatileIr} ${resultType}, ${from.toIrWithType}${alignIr}", metadata)
 
     resultVar
   }

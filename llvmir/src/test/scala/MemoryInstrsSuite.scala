@@ -41,14 +41,14 @@ class MemoryInstrsSuite extends IrTestSuite {
 
   test("trivial load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
-    
+
     val block = createTestBlock()
     val resultVar = block.load("trivial")(fakePointer)
 
     assert(resultVar.irType === IntegerType(8))
-    assertInstr(block, "%trivial1 = load i8* %fake")
+    assertInstr(block, "%trivial1 = load i8, i8* %fake")
   }
-  
+
   test("load from non-pointer") {
     val fakePointer = LocalVariable("fake", IntegerType(8))
     
@@ -71,32 +71,32 @@ class MemoryInstrsSuite extends IrTestSuite {
   
   test("volatile load") {
     val fakePointer = LocalVariable("fake", PointerType(FloatType))
-    
+
     val block = createTestBlock()
     val resultVar = block.load("vol")(
       from=fakePointer,
       volatile=true)
 
     assert(resultVar.irType === FloatType)
-    assertInstr(block, "%vol1 = load volatile float* %fake")
+    assertInstr(block, "%vol1 = load volatile float, float* %fake")
   }
-  
+
   test("aligned load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
-    
+
     val block = createTestBlock()
     val resultVar = block.load("align")(
       from=fakePointer,
       alignment=1024)
 
     assert(resultVar.irType === IntegerType(32))
-    assertInstr(block, "%align1 = load i32* %fake, align 1024")
+    assertInstr(block, "%align1 = load i32, i32* %fake, align 1024")
   }
-  
+
   test("tbaa load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     val tbaaNode = NumberedMetadata(5)
-    
+
     val block = createTestBlock()
     val resultVar = block.load("align")(
       from=fakePointer,
@@ -104,13 +104,13 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === IntegerType(32))
-    assertInstr(block, "%align1 = load i32* %fake, !tbaa !5")
+    assertInstr(block, "%align1 = load i32, i32* %fake, !tbaa !5")
   }
-  
+
   test("aligned volatile tbaa load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     val tbaaNode = NumberedMetadata(10)
-    
+
     val block = createTestBlock()
     val resultVar = block.load("alignvol")(
       from=fakePointer,
@@ -120,9 +120,9 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === IntegerType(32))
-    assertInstr(block, "%alignvol1 = load volatile i32* %fake, align 1024, !tbaa !10")
+    assertInstr(block, "%alignvol1 = load volatile i32, i32* %fake, align 1024, !tbaa !10")
   }
-  
+
   test("trivial store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
     
