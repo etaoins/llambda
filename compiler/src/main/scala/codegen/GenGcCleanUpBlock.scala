@@ -24,7 +24,6 @@ object GenGcCleanUpBlock {
 
     val exceptionResultIr = block.landingpad("exceptionResultIr")(
       resultType=personalityResultType,
-      personalityFunction=personalityFunctionDecl.irValue,
       clauses=Nil,
       cleanup=true
     )

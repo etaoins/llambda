@@ -8,6 +8,8 @@ object IrFunction {
   case object NoUnwind extends FunctionAttribute("nounwind")
   case object ReadNone extends FunctionAttribute("readnone")
   case object ReadOnly extends FunctionAttribute("readonly")
+  case class PersonalityFunction(function : IrValue) extends
+      FunctionAttribute(s"personality ${function.toIrWithType}")
 
   sealed abstract class ParameterAttribute(val toIr : String) extends Irable
 

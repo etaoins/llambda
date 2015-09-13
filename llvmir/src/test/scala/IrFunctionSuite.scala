@@ -145,6 +145,26 @@ class IrFunctionSuite extends FunSuite {
       ).toIr === "declare void @f() gc \"shadow\"")
   }
 
+  test("personality function decl") {
+    val gxxPersonalityV0 = GlobalVariable(
+      name="__gxx_personality_v0",
+      irType=PointerType(FunctionType(
+        returnType=IntegerType(32),
+        parameterTypes=Nil,
+        hasVararg=true
+      ))
+    )
+
+    val result = IrFunction.Result(VoidType, Set())
+
+    assert(IrFunctionDecl(
+        result=result,
+        name="f",
+        arguments=Nil,
+        attributes=Set(IrFunction.PersonalityFunction(gxxPersonalityV0))
+      ).toIr === "declare void @f() personality i32 (...)* @__gxx_personality_v0")
+  }
+
   test("christmas tree decl") {
     val result = IrFunction.Result(IntegerType(32), Set(ZeroExt))
     val arguments = List(

@@ -1,17 +1,6 @@
 package io.llambda.llvmir
 
 class OtherInstrsSuite extends IrTestSuite {
-  // This is effectively the only exception personality on mainstream Unix-likes
-  // Use this for the landingpad tests
-  private val gxxPersonalityV0 = GlobalVariable(
-    name="__gxx_personality_v0",
-    irType=PointerType(FunctionType(
-      returnType=IntegerType(32),
-      parameterTypes=Nil,
-      hasVararg=true
-    ))
-  )
-
   private val gxxResultType = StructureType(List(
     PointerType(IntegerType(8)),
     IntegerType(32)
@@ -470,17 +459,17 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
-      block.landingpad("nocleanup")(gxxResultType, gxxPersonalityV0, Nil)
+      block.landingpad("nocleanup")(gxxResultType, Nil)
     }
   }
   
   test("cleanup landingpad with no clauses") {
     val block = createTestBlock()
 
-    val resultVal = block.landingpad("cleanup")(gxxResultType, gxxPersonalityV0, Nil, true)
+    val resultVal = block.landingpad("cleanup")(gxxResultType, Nil, true)
 
     assert(resultVal.irType === gxxResultType)
-    assertInstr(block, "%cleanup1 = landingpad {i8*, i32} personality i32 (...)* @__gxx_personality_v0 cleanup")
+    assertInstr(block, "%cleanup1 = landingpad {i8*, i32} cleanup")
   }
   
   test("non-cleanup landingpad with two catches") {
@@ -494,11 +483,11 @@ class OtherInstrsSuite extends IrTestSuite {
       CatchClause(exceptionClass2)
     )
 
-    val resultVal = block.landingpad("landresult")(gxxResultType, gxxPersonalityV0, clauses, false)
+    val resultVal = block.landingpad("landresult")(gxxResultType, clauses, false)
 
     assert(resultVal.irType === gxxResultType)
-    assertInstr(block, 
-      "%landresult1 = landingpad {i8*, i32} personality i32 (...)* @__gxx_personality_v0 catch i8** @class1 catch i8** @class2"
+    assertInstr(block,
+      "%landresult1 = landingpad {i8*, i32} catch i8** @class1 catch i8** @class2"
     )
   }
   
@@ -517,11 +506,11 @@ class OtherInstrsSuite extends IrTestSuite {
       )
     )
 
-    val resultVal = block.landingpad("landresult")(gxxResultType, gxxPersonalityV0, clauses, true)
+    val resultVal = block.landingpad("landresult")(gxxResultType, clauses, true)
 
     assert(resultVal.irType === gxxResultType)
-    assertInstr(block, 
-      "%landresult1 = landingpad {i8*, i32} personality i32 (...)* @__gxx_personality_v0 cleanup catch i8** @class1 filter [2 x i8**] [i8** @class2, i8** @class3]"
+    assertInstr(block,
+      "%landresult1 = landingpad {i8*, i32} cleanup catch i8** @class1 filter [2 x i8**] [i8** @class2, i8** @class3]"
     )
   }
 }
