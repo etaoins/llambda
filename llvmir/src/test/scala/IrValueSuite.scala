@@ -124,7 +124,7 @@ class IrValueSuite extends FunSuite {
     )
 
     assert(elementPtrConstant.irType === PointerType(IntegerType(8)))
-    assert(elementPtrConstant.toIr === "getelementptr ([6 x i8]* @helloString, i32 1, i32 0)")
+    assert(elementPtrConstant.toIr === "getelementptr ([6 x i8], [6 x i8]* @helloString, i32 1, i32 0)")
 
     val inboundElementPtrConstant = ElementPointerConstant(
       elementType=IntegerType(8),
@@ -134,7 +134,7 @@ class IrValueSuite extends FunSuite {
     )
 
     assert(inboundElementPtrConstant.irType === PointerType(IntegerType(8)))
-    assert(inboundElementPtrConstant.toIr === "getelementptr inbounds ([6 x i8]* @helloString, i32 0, i32 2)")
+    assert(inboundElementPtrConstant.toIr === "getelementptr inbounds ([6 x i8], [6 x i8]* @helloString, i32 0, i32 2)")
 
     intercept[InconsistentIrException] {
       val boolConstant = TrueConstant

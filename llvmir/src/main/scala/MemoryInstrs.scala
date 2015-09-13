@@ -91,20 +91,18 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
   def getelementptr(resultDest : ResultDestination)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
     val resultVar = resultDest.asLocalVariable(nameSource, PointerType(elementType))
 
-    basePointer.irType match {
-      case pointerType : PointerType =>
-        if (indices.length == 1) {
-          val pointeeType = pointerType.pointeeType
-
-          if (elementType != pointerType.pointeeType) {
-            throw new InconsistentIrException(s"getelementptr passed element type ${elementType}; actual element type is ${pointeeType}")
-          }
+    val basePointeeType = basePointer.irType match {
+      case PointerType(pointeeType) =>
+        if ((indices.length == 1) && (elementType != pointeeType)) {
+          throw new InconsistentIrException(s"getelementptr passed element type ${elementType}; actual element type is ${pointeeType}")
         }
+
+        pointeeType
       case _ =>
         throw new InconsistentIrException("Attempted getelementptr from non-pointer base pointer")
     }
 
-    indices map(_.irType) foreach { 
+    indices map(_.irType) foreach {
       case IntegerType(_) =>
       case _ =>
         throw new InconsistentIrException("Attempted getelementptr with non-integer index")
@@ -117,7 +115,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       ""
     }
 
-    val baseIr = s"${resultVar.toIr} = getelementptr${inboundsIr} ${basePointer.toIrWithType}"
+    val baseIr = s"${resultVar.toIr} = getelementptr${inboundsIr} ${basePointeeType}, ${basePointer.toIrWithType}"
 
     val irParts = baseIr :: indices.toList.map(_.toIrWithType)
     addInstruction(irParts.mkString(", "))

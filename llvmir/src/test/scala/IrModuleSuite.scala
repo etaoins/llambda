@@ -89,7 +89,7 @@ class IrModuleSuite extends FunSuite {
       "declare i32 @\"Put String\"(i8* nocapture) nounwind\n" +
       "define i32 @main(i32 %argc, i8** %\"escaped argv\") {\n" +
       "entry:\n" +
-      "\t%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0\n" +
+      "\t%helloPtr1 = getelementptr [14 x i8], [14 x i8]* @helloWorldString, i32 0, i32 0\n" +
       "\tcall i32 @\"Put String\"(i8* %helloPtr1) nounwind\n" +
       "\tret i32 0\n" +
       "}\n" +

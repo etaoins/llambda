@@ -87,7 +87,7 @@ class IrFunctionBuilderSuite extends IrTestSuite {
     assert(function.toIr === 
       """|define i32 @main(i32 %"Argument Count", i8** %argv) {
          |entry:
-         |	%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0
+         |	%helloPtr1 = getelementptr [14 x i8], [14 x i8]* @helloWorldString, i32 0, i32 0
          |	call i32 @puts(i8* %helloPtr1) nounwind
          |	ret i32 0
          |}""".stripMargin)

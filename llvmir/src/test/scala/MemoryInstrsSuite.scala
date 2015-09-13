@@ -211,9 +211,9 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === PointerType(IntegerType(8)))
-    assertInstr(block, "%zeroindex1 = getelementptr %opaqueType* %fake") 
+    assertInstr(block, "%zeroindex1 = getelementptr %opaqueType, %opaqueType* %fake")
   }
-  
+
   test("getelementptr from non-pointer") {
     val fakeNonPointer = LocalVariable("fake", IntegerType(8))
 
@@ -241,7 +241,7 @@ class MemoryInstrsSuite extends IrTestSuite {
       )
     }
   }
-  
+
   test("1 index getelementptr") {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
@@ -253,9 +253,9 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === PointerType(UserDefinedType("opaqueType")))
-    assertInstr(block, "%oneindex1 = getelementptr %opaqueType* %fake, i32 42") 
+    assertInstr(block, "%oneindex1 = getelementptr %opaqueType, %opaqueType* %fake, i32 42")
   }
-  
+
   test("1 index getelementptr with mismatched type") {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
@@ -282,9 +282,9 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === PointerType(IntegerType(32)))
-    assertInstr(block, "%inbounds1 = getelementptr inbounds i32* %fake, i64 23") 
+    assertInstr(block, "%inbounds1 = getelementptr inbounds i32, i32* %fake, i64 23")
   }
-  
+
   test("2 index getelementptr") {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
@@ -296,6 +296,6 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === PointerType(IntegerType(64)))
-    assertInstr(block, "%twoindex1 = getelementptr %opaqueType* %fake, i32 42, i32 23") 
+    assertInstr(block, "%twoindex1 = getelementptr %opaqueType, %opaqueType* %fake, i32 42, i32 23")
   }
 }

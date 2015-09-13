@@ -106,8 +106,10 @@ object StringConstant {
 }
 
 case class ElementPointerConstant(elementType : FirstClassType, basePointer : IrConstant, indices : Seq[Int], inbounds : Boolean = false) extends IrConstant {
-  if (!basePointer.irType.isInstanceOf[PointerType]) {
-    throw new InconsistentIrException("Attempted to create a getelementptr constant from non-pointer")
+  val basePointeeType = basePointer.irType match {
+    case PointerType(pointeeType) => pointeeType
+    case _ =>
+      throw new InconsistentIrException("Attempted to create a getelementptr constant from non-pointer")
   }
 
   def irType = PointerType(elementType)
@@ -120,7 +122,7 @@ case class ElementPointerConstant(elementType : FirstClassType, basePointer : Ir
       ""
     }
 
-    val paramParts = basePointer.toIrWithType :: indices.toList.map("i32 " + _.toString)
+    val paramParts = basePointeeType.toIr :: basePointer.toIrWithType :: indices.toList.map("i32 " + _.toString)
     val paramIr = paramParts.mkString(", ")
 
     s"getelementptr${inboundsIr} (${paramIr})"
