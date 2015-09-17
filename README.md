@@ -38,8 +38,6 @@ $ cd build
 $ cmake ../runtime && make
 ```
 
-A [Dockerfile](https://docs.docker.com/reference/builder/) is also provided that will build a standalone Llambda environment based on Ubuntu 15.04
-
 Usage
 =====
 
