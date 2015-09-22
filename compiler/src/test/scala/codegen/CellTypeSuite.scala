@@ -35,26 +35,6 @@ class CellTypeSuite extends FunSuite {
     }
   }
 
-  test("isTypeOrSubtypeOf") {
-    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.FlonumCell) === true)
-    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.NumberCell) === true)
-    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.AnyCell) === true)
-    
-    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.StringCell) === false)
-    assert(ct.NumberCell.isTypeOrSubtypeOf(ct.FlonumCell) === false)
-    assert(ct.AnyCell.isTypeOrSubtypeOf(ct.FlonumCell) === false)
-  }
-  
-  test("isTypeOrSupertypeOf") {
-    assert(ct.FlonumCell.isTypeOrSupertypeOf(ct.FlonumCell) === true)
-    assert(ct.NumberCell.isTypeOrSupertypeOf(ct.FlonumCell) === true)
-    assert(ct.AnyCell.isTypeOrSupertypeOf(ct.FlonumCell) === true)
-    
-    assert(ct.StringCell.isTypeOrSupertypeOf(ct.FlonumCell) === false)
-    assert(ct.FlonumCell.isTypeOrSupertypeOf(ct.NumberCell) === false)
-    assert(ct.FlonumCell.isTypeOrSupertypeOf(ct.AnyCell) === false)
-  }
-
   test("concreteTypes") {
     assert(ct.ListElementCell.concreteTypes === Set(ct.PairCell, ct.EmptyListCell))
     assert(ct.NumberCell.concreteTypes === Set(ct.ExactIntegerCell, ct.FlonumCell))

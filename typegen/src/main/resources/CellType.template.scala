@@ -7,7 +7,7 @@ import llambda.compiler.InternalCompilerErrorException
 sealed abstract class CastableValue {
   val irType : FirstClassType
   val llvmName : String
-  
+
   def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =
     if (uncastValue.irType == PointerType(irType)) {
       uncastValue
@@ -20,18 +20,6 @@ sealed abstract class CastableValue {
 sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TRAIT} {
   val schemeName : String
   val directSubtypes : Set[CellType]
-
-  def isTypeOrSubtypeOf(otherType : CellType) : Boolean = {
-    otherType.isTypeOrSupertypeOf(this)
-  }
-
-  def isTypeOrSupertypeOf(otherType : CellType) : Boolean = {
-    if (otherType == this) {
-      return true
-    }
-
-    directSubtypes exists (_.isTypeOrSupertypeOf(otherType))
-  }
 
   lazy val concreteTypes : Set[ConcreteCellType] = this match {
     case concreteType : ConcreteCellType => Set(concreteType)
