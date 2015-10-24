@@ -184,7 +184,6 @@ object PlanLambdaPolymorph {
     }
 
     // Determine our initial signature
-    // This is fun - try renaming scalaBugSignature to initialSignature and remove the assignment below
     val initialSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
