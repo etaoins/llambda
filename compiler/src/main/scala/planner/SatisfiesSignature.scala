@@ -68,6 +68,13 @@ object SatisfiesSignature {
       return false
     }
 
+    def signatureHasVarArgs(signature : ProcedureSignature) =
+      !signature.optionalArgTypes.isEmpty || signature.restArgMemberTypeOpt.isDefined
+
+    if (signatureHasVarArgs(superSignature) != signatureHasVarArgs(derivedSignature)) {
+      return false
+    }
+
     val superVarArgsListType = vt.VariableArgsToListType(
       superSignature.optionalArgTypes,
       superSignature.restArgMemberTypeOpt

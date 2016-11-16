@@ -442,6 +442,24 @@ class SatisfiesSignatureSuite extends FunSuite {
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
   }
 
+  test("procedure with rest arg does not satisfy procedure without args") {
+    val derivedSignature = ProcedureSignature(
+      hasWorldArg=false,
+      hasSelfArg=false,
+      mandatoryArgTypes=Nil,
+      optionalArgTypes=Nil,
+      restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      attributes=Set()
+    )
+
+    val superSignature = derivedSignature.copy(
+      restArgMemberTypeOpt=None
+    )
+
+    assert(SatisfiesSignature(superSignature, derivedSignature) === false)
+  }
+
   test("procedure with rest arg satisfies procedure with optional arg") {
     val derivedSignature = ProcedureSignature(
       hasWorldArg=false,
