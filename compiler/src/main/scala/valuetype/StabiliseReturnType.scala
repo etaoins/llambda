@@ -1,7 +1,6 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import llambda.compiler.dialect
 import llambda.compiler.{celltype => ct}
 
 object StabiliseReturnType {
@@ -10,16 +9,15 @@ object StabiliseReturnType {
     * This is a simple wrapper around [[StabliseType]] to work on [[ReturnType]] instancds
     */
   def apply(
-      returnType : ReturnType.ReturnType[SchemeType],
-      schemeDialect : dialect.Dialect
+      returnType : ReturnType.ReturnType[SchemeType]
   ) : ReturnType.ReturnType[SchemeType] = returnType match {
     case ReturnType.UnreachableValue =>
       ReturnType.UnreachableValue
 
     case ReturnType.SingleValue(valueType) =>
-      ReturnType.SingleValue[SchemeType](StabiliseType(valueType, schemeDialect))
+      ReturnType.SingleValue[SchemeType](StabiliseType(valueType))
 
     case ReturnType.MultipleValues(valueType) =>
-      ReturnType.MultipleValues(StabiliseType(valueType, schemeDialect))
+      ReturnType.MultipleValues(StabiliseType(valueType))
   }
 }

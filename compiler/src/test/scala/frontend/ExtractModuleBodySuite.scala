@@ -360,16 +360,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(storageLoc.schemeType === vt.ExactIntegerType)
     }
   }
-  
-  test("define unstable typed variable fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    // Because R7RS uses mutable pairs the (Listof) type isn't stable
-    intercept[BadSpecialFormException] {
-      bodyFor("(define a : (Listof <exact-integer>) '(1 2 3 4))")(scope, dialect.R7RS)
-    }
-  }
-  
   test("define type declared variable") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor(
@@ -430,25 +421,12 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
            (define a 1)""")(scope)
     }
   }
-  
-  test("redefine variable succeeds in R7RS") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expressions = bodyFor("(define a 2)(define a 3)")(scope, dialect.R7RS)
 
-    inside(scope.get("a").value) {
-      case storageLoc : StorageLocation =>
-        assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))),
-          et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3)))
-        ))
-    }
-  }
-  
-  test("redefine variable fails in llambda") {
+  test("redefine variable fails") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     intercept[DuplicateDefinitionException] {
-      bodyFor("(define a 2)(define a 3)")(scope, dialect.Llambda)
+      bodyFor("(define a 2)(define a 3)")(scope)
     }
   }
 

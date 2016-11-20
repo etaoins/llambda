@@ -7,10 +7,7 @@ import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.BoxedValue
 
-/** Represents a constructed pair with a car and cdr value known at compile time
-  *
-  * These can only exist in Scheme dialects with immutable pairs. In the R7RS dialect these will not be constructed
-  */
+/** Represents a constructed pair with a car and cdr value known at compile time */
 class KnownPairCellValue(
     val car : IntermediateValue,
     val cdr : IntermediateValue,

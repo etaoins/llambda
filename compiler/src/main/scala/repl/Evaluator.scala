@@ -16,18 +16,17 @@ class ReplProcessNonZeroExitException(val code : Int, val stdout : String, val s
 private object ReplFrontendConfig {
   /** Creates a FrontendConfig instance for the REPL
     *
-    * This passes through the feature identifiers and dialect from the command line and sets the include and package
-    * root directories to the current directory
+    * This passes through the feature identifiers from the command line and sets the include and package root
+    * directories to the current directory
     */
-  def apply(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) : frontend.FrontendConfig =  {
+  def apply(targetPlatform : platform.TargetPlatform) : frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
 
     val includePath = frontend.IncludePath(List(currentDirUrl))
 
     frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=FeatureIdentifiers(targetPlatform, schemeDialect),
-      schemeDialect=schemeDialect
+      featureIdentifiers=FeatureIdentifiers(targetPlatform)
     )
   }
 }
@@ -36,14 +35,13 @@ private object ReplFrontendConfig {
   *
   * This is the core of the REPL implementation. It is responsible for evaluating data and tracking the REPL state.
   */
-class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) {
-  private implicit val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
+class Evaluator(targetPlatform : platform.TargetPlatform) {
+  private implicit val frontendConfig = ReplFrontendConfig(targetPlatform)
 
   private val compileConfig = CompileConfig(
     includePath=frontendConfig.includePath,
     optimiseLevel=2,
-    targetPlatform=targetPlatform,
-    schemeDialect=schemeDialect
+    targetPlatform=targetPlatform
   )
 
   val loader : frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
@@ -56,7 +54,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     List("scheme", "write"),
     List("llambda", "internal", "repl"),
     List("llambda", "nfi")
-  ) ++ frontendConfig.schemeDialect.implicitLibraryNames
+  )
 
   val initialBindings = initialLibraries.flatMap(loader.load(_))
 
@@ -142,7 +140,14 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     s"${identifier} ${separator} ${resultString}"
   }
 
-  private def evalCaseFoldedDatum(userDatum : ast.Datum) : String = userDatum match {
+  /** Evaluates a datum in the current REPL state
+    *
+    * @param  userDatum  Datum to evaluate
+    * @return User-readable string containing the successful result of the evaluation.
+    */
+  @throws(classOf[SemanticException])
+  @throws(classOf[ReplProcessNonZeroExitException])
+  def apply(userDatum : ast.Datum) : String = userDatum match {
     case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
       // Load the library
       scope.bindings ++= frontend.ResolveImportDecl(importDecl)(loader, frontendConfig)
@@ -194,23 +199,5 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
       val programExprs = loader.libraryExprs ++ prefixExprs.toList ++ printingExprs
 
       exprsToOutputString(programExprs)
-  }
-
-  /** Evaluates a datum in the current REPL state
-    *
-    * @param  userDatum  Datum to evaluate. This will be case folded if the current Scheme dialect requires is
-    * @return User-readable string containing the successful result of the evaluation.
-    */
-  @throws(classOf[SemanticException])
-  @throws(classOf[ReplProcessNonZeroExitException])
-  def apply(userDatum : ast.Datum) : String = {
-    val caseFoldedDatum = if (schemeDialect.caseFoldPrograms) {
-      userDatum.toCaseFolded
-    }
-    else {
-      userDatum
-    }
-
-    evalCaseFoldedDatum(caseFoldedDatum)
   }
 }

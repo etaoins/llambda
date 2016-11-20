@@ -20,17 +20,14 @@ trait PlanHelpers extends FunSuite with Inside {
     val compileConfig = CompileConfig(
       includePath=includePath,
       optimiseLevel=if (optimise) 0 else 2,
-      targetPlatform=platform.Posix64LE,
-      schemeDialect=dialect.Dialect.default
+      targetPlatform=platform.Posix64LE
     )
 
-    val featureIdentifiers =
-      compileConfig.targetPlatform.platformFeatures ++ compileConfig.schemeDialect.dialectFeatures
+    val featureIdentifiers = compileConfig.targetPlatform.platformFeatures
 
     val frontendConfig = frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=featureIdentifiers,
-      schemeDialect=dialect.Dialect.default
+      featureIdentifiers=featureIdentifiers
     )
 
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
@@ -38,7 +35,6 @@ trait PlanHelpers extends FunSuite with Inside {
     val analysis = analyser.AnalyseExprs(exprs)
 
     planner.PlanConfig(
-      schemeDialect=dialect.Dialect.default,
       optimise=optimise,
       analysis=analysis
     )

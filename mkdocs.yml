@@ -4,7 +4,6 @@ pages:
     - ['index.md', 'Intoduction']
     - ['repl.md', 'REPL']
     - ['scheme.md', 'Scheme Support']
-    - ['dialects.md', 'Dialects']
     - ['numbers.md', 'Numbers']
     - ['types.md', 'Type System']
     - ['pattern-matching.md', 'Pattern Matching']

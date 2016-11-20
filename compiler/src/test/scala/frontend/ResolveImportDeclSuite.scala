@@ -8,8 +8,7 @@ class ResolveImportDeclSuite extends FunSuite {
   def bindingFor(scheme : String) = {
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(Nil),
-      featureIdentifiers=Set(),
-      schemeDialect=dialect.Dialect.default
+      featureIdentifiers=Set()
     )
 
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)

@@ -38,6 +38,6 @@ object FeatureIdentifiers {
     compilerVersionIdentifier
   )
 
-  def apply(platform : TargetPlatform, schemeDialect : dialect.Dialect, extraIdents : Set[String] = Set()) =
-    commonFeatures ++ platform.platformFeatures ++ schemeDialect.dialectFeatures ++ extraIdents
+  def apply(platform : TargetPlatform, extraIdents : Set[String] = Set()) =
+    commonFeatures ++ platform.platformFeatures ++ extraIdents
 }

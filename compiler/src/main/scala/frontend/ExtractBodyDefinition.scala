@@ -47,7 +47,7 @@ private object FindBodyDefines {
           apply(scopedData ++ restData, definesAcc)
 
         case (Some(definePrimitive : PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>
-          val extractedDefines = ExtractDefine(pairDatum, definePrimitive, operands, allowRedefinition=false)
+          val extractedDefines = ExtractDefine(pairDatum, definePrimitive, operands)
           apply(restData, extractedDefines ++ definesAcc)
 
         case _ =>

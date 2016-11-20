@@ -4,9 +4,8 @@ import io.llambda
 import org.scalatest.FunSuite
 
 class FeatureIdentifiersSuite  extends FunSuite {
-  test("posix64be/llambda features") {
+  test("posix64be features") {
     val expectedFeatures = Set(
-      "immutable-pairs",
       "exact-closed",
       "ieee-float",
       "full-unicode",
@@ -15,26 +14,11 @@ class FeatureIdentifiersSuite  extends FunSuite {
       "big-endian"
     )
 
-    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Posix64BE, dialect.Llambda))
+    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Posix64BE))
   }
 
-  test("posix43le/r7rs features") {
+  test("win64 features") {
     val expectedFeatures = Set(
-      "r7rs",
-      "exact-closed",
-      "ieee-float",
-      "full-unicode",
-      "posix",
-      "ilp32",
-      "little-endian"
-    )
-
-    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Posix32LE, dialect.R7RS))
-  }
-
-  test("win64/llambda features") {
-    val expectedFeatures = Set(
-      "immutable-pairs",
       "exact-closed",
       "ieee-float",
       "full-unicode",
@@ -43,12 +27,11 @@ class FeatureIdentifiersSuite  extends FunSuite {
       "little-endian"
     )
 
-    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Win64, dialect.Llambda))
+    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Win64))
   }
 
-  test("posix64le/llambda features with extras") {
+  test("posix64le features with extras") {
     val expectedFeatures = Set(
-      "immutable-pairs",
       "exact-closed",
       "ieee-float",
       "full-unicode",
@@ -61,7 +44,6 @@ class FeatureIdentifiersSuite  extends FunSuite {
 
     assert(expectedFeatures subsetOf FeatureIdentifiers(
       platform.Posix64BE,
-      dialect.Llambda,
       Set("user-def-1", "user-def-2")
     ))
   }

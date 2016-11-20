@@ -9,8 +9,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
     val data = SchemeParser.parseStringAsData(scheme)
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(Nil),
-      featureIdentifiers=Set(),
-      schemeDialect=dialect.Dialect.default
+      featureIdentifiers=Set()
     )
 
     frontend.ExtractProgram(data)(new LibraryLoader(platform.Posix64LE), frontendConfig)

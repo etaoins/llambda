@@ -11,8 +11,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
 
   val frontendConfig = FrontendConfig(
     includePath=includePath,
-    featureIdentifiers=Set("test-feature"),
-    schemeDialect=dialect.Dialect.default
+    featureIdentifiers=Set("test-feature")
   )
 
   val exampleName = List("example", "lib")

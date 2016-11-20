@@ -17,8 +17,5 @@
         symbol->string symbol? syntax-rules tan truncate values vector vector->list vector-fill! vector-length
         vector-ref vector-set! vector? with-input-from-file with-output-to-file write write-char zero?)
 
-(cond-expand ((not immutable-pairs)
-  (export set-car! set-cdr!)))
-
 ; Unimplemented
 ;(export eval interaction-environment load null-environment scheme-report-environment)

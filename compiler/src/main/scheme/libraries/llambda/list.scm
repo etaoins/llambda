@@ -6,17 +6,6 @@
   (export cons* xcons list-tabulate iota fold reduce zip filter remove find find-tail partition take drop split-at
           take-while drop-while span break any every count append-map filter-map)
 
-  ; WeakListof is only a strong type if pair are immutable
-  ; This is used avoid producing type checking causing tail recursive procedures to have extremely poor performance
-  (cond-expand
-    (immutable-pairs
-      (begin
-        (define-type (WeakListof A) (Listof A))
-        (define-type (WeakPairof A B) (Pairof A B))))
-    (else
-      (begin
-        (define-type (WeakListof A) <list-element>)
-        (define-type (WeakPairof A B) <pair>))))
 
   (begin
     (define-native-library lllist (static-library "ll_llambda_list"))
@@ -36,12 +25,12 @@
     (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A)))))
     (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (Listof <any>) (Listof <any>) * A)))
 
-    (: reduce (All (A B) (-> (-> A A A) B (WeakListof A) (U A B))))
+    (: reduce (All (A B) (-> (-> A A A) B (Listof A) (U A B))))
     (define (reduce proc identity lis)
       (if (null? lis)
         identity
         (begin
-          (: inner-fold (All (A) (-> (-> A A A) A (WeakListof A) A)))
+          (: inner-fold (All (A) (-> (-> A A A) A (Listof A) A)))
           (define (inner-fold proc accum lis)
             (if (null? lis) accum
               (inner-fold proc (proc (car lis) accum) (cdr lis))))
@@ -62,26 +51,26 @@
                        (let ((value (car lis)))
                          (if (pred? value) true-expr false-expr))))))
 
-    (: filter (All (A) (-> (-> A <boolean>) (WeakListof A) (WeakListof A))))
+    (: filter (All (A) (-> (-> A <boolean>) (Listof A) (Listof A))))
     (define (filter pred? lis)
       (cond-map-head pred? lis value
                      (cons value (filter pred? (cdr lis)))
                      (filter pred? (cdr lis))))
 
-    (: remove (All (A) (-> (-> A <boolean>) (WeakListof A) (WeakListof A))))
+    (: remove (All (A) (-> (-> A <boolean>) (Listof A) (Listof A))))
     (define (remove pred? lis)
       (cond-map-head pred? lis value
                      (remove pred? (cdr lis))
                      (cons value (remove pred? (cdr lis)))))
 
-    (: find (All (A) (-> (-> A <boolean>) (WeakListof A) (U A #f))))
+    (: find (All (A) (-> (-> A <boolean>) (Listof A) (U A #f))))
     (define (find pred? lis)
       (cond-map-head pred? lis value
                      value
                      (find pred? (cdr lis))
                      #f))
 
-    (: find-tail (All (A) (-> (-> A <boolean>) (WeakListof A) (U (WeakPairof A (WeakListof A)) #f))))
+    (: find-tail (All (A) (-> (-> A <boolean>) (Listof A) (U (Pairof A (Listof A)) #f))))
     (define (find-tail pred? lis)
       (cond-map-head pred? lis value
                      lis
@@ -92,13 +81,13 @@
     (define take (world-function lllist "lllist_take" (-> <any> <native-uint32> <any>)))
     (define split-at (world-function lllist "lllist_split_at" (-> <any> <native-uint32> (Values (Listof <any>) <any>))))
 
-    (: take-while (All (A) (-> (-> A <boolean>) (WeakListof A) (WeakListof A))))
+    (: take-while (All (A) (-> (-> A <boolean>) (Listof A) (Listof A))))
     (define (take-while pred? lis)
       (cond-map-head pred? lis value
                      (cons value (take-while pred? (cdr lis)))
                      '()))
 
-    (: drop-while (All (A) (-> (-> A <boolean>) (WeakListof A) (WeakListof A))))
+    (: drop-while (All (A) (-> (-> A <boolean>) (Listof A) (Listof A))))
     (define (drop-while pred? lis)
       (cond-map-head pred? lis value
                      (drop-while pred? (cdr lis))

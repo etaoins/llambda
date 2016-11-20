@@ -30,15 +30,13 @@ class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
   test("non-trivial program is fully located") {
     val frontendConfig = frontend.FrontendConfig(
       includePath=testutil.NonTrivialProgram.includePath,
-      featureIdentifiers=Set(),
-      schemeDialect=dialect.Dialect.default
+      featureIdentifiers=Set()
     )
     
     val compileConfig = CompileConfig(
       includePath=includePath,
       optimiseLevel=0,
-      targetPlatform=platform.Posix64LE,
-      schemeDialect=dialect.Dialect.default
+      targetPlatform=platform.Posix64LE
     )
   
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)

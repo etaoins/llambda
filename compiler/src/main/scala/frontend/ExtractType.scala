@@ -282,7 +282,7 @@ object ExtractType {
       recursiveVars : RecursiveVars = RecursiveVars()
   )(implicit frontendConfig : FrontendConfig) : vt.SchemeType = {
     val schemeType = extractSchemeType(datum, recursiveVars)
-    val stableType = vt.StabiliseType(schemeType, frontendConfig.schemeDialect)
+    val stableType = vt.StabiliseType(schemeType)
 
     if (schemeType != stableType) {
       throw new BadSpecialFormException(datum, s"Unstable type ${schemeType} used in context where it can be modified; closest stable type is ${stableType}")

@@ -825,36 +825,6 @@ case class InitPair(
     InitPair(f(result), f(carValue), f(cdrValue), listLengthOpt).assignLocationFrom(this)
 }
 
-/** Asserts that a pair is mutable
-  *
-  * It is illegal to attempt SetPairCar or SetPairCdr on an immutable pair
-  */
-case class AssertPairMutable(pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends AssertStep {
-  lazy val inputValues = Set[TempValue](WorldPtrValue, pairValue)
-  val outputValues = Set[TempValue]()
-
-  def renamed(f: (TempValue) => TempValue) =
-    AssertPairMutable(f(pairValue), errorMessage).assignLocationFrom(this)
-
-  override def mergeKey = (pairValue)
-}
-
-case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step {
-  lazy val inputValues = Set[TempValue](pairValue, newValue)
-  val outputValues = Set[TempValue]()
-
-  def renamed(f : (TempValue) => TempValue) =
-    SetPairCar(f(pairValue), f(newValue)).assignLocationFrom(this)
-}
-
-case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step {
-  lazy val inputValues = Set[TempValue](pairValue, newValue)
-  val outputValues = Set[TempValue]()
-
-  def renamed(f : (TempValue) => TempValue) =
-    SetPairCdr(f(pairValue), f(newValue)).assignLocationFrom(this)
-}
-
 /** Step creating a record-like cell */
 sealed trait InitRecordLikeStep extends RecordLikeStep with CellConsumer with DiscardableStep {
   /** Resulting record-like cell */

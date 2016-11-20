@@ -54,8 +54,7 @@ object CostForPlanSteps {
       // This is a load from memory
       loadCost
 
-    case _ : ps.SetPairCar | _ : ps.SetPairCdr | _ : ps.SetRecordDataField | _ : ps.SetRecordLikeDefined |
-         _ : ps.StoreVectorElement =>
+    case _ : ps.SetRecordDataField | _ : ps.SetRecordLikeDefined | _ : ps.StoreVectorElement =>
       storeCost
 
     case _ : ps.TestCellType | _ : ps.TestRecordLikeClass =>
@@ -100,7 +99,7 @@ object CostForPlanSteps {
     case allocateCells : ps.AllocateCells =>
       gcBarrierCost
 
-    case _ : ps.AssertPredicate | _ : ps.AssertPairMutable | _ : ps.AssertRecordLikeDefined =>
+    case _ : ps.AssertPredicate | _ : ps.AssertRecordLikeDefined =>
       // These require a test + a possible GC barrier if the test fails
       (gcBarrierCost / 2) + trivialInstrCost
 

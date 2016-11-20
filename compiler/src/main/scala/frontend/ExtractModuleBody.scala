@@ -31,23 +31,9 @@ object ExtractModuleBody {
     case ExtractedVarsDefine(List(valueTarget), None, exprBlock) =>
       val symbol = valueTarget.definedSymbol
 
-      // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined as
-      // a storage location
       symbol.resolveOpt match {
-        case Some(_) if !context.config.schemeDialect.allowTopLevelRedefinition =>
-          throw new DuplicateDefinitionException(symbol)
-
-        case Some(storageLoc : StorageLocation) =>
-          if (storageLoc.forceImmutable) {
-            throw new BadSpecialFormException(symbol, s"Attempted mutating (define) of immutable binding ${symbol.name}")
-          }
-          else {
-            // Convert this to a (set!)
-            List(et.MutateVar(storageLoc, exprBlock()))
-          }
-
         case Some(_) =>
-          throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}")
+          throw new DuplicateDefinitionException(symbol)
 
         case None =>
           // This is a fresh binding
@@ -56,7 +42,6 @@ object ExtractModuleBody {
       }
 
     case ExtractedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
-      // Don't support re-defining top-level values with (define-values) in any dialect
       for (symbol <- (fixedValueTargets ++ restValueTargetOpt).map(_.definedSymbol)) {
         if (symbol.resolveOpt.isDefined) {
           throw new DuplicateDefinitionException(symbol)
@@ -93,9 +78,7 @@ object ExtractModuleBody {
           extractInclude(appliedSymbol, scope, includeNames, foldCase=true)
 
         case (definePrimitive : PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
-          val allowRedefinition = context.config.schemeDialect.allowTopLevelRedefinition
-
-          ExtractDefine(datum, definePrimitive, operands, allowRedefinition).flatMap { define =>
+          ExtractDefine(datum, definePrimitive, operands).flatMap { define =>
             handleExtractedDefine(datum, define)
           }
 

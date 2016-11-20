@@ -135,7 +135,7 @@ private[planner] object AttemptInlineApply {
     val planResult = PlanExpr(postRestArgState)(lambdaExpr.body)
 
     // Make sure our return type is of the declared type
-    val stableReturnType = vt.StabiliseReturnType(procType.returnType, plan.config.schemeDialect)
+    val stableReturnType = vt.StabiliseReturnType(procType.returnType)
     val castValues = planResult.values.castToReturnType(stableReturnType)
 
     Some(castValues)

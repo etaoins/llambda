@@ -11,8 +11,7 @@ import llambda.compiler.SchemeStringImplicits._
 
 abstract class SchemeFunctionalTestRunner(
     testName : String,
-    onlyOptimised : Boolean = false,
-    onlyDialectOpt : Option[dialect.Dialect] = None
+    onlyOptimised : Boolean = false
 ) extends FunSuite with Inside {
   // Implicit import decl every test gets
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
@@ -58,16 +57,10 @@ abstract class SchemeFunctionalTestRunner(
 
   private def runAllTests(allTests : List[ast.Datum]) {
     if (!onlyOptimised) {
-      // Just run one pass at -O 0
-      runTestConfiguration(allTests, onlyDialectOpt.getOrElse(dialect.Dialect.default), 0)
+      runTestConfiguration(allTests, 0)
     }
 
-    // Don't test R5RS; it's a legacy dialect with its own functional test
-    val optimisedDialects = onlyDialectOpt.map(List(_)).getOrElse(List(dialect.R7RS, dialect.Llambda))
-
-    for(dialect <- optimisedDialects) {
-      runTestConfiguration(allTests, dialect, 2)
-    }
+    runTestConfiguration(allTests, 2)
   }
 
   /** Expands top-level (cond-expand) expressions in the test source */
@@ -81,13 +74,12 @@ abstract class SchemeFunctionalTestRunner(
     }
   }
 
-  private def runTestConfiguration(allTests : List[ast.Datum], schemeDialect : dialect.Dialect, optimiseLevel : Int) {
+  private def runTestConfiguration(allTests : List[ast.Datum], optimiseLevel : Int) {
     // Deal with (cond-expand) for this configuration
     val expandLibraryLoader = new frontend.LibraryLoader(targetPlatform)
     val expandFrontendConfig = frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=targetPlatform.platformFeatures ++ schemeDialect.dialectFeatures,
-      schemeDialect=schemeDialect
+      featureIdentifiers=targetPlatform.platformFeatures
     )
 
     val expandedTests = expandTopLevel(allTests)(expandLibraryLoader, expandFrontendConfig)
@@ -96,8 +88,8 @@ abstract class SchemeFunctionalTestRunner(
       singleTest match {
         case ast.ProperList(ast.Symbol("define-test") :: ast.StringLiteral(name) :: condition :: Nil) =>
           // Start a nested test
-          test(s"$name (${schemeDialect.name} -O ${optimiseLevel})") {
-            runSingleCondition(condition, schemeDialect, optimiseLevel)
+          test(s"$name (-O ${optimiseLevel})") {
+            runSingleCondition(condition, optimiseLevel)
           }
 
         case other =>
@@ -106,10 +98,10 @@ abstract class SchemeFunctionalTestRunner(
     }
   }
 
-  private def runSingleCondition(condition : ast.Datum, schemeDialect : dialect.Dialect, optimiseLevel : Int) {
+  private def runSingleCondition(condition : ast.Datum, optimiseLevel : Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
-        val result = executeProgram(wrapForPrinting(program), schemeDialect, optimiseLevel)
+        val result = executeProgram(wrapForPrinting(program), optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -124,7 +116,7 @@ abstract class SchemeFunctionalTestRunner(
         assert(result.output === List(expectedValue))
 
       case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimiseLevel)
+        val result = executeProgram(program, optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -143,7 +135,7 @@ abstract class SchemeFunctionalTestRunner(
         val canaryValue = ast.Symbol("test-completed")
         val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue))
 
-        val result = executeProgram(wrapForPrinting(programWithCanary), schemeDialect, optimiseLevel)
+        val result = executeProgram(wrapForPrinting(programWithCanary), optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -158,7 +150,6 @@ abstract class SchemeFunctionalTestRunner(
         // Did we expect the optimiser to evaluate this?
         if ((testType == "expect-static-success") &&
             (optimiseLevel == 2) &&
-            (schemeDialect== dialect.Dialect.default) &&
             (result.runMethod != RunResult.Interpreted)) {
           fail("Test could not be statically evaluated at -O 2")
         }
@@ -166,13 +157,13 @@ abstract class SchemeFunctionalTestRunner(
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
 
       case ast.ProperList(ast.Symbol("expect-exit-value") :: ast.IntegerLiteral(exitValue) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimiseLevel)
+        val result = executeProgram(program, optimiseLevel)
         assert(result.exitValue == exitValue)
 
       case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
           val wrappedProgram = wrapForAssertRaises(errorPredicate, program)
-          val result = executeProgram(wrappedProgram, schemeDialect, optimiseLevel)
+          val result = executeProgram(wrappedProgram, optimiseLevel)
 
           if (!result.success) {
             if (result.errorString.isEmpty) {
@@ -190,7 +181,7 @@ abstract class SchemeFunctionalTestRunner(
 
       case ast.ProperList(ast.Symbol("expect-compile-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
-          executeProgram(program, schemeDialect, optimiseLevel)
+          executeProgram(program, optimiseLevel)
         }
         catch {
           case _ : SemanticException if errorPredicate == "error-object?" =>
@@ -236,15 +227,14 @@ abstract class SchemeFunctionalTestRunner(
   private def utf8InputStreamToString(stream : InputStream) : String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum], schemeDialect : dialect.Dialect, optimiseLevel : Int) : ExecutionResult = {
+  private def executeProgram(program : List[ast.Datum], optimiseLevel : Int) : ExecutionResult = {
     val finalProgram = testImportDecl :: program
 
     // Compile the program
     val compileConfig = CompileConfig(
       includePath=includePath,
       optimiseLevel=optimiseLevel,
-      targetPlatform=targetPlatform,
-      schemeDialect=schemeDialect
+      targetPlatform=targetPlatform
     )
 
     // Build our environment

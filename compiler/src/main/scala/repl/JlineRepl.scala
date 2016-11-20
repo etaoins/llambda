@@ -57,13 +57,13 @@ private class ScopeCompleter(scope : Scope) extends completer.Completer {
   }
 }
 
-class JlineRepl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) {
+class JlineRepl(targetPlatform : platform.TargetPlatform) {
   // ANSI colour codes
   private val failureColour = 31
   private val successColour = 32
 
   // Create our REPL evaluator
-  var evaluator = new Evaluator(targetPlatform, schemeDialect)
+  var evaluator = new Evaluator(targetPlatform)
 
   // Create our reader
   val reader = new ConsoleReader;
@@ -137,7 +137,7 @@ class JlineRepl(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     command match {
       case ":reset" =>
         // Rebuild our evaluator
-        evaluator = new Evaluator(targetPlatform, schemeDialect)
+        evaluator = new Evaluator(targetPlatform)
 
         setCompleter(new ScopeCompleter(evaluator.scope))
         acceptInput()

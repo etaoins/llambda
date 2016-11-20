@@ -65,8 +65,8 @@ object ExtractDefine {
     )
   }
 
-  private def bindValue(symbol : sst.ScopedSymbol, value : BoundValue, allowRedefinition : Boolean) : Unit = {
-    if (!allowRedefinition && symbol.scope.bindings.contains(symbol.name)) {
+  private def bindValue(symbol : sst.ScopedSymbol, value : BoundValue) : Unit = {
+    if (symbol.scope.bindings.contains(symbol.name)) {
       throw new DuplicateDefinitionException(symbol)
     }
 
@@ -78,14 +78,12 @@ object ExtractDefine {
     * @param  located            Source location of the application
     * @param  primitiveDefine    Primitive define expression being applied
     * @param  operands           Operands the the application
-    * @param  allowRedefinition  Indicates if variables can be redefined within the same scope
     * @return Extracted definition or None if it cannot be parsed as a definition
     */
   def apply(
       located : SourceLocated,
       primitiveDefine : PrimitiveDefineExpr,
-      operands : List[sst.ScopedDatum],
-      allowRedefinition : Boolean
+      operands : List[sst.ScopedDatum]
   )(implicit context : FrontendContext) : List[ExtractedVarsDefine] =
     (primitiveDefine, operands) match {
       case (Primitives.Define, List(symbol : sst.ScopedSymbol, value)) =>
@@ -127,14 +125,14 @@ object ExtractDefine {
 
       case (Primitives.DefineSyntax, _) =>
         val (symbol, parsedSyntax) = ParseSyntaxDefine(located, operands, context.debugContext)
-        bindValue(symbol, parsedSyntax, allowRedefinition)
+        bindValue(symbol, parsedSyntax)
 
         Nil
 
       case (Primitives.DefineRecordType, _) =>
         ParseRecordTypeDefine(located, operands)(context.config) match {
           case ParseRecordTypeDefine.Result(typeSymbol, recordType, (constructorSym, constructorExpr), procedures) =>
-            bindValue(typeSymbol, BoundType(recordType), allowRedefinition)
+            bindValue(typeSymbol, BoundType(recordType))
 
             val constructorTarget = ValueTarget(
               definedSymbol=constructorSym,
@@ -157,12 +155,12 @@ object ExtractDefine {
         val recursiveVars = ExtractType.RecursiveVars(Map(typeAlias.name -> 0))
         val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars)
 
-        bindValue(typeAlias, BoundType(extractedType), allowRedefinition)
+        bindValue(typeAlias, BoundType(extractedType))
         Nil
 
       case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: args) :: definition :: Nil) =>
         val typeConstructor = ExtractUserDefinedTypeConstructor(args, definition)
-        bindValue(constructorName, typeConstructor, allowRedefinition)
+        bindValue(constructorName, typeConstructor)
         Nil
 
       case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
@@ -203,7 +201,7 @@ object ExtractDefine {
         ))
 
       case (Primitives.DefineNativeLibrary, List(libAlias : sst.ScopedSymbol, libDatum)) =>
-        bindValue(libAlias, ExtractNativeLibrary(libDatum), allowRedefinition)
+        bindValue(libAlias, ExtractNativeLibrary(libDatum))
         Nil
 
       case (Primitives.AnnotateStorageLocType, List(declaredSymbol : sst.ScopedSymbol, typeDatum)) =>

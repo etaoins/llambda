@@ -74,26 +74,6 @@ AnyCell *llbase_cdr(PairCell *pair)
 	return pair->cdr();
 }
 
-void llbase_set_car(World &world, PairCell *pair, AnyCell *obj)
-{
-	if (pair->isGlobalConstant())
-	{
-		signalError(world, ErrorCategory::MutateLiteral, "(set-car!) on pair literal", {pair});
-	}
-
-	return pair->setCar(obj);
-}
-
-void llbase_set_cdr(World &world, PairCell *pair, AnyCell *obj)
-{
-	if (pair->isGlobalConstant())
-	{
-		signalError(world, ErrorCategory::MutateLiteral, "(set-cdr!) on pair literal", {pair});
-	}
-
-	return pair->setCdr(obj);
-}
-
 std::uint32_t llbase_length(ProperList<AnyCell> *list)
 {
 	return list->size();
@@ -114,54 +94,6 @@ ListElementCell* llbase_make_list(World &world, std::uint32_t count, AnyCell *fi
 	}
 
 	return cdr;
-}
-
-AnyCell* llbase_list_copy(World &world, AnyCell *sourceHead)
-{
-	// Find the number of pairs in the list
-	// We can't use ProperList because we need to work with improper lists and non-list objects
-	std::uint32_t pairCount = 0;
-
-	for(auto pair = cell_cast<PairCell>(sourceHead);
-		pair != nullptr;
-		pair = cell_cast<PairCell>(pair->cdr()))
-	{
-		pairCount++;
-	}
-
-	if (pairCount == 0)
-	{
-		return sourceHead;
-	}
-
-	// Make sure we take a reference to this across the next allocation in case the GC runs
-	alloc::AnyRef sourceHeadRef(world, sourceHead);	
-
-	alloc::AllocCell *destHead = alloc::allocateCells(world, pairCount);
-	alloc::AllocCell *destPair = destHead;
-
-	// We've counted our pairs so this has to be a pair
-	auto sourcePair = cell_unchecked_cast<const PairCell>(sourceHeadRef.data());
-
-	// This is predecrement because the last pair is handled specially below this loop
-	while(--pairCount)
-	{
-		// Create the new pair cdr'ed to the next pair
-		new (destPair) PairCell(sourcePair->car(), destPair + 1);
-
-		destPair++;
-
-		// Move to the next pair
-		sourcePair = cell_unchecked_cast<PairCell>(sourcePair->cdr());
-	}
-	
-	// Place our last pair cdr'ed to the last cdr
-	// For proper lists this is the empty list
-	// For improper list this is another type of non-pair cell
-	new (destPair) PairCell(sourcePair->car(), sourcePair->cdr());
-
-	// All done!
-	return destHead;
 }
 
 AnyCell* llbase_append(World &world, RestValues<AnyCell> *argList)

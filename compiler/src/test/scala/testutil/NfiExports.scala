@@ -9,8 +9,7 @@ object NfiExports {
     val libraryLoader = new LibraryLoader(platform.Posix64LE)
     implicit val frontendConfig = frontend.FrontendConfig(
       includePath=IncludePath(Nil),
-      featureIdentifiers=Set(),
-      schemeDialect=dialect.Dialect.default
+      featureIdentifiers=Set()
     )
 
     val exports = libraryLoader.load(List("llambda", "nfi"))

@@ -46,7 +46,7 @@ By convention type constructors are named with an initial uppercase letter
 | ``(Listof <member>)``     | Creates a proper list type with the containing members of type ``<member>``. The proper list can be of any length.
 | ``(List <member> ...)``   | Creates a proper list type of fixed length with the specified member types
 
-The ``Pairof``, ``Listof`` and ``List`` type constructors depend on immutable pair support for a complete and efficient implementation. If mutable pairs are enabled by using the [``r7rs`` or ``r5rs`` dialects](dialects.md) these type constructors can only be used for arguments and return types. They will also generate costly runtime type checks in more situations than dialects with immutable pairs.
+The ``Pairof``, ``Listof`` and ``List`` type constructors depend on immutable pair support for a complete and efficient implementation.
 
 Procedure Type Constructor
 --------------------------

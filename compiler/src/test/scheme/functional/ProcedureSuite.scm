@@ -218,9 +218,7 @@
 (define-test "typed procedure invoked with correct rest arg types" (expect-success
   (import (llambda typed))
   (define (add-values vals : <exact-integer> *)
-    (cond-expand (immutable-pairs
-      (ann vals (Listof <exact-integer>))))
-
+    (ann vals (Listof <exact-integer>))
     (apply + vals))
 
   (assert-equal 6 (add-values 1 2 3))))
@@ -257,24 +255,6 @@
       (length rest))
 
     (set-rest-arg 1 2 3 4 5)))
-
-(cond-expand ((not immutable-pairs)
-  ; R7RS requires the procedure to be passed a newly allocated list
-  (define-test "procedure mutating rest list contents" (expect (3 2)
-      (define (mutate-rest-arg . rest)
-        (set-car! rest 3)
-        rest)
-
-      (mutate-rest-arg 1 2)))
-  (define-test "procedure mutating rest list to improper list" (expect-success
-      (define (mutate-rest-arg . rest)
-        (set-car! rest 3)
-        (set-cdr! rest 4)
-        ; No longer an proper list
-        (assert-false (list? rest))
-        rest)
-
-      (assert-equal '(3 . 4) (mutate-rest-arg 1 2))))))
 
 (define-test "capturing constants" (expect 7
   (define two 2)
@@ -389,22 +369,20 @@
     (assert-raises string?
       ((make-length-counter (dynamic-true)) '(1 2 3 4 5 . 6)))))
 
-(cond-expand
-  (immutable-pairs
-    (define-test "applying typed procedure rest argument" (expect-success
-      (import (llambda typed))
+(define-test "applying typed procedure rest argument" (expect-success
+  (import (llambda typed))
 
-      ; Takes an initial value and then four numerical procedures to fold the value over
-      (: apply-number-procs (-> <number> (-> <number> <number>) * <number>))
-      (define (apply-number-procs initial .  proc-rest-arg)
-        (define first-proc (car proc-rest-arg))
-        (define second-proc (car (cdr proc-rest-arg)))
-        (define third-proc (car (cdr (cdr proc-rest-arg))))
-        (define fourth-proc (car (cdr (cdr (cdr proc-rest-arg)))))
+  ; Takes an initial value and then four numerical procedures to fold the value over
+  (: apply-number-procs (-> <number> (-> <number> <number>) * <number>))
+  (define (apply-number-procs initial .  proc-rest-arg)
+    (define first-proc (car proc-rest-arg))
+    (define second-proc (car (cdr proc-rest-arg)))
+    (define third-proc (car (cdr (cdr proc-rest-arg))))
+    (define fourth-proc (car (cdr (cdr (cdr proc-rest-arg)))))
 
-        (fourth-proc (third-proc (second-proc (first-proc initial)))))
+    (fourth-proc (third-proc (second-proc (first-proc initial)))))
 
-      (assert-equal -0.25 (apply-number-procs 4 - * + /))))))
+  (assert-equal -0.25 (apply-number-procs 4 - * + /))))
 
 (define-test "invoking procedures placed in lists" (expect-success
   (define escape-list

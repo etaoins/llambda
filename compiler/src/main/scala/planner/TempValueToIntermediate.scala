@@ -23,7 +23,7 @@ object TempValueToIntermediate {
       new iv.NativeCharValue(tempValue)
 
     case schemeType : vt.SchemeType =>
-      val stableType = vt.StabiliseType(schemeType, planConfig.schemeDialect)
+      val stableType = vt.StabiliseType(schemeType)
       new iv.CellValue(stableType, BoxedValue(schemeType.cellType, tempValue))
   }
 }

@@ -86,42 +86,6 @@ object ListProcPlanner extends ReportProcPlanner {
         None
       }
 
-    case ("set-car!", List((pairLoc, pairValue), (_, newValue))) =>
-      val pairTemp = plan.withContextLocation(pairLoc) {
-        pairValue.toTempValue(vt.AnyPairType)
-      }
-
-      val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
-
-      val errorMessage = RuntimeErrorMessage(
-        category=ErrorCategory.MutateLiteral,
-        name="setCarImmutable",
-        text="(set-car!) attempted on pair literal"
-      )
-
-      plan.steps += ps.AssertPairMutable(pairTemp, errorMessage)
-      plan.steps += ps.SetPairCar(pairTemp, newValueTemp)
-
-      Some(iv.UnitValue)
-    
-    case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
-      val pairTemp = plan.withContextLocation(pairLoc) {
-        pairValue.toTempValue(vt.AnyPairType)
-      }
-
-      val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
-
-      val errorMessage = RuntimeErrorMessage(
-        category=ErrorCategory.MutateLiteral,
-        name="setCdrImmutable",
-        text="(set-cdr!) attempted on pair literal"
-      )
-
-      plan.steps += ps.AssertPairMutable(pairTemp, errorMessage)
-      plan.steps += ps.SetPairCdr(pairTemp, newValueTemp)
-
-      Some(iv.UnitValue)
-
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       Some(ValuesToPair(carValue, cdrValue, None))
     

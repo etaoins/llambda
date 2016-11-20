@@ -264,28 +264,22 @@
   (import (llambda typed))
 
   (assert-equal 100 (let-values (((product) (* 5 20)))
-                                (cond-expand (immutable-pairs
-                                               (ann product <exact-integer>)))
-
+                                (ann product <exact-integer>)
                                 product))
 
   (assert-equal 35 (let-values (((root rem) (exact-integer-sqrt 32)))
-                               (cond-expand (immutable-pairs
-                                              (ann root <exact-integer>)
-                                              (ann rem <exact-integer>)))
+                               (ann root <exact-integer>)
+                               (ann rem <exact-integer>)
 
                                (* root rem)))
 
   (assert-equal 100 (let-values ((([product : <exact-integer>]) (* 5 20)))
-                                (cond-expand (immutable-pairs
-                                               (ann product <exact-integer>)))
-
+                                (ann product <exact-integer>)
                                 product))
 
   (assert-equal 35 (let-values ((([root : <exact-integer>] [rem : <exact-integer>]) (exact-integer-sqrt 32)))
-                               (cond-expand (immutable-pairs
-                                              (ann root <exact-integer>)
-                                              (ann rem <exact-integer>)))
+                               (ann root <exact-integer>)
+                               (ann rem <exact-integer>)
 
                                (* root rem)))))
 

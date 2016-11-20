@@ -149,7 +149,7 @@ object ConstrainType {
     val rawNewType = constraint.applyToSubject(existingType)
 
     // We have to be careful to make storage locations with "stable" types in case they can be mutated
-    val stableNewType = vt.StabiliseType(rawNewType, planConfig.schemeDialect)
+    val stableNewType = vt.StabiliseType(rawNewType)
 
     // Create a new intermediate value with the constrained type
     val constrainedValue = value.withSchemeType(stableNewType)

@@ -9,8 +9,8 @@ import llambda.compiler.SchemeStringImplicits._
 class EvaluatorSuite extends FunSuite {
   private val targetPlatform = platform.DetectTargetPlatform()
 
-  private def testEvaluator(schemeDialect : dialect.Dialect = dialect.Dialect.default) : Evaluator =
-    new Evaluator(targetPlatform, schemeDialect)
+  private def testEvaluator() : Evaluator =
+    new Evaluator(targetPlatform)
 
   test("evaluating a trivial expression") {
     val eval = testEvaluator()
@@ -152,15 +152,5 @@ class EvaluatorSuite extends FunSuite {
         assert(nonZero.stdout === "hello-world")
         assert(nonZero.stderr === "")
     }
-  }
-
-  test("R5RS") {
-    val eval = testEvaluator(dialect.R5RS)
-
-    // Make sure we case fold
-    assert(eval(datum"""(CAR (Cons 'ONE 'two))""") === "one")
-
-    // Make sure we import (scheme r5rs) implicitly
-    assert(eval(datum"""(inexact->exact 13.0)""") === "13")
   }
 }

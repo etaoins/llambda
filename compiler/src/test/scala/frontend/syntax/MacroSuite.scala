@@ -36,25 +36,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (false-literal)"""
     ) === et.Literal(ast.BooleanLiteral(false)))
   }
-  
-  test("redefine syntax succeeds in R7RS") {
-    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    assert(bodyFor(
-      """(define-syntax false-literal
-           (syntax-rules ()
-             ((false-literal)
-               #f
-         )))
-         (define-syntax false-literal
-           (syntax-rules ()
-             ((false-literal)
-               #f
-         )))
-         (false-literal)"""
-    )(syntaxScope, dialect.R7RS) === List(et.Literal(ast.BooleanLiteral(false))))
-  }
-  
   test("redefine syntax fails in llambda") {
     implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
@@ -70,7 +52,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                ((false-literal)
                  #f
            )))
-           (false-literal)""")(syntaxScope, dialect.Llambda)
+           (false-literal)""")(syntaxScope)
     }
   }
   

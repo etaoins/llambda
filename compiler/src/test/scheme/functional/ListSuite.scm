@@ -70,43 +70,10 @@
   (assert-equal '(4.0 4.0 4.0 4.0) (make-list 4 4.0))
   (assert-equal '(#() #()) (make-list 2 (make-vector 0)))))
 
-(define-test "(list-copy) of degenerate lists" (expect-success
-  (assert-equal '() (list-copy '()))
-  (assert-equal '(1 2 . 3) (list-copy '(1 2 . 3)))
-  ; This is allowed by R7RS. Single objects can be considered degenerate forms of improper lists so this makes sense.
-  (assert-equal 'a (list-copy 'a))))
-
-(cond-expand
-  (immutable-pairs
-    (define-test "(list-copy) of non-empty proper list" (expect-success
-      (define immutable-list '(1.0 2.0 3.0))
-      (define copied-list (list-copy immutable-list))
-
-      (assert-equal '(1.0 2.0 3.0) copied-list))))
-  (else
-    (define-test "(list-copy) of non-empty proper list" (expect-success
-      (define immutable-list '(1.0 2.0 3.0))
-      (define copied-list (list-copy immutable-list))
-      ; This shouldn't effect the immutable list
-      (set-car! copied-list -1.0)
-
-      (assert-equal '(1.0 2.0 3.0) immutable-list)
-      (assert-equal '(-1.0 2.0 3.0) copied-list)))))
-
 (define-test "(list)" (expect-static-success
   (assert-true (null? (list)))
   (assert-equal '() (list))
   (assert-equal '(1 2 3) (list 1 2 3))))
-
-(cond-expand
-  ((not immutable-pairs)
-    (define-test "mutating (list) to improper" (expect-success
-      (define test-list (list 1 2 3))
-      (set-cdr! test-list 2)
-
-      ; No longer an improper list
-      (assert-false (list? test-list))
-      (assert-equal '(1 . 2) test-list)))))
 
 (define-test "(append)" (expect-static-success
   (assert-equal '() (append))
@@ -121,11 +88,7 @@
 (define-test "(memq)" (expect-static-success
   (assert-equal '(a b c) (memq 'a '(a b c)))
   (assert-equal '(b c) (memq 'b '(a b c)))
-  (assert-false (memq 'a '(b c d)))
-
-  (cond-expand ((not immutable-pairs)
-    ; memq isn't recurive
-    (assert-false (memq (list 'a) '(b (a) c)))))))
+  (assert-false (memq 'a '(b c d)))))
 
 (define-test "(member) is recursive" (expect-static-success
   (assert-equal '((a) c) (member (list 'a) '(b (a) c)))))
@@ -134,23 +97,6 @@
 ; unspecified for eq?
 (define-test "(memv) on number list" (expect (101 102)
   (memv 101 '(100 101 102))))
-
-(cond-expand ((not immutable-pairs)
-  (define-test "(set-car!) of cons" (expect (new-car . old-cdr)
-    (define test-cons (cons 'old-car 'old-cdr))
-    (set-car! test-cons 'new-car)
-    test-cons))
-
-  (define-test "(set-car!) on literal fails" (expect-error mutate-literal-error?
-    (set-car! '(old-car . old-cdr) 'new-car)))
-
-  (define-test "(set-cdr!) of cons" (expect (old-car . new-cdr)
-    (define test-cons (cons 'old-car 'old-cdr))
-    (set-cdr! test-cons 'new-cdr)
-    test-cons))
-
-  (define-test "(set-cdr!) on literal fails" (expect-error mutate-literal-error?
-    (set-cdr! '(old-car . old-cdr) 'new-cdr)))))
 
 (define-test "(reverse)" (expect-success
   (assert-equal '() (reverse '()))
@@ -171,9 +117,6 @@
   (assert-equal '(a 1) (assq 'a e))
   (assert-equal '(b 2) (assq 'b e))
   (assert-equal #f (assq 'd e))
-
-  (cond-expand ((not immutable-pairs)
-    (assert-equal #f (assq (list 'a) '(((a)) ((b)) ((c)))))))
 
   (assert-equal '((a)) (assoc (list 'a) '(((a)) ((b)) ((c)))))
 
@@ -209,8 +152,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (filter even? '(3 1 4 1 5 9)) (Listof <exact-integer>))))
+  (ann (filter even? '(3 1 4 1 5 9)) (Listof <exact-integer>))
 
   (assert-equal '(0 7 8 8 43 -4) (filter number? '(0 7 8 8 43 -4)))
   (assert-equal '(0 8 8 -4) (filter even? '(0 7 8 8 43 -4)))
@@ -221,8 +163,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (remove even? '(0 7 8 8 43 -4)) (Listof <exact-integer>))))
+  (ann (remove even? '(0 7 8 8 43 -4)) (Listof <exact-integer>))
 
   (assert-equal '(0 7 8 8 43 -4) (remove symbol? '(0 7 8 8 43 -4)))
   (assert-equal '(7 43) (remove even? '(0 7 8 8 43 -4)))
@@ -233,8 +174,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (find even? '(3 1 4 1 5 9)) (U <exact-integer> #f))))
+  (ann (find even? '(3 1 4 1 5 9)) (U <exact-integer> #f))
 
   (assert-equal 4 (find even? '(3 1 4 1 5 9)))
   (assert-equal #f (find even? '()))
@@ -244,8 +184,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (find-tail even? '(3 1 37 -8 -5 0 0)) (U (Listof <exact-integer>) #f))))
+  (ann (find-tail even? '(3 1 37 -8 -5 0 0)) (U (Listof <exact-integer>) #f))
 
   (assert-equal '(-8 -5 0 0) (find-tail even? '(3 1 37 -8 -5 0 0)))
   (assert-equal #f (find-tail even? '(3 1 37 -5)))))
@@ -254,8 +193,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (take-while number? '(2 18 3 10 22 9)) (Listof <exact-integer>))))
+  (ann (take-while number? '(2 18 3 10 22 9)) (Listof <exact-integer>))
 
   (assert-equal '(2 18 3 10 22 9) (take-while number? '(2 18 3 10 22 9)))
   (assert-equal '(2 18) (take-while even? '(2 18 3 10 22 9)))
@@ -266,8 +204,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (drop-while even? '(2 18 3 10 22 9)) (Listof <exact-integer>))))
+  (ann (drop-while even? '(2 18 3 10 22 9)) (Listof <exact-integer>))
 
   (assert-equal '() (drop-while number? '(2 18 3 10 22 9)))
   (assert-equal '(3 10 22 9) (drop-while even? '(2 18 3 10 22 9)))
@@ -288,53 +225,32 @@
   (import (llambda typed))
 
   (let-values (((true-list false-list) (partition (lambda (x) x) '(one 2 3 four five 6))))
-              (cond-expand
-                (immutable-pairs
-                  (ann true-list (Listof (U <symbol> <exact-integer>)))
-                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+              (ann true-list (Listof (U <symbol> <exact-integer>)))
+              (ann false-list (Listof (U <symbol> <exact-integer>)))
 
               (assert-equal true-list '(one 2 3 four five 6))
               (assert-equal false-list '()))
 
   (let-values (((true-list false-list) (partition symbol? '(one 2 3 four five 6))))
-              (cond-expand
-                (immutable-pairs
-                  (ann true-list (Listof (U <symbol> <exact-integer>)))
-                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+              (ann true-list (Listof (U <symbol> <exact-integer>)))
+              (ann false-list (Listof (U <symbol> <exact-integer>)))
 
               (assert-equal true-list '(one four five))
               (assert-equal false-list '(2 3 6)))
 
   (let-values (((true-list false-list) (partition number? '(one 2 3 four five 6))))
-              (cond-expand
-                (immutable-pairs
-                  (ann true-list (Listof (U <symbol> <exact-integer>)))
-                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+              (ann true-list (Listof (U <symbol> <exact-integer>)))
+              (ann false-list (Listof (U <symbol> <exact-integer>)))
 
               (assert-equal true-list '(2 3 6))
               (assert-equal false-list '(one four five)))
 
   (let-values (((true-list false-list) (partition port? '(one 2 3 four five 6))))
-              (cond-expand
-                (immutable-pairs
-                  (ann true-list (Listof (U <symbol> <exact-integer>)))
-                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+              (ann true-list (Listof (U <symbol> <exact-integer>)))
+              (ann false-list (Listof (U <symbol> <exact-integer>)))
 
               (assert-equal true-list '())
-              (assert-equal false-list '(one 2 3 four five 6)))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (let ((input-list (list 1 2 3 4 5)))
-       (define (evil-predicate val)
-         ; Mutate the list while we're partitioning - this is undefined but shouldn't crash
-         (set-cdr! input-list 5)
-         #t)
-
-
-       (guard (condition
-                (else 'ignore))
-              (partition evil-predicate input-list)))))))
+              (assert-equal false-list '(one 2 3 four five 6)))))
 
 (define-test "(partition) with improper list fails" (expect-error type-error?
   (import (llambda list))
@@ -353,8 +269,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (xcons 1 'foo) (Pairof <symbol> <exact-integer>))))
+  (ann (xcons 1 'foo) (Pairof <symbol> <exact-integer>))
 
   (assert-equal '(a b c) (xcons '(b c) 'a))))
 
@@ -362,8 +277,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (cond-expand (immutable-pairs
-    (ann (list-tabulate 4 *) (Listof <number>))))
+  (ann (list-tabulate 4 *) (Listof <number>))
 
   (assert-equal '(0 1 2 3) (list-tabulate 4 values))
 
@@ -423,9 +337,8 @@
   (import (llambda typed))
 
   (let-values (((head tail) (span even? '(2 18 3 10 22 9))))
-              (cond-expand (immutable-pairs
-                             (ann head (Listof <exact-integer>))
-                             (ann tail (Listof <exact-integer>))))
+              (ann head (Listof <exact-integer>))
+              (ann tail (Listof <exact-integer>))
 
               (assert-equal '(2 18) head)
               (assert-equal '(3 10 22 9) tail))
@@ -447,9 +360,8 @@
   (import (llambda typed))
 
   (let-values (((head tail) (break even? '(3 1 4 1 5 9))))
-              (cond-expand (immutable-pairs
-                             (ann head (Listof <exact-integer>))
-                             (ann tail (Listof <exact-integer>))))
+              (ann head (Listof <exact-integer>))
+              (ann tail (Listof <exact-integer>))
 
               (assert-equal '(3 1) head)
               (assert-equal '(4 1 5 9) tail))
@@ -479,21 +391,7 @@
 
   (assert-equal #f (any string->number '("one" "two" "three" "four")))
   (assert-equal 10 (any string->number '("one" "two" "three" "10")))
-  (assert-equal 16 (any string->number '("one" "two" "three" "10") '(2 8 10 16)))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (pred-proc n)
-         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
-         (set-cdr! (cdr input-list) '())
-         #f)
-
-       (guard (condition
-                (else 'ignore))
-              (any pred-proc input-list)))))))
+  (assert-equal 16 (any string->number '("one" "two" "three" "10") '(2 8 10 16)))))
 
 (define-test "(any) with improper list fails" (expect-error type-error?
   (import (llambda list))
@@ -512,21 +410,7 @@
 
   (assert-equal #f (every string->number '("10" "10" "10" "ten")))
   (assert-equal 10 (every string->number '("10" "10" "10" "10")))
-  (assert-equal 16 (every string->number '("10" "10" "10" "10") '(2 8 10 16)))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (pred-proc n)
-         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
-         (set-cdr! (cdr input-list) '())
-         #t)
-
-       (guard (condition
-                (else 'ignore))
-              (every pred-proc input-list)))))))
+  (assert-equal 16 (every string->number '("10" "10" "10" "10") '(2 8 10 16)))))
 
 (define-test "(every) with improper list fails" (expect-error type-error?
   (import (llambda list))
@@ -544,21 +428,7 @@
 
   (assert-equal 3 (count string->number '("10" "10" "10" "ten")))
   (assert-equal 4 (count string->number '("10" "10" "10" "10")))
-  (assert-equal 4 (count string->number '("10" "10" "10" "10") '(2 8 10 16)))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (pred-proc n)
-         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
-         (set-cdr! (cdr input-list) '())
-         #t)
-
-       (guard (condition
-                (else 'ignore))
-              (count pred-proc input-list)))))))
+  (assert-equal 4 (count string->number '("10" "10" "10" "10") '(2 8 10 16)))))
 
 (define-test "(count) with improper list fails" (expect-error type-error?
   (import (llambda list))
@@ -576,18 +446,3 @@
   (assert-equal '(5.0 6.0 7.0 8.0 9.0) (iota 5 5.0))
   (assert-equal '(5 4 3 2 1) (iota 5 5 -1))
   (assert-equal '(5.0 4.0 3.0 2.0 1.0) (iota 5 5 -1.0))))
-
-(cond-expand
-  ((not immutable-pairs)
-   (define-test "(list-set!)" (expect (one two three)
-     (let ((ls (list 'one 'two 'five)))
-       (list-set! ls 2 'three)
-       ls)))
-
-   (define-test "(list-set!) past end of list fails" (expect-error range-error?
-     (let ((ls (list 'one 'two 'five)))
-       (list-set! ls 5 'three)
-       ls)))
-
-   (define-test "(list-set!) on constant list fails" (expect-error mutate-literal-error?
-     (list-set! '(0 1 2) 1  "oops")))))

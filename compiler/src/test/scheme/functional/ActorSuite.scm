@@ -215,17 +215,6 @@
   (assert-equal #(0 0 one 0 0) (ool-record-cell-field1 cloned-ool))
   (assert-equal #\b (ool-record-cell-field2 cloned-ool))
 
-  ; Pairs
-  (cond-expand
-    ((not immutable-pairs)
-
-     (let ((test-pair (cons 1 2)))
-       (set-car! test-pair 3)
-       (let ((cloned-pair (ping-pong test-pair))) ; Clone
-         (set-cdr! cloned-pair 4) ; Modify the clone
-         (assert-equal cloned-pair '(3 . 4)) ; Clone is modified
-         (assert-equal test-pair '(3 . 2)))))) ; Original is not
-
   ; stdin, stdout and stderr can be cloned
   (assert-equal (current-input-port) (ping-pong (current-input-port)))
   (assert-equal (current-output-port) (ping-pong (current-output-port)))

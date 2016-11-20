@@ -158,17 +158,6 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     }
   }
 
-  test("field with unstable type fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
-
-    intercept[BadSpecialFormException] {
-      bodyFor("""(define-record-type <new-type>
-                 (new-type unstable-list)
-                 new-type?
-                 ((unstable-list : (Listof <any>)) new-type-unstable-list))""")(scope, dialect.R7RS)
-    }
-  }
-  
   test("read-only and mutable field") {
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 

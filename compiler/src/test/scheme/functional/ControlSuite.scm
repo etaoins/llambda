@@ -223,22 +223,7 @@
                     (lambda (ignored)
                       (set! count (+ count 1))
                       count)
-                    '(a b))))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (mapper-proc n)
-         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
-         (set-cdr! (cdr input-list) '())
-         (* n n))
-
-
-       (guard (condition
-                (else 'ignore))
-              (map mapper-proc input-list)))))))
+                    '(a b))))))
 
 (define-test "(map) with multiple value return fails" (expect-error arity-error?
   (map values '(1 2 3) '(4 5 6))))
@@ -262,22 +247,7 @@
       (values i acc))
     '(1 2 3 4 5))
 
-  (assert-equal 15 acc)
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (iter-proc n)
-         ; Mutate the list during (for-each) - this is an undefined operation but shouldn't crash
-         (set-cdr! (cdr input-list) '())
-         (* n n))
-
-
-       (guard (condition
-                (else 'ignore))
-              (for-each iter-proc input-list)))))))
+  (assert-equal 15 acc)))
 
 (define-test "(string-map)" (expect-success
   (import (scheme char))
@@ -342,20 +312,7 @@
 
   (assert-equal '(1 -1 3 -3 8 -8) (append-map (lambda (x) (list x (- x))) '(1 3 8)))
   (assert-equal '() (append-map (lambda (x) (list x (- x))) '()))
-  (assert-equal '(1 4 7 2 5 8 3 6 9) (append-map (lambda args args) '(1 2 3) '(4 5 6) '(7 8 9 10)))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (map-proc n)
-         (set-cdr! (cdr input-list) '())
-         '())
-
-       (guard (condition
-                (else 'ignore))
-              (append-map map-proc input-list)))))))
+  (assert-equal '(1 4 7 2 5 8 3 6 9) (append-map (lambda args args) '(1 2 3) '(4 5 6) '(7 8 9 10)))))
 
 (define-test "(append-map) with improper list fails" (expect-error type-error?
   (import (llambda list))
@@ -369,20 +326,7 @@
   ; possible returns from the lambda
   (assert-equal '(1 9 49) (ann (filter-map (lambda (x) (and (number? x) (* x x))) '(a 1 b 3 c 7)) (Listof (U <number> #f))))
   (assert-equal '() (filter-map (lambda (x) (and (number? x) (* x x))) '()))
-  (assert-equal '((1 one) (3 Three three)) (filter-map (lambda (first . rest) (member first rest)) '(1 2 3 4) '(one two 3) '(1 two Three) '(one TWO three)))
-
-  (cond-expand
-    ((not immutable-pairs)
-     (begin
-       (define input-list (list-copy '(1 2 3 4)))
-
-       (define (map-proc n)
-         (set-cdr! (cdr input-list) '())
-         '())
-
-       (guard (condition
-                (else 'ignore))
-              (filter-map map-proc input-list)))))))
+  (assert-equal '((1 one) (3 Three three)) (filter-map (lambda (first . rest) (member first rest)) '(1 2 3 4) '(one two 3) '(1 two Three) '(one TWO three)))))
 
 (define-test "(filter-map) on improper list fails" (expect-error type-error?
   (import (llambda list))

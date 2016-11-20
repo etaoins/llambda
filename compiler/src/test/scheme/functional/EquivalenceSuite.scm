@@ -148,11 +148,7 @@
   (let ((var '(a b)))
     (assert-true (eqv? var var)))
 
-  (assert-false (eqv? '() '(1 2 3)))
-
-  ; With immutable pairs there's no distinction between constant and constructed lists
-  (cond-expand ((not immutable-pairs)
-    (assert-false (eqv? (list 1 2 3) (list 1 2 3)))))))
+  (assert-false (eqv? '() '(1 2 3)))))
 
 (define-test "vector (eqv?)" (expect-success
   (let ((var #(1 2 3)))
@@ -193,10 +189,6 @@
 
 (define-test "constant 'a and 'a are eq" (expect #t
   (eq? 'a 'a)))
-
-(cond-expand ((not immutable-pairs)
-  (define-test "constructed lists are not eq" (expect #f
-    (eq? (list 'a) (list 'a))))))
 
 (define-test "'() and '() are eq" (expect #t
   (eq? '() '())))

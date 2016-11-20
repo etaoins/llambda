@@ -16,11 +16,8 @@
         exact-integer-sqrt numerator denominator rationalize)
 (export number->string string->number)
 (export boolean? not boolean=?)
-(export pair? null? list? cons car cdr caar cadr cdar cddr length list-copy make-list list append memv memq member assv
-        assq assoc reverse list-tail list-ref)
-
-(cond-expand ((not immutable-pairs)
-  (export set-car! set-cdr! list-set!)))
+(export pair? null? list? cons car cdr caar cadr cdar cddr length make-list list append memv memq member assv assq
+        assoc reverse list-tail list-ref)
 
 (export symbol? symbol=? symbol->string string->symbol)
 (export char? char->integer integer->char char=? char<? char>? char<=? char>=?)

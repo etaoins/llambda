@@ -1,99 +1,98 @@
-(cond-expand (immutable-pairs
-  (define-test "(cons) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(cons) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-1 (typed-dynamic 1 <exact-integer>))
-    (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-    (ann (cons exact-1 inexact-1) (Pairof <exact-integer> <flonum>))))
+  (ann (cons exact-1 inexact-1) (Pairof <exact-integer> <flonum>))))
 
-  (define-test "(car) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(car) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-1 (typed-dynamic 1 <exact-integer>))
-    (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-    (ann (car (cons exact-1 inexact-1)) <exact-integer>)))
+  (ann (car (cons exact-1 inexact-1)) <exact-integer>)))
 
-  (define-test "(cdr) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(cdr) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-1 (typed-dynamic 1 <exact-integer>))
-    (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-    (ann (cdr (cons exact-1 inexact-1)) <flonum>)))
+  (ann (cdr (cons exact-1 inexact-1)) <flonum>)))
 
-  (define-test "(list) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(list) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-1 (typed-dynamic 1 <exact-integer>))
-    (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-    (ann (list exact-1 inexact-1) (Listof <number>))))
+  (ann (list exact-1 inexact-1) (Listof <number>))))
 
-  (define-test "(memv) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(memv) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
-    (ann (memv 2 exact-list) (U #f (Listof <exact-integer>)))))
+  (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
+  (ann (memv 2 exact-list) (U #f (Listof <exact-integer>)))))
 
-  (define-test "(member) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(member) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
-    (ann (member 2 exact-list) (U #f (Listof <exact-integer>)))))
+  (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
+  (ann (member 2 exact-list) (U #f (Listof <exact-integer>)))))
 
-  (define-test "(assv) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(assv) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define symbol-to-int (typed-dynamic '((one . 1) (two . 2) (four . 4)) (Listof (Pairof <symbol> <exact-integer>))))
+  (define symbol-to-int (typed-dynamic '((one . 1) (two . 2) (four . 4)) (Listof (Pairof <symbol> <exact-integer>))))
 
-    (ann (assv 'one symbol-to-int) (U #f (Pairof <symbol> <exact-integer>)))))
+  (ann (assv 'one symbol-to-int) (U #f (Pairof <symbol> <exact-integer>)))))
 
-  (define-test "(list-tail) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(list-tail) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
-    (ann (list-tail exact-list 1) (Listof <exact-integer>))))
+  (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
+  (ann (list-tail exact-list 1) (Listof <exact-integer>))))
 
-  (define-test "(list-ref) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(list-ref) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
-    (ann (list-ref exact-list 1) <exact-integer>)))
+  (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
+  (ann (list-ref exact-list 1) <exact-integer>)))
 
-  (define-test "(reverse) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(reverse) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
-    (define reverse-list (reverse integer-list))
+  (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
+  (define reverse-list (reverse integer-list))
 
-    (ann integer-list (Listof <exact-integer>))))
+  (ann integer-list (Listof <exact-integer>))))
 
-  (define-test "(map) is polymorphic" (expect-success
-    (import (llambda typed))
+(define-test "(map) is polymorphic" (expect-success
+  (import (llambda typed))
 
-    (define inexact-1 (typed-dynamic 1.0 <flonum>))
-    (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
 
-    (ann (map (lambda (x) inexact-1) integer-list) (Listof <flonum>))))
+  (ann (map (lambda (x) inexact-1) integer-list) (Listof <flonum>))))
 
-  (define-test "recursive polymorphic Scheme procedures" (expect-success
-    (import (llambda typed))
+(define-test "recursive polymorphic Scheme procedures" (expect-success
+  (import (llambda typed))
 
-    (: my-list-ref (All (A [N : <number>]) (-> (Listof A) N A)))
-    (define (my-list-ref head count)
-      (if (zero? count)
-        (car head)
-        (my-list-ref (cdr head) (- count 1))))
+  (: my-list-ref (All (A [N : <number>]) (-> (Listof A) N A)))
+  (define (my-list-ref head count)
+    (if (zero? count)
+      (car head)
+      (my-list-ref (cdr head) (- count 1))))
 
-    (define int-result (my-list-ref '(1 2 3) 2))
-    (ann int-result <exact-integer>)
-    (assert-equal 3 int-result)
+  (define int-result (my-list-ref '(1 2 3) 2))
+  (ann int-result <exact-integer>)
+  (assert-equal 3 int-result)
 
-    (define flonum-result (my-list-ref '(1.0 2.0 3.0) 1.0))
-    (ann flonum-result <flonum>)
-    (assert-equal 2.0 flonum-result)))))
+  (define flonum-result (my-list-ref '(1.0 2.0 3.0) 1.0))
+  (ann flonum-result <flonum>)
+  (assert-equal 2.0 flonum-result)))
 
 (define-test "(+) is polymorphic" (expect-success
   (import (llambda typed))

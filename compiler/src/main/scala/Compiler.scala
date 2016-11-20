@@ -180,13 +180,12 @@ object Compiler {
   def planData(data : List[ast.Datum], config : CompileConfig) : PlannedProgram = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
-    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.schemeDialect, config.extraFeatureIdents)
+    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents)
 
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(
       includePath=config.includePath,
       featureIdentifiers=featureIdentifiers,
-      schemeDialect=config.schemeDialect,
       traceMacroExpansion=config.traceMacroExpansion
     )
 
@@ -202,7 +201,6 @@ object Compiler {
 
     // Plan execution
     val planConfig = planner.PlanConfig(
-      schemeDialect=config.schemeDialect,
       optimise=config.optimiseLevel > 1,
       analysis=analysis
     )

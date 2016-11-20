@@ -6,7 +6,6 @@ import llambda.compiler.frontend.IncludePath
 case class CompileConfig(
   includePath : IncludePath,
   targetPlatform : platform.TargetPlatform,
-  schemeDialect : dialect.Dialect,
   optimiseLevel : Int = 0,
   emitLlvm : Boolean = false,
   extraFeatureIdents : Set[String] = Set(),

@@ -276,14 +276,3 @@
     (error "I hate strings!"))
 
   (ann string-or-int <exact-integer>)))
-
-(cond-expand ((not immutable-pairs)
-  (define-test "(list?) occurrence typing doesn't survive a (set-cdr!)" (expect #f
-    (import (llambda typed))
-    (define test-list (list-copy '(1 2 3)))
-
-    (if (list? test-list)
-      (begin
-        (set-cdr! test-list 2)
-        (list? test-list))
-      'unreachable)))))

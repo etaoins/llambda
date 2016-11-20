@@ -601,44 +601,6 @@ object GenPlanStep {
         currentAllocation=newAllocation
       ).withTempValue(resultTemp -> resultIr)
 
-    case ps.AssertPairMutable(pairTemp, errorMessage) =>
-      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
-      val pairIr = state.liveTemps(pairTemp)
-
-      // Start our branches
-      val irFunction = state.currentBlock.function
-      val fatalBlock = irFunction.startChildBlock("pairIsImmutable")
-      val successBlock = irFunction.startChildBlock("pairIsMutable")
-
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, locatedOpt=Some(step))
-
-      // The GC state can only be 0 (GC allocated) or 1 (global constant)
-      // There are other GC states temporarily used during GC but they should never be reachable by program code
-      val rangeMetadata = RangeMetadata(ct.AnyCell.gcStateIrType, (0, 2))
-
-      val globalConstantGcState = IntegerConstant(ct.AnyCell.gcStateIrType, 1)
-      val gcStateIr = ct.PairCell.genLoadFromGcState(state.currentBlock)(pairIr, metadata=Map("range" -> rangeMetadata))
-      val irResult = state.currentBlock.icmp("isMutable")(IComparisonCond.NotEqual, None, globalConstantGcState, gcStateIr) 
-
-      state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
-
-      // Continue with the successful block
-      state.copy(currentBlock=successBlock)
-
-    case ps.SetPairCar(pairTemp, newValueTemp) =>
-      val pairIr = state.liveTemps(pairTemp)
-      val newValueIr = state.liveTemps(newValueTemp)
-      
-      ct.PairCell.genStoreToCar(state.currentBlock)(newValueIr, pairIr)
-      state
-
-    case ps.SetPairCdr(pairTemp, newValueTemp) =>
-      val pairIr = state.liveTemps(pairTemp)
-      val newValueIr = state.liveTemps(newValueTemp)
-      
-      ct.PairCell.genStoreToCdr(state.currentBlock)(newValueIr, pairIr)
-      state
-
     case ps.AssertPredicate(predicateTemp, errorMessage, evidenceOpt) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val predIr = state.liveTemps(predicateTemp)

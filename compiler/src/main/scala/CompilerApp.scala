@@ -13,7 +13,6 @@ object CompilerApp extends App {
     extraFeatureIdents : Set[String] = Set(),
     genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
-    schemeDialect : dialect.Dialect = dialect.Dialect.default,
     dumpPlan : Boolean = false,
     traceMacroExpansion : Boolean = false,
     runAsScript : Boolean = false
@@ -65,18 +64,6 @@ object CompilerApp extends App {
         success
       }
     } text("target platform") 
-
-    opt[String]("scheme-dialect") action { (dialectString, c) =>
-      c.copy(schemeDialect=dialect.Dialect.dialects(dialectString))
-    } validate { dialectString => 
-      val validDialects = dialect.Dialect.dialects.keys.toList.sorted
-      if (!validDialects.contains(dialectString)) {
-        failure("Unknown Scheme dialect. Valid values are: " + validDialects.mkString(", "))
-      }
-      else {
-        success
-      }
-    } text("scheme dialect")
 
     opt[String]("with-feature-ident") unbounded() action { (featureIdent, c) =>
       c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)
@@ -168,7 +155,6 @@ object CompilerApp extends App {
         val compileConfig = CompileConfig(
           includePath=includePath,
           targetPlatform=targetPlatform,
-          schemeDialect=config.schemeDialect,
           emitLlvm=config.emitLlvm,
           optimiseLevel=config.optimiseLevel,
           extraFeatureIdents=config.extraFeatureIdents,
@@ -201,7 +187,7 @@ object CompilerApp extends App {
 
       case None =>
         // Launch the REPL
-        (new repl.JlineRepl(targetPlatform, config.schemeDialect))()
+        (new repl.JlineRepl(targetPlatform))()
     }
   }  getOrElse {
     sys.exit(1)

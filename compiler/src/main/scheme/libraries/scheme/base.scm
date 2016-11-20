@@ -734,17 +734,4 @@
                      (if test
                        (begin result1 result2 ...)
                        (guard-aux reraise clause1 clause2 ...))))))
-
-  ; Optional R7RS mutable pair support
-  (cond-expand
-    (immutable-pairs
-      (begin
-        (define-r7rs (list-copy obj) obj)))
-    (else
-      (begin
-        (define-r7rs list-copy (world-function llbase "llbase_list_copy" (-> <any> <any>)))
-        (define-r7rs set-car! (world-function llbase "llbase_set_car" (-> <pair> <any> <unit>)))
-        (define-r7rs set-cdr! (world-function llbase "llbase_set_cdr" (-> <pair> <any> <unit>)))
-        (define-r7rs (list-set! [l : <list>] [n : <exact-integer>] [val : <any>])
-          (set-car! (list-tail l n) val)))))
 )
