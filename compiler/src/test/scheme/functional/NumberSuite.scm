@@ -8,11 +8,6 @@
   (assert-true  (number? (typeless-cell -5.0)))
   (assert-false (number? (typeless-cell '())))))
 
-(define-test "(real?)" (expect-static-success
-  (assert-true  (real? 4))
-  (assert-true  (real? -5.0))
-  (assert-false (real? '()))))
-
 (define-test "(rational?)" (expect-success
   (assert-true  (rational? 4))
   (assert-true  (rational? -5.0))
@@ -20,11 +15,6 @@
   (assert-false (rational? +inf.0))
   (assert-false (rational? +nan.0))
   (assert-false (rational? '()))))
-
-(define-test "(complex?)" (expect-static-success
-  (assert-true  (complex? 4))
-  (assert-true  (complex? -5.0))
-  (assert-false (complex? '()))))
 
 (define-test "(integer?)" (expect-static-success
   (assert-true  (integer? 4))

@@ -393,12 +393,12 @@ void testSymbolShorthand(World &world, std::string shorthand, std::string expans
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, oneTwoPair});
 	ASSERT_PARSES(shorthand + " (1 . 2)", expectedList);
 
-	alloc::SymbolRef realPSymbol(world, SymbolCell::fromUtf8StdString(world, "real?"));
+	alloc::SymbolRef realPSymbol(world, SymbolCell::fromUtf8StdString(world, "rational?"));
 	alloc::FlonumRef inexactOne(world, FlonumCell::fromValue(world, 1.0));
 	alloc::StrongRef<ProperList<AnyCell>> realPList(world, ProperList<AnyCell>::create(world, {realPSymbol, inexactOne}));
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, realPList});
-	ASSERT_PARSES(shorthand + "(real? 1.0)", expectedList);
+	ASSERT_PARSES(shorthand + "(rational? 1.0)", expectedList);
 
 	alloc::StrongRef<ProperList<AnyCell>> innerList(world, ProperList<AnyCell>::create(world, {expansionSymbol, BooleanCell::trueInstance()}));
 

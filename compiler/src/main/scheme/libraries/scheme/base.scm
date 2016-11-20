@@ -285,9 +285,6 @@
     (define-r7rs apply (world-function llbase "llbase_apply" (-> <procedure> <any> * *)))
 
     (define-r7rs number? (make-predicate <number>))
-    ; We only support real and rational numbers
-    (define-r7rs complex? number?)
-    (define-r7rs real? number?)
 
     (define-r7rs rational? (native-function llbase "llbase_is_rational" (-> <any> <native-bool>)))
 

@@ -37,8 +37,8 @@ class SchemeParserSuite extends FunSuite with Inside {
       ast.ProperList(List(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2)))) :: Nil
     )
 
-    assertReflexiveParse(shorthand + "(real? 1.0)",
-      ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.FlonumLiteral(1.0))))) :: Nil
+    assertReflexiveParse(shorthand + "(rational? 1.0)",
+      ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("rational?"), ast.FlonumLiteral(1.0))))) :: Nil
     )
 
     assertReflexiveParse(shorthand + shorthand + "#true",

@@ -12,8 +12,6 @@ Scheme defines an elaborate [numerical tower](http://en.wikipedia.org/wiki/Numer
 
 Any arithmetic operation on mixed ``<exact-integer>`` and ``<flonum>`` operands will implicitly convert all of the operands to ``<flonum>`` and produce a ``<flonum>`` result. An ``<exact-integer>`` can also be explicitly converted in to a ``<flonum>`` using the ``(inexact)`` procedure. This can be useful for avoiding overflow when performing arithmetic on large integers at the expense of precision.
 
-Complex numbers are completely unsupported. A ``(llambda complex-stub)`` library is supplied implementing the procedures defined in ``(scheme complex)``. However, they signal errors when creating or manipulating numbers with imaginary components. The library primarily exists as part of the R5RS compatibility implementation.
-
 Performance
 -----------
 

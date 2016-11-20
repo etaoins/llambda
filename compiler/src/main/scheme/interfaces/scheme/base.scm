@@ -10,10 +10,10 @@
 (export _ ...)
 (export =>)
 (export eqv? eq? equal?)
-(export number? complex? real? rational? exact? integer? exact-integer? inexact? zero? even? odd? exact inexact + - / *
-        expt = < > <= >= positive? negative? floor ceiling truncate round square abs truncate/ truncate-quotient
-        truncate-remainder floor/ floor-quotient floor-remainder quotient remainder modulo max min gcd lcm
-        exact-integer-sqrt numerator denominator rationalize)
+(export number? exact? rational? integer? exact-integer? inexact? zero? even? odd? exact inexact + - / * expt = < > <=
+        >= positive? negative? floor ceiling truncate round square abs truncate/ truncate-quotient truncate-remainder
+        floor/ floor-quotient floor-remainder quotient remainder modulo max min gcd lcm exact-integer-sqrt numerator
+        denominator rationalize)
 (export number->string string->number)
 (export boolean? not boolean=?)
 (export pair? null? list? cons car cdr caar cadr cdar cddr length make-list list append memv memq member assv assq
