@@ -11,8 +11,8 @@ private[frontend] object ResolveIncludeList {
     *
     * @param  located          Source location of the include. This is to support both relative includes and to report
     *                          errors
-    * @param  includeNameData  User supplied body of the (include) or (include-ci). Currently only lists of one or more
-    *                          strings are supported; all other input will raise a BadSpecialFormException
+    * @param  includeNameData  User supplied body of the (include). Currently only lists of one or more strings are
+    *                          supported; all other input will raise a BadSpecialFormException
     * @return Include load results for the include name data
     */
   def apply(

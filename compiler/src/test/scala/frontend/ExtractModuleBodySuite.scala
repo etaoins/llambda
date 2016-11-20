@@ -713,17 +713,6 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
 
-  test("include-ci") {
-    // Simple include should return an et.Begin with the contents of the ifle
-    assert(exprFor("""(include-ci "includes/vector-include.scm")""") ===
-      et.Literal(ast.VectorLiteral(Vector(
-        ast.Symbol("upper"),
-        ast.Symbol("mixed"),
-        ast.Symbol("lower")
-      )))
-    )
-  }
-
   test("cast expression types") {
     assert(exprFor("(cast #t <boolean>)")(nfiScope) === 
       et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, false)

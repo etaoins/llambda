@@ -9,14 +9,9 @@ import llambda.compiler.valuetype.Implicits._
 sealed abstract class Datum extends SourceLocated {
   /** Scheme type for this datum */
   val schemeType : vt.NonUnionSchemeType
-
-  /** Returns a case folded version of this datum */
-  def toCaseFolded : Datum
 }
 
-sealed abstract class Leaf extends Datum {
-  def toCaseFolded : Datum = this
-}
+sealed abstract class Leaf extends Datum
 
 // This helps out ScopedSyntaxTree by grouping all the types that have scope or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Leaf
@@ -95,9 +90,6 @@ object NaNLiteral {
 case class Symbol(name : String) extends Leaf {
   val schemeType = vt.LiteralSymbolType(name)
 
-  override def toCaseFolded =
-    Symbol(name.toLowerCase).assignLocationFrom(this)
-
   override def toString = if (SchemeParser.isValidIdentifier(name)) {
     name
   }
@@ -114,9 +106,6 @@ case class EmptyList() extends NonSymbolLeaf {
 
 case class Pair(car : Datum, cdr : Datum) extends Datum {
   val schemeType = vt.PairType(car.schemeType, cdr.schemeType)
-
-  def toCaseFolded : Datum =
-    Pair(car.toCaseFolded, cdr.toCaseFolded)
 
   override def toString = this match {
     case ProperList(data) =>
@@ -175,9 +164,6 @@ object ProperList {
 
 case class VectorLiteral(elements : Vector[Datum]) extends Datum {
   val schemeType = vt.VectorType
-
-  def toCaseFolded : Datum =
-    VectorLiteral(elements.map(_.toCaseFolded))
 
   override def toString =
     "#(" + elements.map(_.toString).mkString(" ") + ")"

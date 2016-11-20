@@ -9,19 +9,11 @@ object ExtractModuleBody {
   private def extractInclude(
       located : SourceLocated,
       scope : Scope,
-      includeNameData : List[sst.ScopedDatum],
-      foldCase : Boolean = false
+      includeNameData : List[sst.ScopedDatum]
   )(implicit context : FrontendContext) : List[et.Expr] = {
     val includeData = ResolveIncludeList(located, includeNameData.map(_.unscope))(context.config.includePath)
 
-    val foldedData = if (foldCase) {
-      includeData.map(_.toCaseFolded)
-    }
-    else {
-      includeData
-    }
-
-    ExtractModuleBody(foldedData, scope)
+    ExtractModuleBody(includeData, scope)
   }
 
   private def handleExtractedDefine(
@@ -72,10 +64,6 @@ object ExtractModuleBody {
           // We need the scope from the (include) to rescope the included file
           val scope = appliedSymbol.scope
           extractInclude(appliedSymbol, scope, includeNames)
-
-        case (Primitives.IncludeCI, sst.ScopedProperList(includeNames)) =>
-          val scope = appliedSymbol.scope
-          extractInclude(appliedSymbol, scope, includeNames, foldCase=true)
 
         case (definePrimitive : PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
           ExtractDefine(datum, definePrimitive, operands).flatMap { define =>

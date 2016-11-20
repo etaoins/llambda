@@ -9,7 +9,6 @@ The core Llambda language is based closely on the [Scheme R7RS report](http://tr
 * Circular lists are not supported. In the default ``llambda`` dialect it's impossible to create circular lists due to pairs being immutable. In the ``r7rs`` and ``r5rs`` dialects passing circular lists to procedures expecting lists will cause an infinite loop.
 * The use of datum labels to create lists with shared or circular structures is not supported. Datum labels are only usable after their definition
 * The parser case folding directives ``#!fold-case`` and ``#!no-fold-case`` are not supported
-* Case insensitive parsing via ``(include-ci)`` does not parse character names case insensitively. Symbol names are lowercased instead of case folded which causes incorrect behaviour with certain non-ASCII characters
 * ``(define-record-type)`` must use fields with distinct names even if their identifiers are in different scopes. This is used to implement record inheritance but may cause problems with record types defined in macros
 
 The [numbers documentation](numbers.md) describes the subset of the R7RS numerical tower implemented by Llambda.

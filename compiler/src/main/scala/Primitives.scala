@@ -13,7 +13,6 @@ object Primitives {
   object Set extends PrimitiveExpr
   object SyntaxError extends PrimitiveExpr
   object Include extends PrimitiveExpr
-  object IncludeCI extends PrimitiveExpr
   object Quasiquote extends PrimitiveExpr
   object Unquote extends PrimitiveExpr
   object UnquoteSplicing extends PrimitiveExpr
@@ -65,7 +64,6 @@ object Primitives {
       "set!" -> Set,
       "syntax-error" -> SyntaxError,
       "include" -> Include,
-      "include-ci" -> IncludeCI,
       "quasiquote" -> Quasiquote,
       "unquote" -> Unquote,
       "unquote-splicing" -> UnquoteSplicing,

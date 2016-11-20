@@ -32,18 +32,11 @@ private object FindBodyDefines {
           // This is a (begin) - flatten it
           apply(innerExprData ++ restData, definesAcc)
 
-        case (Some(includeType @ (Primitives.Include | Primitives.IncludeCI)), sst.ScopedProperList(includeNameData)) =>
+        case (Some(Primitives.Include), sst.ScopedProperList(includeNameData)) =>
           val unscopedIncludeNames = includeNameData.map(_.unscope)
           val includeData = ResolveIncludeList(appliedSymbol, unscopedIncludeNames)(context.config.includePath)
 
-          val foldedData = if (includeType == Primitives.IncludeCI) {
-            includeData.map(_.toCaseFolded)
-          }
-          else {
-            includeData
-          }
-
-          val scopedData = foldedData.map(sst.ScopedDatum(appliedSymbol.scope, _))
+          val scopedData = includeData.map(sst.ScopedDatum(appliedSymbol.scope, _))
           apply(scopedData ++ restData, definesAcc)
 
         case (Some(definePrimitive : PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>

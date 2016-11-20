@@ -5,18 +5,11 @@ import llambda.compiler._
 
 private[frontend] object ExtractLibrary {
   private def expandDecls(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[ast.Datum] = datum match {
-    case ast.ProperList(ast.Symbol(includeType @ ("include" | "include-ci")) :: includeNameData) =>
+    case ast.ProperList(ast.Symbol("include") :: includeNameData) =>
       // Include the files and wrap them in (begin)
       val includeData = ResolveIncludeList(datum, includeNameData)(frontendConfig.includePath)
 
-      val foldedData = if (includeType == "include-ci") {
-        includeData.map(_.toCaseFolded)
-      }
-      else {
-        includeData
-      }
-
-      List(ast.ProperList(ast.Symbol("begin") :: foldedData))
+      List(ast.ProperList(ast.Symbol("begin") :: includeData))
 
     case ast.ProperList(ast.Symbol("include-library-declarations") :: includeNameData) =>
       // Splice the includes in directly
