@@ -4,7 +4,7 @@ Errors
 Error Model
 -----------
 
-Llambda implements the R7RS error system which is built on exceptions raised by ``(raise)`` or ``(error)`` and caught with ``(guard)`` or ``(with-exception-handler)``. Individual error categories have predicate procedures that can be used to categorise signalled errors inside exception handlers. If an exception is not caught by an exception handler a description of the error will be printed to standard error and the program will terminate.
+Llambda implements the R7RS error system which is built on exceptions raised by ``(raise)`` or ``(error)`` and caught with ``(guard)``. Individual error categories have predicate procedures that can be used to categorise signalled errors inside exception handlers. If an exception is not caught by an exception handler a description of the error will be printed to standard error and the program will terminate.
 
 In this example ``(open-input-file)`` is executed and a message is printed whenever a ``file-error`` is signalled. If any other error is signalled the exception will be re-raised and handled by the next exception handler.
 

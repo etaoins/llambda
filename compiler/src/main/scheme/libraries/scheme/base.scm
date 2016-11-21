@@ -676,7 +676,6 @@
     (define-r7rs (flush-output-port [port : <port> (current-output-port)])
                  (native-flush-output-port port))
 
-    (define-r7rs with-exception-handler (world-function llbase "llbase_with_exception_handler" (-> (-> <any> *) (-> *) *)))
     (define-r7rs raise (world-function llbase "llbase_raise" (-> <any> <unit>) noreturn))
     (define-r7rs error (world-function llbase "llbase_error" (-> <string> <any> * <unit>) noreturn))
     (define-r7rs error-object? (make-predicate <error-object>))

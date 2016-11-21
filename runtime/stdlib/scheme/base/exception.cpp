@@ -19,38 +19,6 @@ extern "C"
 
 using HandlerProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*, AnyCell*>;
 
-ReturnValues<AnyCell>* llbase_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)
-{
-	// Root our exception handler
-	alloc::StrongRef<HandlerProcedureCell> handler(world, handlerRaw);
-
-	// Keep track of our dynamic state
-	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell());
-
-	try
-	{
-		return thunk->apply(world);
-	}
-	catch (dynamic::SchemeException &except)
-	{
-		// GC root the exception's information
-		// We need to do this to be able to reconstruct the exception in the case that our continuation is captured
-		// inside the Scheme exception handler. C++ exceptions are allocated outside of the normal stack so they
-		// aren't copied as part of the (call/cc) capture process
-		alloc::AnyRef objectRef(world, except.object());
-
-		// Call the handler in the dynamic environment (raise) was in
-		// This is required by R7RS for reasons mysterious to me
-		handler->apply(world, except.object());
-
-		// Now switch to the state we were in before re-raising the exception
-		dynamic::State::switchStateCell(world, expectedStateRef);
-
-		// Reconstruct the original exception and rethrow
-		throw dynamic::SchemeException(objectRef);
-	}
-}
-
 ReturnValues<AnyCell> *llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
 {
 	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
@@ -58,7 +26,7 @@ ReturnValues<AnyCell> *llbase_guard_kernel(World &world, HandlerProcedureCell *g
 
 	try
 	{
-		return thunk->apply(world); 
+		return thunk->apply(world);
 	}
 	catch (dynamic::SchemeException &except)
 	{
