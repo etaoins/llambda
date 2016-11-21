@@ -239,15 +239,15 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def PositiveInfinity = rule {
-    ignoreCase("+inf.0") ~ push(Double.PositiveInfinity)
+    "+inf.0" ~ push(Double.PositiveInfinity)
   }
 
   def NegativeInfinity = rule {
-    ignoreCase("-inf.0") ~ push(Double.NegativeInfinity)
+    "-inf.0" ~ push(Double.NegativeInfinity)
   }
 
   def NaN = rule {
-    SignCharacter ~ ignoreCase("nan.0") ~ push(Double.NaN)
+    SignCharacter ~ "nan.0" ~ push(Double.NaN)
   }
 
   def IntegerDatum = rule {
@@ -274,23 +274,23 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def BinaryInteger = rule {
-    ignoreCase("#b") ~ capture(optional(SignCharacter) ~ oneOrMore(BinaryDigit)) ~> ({ number =>
+    "#b" ~ capture(optional(SignCharacter) ~ oneOrMore(BinaryDigit)) ~> ({ number =>
       java.lang.Long.parseLong(number, 2)
     })
   }
 
   def OctalInteger = rule {
-    ignoreCase("#o") ~ capture(optional(SignCharacter) ~ oneOrMore(OctalDigit)) ~> ({ number =>
+    "#o" ~ capture(optional(SignCharacter) ~ oneOrMore(OctalDigit)) ~> ({ number =>
       java.lang.Long.parseLong(number, 8)
     })
   }
 
   def RadixedDecimalNumber = rule {
-    ignoreCase("#d") ~ UnradixedDecimalNumber
+    "#d" ~ UnradixedDecimalNumber
   }
 
   def HexInteger = rule {
-    ignoreCase("#x") ~ capture(optional(SignCharacter) ~ oneOrMore(HexDigit)) ~> ({ number =>
+    "#x" ~ capture(optional(SignCharacter) ~ oneOrMore(HexDigit)) ~> ({ number =>
       java.lang.Long.parseLong(number, 16)
     })
   }
@@ -375,7 +375,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def Byte = rule {
-    (RadixedExactInteger | UnradixedExactInteger | (ignoreCase("#d") ~ UnradixedExactInteger)) ~ Whitespace
+    (RadixedExactInteger | UnradixedExactInteger | ("#d" ~ UnradixedExactInteger)) ~ Whitespace
   }
 
   // Characters
@@ -403,7 +403,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def HexCharBody = rule {
-    ignoreCase("x") ~ capture(oneOrMore(HexDigit)) ~ Whitespace ~> { hexCode =>
+    "x" ~ capture(oneOrMore(HexDigit)) ~ Whitespace ~> { hexCode =>
       val codePoint = Integer.parseInt(hexCode, 16)
 
       test(codePoint <= ast.CharLiteral.lastCodePoint) ~ push(ast.CharLiteral(codePoint))

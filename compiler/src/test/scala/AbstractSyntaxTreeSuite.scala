@@ -65,10 +65,6 @@ class AbstractSyntaxTreeSuite  extends FunSuite {
     assert(ast.Symbol("-inf.0").toString === "|-inf.0|");
     assert(ast.Symbol("+nan.0").toString === "|+nan.0|");
     assert(ast.Symbol("-nan.0").toString === "|-nan.0|");
-    assert(ast.Symbol("+INF.0").toString === "|+INF.0|");
-    assert(ast.Symbol("-INF.0").toString === "|-INF.0|");
-    assert(ast.Symbol("+NaN.0").toString === "|+NaN.0|");
-    assert(ast.Symbol("-NaN.0").toString === "|-NaN.0|");
     assert(ast.Symbol("+inf.00").toString === "|+inf.00|");
     assert(ast.Symbol("-inf.00").toString === "|-inf.00|");
     assert(ast.Symbol("+nan.00").toString === "|+nan.00|");

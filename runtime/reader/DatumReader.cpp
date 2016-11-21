@@ -421,19 +421,19 @@ AnyCell* DatumReader::parseOctoDatum()
 
 	int getChar = rdbuf()->sbumpc();
 
-	if ((getChar == 'b') || (getChar == 'B'))
+	if (getChar == 'b')
 	{
 		return parseNumber(2);
 	}
-	else if ((getChar == 'o') || (getChar == 'O'))
+	else if (getChar == 'o')
 	{
 		return parseNumber(8);
 	}
-	else if ((getChar == 'd') || (getChar == 'D'))
+	else if (getChar == 'd')
 	{
 		return parseNumber(10);
 	}
-	else if ((getChar == 'x') || (getChar == 'X'))
+	else if (getChar == 'x')
 	{
 		return parseNumber(16);
 	}
@@ -665,11 +665,11 @@ AnyCell* DatumReader::parsePositiveNumber(int radix)
 	// Take the +
 	rdbuf()->sbumpc();
 
-	if (consumeLiteral(rdbuf(), "inf.0", true))
+	if (consumeLiteral(rdbuf(), "inf.0"))
 	{
 		return FlonumCell::positiveInfinity(m_world);
 	}
-	else if (consumeLiteral(rdbuf(), "nan.0", true))
+	else if (consumeLiteral(rdbuf(), "nan.0"))
 	{
 		return FlonumCell::NaN(m_world);
 	}
@@ -691,11 +691,11 @@ AnyCell* DatumReader::parseNegativeNumber(int radix)
 	// Take the -
 	rdbuf()->sbumpc();
 
-	if (consumeLiteral(rdbuf(), "inf.0", true))
+	if (consumeLiteral(rdbuf(), "inf.0"))
 	{
 		return FlonumCell::negativeInfinity(m_world);
 	}
-	else if (consumeLiteral(rdbuf(), "nan.0", true))
+	else if (consumeLiteral(rdbuf(), "nan.0"))
 	{
 		return FlonumCell::NaN(m_world);
 	}

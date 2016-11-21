@@ -152,15 +152,15 @@ void testIntegers(World &world)
 	ASSERT_PARSES("3.", ExactIntegerCell::fromValue(world, 3));
 
 	ASSERT_PARSES("#b111", ExactIntegerCell::fromValue(world, 7));
-	ASSERT_PARSES("#B-1000", ExactIntegerCell::fromValue(world, -8));
+	ASSERT_PARSES("#b-1000", ExactIntegerCell::fromValue(world, -8));
 
-	ASSERT_PARSES("#O1234", ExactIntegerCell::fromValue(world, 668));
+	ASSERT_PARSES("#o1234", ExactIntegerCell::fromValue(world, 668));
 	ASSERT_PARSES("#o-010", ExactIntegerCell::fromValue(world, -8));
 
-	ASSERT_PARSES("#D1234", ExactIntegerCell::fromValue(world, 1234));
+	ASSERT_PARSES("#d1234", ExactIntegerCell::fromValue(world, 1234));
 	ASSERT_PARSES("#d-010", ExactIntegerCell::fromValue(world, -10));
 
-	ASSERT_PARSES("#Xdead", ExactIntegerCell::fromValue(world, 57005));
+	ASSERT_PARSES("#xdead", ExactIntegerCell::fromValue(world, 57005));
 	ASSERT_PARSES("#x-b00b5", ExactIntegerCell::fromValue(world, -721077));
 
 	ASSERT_PARSES("9007199254740993", ExactIntegerCell::fromValue(world, 9007199254740993LL));
@@ -199,11 +199,8 @@ void testReals(World &world)
 	ASSERT_PARSES("+inf.0", FlonumCell::positiveInfinity(world));
 	ASSERT_PARSES("-inf.0", FlonumCell::negativeInfinity(world));
 
-	ASSERT_PARSES("+INF.0", FlonumCell::positiveInfinity(world));
-	ASSERT_PARSES("-INF.0", FlonumCell::negativeInfinity(world));
-
-	ASSERT_PARSES("+NaN.0", FlonumCell::NaN(world));
-	ASSERT_PARSES("-NaN.0", FlonumCell::NaN(world));
+	ASSERT_PARSES("+nan.0", FlonumCell::NaN(world));
+	ASSERT_PARSES("-nan.0", FlonumCell::NaN(world));
 
 	ASSERT_PARSES("+inf.00", FlonumCell::positiveInfinity(world));
 	ASSERT_PARSES("-inf.00", FlonumCell::negativeInfinity(world));

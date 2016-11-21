@@ -102,15 +102,15 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("3.", List(ast.IntegerLiteral(3)))
 
     assertReflexiveParse("#b111", List(ast.IntegerLiteral(7)))
-    assertReflexiveParse("#B-1000", List(ast.IntegerLiteral(-8)))
+    assertReflexiveParse("#b-1000", List(ast.IntegerLiteral(-8)))
 
-    assertReflexiveParse("#O1234", List(ast.IntegerLiteral(668)))
+    assertReflexiveParse("#o1234", List(ast.IntegerLiteral(668)))
     assertReflexiveParse("#o-010", List(ast.IntegerLiteral(-8)))
 
-    assertReflexiveParse("#D1234", List(ast.IntegerLiteral(1234)))
+    assertReflexiveParse("#d1234", List(ast.IntegerLiteral(1234)))
     assertReflexiveParse("#d-010", List(ast.IntegerLiteral(-10)))
 
-    assertReflexiveParse("#Xdead", List(ast.IntegerLiteral(57005)))
+    assertReflexiveParse("#xdead", List(ast.IntegerLiteral(57005)))
     assertReflexiveParse("#x-b00b5", List(ast.IntegerLiteral(-721077)))
 
     // This is too large to be parsed as a 32bit integer or a double
@@ -138,11 +138,8 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral()))
     assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral()))
 
-    assertReflexiveParse("+INF.0", List(ast.PositiveInfinityLiteral()))
-    assertReflexiveParse("-INF.0", List(ast.NegativeInfinityLiteral()))
-
-    assertReflexiveParse("+NaN.0", List(ast.NaNLiteral()))
-    assertReflexiveParse("-NaN.0", List(ast.NaNLiteral()))
+    assertReflexiveParse("+nan.0", List(ast.NaNLiteral()))
+    assertReflexiveParse("-nan.0", List(ast.NaNLiteral()))
 
     // An identifier is any sequence (...)  provided that it does not have a prefix which is a valid number
     assertReflexiveParse("+inf.00", List(ast.PositiveInfinityLiteral(), ast.IntegerLiteral(0)))

@@ -122,12 +122,10 @@ namespace
 	 *
 	 * @param  rdbuf            Stream buffer to read from
 	 * @param  expected         Expected literal to consume
-	 * @param  caseInsensitive  Indicates if the expected string should be matched case insensitively. This only works
-	 *                          if "expected" is pure ASCII
 	 * @return True if the literal was consumed, false otherwise. If the literal wasn't consumed then any read
 	 *         characters are put back on the stream
 	 */
-	bool consumeLiteral(std::streambuf *rdbuf, const char *expected, bool caseInsensitive = false)
+	bool consumeLiteral(std::streambuf *rdbuf, const char *expected)
 	{
 		std::string accum;
 
@@ -150,16 +148,7 @@ namespace
 				return false;
 			}
 
-			bool matched;
-
-			if (caseInsensitive)
-			{
-				matched = tolower(expectedChar) == tolower(actualChar);
-			}
-			else
-			{
-				matched = expectedChar == actualChar;
-			}
+			bool matched = expectedChar == actualChar;
 
 			if (!matched)
 			{
