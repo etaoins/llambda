@@ -38,23 +38,16 @@ ReturnValues<AnyCell>* llbase_with_exception_handler(World &world, HandlerProced
 		// inside the Scheme exception handler. C++ exceptions are allocated outside of the normal stack so they
 		// aren't copied as part of the (call/cc) capture process
 		alloc::AnyRef objectRef(world, except.object());
-		alloc::StrongRef<dynamic::EscapeProcedureCell> resumeProcRef(world, except.resumeProc());
 
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
-		ReturnValues<AnyCell> *handlerResult = handler->apply(world, except.object());
+		handler->apply(world, except.object());
 
-		// Is this a resumable exception?
-		if (resumeProcRef != nullptr)
-		{
-			resumeProcRef->continuation()->resume(world, handlerResult);
-		}
-		
 		// Now switch to the state we were in before re-raising the exception
 		dynamic::State::switchStateCell(world, expectedStateRef);
 
 		// Reconstruct the original exception and rethrow
-		throw dynamic::SchemeException(objectRef, resumeProcRef);
+		throw dynamic::SchemeException(objectRef);
 	}
 }
 
@@ -83,28 +76,6 @@ ReturnValues<AnyCell> *llbase_guard_kernel(World &world, HandlerProcedureCell *g
 void llbase_raise(World &world, AnyCell *obj)
 {
 	throw dynamic::SchemeException(obj);
-}
-
-ReturnValues<AnyCell>* llbase_raise_continuable(World &world, AnyCell *obj)
-{
-	using dynamic::EscapeProcedureCell;
-	using dynamic::Continuation;
-
-	alloc::StrongRef<EscapeProcedureCell> resumeRef(world, EscapeProcedureCell::createInstance(world, nullptr));
-
-	Continuation *cont = Continuation::capture(world);
-
-	if (ProperList<AnyCell> *passedValues = cont->takePassedValues())
-	{
-		// The exception handler resumed us
-		return passedValues;
-	}
-	else
-	{
-		// We're in the original capture path - throw an exception!
-		resumeRef->setContinuation(cont);
-		throw dynamic::SchemeException(obj, resumeRef);
-	}
 }
 
 void llbase_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)

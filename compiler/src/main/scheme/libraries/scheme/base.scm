@@ -678,7 +678,6 @@
 
     (define-r7rs with-exception-handler (world-function llbase "llbase_with_exception_handler" (-> (-> <any> *) (-> *) *)))
     (define-r7rs raise (world-function llbase "llbase_raise" (-> <any> <unit>) noreturn))
-    (define-r7rs raise-continuable (world-function llbase "llbase_raise_continuable" (-> <any> *)))
     (define-r7rs error (world-function llbase "llbase_error" (-> <string> <any> * <unit>) noreturn))
     (define-r7rs error-object? (make-predicate <error-object>))
     (define-r7rs error-object-message (native-function llbase "llbase_error_object_message" (-> <error-object> <string>)))

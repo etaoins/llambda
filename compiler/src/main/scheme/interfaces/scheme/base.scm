@@ -38,5 +38,5 @@
         read-bytevector! u8-ready? char-ready?)
 (export newline write-u8 write-char write-string write-bytevector flush-output-port)
 (export features)
-(export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants
-        guard file-error? read-error?)
+(export with-exception-handler raise error error-object? error-object-message error-object-irritants guard file-error?
+        read-error?)

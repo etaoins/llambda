@@ -14,9 +14,8 @@ namespace dynamic
 class SchemeException
 {
 public:
-	SchemeException(AnyCell *object, EscapeProcedureCell *resumeProc = nullptr) :
-		m_object(object),
-		m_resumeProc(resumeProc)
+	SchemeException(AnyCell *object) :
+		m_object(object)
 	{
 	}
 
@@ -30,20 +29,8 @@ public:
 		return m_object;
 	}
 
-	/**
-	 * Returns the escape procedure that returns to the continuation of the (raise-continuable) that triggered this
-	 * exception
-	 *
-	 * For normal exceptions this will return nullptr
-	 */
-	EscapeProcedureCell *resumeProc()
-	{
-		return m_resumeProc;
-	}
-
 private:
 	AnyCell *m_object;
-	EscapeProcedureCell *m_resumeProc;
 };
 
 }
