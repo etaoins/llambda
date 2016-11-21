@@ -24,12 +24,6 @@ namespace
 	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, RestValues<CharCell>*>;
 	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, RestValues<CharCell>*>;
 
-	template<class T>
-	T *cell_map_cast(World &world, AnyCell *value)
-	{
-		return cell_checked_cast<T>(world, value, "Input list mutated during (map)");
-	}
-
 	template<typename MapFunction>
 	VectorCell* abstractVectorMap(World &world, MapFunction mapFunc, VectorCell *firstVectorRaw, RestValues<VectorCell> *restVectorList)
 	{
@@ -90,19 +84,19 @@ namespace
 			// Build the rest argument list
 			for(size_t j = 0; j < restLists.size(); j++)
 			{
-				auto restListPair = cell_map_cast<PairCell>(world, restLists[j]);
+				auto restListPair = cell_unchecked_cast<PairCell>(restLists[j]);
 				restArgVector[j] = restListPair->car();
 
 				// Move this forward to the next element
-				restLists[j] = cell_map_cast<ListElementCell>(world, restListPair->cdr());
+				restLists[j] = cell_unchecked_cast<ListElementCell>(restListPair->cdr());
 			}
 
 			// Create the rest argument list
 			RestValues<AnyCell> *restArgList = RestValues<AnyCell>::create(world, restArgVector);
 
 			// Extract the first list value and move it forward
-			auto firstListPair = cell_map_cast<PairCell>(world, firstList.data());
-			firstList.setData(cell_map_cast<ListElementCell>(world, firstListPair->cdr()));
+			auto firstListPair = cell_unchecked_cast<PairCell>(firstList.data());
+			firstList.setData(cell_unchecked_cast<ListElementCell>(firstListPair->cdr()));
 
 			outputVector[i] = mapFunc(firstListPair->car(), restArgList);
 		}

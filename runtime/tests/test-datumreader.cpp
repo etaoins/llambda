@@ -187,10 +187,6 @@ void testReals(World &world)
 	ASSERT_PARSES(".25", FlonumCell::fromValue(world, 0.25));
 	ASSERT_PARSES("-.125", FlonumCell::fromValue(world, -0.125));
 
-	ASSERT_PARSES("2/5", FlonumCell::fromValue(world, 0.4));
-	ASSERT_PARSES("+20/50", FlonumCell::fromValue(world, 0.4));
-	ASSERT_PARSES("-20/2", FlonumCell::fromValue(world, -10.0));
-
 	ASSERT_PARSES("5e-1", FlonumCell::fromValue(world, 0.5));
 	ASSERT_PARSES("5e+1", FlonumCell::fromValue(world, 50.0));
 	ASSERT_PARSES("2.5e5", FlonumCell::fromValue(world, 250000.0));

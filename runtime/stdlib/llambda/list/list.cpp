@@ -218,7 +218,7 @@ AnyCell* lllist_fold(World &world, FoldProc *foldProcRaw, AnyCell *initialValue,
 			inputVector[i] = inputListPair->car();
 
 			// Move this forward to the next element
-			inputLists[i] = cell_checked_cast<ListElementCell>(world, inputListPair->cdr(), "Input list mutated during (fold)");
+			inputLists[i] = cell_unchecked_cast<ListElementCell>(inputListPair->cdr());
 		}
 
 		inputVector[inputListCount] = accum;
@@ -255,7 +255,7 @@ ReturnValues<ProperList<AnyCell>>* lllist_partition(World &world, PredicateProc 
 			falseValues.push_back(headValue);
 		}
 
-		auto *nextHead = cell_checked_cast<ListElementCell>(world, headPair->cdr(), "Input list mutated during (partition)");
+		auto *nextHead = cell_unchecked_cast<ListElementCell>(headPair->cdr());
 		listHead.setData(nextHead);
 	}
 

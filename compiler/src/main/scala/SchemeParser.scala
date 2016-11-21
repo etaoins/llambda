@@ -215,10 +215,6 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def Rational = rule {
-    Flonum | Fraction
-  }
-
-  def Flonum = rule {
     capture(optional(SignCharacter) ~ zeroOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~ optional(Exponent) ~> ({ (number, exponentOpt) =>
       exponentOpt match {
         case Some(exponent) =>
@@ -240,22 +236,6 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     "e" ~ capture(optional(SignCharacter) ~ oneOrMore(Digit)) ~> ({ number =>
       java.lang.Long.parseLong(number)
     })
-  }
-
-  def Fraction = rule {
-    PositiveFraction | NegativeFraction
-  }
-
-  def PositiveFraction = rule {
-    optional('+') ~ UnsignedFraction
-  }
-
-  def NegativeFraction = rule {
-    '-' ~ UnsignedFraction ~> (-_)
-  }
-
-  def UnsignedFraction = rule {
-    capture(oneOrMore(Digit)) ~ "/" ~ capture(oneOrMore(Digit)) ~> (_.toDouble / _.toDouble)
   }
 
   def PositiveInfinity = rule {

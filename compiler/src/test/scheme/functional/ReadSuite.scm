@@ -23,12 +23,10 @@
 
   ; This has a more extensive unit test in C++ in test-datumreader.cpp
   (assert-parses 256 "256")
-  (assert-parses 1/4096 "1/4096")
   (assert-parses 256.5 "256.5")
 
   (assert-parses -7898 "-7898")
   (assert-parses -7898.5 "-7898.5")
-  (assert-parses -16/32 "-16/32")
 
   (assert-parses +inf.0 "+inf.0")
   (assert-parses -inf.0 "-inf.0")

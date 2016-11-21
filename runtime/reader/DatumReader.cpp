@@ -788,29 +788,6 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 				return FlonumCell::fromValue(m_world, doubleValue);
 			}
 		}
-		else if (peekChar == '/')
-		{
-			rdbuf()->sbumpc();
-			std::string denomString(takeDecimal(rdbuf()));
-
-			if (!denomString.empty())
-			{
-				const double numerValue = std::stod(numberString, nullptr);
-				const double denomValue = std::stod(denomString, nullptr);
-
-				double doubleValue = numerValue / denomValue;
-
-				if (negative)
-				{
-					doubleValue = -doubleValue;
-				}
-
-				return FlonumCell::fromValue(m_world, doubleValue);
-			}
-
-			// Put the / back; it will treated as a symbol
-			rdbuf()->sputbackc('/');
-		}
 	}
 
 	std::int64_t intValue;

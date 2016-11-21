@@ -74,8 +74,6 @@
   (assert-equal +inf.0 (string->number "+inf.0" 8))
   (assert-equal -inf.0 (string->number "-inf.0" 8))
 
-  (assert-equal -2.0 (string->number "-500/250"))
-
   (assert-equal 0.125 (string->number ".125"))
   (assert-equal -0.25 (string->number "-.25"))
 
