@@ -8,8 +8,6 @@
 #include "alloc/cellref.h"
 
 #include "dynamic/State.h"
-#include "dynamic/EscapeProcedureCell.h"
-#include "dynamic/Continuation.h"
 #include "dynamic/SchemeException.h"
 
 using namespace lliby;

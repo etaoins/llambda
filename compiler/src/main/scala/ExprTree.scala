@@ -300,11 +300,3 @@ case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) exten
     Parameterize(newParams, f(body)).assignLocationFrom(this)
   }
 }
-
-/** Returns from the current lambda with the given value */
-case class Return(values : List[Expr]) extends Expr {
-  lazy val subexprs = values
-
-  def map(f : Expr => Expr) : Return = 
-    Return(values.map(f)).assignLocationFrom(this)
-}

@@ -42,11 +42,6 @@ private[analyser] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
       // Internal definitions are pure as long as all the bound values and body expressions are pure
       internalDefine.subexprs.exists(ExprHasSideEffects)
 
-    case _ : et.Return =>
-      // Returns have the side effect of causing control flow
-      // We try to avoid producing them whenever possible so if there's one in the ET it's probably required
-      true
-
     case _ : et.Parameterize =>
       // Parameterize can call converter procedures implicitly
       // For that reason it's very difficult to determine if they're pure

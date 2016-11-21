@@ -45,9 +45,7 @@ add_library(llcore
 	core/io.cpp
 	core/recorddata.cpp
 	core/vector.cpp
-	dynamic/Continuation.cpp
 	dynamic/State.cpp
-	dynamic/EscapeProcedureCell.cpp
 	dynamic/ParameterProcedureCell.cpp
 	dynamic/init.cpp
 	hash/DatumHash.cpp

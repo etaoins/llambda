@@ -26,7 +26,6 @@
 #include "binding/HashMapCell.h"
 
 #include "dynamic/ParameterProcedureCell.h"
-#include "dynamic/EscapeProcedureCell.h"
 
 namespace
 {
@@ -512,10 +511,6 @@ void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *proc)
 		if (dynamic::ParameterProcedureCell::isInstance(proc))
 		{
 			m_outStream << "#!procedure(parameter:" << proc << ")";
-		}
-		else if (dynamic::EscapeProcedureCell::isInstance(proc))
-		{
-			m_outStream << "#!procedure(escape:" << proc << ")";
 		}
 		else
 		{

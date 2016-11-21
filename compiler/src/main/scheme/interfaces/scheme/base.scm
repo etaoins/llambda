@@ -27,8 +27,7 @@
         utf8->string string->utf8 bytevector-copy bytevector-copy!)
 (export string? make-string string string-length string-ref string-set! string-append list->string string->list
         string-copy string-copy! substring string-fill! string=? string<? string>? string<=? string>=?)
-(export procedure? apply call-with-current-continuation call/cc values call-with-values vector-map vector-for-each
-        map for-each string-map string-for-each)
+(export procedure? apply values call-with-values vector-map vector-for-each map for-each string-map string-for-each)
 (export make-parameter dynamic-wind)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port textual-port?
         binary-port? input-port-open? output-port-open? close-port close-input-port close-output-port open-output-string

@@ -4,7 +4,6 @@
 #include "binding/AnyCell.h"
 #include "alloc/cellref.h"
 #include "core/World.h"
-#include "dynamic/EscapeProcedureCell.h"
 
 namespace lliby
 {

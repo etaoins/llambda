@@ -37,11 +37,6 @@ private[planner] object AttemptInlineApply {
       return None
     }
 
-    if (ContainsImmediateReturn(lambdaExpr.body)) {
-      // Not supported yet
-      return None
-    }
-
     val procType = lambdaExpr.polyType.typeForArgs(args.map(_._2.schemeType))
 
     val closedVars = FindClosedVars(parentState, lambdaExpr, None)

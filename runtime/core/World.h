@@ -12,11 +12,6 @@
 namespace lliby
 {
 
-namespace dynamic
-{
-class Continuation;
-}
-
 namespace alloc
 {
 class CellRootList;
@@ -30,7 +25,6 @@ class Mailbox;
 
 class World
 {
-	friend class dynamic::Continuation;
 public:
 	//
 	// This is the public section of World
@@ -119,54 +113,11 @@ public: // Normal C++ API
 	 */
 	void addChildActor(const std::weak_ptr<actor::Mailbox> &childActor);
 
-	/**
-	 * Returns the run sequence number
-	 *
-	 * This is incremented on every call to run(). This is used to prevent continuations from being used across calls to
-	 * run()
-	 */
-	int runSequence()
-	{
-		return m_runSequence;
-	}
-
-protected: // Continuation support
-	/**
-	 * Returns the stack pointer to the top of the World's stack
-	 */
-	void* continuationBase()
-	{
-		return m_continuationBase;
-	}
-
-	/**
-	 * Returns the current resuming continuation
-	 *
-	 * This is used as a temporary safe place to store the continuation pointer during resume
-	 */
-	volatile dynamic::Continuation* resumingContinuation()
-	{
-		return m_resumingContinuation;
-	}
-
-	/**
-	 * Sets the current resuming continuation
-	 */
-	void setResumingContinuation(dynamic::Continuation *resumingContinuation)
-	{
-		m_resumingContinuation = resumingContinuation;
-	}
-
 private:
 	DynamicStateCell *m_activeStateCell;
 
 	alloc::CellRootList m_strongRoots;
 	alloc::CellRootList m_weakRoots;
-
-	void *m_continuationBase;
-	volatile dynamic::Continuation *m_resumingContinuation;
-
-	unsigned int m_runSequence = 0;
 
 	actor::ActorContext *m_actorContext = nullptr;
 	std::vector<std::weak_ptr<actor::Mailbox>> m_childActors;

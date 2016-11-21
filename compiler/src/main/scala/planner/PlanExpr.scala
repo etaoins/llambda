@@ -11,8 +11,6 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.InternalCompilerErrorException
 
 private[planner] object PlanExpr {
-  private val callCcNames = Set("call-with-current-continuation", "call/cc")
-
   def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
     expr match {
       case et.Begin(exprs) =>
@@ -29,17 +27,6 @@ private[planner] object PlanExpr {
           else {
             apply(planResult.state)(expr)
           }
-        }
-
-      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), args)
-          if callCcNames.contains(callCcProc.reportName) && plan.config.optimise =>
-        // This is a (call/cc)
-        ReduceCallCc(expr, args)(plan.config) match {
-          case SimplifiedCallCc(newArgs) =>
-            PlanApplication(initialState)(procRef, newArgs)
-
-          case StrippedCallCc(newExpr) =>
-            PlanExpr(initialState)(newExpr)
         }
 
       case et.Apply(procExpr, argExprs) =>
@@ -218,7 +205,7 @@ private[planner] object PlanExpr {
           values=SingleValue(procValue)
         )
 
-      case et.Parameterize(parameterValues, innerExpr) => 
+      case et.Parameterize(parameterValues, innerExpr) =>
         val parameterValueTemps = new mutable.ListBuffer[ps.ParameterizedValue]
 
         val postValueState = parameterValues.foldLeft(initialState) { case (state, (parameterExpr, valueExpr)) =>
@@ -249,31 +236,6 @@ private[planner] object PlanExpr {
         plan.steps += ps.PopDynamicState()
 
         postInnerResult
-
-      case et.Return(returnedExprs) =>
-        val initialResult = PlanResult(
-          state=initialState,
-          values=SingleValue(iv.UnitValue)
-        )
-
-        // Evaluate each value to return
-        val scannedExprs = returnedExprs.scanLeft(initialResult) { case (prevResult, returnedExpr) =>
-          apply(prevResult.state)(returnedExpr)
-        }
-
-        // Extract the result values from the PlanResult
-        val resultValues = ResultValues(scannedExprs.tail.map(_.values.toSingleValue))
-
-        // If there's a return the return type is always ArbitraryValues
-        val returnValueTempOpt = resultValues.toReturnTempValue(vt.ReturnType.ArbitraryValues)
-
-        plan.steps += ps.Return(returnValueTempOpt)
-
-        PlanResult(
-          state=scannedExprs.last.state,
-          // et.Return does not have a value - execution stops
-          values=SingleValue(iv.UnitValue)
-        )
-    }  
+    }
   }
 }

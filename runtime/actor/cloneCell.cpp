@@ -23,7 +23,6 @@
 #include "binding/ErrorCategory.h"
 #include "binding/HashMapCell.h"
 
-#include "dynamic/EscapeProcedureCell.h"
 #include "dynamic/ParameterProcedureCell.h"
 #include "dynamic/State.h"
 
@@ -37,7 +36,6 @@ namespace actor
 {
 
 using dynamic::ParameterProcedureCell;
-using dynamic::EscapeProcedureCell;
 using dynamic::ConverterProcedureCell;
 using dynamic::State;
 
@@ -265,10 +263,6 @@ namespace
 			if (auto paramProcCell = cell_cast<ParameterProcedureCell>(cell))
 			{
 				return cloneParamProcCell(heap, paramProcCell, context);
-			}
-			else if (EscapeProcedureCell::isInstance(cell))
-			{
-				throw UnclonableCellException(cell, "Escape procedures cannot be cloned");
 			}
 			else if (recordLikeCell->isUndefined())
 			{

@@ -174,7 +174,7 @@ private[planner] object RetypeLambdaArgs {
       // Ignore these
       argTypes
 
-    case _ : et.Return | _ : et.Parameterize | _ : et.TopLevelDefine | _ : et.Apply =>
+    case _ : et.Parameterize | _ : et.TopLevelDefine | _ : et.Apply =>
       // These can terminate (or in the case of TopLevelDefine, shouldn't exist)
       // Abort!
       throw new CollectionAborted(argTypes)

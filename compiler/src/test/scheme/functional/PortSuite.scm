@@ -160,21 +160,3 @@
 
   (assert-equal result-value 'success)
   (assert-false (input-port-open? simple-port))))
-
-(define-test "(call-with-port) with non-returning thunk does not close port" (expect-success
-  (define callcc-port (open-input-string ""))
-  (define first-time #t)
-
-  ; This will be executed twice
-  (define outer-continuation (call/cc (lambda (k) k)))
-  (assert-true (input-port-open? callcc-port))
-
-  (when first-time
-    (set! first-time #f)
-    (call-with-port callcc-port (lambda (port)
-      (assert-true (input-port-open? callcc-port))
-      ; Jump back to the continuation - this should not close the port because we didn't return
-      (outer-continuation #f))))
-
-  ; Make sure we actually went through the continuation
-  (assert-false first-time)))

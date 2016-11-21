@@ -278,8 +278,6 @@
     (define-r7rs boolean=? (native-function llbase "llbase_boolean_equal" (-> <boolean> <boolean> <boolean> * <native-bool>)))
 
     (define-r7rs procedure? (make-predicate <procedure>))
-    (define-r7rs call-with-current-continuation (world-function llbase "llbase_call_with_current_continuation" (-> (-> <procedure> *) *)))
-    (define-r7rs call/cc call-with-current-continuation)
     (define-r7rs values (native-function llbase "llbase_values" (-> <any> * *)))
     (define-r7rs call-with-values (world-function llbase "llbase_call_with_values" (-> (-> *) <procedure> *)))
     (define-r7rs apply (world-function llbase "llbase_apply" (-> <procedure> <any> * *)))

@@ -167,11 +167,6 @@
   ; Mailboxes
   (assert-equal ping-pong-actor (ping-pong ping-pong-actor))
 
-  ; Continuations cannot be cloned
-  (call/cc (lambda (k)
-             (assert-raises unclonable-value-error?
-                            (ping-pong k))))
-
   ; Error objects
   (define orig-error (guard (obj
                               (else
@@ -282,29 +277,6 @@
   (define result (ask root-actor (start-message 6) (seconds 20)))
 
   (assert-equal 720 (result-message-count result))))
-
-(define-test "captured continuations cannot be used across messages" (expect-success
-  (import (llambda actor))
-  (import (llambda error))
-  (import (llambda duration))
-
-  (define actor
-    (act (lambda ()
-           (define captured-cont #!unit)
-           (lambda (msg)
-             (cond
-               ((equal? msg 'capture)
-                (call/cc (lambda (k)
-                           (set! captured-cont k))))
-               ((equal? msg 'invoke)
-                (guard (obj
-                         (else
-                           (tell (sender) obj)))
-                       (captured-cont))
-                (tell (sender) 'no-except)))))))
-
-  (tell actor 'capture)
-  (assert-true (expired-escape-procedure-error? (ask actor 'invoke (seconds 2))))))
 
 (define-test "procedures capturing ports can be used inside actors" (expect-success
   (import (scheme write))

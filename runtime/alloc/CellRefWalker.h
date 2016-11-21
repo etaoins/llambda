@@ -29,8 +29,6 @@
 #include "hash/DatumHashTree.h"
 
 #include "dynamic/State.h"
-#include "dynamic/Continuation.h"
-#include "dynamic/EscapeProcedureCell.h"
 
 namespace lliby
 {
@@ -40,7 +38,6 @@ class DatumHashTree;
 namespace dynamic
 {
 	class State;
-	class Continuation;
 }
 
 namespace alloc
@@ -90,14 +87,7 @@ public:
 		}
 		else if (auto recordLikeCell = cell_cast<RecordLikeCell>(*rootCellRef))
 		{
-			if (auto escapeProcCell = cell_cast<dynamic::EscapeProcedureCell>(*rootCellRef))
-			{
-				if (escapeProcCell->continuation() != nullptr)
-				{
-					visitContinuation(escapeProcCell->continuation(), visitor);
-				}
-			}
-			else if (!recordLikeCell->isUndefined())
+			if (!recordLikeCell->isUndefined())
 			{
 				const RecordClassMap *classMap = recordLikeCell->classMap();
 
@@ -253,29 +243,6 @@ public:
 		{
 			visitCell(reinterpret_cast<AnyCell**>(state->parentCellRef()), visitor);
 		}
-	}
-
-	/**
-	 * Visits a continuation
-	 */
-	template<typename T>
-	void visitContinuation(dynamic::Continuation *continuation, T visitor)
-	{
-		visitCellRootList(continuation->strongRoots(), visitor);
-		visitShadowStack(continuation->shadowStackHead(), visitor);
-		visitCell(reinterpret_cast<AnyCell**>(continuation->dynamicStateCellRef()), visitor);
-
-		if (*continuation->passedValuesRef())
-		{
-			visitCell(reinterpret_cast<AnyCell**>(continuation->passedValuesRef()), visitor);
-		}
-
-		// XXX: This isn't correct
-		// This effectively treats all weak references inside the continuation's saved stack as a strong reference. This is
-		// because the collector uses a special visitor for weak refs that we don't have access to. Even if it was passed
-		// through all weak references need to be processed at the end of GC, not when we encounter the continuation.
-		// As weak references are effectively unused this is close enough
-		visitCellRootList(continuation->weakRoots(), visitor);
 	}
 
 	/**
