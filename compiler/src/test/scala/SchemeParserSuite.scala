@@ -245,17 +245,6 @@ newline""", "Bare\nnewline")
     )))))
   }
 
-  test("curly infix proper lists") {
-    assert(scm"{1 + 2 + 3}" === List(
-      ast.ProperList(List(
-        ast.Symbol("+"),
-        ast.IntegerLiteral(1),
-        ast.IntegerLiteral(2),
-        ast.IntegerLiteral(3)
-      ))
-    ))
-  }
-
   test("no expressions") {
     assert(scm"" === Nil)
   }

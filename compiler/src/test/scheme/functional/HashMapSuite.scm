@@ -181,7 +181,7 @@
   (define number-hash-map (alist->hash-map '((1 . "one") (2 . "one") (3 . "three") (2 . "two"))))
 
   (define total (hash-map-fold (lambda (key value accum)
-                                 {accum + key + {(string-length value) * 10}}
+                                 (+ accum key (* (string-length value) 10))
                                  ) 0 number-hash-map))
 
   (assert-equal 116 total)))

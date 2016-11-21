@@ -16,9 +16,6 @@ sealed abstract class ParseErrorException(message : String) extends Exception(me
 class ParseFailedException(val filename : Option[String], val message : String) extends
   ParseErrorException(filename.getOrElse("(unknown)") + ": " + message)
 
-class InvalidCurlyInfixExprException(val located : SourceLocated, message : String) extends
-  ParseErrorException(message + "\n" + located.locationString)
-
 class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends Parser with StringBuilding {
   import CharPredicate._
 
@@ -93,9 +90,6 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 
         case '[' =>
           SquareListDatum
-
-        case '{' =>
-          CurlyListDatum
 
         case '|' =>
           EnclosedSymbol
@@ -199,11 +193,6 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
       ast.AnyList(head, terminator)
     })
   }
-
-  def CurlyListDatum = rule {
-    "{" ~ zeroOrMore(Datum) ~ "}" ~> (ConvertCurlyInfixExpr(_))
-  }
-
 
   // Decimal numbers
   def UnradixedDecimalNumber = rule {
