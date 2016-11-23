@@ -28,7 +28,7 @@ private[planner] object PlanApplication {
       case _ =>
     }
 
-    val initialResult = PlanResult(state, SingleValue(iv.UnitValue))
+    val initialResult = PlanResult(state, iv.UnitValue)
 
     val argResults = argExprs.scanLeft(initialResult) { case (prevResult, argExpr) =>
       PlanExpr(prevResult.state)(argExpr)
@@ -37,7 +37,7 @@ private[planner] object PlanApplication {
     // Use the final argument's state
     val argState = argResults.last.state
     // Zip with the original argument expr so we can use it to locate exceptions related to that argument
-    val args = argExprs.zip(argResults.tail.map(_.value.toSingleValue()))
+    val args = argExprs.zip(argResults.tail.map(_.value))
 
     planWithArgValues(argState)(procExpr, args)
   }
@@ -89,7 +89,7 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procValue = procResult.value.toSingleValue().toApplicableValueForArgs(args.map(_._2.schemeType))
+    val procValue = procResult.value.toApplicableValueForArgs(args.map(_._2.schemeType))
 
     val invokableProc = procValue.toInvokableProc()
 
@@ -179,7 +179,7 @@ private[planner] object PlanApplication {
 
     return PlanResult(
       state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
-      value=invokeValue.withReturnType(procedureType.returnType)
+      value=invokeValue.withSchemeType(procedureType.returnType.schemeType)
     )
   }
 
@@ -217,7 +217,7 @@ private[planner] object PlanApplication {
       case None =>
         val procResult = PlanExpr(initialState)(procExpr)
         val invokableProc = plan.withContextLocation(procExpr) {
-          procResult.value.toSingleValue.toInvokableProc
+          procResult.value.toInvokableProc
         }
 
         PlanResult(

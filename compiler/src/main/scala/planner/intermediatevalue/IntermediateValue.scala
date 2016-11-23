@@ -301,6 +301,23 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     */
   def toApplicableValueForArgs(args : List[vt.SchemeType])(implicit plan : PlanWriter) : IntermediateValue =
     this
+
+  /** Converts this intermediate value to a TempValue for the specified return type
+    *
+    * If no value needs to be returned this will return None
+    */
+  final def toReturnTempValueOpt(
+      returnType : vt.ReturnType.ReturnType[vt.ValueType]
+  )(implicit plan : PlanWriter) : Option[ps.TempValue] = returnType match {
+    case vt.ReturnType.SingleValue(vt.UnitType) | vt.ReturnType.UnreachableValue =>
+      None
+
+    case vt.ReturnType.SingleValue(resultType) =>
+      Some(toTempValue(resultType))
+  }
+
+  def preferredReturnType: vt.ReturnType.ReturnType[vt.ValueType] =
+    vt.ReturnType.SingleValue(preferredRepresentation)
 }
 
 object IntermediateValue {

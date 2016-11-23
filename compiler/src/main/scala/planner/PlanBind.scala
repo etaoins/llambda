@@ -82,7 +82,7 @@ private[planner] object PlanBind {
 
             PlanResult(
               state=postrecursiveState,
-              value=SingleValue(procValue)
+              value=procValue
             )
           }
 
@@ -97,7 +97,7 @@ private[planner] object PlanBind {
       val storageLocToValue = binding match {
         case et.SingleBinding(storageLoc, _) =>
           // Convert the result values to a single value
-          val uncastIntermediate = initialValueResult.value.toSingleValue()
+          val uncastIntermediate = initialValueResult.value
 
           // And cast to the correct type
           val initialIntermediate = uncastIntermediate.castToSchemeType(storageLoc.schemeType)

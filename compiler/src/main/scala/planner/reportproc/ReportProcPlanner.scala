@@ -22,7 +22,7 @@ abstract trait ReportProcPlanner {
     planWithValue(initialState)(reportName, args) map { value =>
       PlanResult(
         state=initialState,
-        value=SingleValue(value)
+        value=value
       )
     }
   }

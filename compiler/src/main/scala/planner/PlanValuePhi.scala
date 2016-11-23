@@ -5,22 +5,22 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
-object PlanResultValuePhi {
+object PlanValuePhi {
   case class Result(
     leftTempValue : ps.TempValue,
     rightTempValue : ps.TempValue,
     resultTemp : ps.TempValue,
-    resultValue : ResultValue
+    resultValue : iv.IntermediateValue
   )
 
   def apply(
       leftPlan : PlanWriter,
-      leftValue : ResultValue,
+      leftValue : iv.IntermediateValue,
       rightPlan : PlanWriter,
-      rightValue : ResultValue
+      rightValue : iv.IntermediateValue
   ) : Result =
     (leftValue, rightValue) match {
-      case (SingleValue(leftUnboxed : iv.UnboxedValue), SingleValue(rightUnboxed : iv.UnboxedValue))
+      case (leftUnboxed : iv.UnboxedValue, rightUnboxed : iv.UnboxedValue)
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType
         val phiResultTemp = ps.Temp(commonType)
@@ -35,10 +35,10 @@ object PlanResultValuePhi {
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
-          resultValue=SingleValue(resultValue)
+          resultValue=resultValue
         )
 
-      case (SingleValue(leftValue), SingleValue(rightValue)) =>
+      case (leftValue, rightValue) =>
         val phiSchemeType = leftValue.schemeType + rightValue.schemeType
 
         val leftTempValue = leftValue.toTempValue(phiSchemeType)(leftPlan)
@@ -55,7 +55,7 @@ object PlanResultValuePhi {
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
-          resultValue=SingleValue(new iv.CellValue(phiSchemeType, boxedValue))
+          resultValue=new iv.CellValue(phiSchemeType, boxedValue)
         )
     }
 }

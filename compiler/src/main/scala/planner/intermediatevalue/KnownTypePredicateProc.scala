@@ -46,7 +46,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownProc(
 
         Some(PlanResult(
           state=registeredState,
-          value=SingleValue(resultValue)
+          value=resultValue
         ))
 
       case _ =>

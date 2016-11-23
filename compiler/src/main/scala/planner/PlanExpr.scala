@@ -16,13 +16,13 @@ private[planner] object PlanExpr {
       case et.Begin(exprs) =>
         val initialResult = PlanResult(
           state=initialState,
-          value=SingleValue(iv.UnitValue)
+          value=iv.UnitValue
         )
 
         exprs.foldLeft(initialResult) { case (planResult, expr) =>
-          if (planResult.value == UnreachableValue) {
+          if (planResult.value == iv.UnreachableValue) {
             // This code is unreachable - check if the code is valid but keep track of the fact we're not reachable
-            apply(planResult.state)(expr).copy(value=UnreachableValue)
+            apply(planResult.state)(expr).copy(value=iv.UnreachableValue)
           }
           else {
             apply(planResult.state)(expr)
@@ -35,7 +35,7 @@ private[planner] object PlanExpr {
       case et.TopLevelDefine(binding) =>
         PlanResult(
           state=PlanBind(initialState)(List(binding)),
-          value=SingleValue(iv.UnitValue)
+          value=iv.UnitValue
         )
 
       case et.InternalDefine(bindings, bodyExpr) =>
@@ -54,7 +54,7 @@ private[planner] object PlanExpr {
             // Return the value directly 
             PlanResult(
               state=initialState,
-              value=SingleValue(value)
+              value=value
             )
 
           case MutableValue(mutableType, mutableTemp, needsUndefCheck) =>
@@ -80,7 +80,7 @@ private[planner] object PlanExpr {
 
             PlanResult(
               state=initialState,
-              value=SingleValue(resultValue)
+              value=resultValue
             )
         }
       
@@ -98,7 +98,7 @@ private[planner] object PlanExpr {
 
         // Evaluate at convert to the correct type for the mutable
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueIntermediate = newValueResult.value.toSingleValue()
+        val newValueIntermediate = newValueResult.value
         val newValueTemp = newValueIntermediate.toTempValue(mutableType.innerType)
 
         // Load our data pointer
@@ -110,13 +110,13 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=newValueResult.state,
-          value=SingleValue(iv.UnitValue)
+          value=iv.UnitValue
         )
 
       case et.Literal(value) =>
         PlanResult(
           state=initialState,
-          value=SingleValue(DatumToConstantValue(value))
+          value=DatumToConstantValue(value)
         )
 
       case et.Cond(testExpr, trueExpr, falseExpr) =>
@@ -128,7 +128,7 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=initialState,
-          value=SingleValue(newProcValue)
+          value=newProcValue
         )
 
       case recordConstructor @ et.RecordConstructor(recordType, initializedFields) =>
@@ -139,9 +139,9 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=initialState,
-          value=SingleValue(newProcValue)
+          value=newProcValue
         )
-      
+
       case recordAccessor @ et.RecordAccessor(recordType, field) =>
         val newProcValue =new iv.KnownRecordAccessorProc(
           recordType=recordType,
@@ -150,9 +150,9 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=initialState,
-          value=SingleValue(newProcValue)
+          value=newProcValue
         )
-      
+
       case recordMutator @ et.RecordMutator(recordType, field) =>
         val newProcValue = new iv.KnownRecordMutatorProc(
           recordType=recordType,
@@ -161,25 +161,25 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=initialState,
-          value=SingleValue(newProcValue)
+          value=newProcValue
         )
-      
+
       case typePredicate @ et.TypePredicate(schemeType) =>
         val newProcValue = new iv.KnownTypePredicateProc(schemeType)
 
         PlanResult(
           state=initialState,
-          value=SingleValue(newProcValue)
+          value=newProcValue
         )
 
       case et.Cast(valueExpr, targetType, staticCheck) =>
         val valueResult = apply(initialState)(valueExpr)
-        val valueIntermediate = valueResult.value.toSingleValue
+        val valueIntermediate = valueResult.value
         val castValue = valueIntermediate.castToSchemeType(targetType, None, staticCheck)
 
         PlanResult(
           state=valueResult.state,
-          value=SingleValue(castValue)
+          value=castValue
         )
 
       case lambdaExpr : et.Lambda =>
@@ -191,7 +191,7 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=initialState,
-          value=SingleValue(procValue)
+          value=procValue
         )
 
       case et.CaseLambda(clauseExprs) =>
@@ -202,7 +202,7 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=initialState,
-          value=SingleValue(procValue)
+          value=procValue
         )
 
       case et.Parameterize(parameterValues, innerExpr) =>
@@ -212,7 +212,7 @@ private[planner] object PlanExpr {
           val parameterResult = apply(state)(parameterExpr)
           val valueResult = apply(parameterResult.state)(valueExpr)
 
-          val parameterIntermediate = parameterResult.value.toSingleValue()
+          val parameterIntermediate = parameterResult.value
           val parameterTemp = parameterIntermediate.toTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), convertProcType=false)
 
           val mayHaveConverterProc = parameterIntermediate match {
@@ -223,7 +223,7 @@ private[planner] object PlanExpr {
               true
           }
 
-          val valueIntermediate = valueResult.value.toSingleValue()
+          val valueIntermediate = valueResult.value
           val valueTemp = valueIntermediate.toTempValue(vt.AnySchemeType)
 
           parameterValueTemps += ps.ParameterizedValue(parameterTemp, valueTemp, mayHaveConverterProc)

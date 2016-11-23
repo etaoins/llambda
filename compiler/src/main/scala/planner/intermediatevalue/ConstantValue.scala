@@ -214,3 +214,22 @@ case object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {
   }
 }
 
+case object UnreachableValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {
+  val typeDescription = "unreachable value"
+
+  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = {
+    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    plan.steps += ps.CreateUnitCell(constantTemp)
+    BoxedValue(cellType, constantTemp)
+  }
+
+  override def preferredReturnType = vt.ReturnType.UnreachableValue
+
+  override def castToSchemeType(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage] = None,
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter) : IntermediateValue = this
+
+  override def withSchemeType(newType : vt.SchemeType) : IntermediateValue = this
+}

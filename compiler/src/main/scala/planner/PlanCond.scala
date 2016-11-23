@@ -78,29 +78,13 @@ object PlanCond {
     }
   }
 
-  // Wrapper for constrainIntermediateValues
-  private def constrainResultValues(resultState : PlannerState)(
-    testValue : iv.IntermediateValue,
-    trueState : PlannerState,
-    trueValue : ResultValue,
-    falseState : PlannerState,
-    falseValue : ResultValue,
-    resultValue : ResultValue
-  ) : PlannerState = (trueValue, falseValue, resultValue) match {
-    case (SingleValue(trueValue), SingleValue(falseValue), SingleValue(resultValue)) =>
-      constrainIntermediateValues(resultState)(testValue, trueState, trueValue, falseState, falseValue, resultValue)
-
-    case _ =>
-      resultState
-  }
-
   def apply(initialState : PlannerState)(
       testExpr : et.Expr,
       trueExpr : et.Expr,
       falseExpr : et.Expr
   )(implicit plan : PlanWriter) : PlanResult = {
     val testResult = PlanExpr(initialState)(testExpr)
-    val testValue = testResult.value.toSingleValue()
+    val testValue = testResult.value
 
     vt.SatisfiesType(vt.LiteralBooleanType(false), testValue.schemeType) match {
       case Some(true) =>
@@ -128,7 +112,7 @@ object PlanCond {
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
         val falseValue = falseResult.value
 
-        if (trueValue == UnreachableValue) {
+        if (trueValue == iv.UnreachableValue) {
           // True branch terminates unconditionally; place it inside the branch and move the false branch after so we
           // can avoid the phi
           plan.steps += ps.CondBranch(truthyPred, trueWriter.steps.toList, Nil, Nil)
@@ -136,14 +120,14 @@ object PlanCond {
           plan.steps ++= falseWriter.steps
           falseResult
         }
-        else if (falseValue == UnreachableValue) {
+        else if (falseValue == iv.UnreachableValue) {
           plan.steps += ps.CondBranch(truthyPred, Nil, falseWriter.steps.toList, Nil)
 
           plan.steps ++= trueWriter.steps
           trueResult
         }
         else {
-          val planPhiResult = PlanResultValuePhi(trueWriter, trueValue, falseWriter, falseValue)
+          val planPhiResult = PlanValuePhi(trueWriter, trueValue, falseWriter, falseValue)
           val resultValue = planPhiResult.resultValue
 
           val valuesPhi = ps.ValuePhi(
@@ -159,7 +143,7 @@ object PlanCond {
             List(valuesPhi)
           )
 
-          val constrainedState = constrainResultValues(testResult.state)(
+          val constrainedState = constrainIntermediateValues(testResult.state)(
             testValue=testValue,
             trueState=trueResult.state,
             trueValue=trueValue,

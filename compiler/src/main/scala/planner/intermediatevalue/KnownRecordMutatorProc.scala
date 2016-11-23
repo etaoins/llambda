@@ -71,7 +71,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
 
         Some(PlanResult(
           state=state,
-          value=SingleValue(UnitValue)
+          value=UnitValue
         ))
 
       case _ =>

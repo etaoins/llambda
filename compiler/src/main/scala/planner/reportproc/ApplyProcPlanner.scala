@@ -18,14 +18,14 @@ object ApplyProcPlanner extends ReportProcPlanner {
       Some(PlanApplication.planWithArgList(initialState)(applyProcExpr, iv.EmptyListValue))
 
     case ("apply", applyProcExpr :: applyArgExprs) =>
-      val initialResult = PlanResult(initialState, SingleValue(iv.UnitValue))
+      val initialResult = PlanResult(initialState, iv.UnitValue)
 
       val applyArgResults = applyArgExprs.scanLeft(initialResult) { case (prevResult, applyArgExpr) =>
         PlanExpr(prevResult.state)(applyArgExpr)
       }
 
       val argState = applyArgResults.last.state
-      val applyArgs = applyArgResults.tail.map(_.value.toSingleValue())
+      val applyArgs = applyArgResults.tail.map(_.value)
 
       val argList = ValuesToList(applyArgs.dropRight(1), applyArgs.last)
       Some(PlanApplication.planWithArgList(argState)(applyProcExpr, argList))

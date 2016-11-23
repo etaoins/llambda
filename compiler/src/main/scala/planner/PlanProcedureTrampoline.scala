@@ -75,10 +75,10 @@ private[planner] object PlanProcedureTrampoline {
     val applyResult = PlanApplication.planWithArgList(procState)(et.VarRef(selfLoc), argList)(plan)
 
     applyResult.value match {
-      case UnreachableValue =>
+      case iv.UnreachableValue =>
 
-      case resultValues =>
-        val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan)
+      case reachableValue =>
+        val returnTempOpt = reachableValue.toReturnTempValueOpt(trampolineSignature.returnType)(plan)
         plan.steps += ps.Return(returnTempOpt)
     }
 

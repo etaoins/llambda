@@ -14,7 +14,7 @@ object PlanInvokeApply {
       invokableProc : iv.InvokableProc,
       fixedTemps : Seq[ps.TempValue],
       varArgTempOpt : Option[ps.TempValue]
-  )(implicit plan : PlanWriter) : ResultValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.polySignature.upperBound
 
@@ -39,30 +39,36 @@ object PlanInvokeApply {
     signature.returnType match {
       case vt.ReturnType.UnreachableValue =>
         plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps, discardable=discardable)
-        UnreachableValue
+        iv.UnreachableValue
 
       case vt.ReturnType.SingleValue(vt.UnitType) =>
         plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps, discardable=discardable)
 
         if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
-          UnreachableValue
+          iv.UnreachableValue
         }
         else {
-          SingleValue(iv.UnitValue)
+          iv.UnitValue
         }
 
       case otherType =>
         val resultTemp = ps.Temp(otherType.representationTypeOpt.get)
         plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, argTemps, discardable=discardable)
 
-        TempValueToResults(otherType, resultTemp)
+        otherType match {
+          case vt.ReturnType.UnreachableValue =>
+            iv.UnreachableValue
+
+          case vt.ReturnType.SingleValue(valueType) =>
+            TempValueToIntermediate(valueType, resultTemp)(plan.config)
+        }
     }
   }
 
   def withArgumentList(
       invokableProc : iv.InvokableProc,
       argListValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : ResultValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val signature = invokableProc.polySignature.upperBound
 
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
@@ -108,7 +114,7 @@ object PlanInvokeApply {
   def withIntermediateValues(
       invokableProc : iv.InvokableProc,
       args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : ResultValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val signature = invokableProc.polySignature.upperBound
 
     // Convert all the args

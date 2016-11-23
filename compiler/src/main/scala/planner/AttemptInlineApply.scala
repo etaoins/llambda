@@ -19,7 +19,7 @@ private[planner] object AttemptInlineApply {
       args : List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt : Option[ps.TempValue] = None,
       manifestOpt : Option[LambdaManifest] = None
-  )(implicit plan : PlanWriter) : Option[ResultValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc) ++ lambdaExpr.restArgOpt
 
@@ -100,7 +100,7 @@ private[planner] object AttemptInlineApply {
     val postDefaultOptState = lambdaExpr.optionalArgs.takeRight(defaultedOptionalCount).foldLeft(postFixedArgState) {
       case (state, et.OptionalArg(storageLoc, defaultExpr)) =>
         val defaultResult = PlanExpr(state)(defaultExpr)
-        val defaultValue = defaultResult.value.toSingleValue()
+        val defaultValue = defaultResult.value
 
         if (vt.SatisfiesType(storageLoc.schemeType, defaultValue.schemeType) != Some(true)) {
           return None
@@ -131,7 +131,7 @@ private[planner] object AttemptInlineApply {
 
     // Make sure our return type is of the declared type
     val stableReturnType = vt.StabiliseReturnType(procType.returnType)
-    val castValues = planResult.value.castToReturnType(stableReturnType)
+    val castValues = planResult.value.castToSchemeType(stableReturnType.schemeType)
 
     Some(castValues)
   }
@@ -149,7 +149,7 @@ private[planner] object AttemptInlineApply {
   def fromSEL(state : PlannerState)(
       lambdaExpr : et.Lambda,
       args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[ResultValue] =
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
     attemptInline(state, state)(lambdaExpr, args)
 
   /** Attempts to inline an already planned lambda from its manifest
@@ -165,7 +165,7 @@ private[planner] object AttemptInlineApply {
       manifest : LambdaManifest,
       args : List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt : Option[ps.TempValue] = None
-  )(implicit plan : PlanWriter) : Option[ResultValue] =
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
     attemptInline(manifest.parentState, inlineState)(
       lambdaExpr=manifest.lambdaExpr,
       args=args,

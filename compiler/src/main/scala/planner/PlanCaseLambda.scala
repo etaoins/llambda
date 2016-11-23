@@ -49,7 +49,7 @@ private[planner] object PlanCaseLambda {
       closureType : vt.ClosureType,
       argListHeadTemp : ps.TempValue,
       argLengthTemp : ps.TempValue
-  )(implicit entryPlan : PlanWriter) : ResultValue = plannedClauses match {
+  )(implicit entryPlan : PlanWriter) : iv.IntermediateValue = plannedClauses match {
     case Nil =>
       // We were called with no clauses
       // Note that the checkingClause match below will explicitly check for empty clauses before recursing so this will
@@ -59,7 +59,7 @@ private[planner] object PlanCaseLambda {
       entryPlan.steps += ps.AssertPredicate(falsePredTemp, noMatchingClauseRuntimeErrorMessage)
 
       // This isn't reachable but we need to return to make codegen happy
-      SingleValue(iv.UnitValue)
+      iv.UnitValue
 
     case checkingClause :: tailClauses =>
       // See if our length matched
@@ -124,7 +124,7 @@ private[planner] object PlanCaseLambda {
         )(falsePlan)
 
         // Now phi them together
-        val phiResult = PlanResultValuePhi(truePlan, trueValues, falsePlan, falseValues)
+        val phiResult = PlanValuePhi(truePlan, trueValues, falsePlan, falseValues)
 
         val valuePhis = List(ps.ValuePhi(phiResult.resultTemp, phiResult.leftTempValue, phiResult.rightTempValue))
 
@@ -197,7 +197,7 @@ private[planner] object PlanCaseLambda {
     val argLengthTemp = ps.Temp(vt.UInt32)
     procPlan.steps += ps.CalcProperListLength(argLengthTemp, argListHeadTemp)
 
-    val resultValues = planClauseTests(
+    val resultValue = planClauseTests(
       plannedClauses=plannedClauses,
       innerSelfTempOpt=innerSelfTempOpt,
       closureType=closureType,
@@ -205,8 +205,8 @@ private[planner] object PlanCaseLambda {
       argLengthTemp=argLengthTemp
     )(procPlan)
 
-    val returnType = resultValues.preferredReturnType
-    val resultTempOpt = resultValues.toReturnTempValue(returnType)(procPlan)
+    val returnType = resultValue.preferredReturnType
+    val resultTempOpt = resultValue.toReturnTempValueOpt(returnType)(procPlan)
     procPlan.steps += ps.Return(resultTempOpt)
 
     // Determine our signature
