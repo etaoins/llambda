@@ -18,12 +18,6 @@ class EvaluatorSuite extends FunSuite {
     assert(eval(datum"""(+ 1 2)""") === "3")
   }
 
-  test("evaluting an expression returning multiple values") {
-    val eval = testEvaluator()
-
-    assert(eval(datum"""(exact-integer-sqrt 18)""") === "(values 4 2)")
-  }
-
   test("simple (define)") {
     val eval = testEvaluator()
 
@@ -52,8 +46,8 @@ class EvaluatorSuite extends FunSuite {
   test("lambda shorthand (define)") {
     val eval = testEvaluator()
 
-    eval(datum"""(define (return-both x y) (values x y))""")
-    assert(eval(datum"""(return-both 10 20)""") === "(values 10 20)")
+    eval(datum"""(define (return-first x y) x)""")
+    assert(eval(datum"""(return-first 10 20)""") === "10")
   }
 
   test("(define) memoizes Scheme data") {

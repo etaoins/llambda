@@ -212,26 +212,6 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     }
   }
 
-  test("function taking union and returning specific values") {
-    val expectedFunction = et.NativeFunction(
-      NativeSystemLibrary,
-      ProcedureSignature(
-        hasWorldArg=false,
-        hasSelfArg=false,
-        mandatoryArgTypes=List(vt.UnionType(Set(vt.StringType, vt.SymbolType))),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SpecificValues(List(vt.StringType, vt.SymbolType)),
-        attributes=Set()
-      ).toPolymorphic,
-      "lliby_newline"
-    )
-
-    assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (-> (U <string> <symbol>) (Values <string> <symbol>)))""")
-    }
-  }
-
   test("function taking a integer cell and returning a rational cell") {
     val expectedFunction = et.NativeFunction(
       NativeSystemLibrary,

@@ -86,50 +86,6 @@
                     ((let-syntax ((name val) ...) body1 body2 ...)
                      (letrec-syntax ((name val) ...) body1 body2 ...))))
 
-    (define-syntax let-values
-      (syntax-rules ()
-                    ((let-values (binding ...) body0 body1 ...)
-                     (let-values "bind"
-                                 (binding ...) () (begin body0 body1 ...)))
-                    ((let-values "bind" () tmps body)
-                     (let tmps body))
-                    ((let-values "bind" ((b0 e0)
-                                         binding ...) tmps body)
-                     (let-values "mktmp" b0 e0 ()
-                                 (binding ...) tmps body))
-                    ((let-values "mktmp" () e0 args
-                                 bindings tmps body)
-                     (call-with-values
-                       (lambda () e0)
-                       (lambda args
-                         (let-values "bind"
-                                     bindings tmps body))))
-                    ((let-values "mktmp" ([name : <type>] . b) e0 (arg ...)
-                                 bindings (tmp ...) body)
-                     (let-values "mktmp" b e0 (arg ... [x : <type>])
-                                 bindings (tmp ... (name : <type> x)) body))
-                    ((let-values "mktmp" (a . b) e0 (arg ...)
-                                 bindings (tmp ...) body)
-                     (let-values "mktmp" b e0 (arg ... x)
-                                 bindings (tmp ... (a x)) body))
-                    ((let-values "mktmp" a e0 (arg ...)
-                                 bindings (tmp ...) body)
-                     (call-with-values
-                       (lambda () e0)
-                       (lambda (arg ... . x)
-                         (let-values "bind"
-                                     bindings (tmp ... (a x)) body))))))
-
-    (define-syntax let*-values
-      (syntax-rules ()
-                    ((let*-values () body0 body1 ...)
-                     (let () body0 body1 ...))
-                    ((let*-values (binding0 binding1 ...)
-                                  body0 body1 ...)
-                     (let-values (binding0)
-                                 (let*-values (binding1 ...)
-                                              body0 body1 ...)))))
-
     (define-syntax cond
       (syntax-rules (else =>)
                     ((cond (else result1 result2 ...))
@@ -277,8 +233,6 @@
     (define-r7rs boolean=? (native-function llbase "llbase_boolean_equal" (-> <boolean> <boolean> <boolean> * <native-bool>)))
 
     (define-r7rs procedure? (make-predicate <procedure>))
-    (define-r7rs values (native-function llbase "llbase_values" (-> <any> * *)))
-    (define-r7rs call-with-values (world-function llbase "llbase_call_with_values" (-> (-> *) <procedure> *)))
     (define-r7rs apply (world-function llbase "llbase_apply" (-> <procedure> <any> * *)))
 
     (define-r7rs number? (make-predicate <number>))
@@ -372,11 +326,11 @@
             (- num)
             num))))
 
-    (define-r7rs truncate/ (world-function llbase "llbase_truncate_div" (-> <native-int64> <native-int64> (Values <exact-integer> <exact-integer>))))
+    (define-r7rs truncate/ (world-function llbase "llbase_truncate_div" (-> <native-int64> <native-int64> (Pairof <exact-integer> <exact-integer>))))
     (define-r7rs truncate-quotient (world-function llbase "llbase_truncate_quotient" (-> <native-int64> <native-int64> <native-int64>)))
     (define-r7rs truncate-remainder (world-function llbase "llbase_truncate_remainder" (-> <native-int64> <native-int64> <native-int64>)))
 
-    (define-r7rs floor/ (world-function llbase "llbase_floor_div" (-> <native-int64> <native-int64> (Values <exact-integer> <exact-integer>))))
+    (define-r7rs floor/ (world-function llbase "llbase_floor_div" (-> <native-int64> <native-int64> (Pairof <exact-integer> <exact-integer>))))
     (define-r7rs floor-quotient (world-function llbase "llbase_floor_quotient" (-> <native-int64> <native-int64> <native-int64>)))
     (define-r7rs floor-remainder (world-function llbase "llbase_floor_remainder" (-> <native-int64> <native-int64> <native-int64>)))
 
@@ -401,7 +355,7 @@
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-lcm rest))))
 
-    (define-r7rs exact-integer-sqrt (world-function llbase "llbase_exact_integer_sqrt" (-> <native-int64> (Values <exact-integer> <exact-integer>))))
+    (define-r7rs exact-integer-sqrt (world-function llbase "llbase_exact_integer_sqrt" (-> <native-int64> (Pairof <exact-integer> <exact-integer>))))
 
     (define native-number->string (world-function llbase "llbase_number_to_string" (-> <number> <native-uint8> <string>)))
     (define-r7rs (number->string [num : <number>] [radix : <exact-integer> 10])

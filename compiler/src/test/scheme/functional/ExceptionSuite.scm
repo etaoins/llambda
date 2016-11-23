@@ -75,17 +75,6 @@
              (else 'fallthrough))
            'no-except))
 
-  ; This doesn't invoke the handler it all and returns a multiple values
-  (assert-equal '(1 2 3)
-    (call-with-values
-      (lambda ()
-        (guard (condition
-                 ((assv 'a condition) => cdr)
-                 ((assv 'b condition))
-                 (else 'fallthrough))
-               (values 1 2 3)))
-      (lambda args args)))
-
   ; Make sure the guard conditions are evaluated in the dynamic environment of the guard
   (define test-parameter (make-parameter 'default))
   (parameterize ((test-parameter 'outer1))

@@ -2,6 +2,7 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProperList.h"
+#include "binding/TypedPairCell.h"
 
 #include <cmath>
 #include <cfloat>
@@ -376,7 +377,7 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCe
 	}
 }
 
-ReturnValues<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -391,7 +392,7 @@ ReturnValues<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t n
 	auto quotient = numerator / denominator;
 	auto remainder = numerator % denominator;
 
-	return ReturnValues<ExactIntegerCell>::emplaceValues(world, {quotient, remainder});
+	return TypedPairCell<ExactIntegerCell, ExactIntegerCell>::emplaceValues(world, quotient, remainder);
 }
 
 std::int64_t llbase_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -425,7 +426,7 @@ std::int64_t llbase_truncate_remainder(World &world, std::int64_t numerator, std
 	return numerator % denominator;
 }
 
-ReturnValues<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -438,7 +439,7 @@ ReturnValues<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t nume
 	}
 
 	auto floorResult = floorDivision(numerator, denominator);
-	return ReturnValues<ExactIntegerCell>::emplaceValues(world, {floorResult.quotient, floorResult.remainder});
+	return TypedPairCell<ExactIntegerCell, ExactIntegerCell>::emplaceValues(world, floorResult.quotient, floorResult.remainder);
 }
 
 std::int64_t llbase_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -536,7 +537,7 @@ std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<ExactIntegerC
 	return (result < 0) ? -result : result;
 }
 
-ReturnValues<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64_t val)
+TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64_t val)
 {
 	if (val < 0)
 	{
@@ -547,7 +548,7 @@ ReturnValues<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int
 	const std::int64_t floorResult = std::sqrt(val);
 	const std::int64_t remainder = val - (floorResult * floorResult);
 
-	return ReturnValues<ExactIntegerCell>::emplaceValues(world, {floorResult, remainder});
+	return TypedPairCell<ExactIntegerCell, ExactIntegerCell>::emplaceValues(world, floorResult, remainder);
 }
 
 }

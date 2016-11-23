@@ -394,18 +394,6 @@
   (define escaped-lambda (car escape-list))
   (escaped-lambda)))
 
-(define-test "invoking procedures returned from multiple value lists" (expect-output (-1)
-  (import (scheme write))
-  (import (scheme process-context))
-
-  (call-with-values
-    (lambda ()
-      (values
-        (if (dynamic-true) write exit)
-        (if (dynamic-false) + -)))
-    (lambda (writer proc)
-      (writer (proc 1 2))))))
-
 (define-test "trivial typed tail recursion" (expect ()
   (import (llambda typed))
 

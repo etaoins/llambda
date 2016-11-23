@@ -71,14 +71,14 @@
   ; initialize v to vector of sequential integers
   (define (initialize! v)
     (define (iter v n) (if (>= n (vector-length v))
-                         (values)
+                         #!unit
                          (begin (vector-set! v n n) (iter v (+ n 1)))))
     (iter v 0))
 
   ; set every nth element of vector v to 0,
   ; starting with element m
   (define (strike! v m n)
-    (cond ((>= m (vector-length v)) (values))
+    (cond ((>= m (vector-length v)) #!unit)
           (else (begin
                   (vector-set! v m 0)
                   (strike! v (+ m n) n)))))

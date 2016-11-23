@@ -277,7 +277,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       (quotientValueOpt, remainderValueOpt) match {
         case (Some(quotientValue), Some(remainderValue)) =>
           plan.steps ++= inlinePlan.steps
-          Some(ResultValues(List(quotientValue, remainderValue)))
+          Some(SingleValue(ValuesToPair(quotientValue, remainderValue, None)))
 
         case _ =>
           None

@@ -283,7 +283,7 @@
 
   (ann (list-tabulate 4 *) (Listof <number>))
 
-  (assert-equal '(0 1 2 3) (list-tabulate 4 values))
+  (assert-equal '(0 1 2 3) (list-tabulate 4 (lambda (x) x)))
 
   (assert-equal '("" "*" "**" "***") (list-tabulate 4 (lambda (n) (make-string n #\*))))))
 

@@ -26,7 +26,6 @@ object Primitives {
   object SyntaxRules extends PrimitiveExpr
 
   object Define extends PrimitiveDefineExpr
-  object DefineValues extends PrimitiveDefineExpr
   object DefineSyntax extends PrimitiveDefineExpr
   object DefineRecordType extends PrimitiveDefineExpr
   object DefineType extends PrimitiveDefineExpr
@@ -68,7 +67,6 @@ object Primitives {
       "unquote" -> Unquote,
       "unquote-splicing" -> UnquoteSplicing,
       "define" -> Define,
-      "define-values" -> DefineValues,
       "define-syntax" -> DefineSyntax,
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,

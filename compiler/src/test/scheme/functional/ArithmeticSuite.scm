@@ -152,36 +152,52 @@
   (/)))
 
 (define-test "(truncate/)" (expect-success
-  (let-values (((quot remain) (truncate/ 5 2)))
+  (let* ((result (truncate/ 5 2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal 1 remain))
 
-  (let-values (((quot remain) (truncate/ -5 2)))
+  (let* ((result (truncate/ -5 2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal -2 quot)
     (assert-equal -1 remain))
 
-  (let-values (((quot remain) (truncate/ 5 -2)))
+  (let* ((result (truncate/ 5 -2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal -2 quot)
     (assert-equal 1 remain))
 
-  (let-values (((quot remain) (truncate/ -5 -2)))
+  (let* ((result (truncate/ -5 -2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal -1 remain))
 
   ; Our native code generation requires a constant denominator to avoid divide by zero checks
-  (let-values (((quot remain) (truncate/ (typed-dynamic 5 <exact-integer>) 2)))
+  (let* ((result (truncate/ (typed-dynamic 5 <exact-integer>) 2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal 1 remain))
 
-  (let-values (((quot remain) (truncate/ (typed-dynamic -5 <exact-integer>) 2)))
+  (let* ((result (truncate/ (typed-dynamic -5 <exact-integer>) 2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal -2 quot)
     (assert-equal -1 remain))
 
-  (let-values (((quot remain) (truncate/ (typed-dynamic 5 <exact-integer>) -2)))
+  (let* ((result (truncate/ (typed-dynamic 5 <exact-integer>) -2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal -2 quot)
     (assert-equal 1 remain))
 
-  (let-values (((quot remain) (truncate/ (typed-dynamic -5 <exact-integer>) -2)))
+  (let* ((result (truncate/ (typed-dynamic -5 <exact-integer>) -2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal -1 remain))))
 
@@ -240,19 +256,27 @@
     (truncate-remainder 5 0)))
 
 (define-test "(floor/)" (expect-success
-  (let-values (((quot remain) (floor/ 5 2)))
+  (let* ((result (floor/ 5 2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal 1 remain))
 
-  (let-values (((quot remain) (floor/ -5 2)))
+  (let* ((result (floor/ -5 2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal -3 quot)
     (assert-equal 1 remain))
 
-  (let-values (((quot remain) (floor/ 5 -2)))
+  (let* ((result (floor/ 5 -2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal -3 quot)
     (assert-equal -1 remain))
 
-  (let-values (((quot remain) (floor/ -5 -2)))
+  (let* ((result (floor/ -5 -2))
+         (quot (car result))
+         (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal -1 remain))))
 
@@ -410,20 +434,28 @@
   (assert-equal 576 (lcm 32 -36 192))))
 
 (define-test "(exact-integer-sqrt)" (expect-success
-  (let-values (((root rem) (exact-integer-sqrt 0)))
+  (let* ((result (exact-integer-sqrt 0))
+         (root (car result))
+         (rem (cdr result)))
     (assert-equal 0 root)
     (assert-equal 0 rem))
 
-  (let-values (((root rem) (exact-integer-sqrt 4)))
+  (let* ((result (exact-integer-sqrt 4))
+         (root (car result))
+         (rem (cdr result)))
     (assert-equal 2 root)
     (assert-equal 0 rem))
 
-  (let-values (((root rem) (exact-integer-sqrt 5)))
+  (let* ((result (exact-integer-sqrt 5))
+         (root (car result))
+         (rem (cdr result)))
     (assert-equal 2 root)
     (assert-equal 1 rem))
 
   ; Ensure large integer values work correctly - converting to double won't work here
-  (let-values (((root rem) (exact-integer-sqrt 4611686018427387911)))
+  (let* ((result (exact-integer-sqrt 4611686018427387911))
+         (root (car result))
+         (rem (cdr result)))
     (assert-equal 2147483648 root)
     (assert-equal 7 rem))))
 

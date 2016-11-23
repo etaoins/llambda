@@ -245,45 +245,6 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
 
-  test("procedure returning multiple values") {
-    val signature = signatureFor("""
-      (lambda ()
-        (values 1 'a #f))""")
-
-    val multipleValueListType = vt.SpecificProperListType(List(
-      vt.ExactIntegerType,
-      vt.LiteralSymbolType("a"),
-      vt.LiteralBooleanType(false)
-    ))
-
-    assert(signature.mandatoryArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.MultipleValues(multipleValueListType))
-  }
-
-  test("procedure returning multiple values across (if)") {
-    val signature = signatureFor("""
-      (lambda ()
-        (if (dynamic-true)
-          (values 1 'a #f)
-          (values 2 '() #t)))""")
-
-    val multipleValueListType = vt.UnionType(Set(
-      vt.SpecificProperListType(List(
-        vt.ExactIntegerType,
-        vt.LiteralSymbolType("a"),
-        vt.LiteralBooleanType(false)
-      )),
-      vt.SpecificProperListType(List(
-        vt.ExactIntegerType,
-        vt.EmptyListType,
-        vt.LiteralBooleanType(true)
-      ))
-    ))
-
-    assert(signature.mandatoryArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.MultipleValues(multipleValueListType))
-  }
-
   test("procedure unconditionally terminating is annotated as NoReturn") {
     val signature = signatureFor("""
       (lambda ()

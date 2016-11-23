@@ -43,28 +43,6 @@ case class ExtractedVarsDefine(
 )
 
 object ExtractDefine {
-  private def parseMultipleValueDefine(
-      argList : List[sst.ScopedDatum],
-      argTerminator : sst.ScopedDatum,
-      initialiserDatum : sst.ScopedDatum
-  )(implicit context : FrontendContext) : ExtractedVarsDefine = {
-    val parsedFormals = ParseFormals(argList, argTerminator, allowOptionals=false)
-
-    val fixedValueTargets = parsedFormals.mandatoryArgs map { case (symbol, schemeTypeOpt) =>
-      ValueTarget(symbol, schemeTypeOpt)
-    }
-
-    val restValueTargetOpt = parsedFormals.restArgOpt map { case (symbol, memberTypeOpt) =>
-      ValueTarget(symbol, memberTypeOpt.map(vt.UniformProperListType(_)))
-    }
-
-    ExtractedVarsDefine(
-      fixedValueTargets=fixedValueTargets,
-      restValueTargetOpt=restValueTargetOpt,
-      expr=() => {ExtractExpr(initialiserDatum) }
-    )
-  }
-
   private def bindValue(symbol : sst.ScopedSymbol, value : BoundValue) : Unit = {
     if (symbol.scope.bindings.contains(symbol.name)) {
       throw new DuplicateDefinitionException(symbol)
@@ -119,9 +97,6 @@ object ExtractDefine {
             typeDeclaration=LocTypeDeclarationForSymbol(symbol)
           ).assignLocationAndContextFrom(located, context.debugContext)
         }))
-
-      case (Primitives.DefineValues, List(sst.ScopedListOrDatum(operands, operandTerminator), initialiser)) =>
-        List(parseMultipleValueDefine(operands, operandTerminator, initialiser))
 
       case (Primitives.DefineSyntax, _) =>
         val (symbol, parsedSyntax) = ParseSyntaxDefine(located, operands, context.debugContext)

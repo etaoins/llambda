@@ -48,8 +48,7 @@ object ReportProcPlanner {
   val typingPlanners = List[ReportProcPlanner](
     ApplyProcPlanner,
     EquivalenceProcPlanner,
-    NumberPredicateProcPlanner,
-    ValuesProcPlanner
+    NumberPredicateProcPlanner
   )
 
   // These planners primarily exist for optimisation

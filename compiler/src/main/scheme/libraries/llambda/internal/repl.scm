@@ -7,13 +7,5 @@
 
   (begin
     (define write-stdout (native-function system-library "llcore_write_stdout" (-> <any> <unit>)))
-
-    ; This is used to pretty print results inside the REPL. This works like (write) unless multiple values are provided.
-    (define (print-thunk-result [thunk : (-> *)])
-      (call-with-values thunk
-                        (lambda vals
-                          (if (= 1 (length vals))
-                            ; Only one value
-                            (write-stdout (car vals))
-                            ; Multiple values
-                            (write-stdout `(values ,@vals))))))))
+    (define (print-thunk-result [thunk : (-> <any>)])
+      (write-stdout (thunk)))))

@@ -56,17 +56,4 @@ ReturnValues<AnyCell> *llbase_apply(World &world, TopProcedureCell *procedure, R
 	return procedure->apply(world, procArgHead);
 }
 
-ReturnValues<AnyCell>* llbase_values(RestValues<AnyCell> *restArgHead)
-{
-	return restArgHead;
-}
-
-ReturnValues<AnyCell> *llbase_call_with_values(World &world, ThunkProcedureCell *producer, TopProcedureCell *consumerRaw)
-{
-	alloc::StrongRef<TopProcedureCell> consumer(world, consumerRaw);
-
-	ReturnValues<AnyCell> *values = producer->apply(world);
-	return consumer->apply(world, values);
-}
-
 }

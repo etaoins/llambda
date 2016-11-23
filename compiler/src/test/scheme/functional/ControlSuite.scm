@@ -1,61 +1,8 @@
-(define-test "(define) doesn't accept multiple values" (expect-error arity-error?
-  (define x (values 1 2 3))))
-
-(define-test "(define) accepts single value produced with (values)" (expect test
-  (define x (values 'test))
-  x))
-
-(define-test "(call-with-values) with single value" (expect -1
-  (call-with-values * -)))
-
-(define-test "(call-with-values) with wrong producer arity fails at compile time" (expect-compile-error arity-error?
-  (call-with-values (lambda (extra-arg)) -)))
-
-(define-test "(call-with-values) with multiple values" (expect-static-success
-  (assert-equal 9
-    (call-with-values (lambda () (values 4 5))
-                      (lambda (a b) (+ a b))))))
-
-(define-test "(call-with-values) with mismatched arity fails" (expect-error arity-error?
-  (call-with-values (lambda () (values 4 5))
-                    (lambda (a b c) b))))
-
-(define-test "(call-with-values) with wrong type fails" (expect-error type-error?
-  (import (llambda typed))
-  (call-with-values (lambda () (values 4 5))
-                    (lambda ([a : <exact-integer>] [b : <flonum>]) b))))
-
-(define-test "(call-with-values) with zero values returning multiple values" (expect (a b c)
-  (call-with-values
-    (lambda ()
-      (call-with-values (lambda () (values))
-                        (lambda () (values 'a 'b 'c))))
-    (lambda values-list
-      values-list))))
-
-(define-test "multiple values returned from (if)" (expect (1 2 3 4)
-  (define (return-multiple)
-    (if (dynamic-true)
-      (values 1 2 3 4)
-      (values 4 5 6 7)))
-
-  (call-with-values return-multiple
-                    (lambda values-list values-list))))
-
-(define-test "(values) converted to type with incompatible arg and return fails" (expect-compile-error type-error?
-  (import (llambda typed))
-
-  (: convert-string (-> <string> (-> <string> <symbol>) <symbol>))
-  (define (convert-string str converter)
-    (converter str))
-
-  (convert-string "Hello" values)))
-
 (define-test "(vector-map)" (expect-success
   (assert-equal #(b e h) (vector-map cadr '#((a b) (d e) (g h))))
   (assert-equal #(1 4 27 256 3125) (vector-map (lambda (n) (expt n n)) '#(1 2 3 4 5)))
   (assert-equal #(5 7 9) (vector-map + '#(1 2 3) '#(4 5 6 7)))
-  (assert-equal #(1 2 3) (vector-map values '#(1 2 3)))
+  (assert-equal #(1 2 3) (vector-map (lambda (x) x) '#(1 2 3)))
 
   (assert-equal #(1 2)
                 (let ((count 0))
@@ -64,9 +11,6 @@
                       (set! count (+ count 1))
                       count)
                     '#(a b))))))
-
-(define-test "(vector-map) with multiple value return fails" (expect-error arity-error?
-  (vector-map values #(1 2 3) #(4 5 6))))
 
 (define-test "(vector-for-each)" (expect-success
   (import (llambda typed))
@@ -78,13 +22,11 @@
                     '#(0 1 2 3 4))
                   v))
 
-  ; We should be able to iterate while returning mulitple values unlike (vector-map)
   (define counter : <exact-integer> 0)
 
   (vector-for-each
     (lambda (i)
-      (set! counter (+ counter 1))
-      (values i counter))
+      (set! counter (+ counter 1)))
     #(a b c d e f))
 
   (assert-equal 6 counter)))
@@ -93,7 +35,7 @@
   (assert-equal '(b e h) (map cadr '((a b) (d e) (g h))))
   (assert-equal '(1 4 27 256 3125) (map (lambda (n) (expt n n)) '(1 2 3 4 5)))
   (assert-equal '(5 7 9) (map + '(1 2 3) '(4 5 6 7)))
-  (assert-equal '(1 2 3) (map values '(1 2 3)))
+  (assert-equal '(1 2 3) (map (lambda (x) x) '(1 2 3)))
 
   (assert-equal '(1 2)
                 (let ((count 0))
@@ -102,9 +44,6 @@
                       (set! count (+ count 1))
                       count)
                     '(a b))))))
-
-(define-test "(map) with multiple value return fails" (expect-error arity-error?
-  (map values '(1 2 3) '(4 5 6))))
 
 (define-test "(for-each)" (expect-success
   (import (llambda typed))
@@ -116,13 +55,11 @@
                     '(0 1 2 3 4))
                   v))
 
-  ; We should be able to iterate while returning mulitple values unlike (vector-map)
   (define acc : <exact-integer> 0)
 
   (for-each
     (lambda (i)
-      (set! acc (+ acc i))
-      (values i acc))
+      (set! acc (+ acc i)))
     '(1 2 3 4 5))
 
   (assert-equal 15 acc)))
