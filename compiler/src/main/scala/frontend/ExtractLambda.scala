@@ -152,14 +152,14 @@ object ExtractLambda {
           mandatoryArgTypes=formalsMandatoryArgTypes.map(_._2),
           optionalArgTypes=formalsOptionalArgTypes.map(_._2),
           restArgMemberTypeOpt=formalsRestArgMemberTypeOpt.map(_._2),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic
 
         ReconciledTypes(
           formalsMandatoryArgTypes,
           formalsOptionalArgTypes,
           formalsRestArgMemberTypeOpt,
-          vt.ReturnType.ArbitraryValues,
+          vt.ReturnType.SingleValue(vt.AnySchemeType),
           polyType)
     }
   }

@@ -17,6 +17,6 @@ object ConvertibleToReturnType {
         Some(true)
 
       case (destType, sourceType) =>
-        SatisfiesType(destType.toValueListType, sourceType.toValueListType)
+        SatisfiesType(destType.schemeType, sourceType.schemeType)
     }
 }

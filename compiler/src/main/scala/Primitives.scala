@@ -43,7 +43,6 @@ object Primitives {
   object ListofType extends PrimitiveTypeConstructor
   object ListType extends PrimitiveTypeConstructor
   object RecType extends PrimitiveTypeConstructor
-  object ValuesType extends PrimitiveTypeConstructor
   object ProcedureType extends PrimitiveTypeConstructor
   object OptionalProcedureType extends PrimitiveTypeConstructor
   object CaseProcedureType extends PrimitiveTypeConstructor
@@ -92,7 +91,6 @@ object Primitives {
       "Listof" -> ListofType,
       "List" -> ListType,
       "Rec" -> RecType,
-      "Values" -> ValuesType,
       "->" -> ProcedureType,
       "->*" -> OptionalProcedureType,
       "case->" -> CaseProcedureType,

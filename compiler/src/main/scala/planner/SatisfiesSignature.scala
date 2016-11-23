@@ -27,7 +27,6 @@ object SatisfiesSignature {
     * - Have the same number of mandatory arguments and they're covariant
     * - Have the same number of optional arguments and they're covariant
     * - Have the same number of rest arguments and they're covariant
-    * - Either both return a single value or both return multiple values with covariant types
     *
     * This test is much more strict than procedure type checks which work on an abstract type system level instead of
     * a calling convention level.
@@ -96,9 +95,6 @@ object SatisfiesSignature {
 
       case (vt.ReturnType.SingleValue(superSingle), vt.ReturnType.SingleValue(derivedSingle)) =>
         satisfiesRepresentation(superSingle, derivedSingle)
-
-      case (vt.ReturnType.MultipleValues(superList), vt.ReturnType.MultipleValues(derivedList)) =>
-        vt.SatisfiesType(superList, derivedList) == Some(true)
 
       case _ =>
         false

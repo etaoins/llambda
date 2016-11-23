@@ -15,9 +15,9 @@ using namespace lliby;
 extern "C"
 {
 
-using HandlerProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*, AnyCell*>;
+using HandlerProcedureCell = TypedProcedureCell<AnyCell*, AnyCell*>;
 
-ReturnValues<AnyCell> *llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
+AnyCell* llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
 {
 	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell());

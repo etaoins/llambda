@@ -19,7 +19,7 @@ namespace
 	// startup
 	RecordLikeCell::RecordClassIdType registeredClassId = ~0;
 
-	ReturnValues<AnyCell> *procedureBody(World &world, ProcedureCell *self, RestValues<AnyCell> *argList)
+	AnyCell* procedureBody(World &world, ProcedureCell *self, RestValues<AnyCell> *argList)
 	{
 		assert(ParameterProcedureCell::isInstance(self));
 
@@ -30,10 +30,7 @@ namespace
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point
 		auto parameterProc = static_cast<ParameterProcedureCell*>(self);
-		AnyCell *paramValue = State::activeState(world)->valueForParameter(parameterProc);
-
-		// Return a list of values
-		return ReturnValues<AnyCell>::create(world, {paramValue});
+		return State::activeState(world)->valueForParameter(parameterProc);
 	}
 }
 

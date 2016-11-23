@@ -98,7 +98,7 @@ class InstantiateTypeSuite extends FunSuite {
       mandatoryArgTypes=List(polyA, PortType),
       optionalArgTypes=List(PortType, polyA),
       restArgMemberTypeOpt=Some(polyB),
-      returnType=ReturnType.SpecificValues(List(polyA, StringType))
+      returnType=ReturnType.SingleValue(polyA)
     )
 
     val reconciled = ReconcileTypeVars.Result(Map(
@@ -110,7 +110,7 @@ class InstantiateTypeSuite extends FunSuite {
       mandatoryArgTypes=List(ExactIntegerType, PortType),
       optionalArgTypes=List(PortType, ExactIntegerType),
       restArgMemberTypeOpt=Some(FlonumType),
-      returnType=ReturnType.SpecificValues(List(ExactIntegerType, StringType))
+      returnType=ReturnType.SingleValue(ExactIntegerType)
     )
 
     assert(InstantiateType(reconciled, polyProc) == expected)

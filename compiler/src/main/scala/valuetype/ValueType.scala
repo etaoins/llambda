@@ -431,7 +431,7 @@ case class CaseProcedureType(
     Some(this)
 }
 
-object TopProcedureType extends ProcedureType(Nil, Nil, Some(AnySchemeType), ReturnType.ArbitraryValues)
+object TopProcedureType extends ProcedureType(Nil, Nil, Some(AnySchemeType), ReturnType.SingleValue(AnySchemeType))
 
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))

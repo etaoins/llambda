@@ -389,7 +389,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(body === et.Literal(ast.BooleanLiteral(true)))
@@ -401,7 +401,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.AnySchemeType)
@@ -414,7 +414,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
@@ -428,7 +428,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.AnySchemeType)
@@ -456,7 +456,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.AnySchemeType)
@@ -471,7 +471,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.NumberType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.NumberType)
@@ -484,7 +484,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
@@ -498,7 +498,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.ExactIntegerType, vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.SymbolType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.ExactIntegerType)
@@ -522,7 +522,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=List(vt.StringType),
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.StringType)
@@ -537,7 +537,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(body === et.VarRef(argX))
@@ -576,7 +576,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
@@ -601,7 +601,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.AnySchemeType)
@@ -630,7 +630,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.AnySchemeType)
@@ -656,7 +656,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.SymbolType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.SymbolType)
@@ -676,7 +676,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.AnySchemeType)
@@ -704,7 +704,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.BooleanType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.StringType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.BooleanType)
@@ -725,7 +725,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.UniformProperListType(vt.StringType)),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(restArg.schemeType === vt.UniformProperListType(vt.UniformProperListType(vt.StringType)))
@@ -750,7 +750,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=List(vt.BooleanType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.StringType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.BooleanType)
@@ -770,7 +770,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
@@ -795,7 +795,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.PortType),
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(restArg.schemeType === vt.UniformProperListType(vt.PortType))
@@ -814,7 +814,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.ArbitraryValues
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
         ).toPolymorphic)
 
         assert(bodyExpr === et.VarRef(storageLoc))

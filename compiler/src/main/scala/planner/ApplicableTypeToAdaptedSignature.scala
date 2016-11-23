@@ -39,7 +39,7 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.ArbitraryValues,
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
           attributes=Set()
         )
     }

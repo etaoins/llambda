@@ -97,7 +97,7 @@
   (assert-equal 'four (hash-map-ref number-hash-map 4 (lambda () 'four)))
 
   (assert-raises invalid-argument-error?
-    (assert-equal #f (hash-map-ref number-hash-map 4)))))
+    (hash-map-ref number-hash-map 4))))
 
 (define-test "(hash-map->alist)" (expect-success
   (import (llambda hash-map))

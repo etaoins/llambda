@@ -159,7 +159,7 @@ class AnalyseExprsSuite extends FunSuite {
       et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Apply(
         et.Lambda(
-          polyType=vt.ProcedureType(Nil, Nil, None, vt.ReturnType.ArbitraryValues).toPolymorphic,
+          polyType=vt.ProcedureType(Nil, Nil, None, vt.ReturnType.SingleValue(vt.AnySchemeType)).toPolymorphic,
           mandatoryArgs=Nil,
           optionalArgs=Nil,
           restArgOpt=None,
@@ -191,7 +191,7 @@ class AnalyseExprsSuite extends FunSuite {
       et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Apply(
         et.Lambda(
-          polyType=vt.ProcedureType(Nil, Nil, None, vt.ReturnType.ArbitraryValues).toPolymorphic,
+          polyType=vt.ProcedureType(Nil, Nil, None, vt.ReturnType.SingleValue(vt.AnySchemeType)).toPolymorphic,
           mandatoryArgs=Nil,
           optionalArgs=Nil,
           restArgOpt=None,
@@ -220,7 +220,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testExprs = List(
       et.TopLevelDefine(et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(true)))),
       et.Lambda(
-        polyType=vt.ProcedureType(Nil, Nil, None, vt.ReturnType.ArbitraryValues).toPolymorphic,
+        polyType=vt.ProcedureType(Nil, Nil, None, vt.ReturnType.SingleValue(vt.AnySchemeType)).toPolymorphic,
         mandatoryArgs=Nil,
         optionalArgs=Nil,
         restArgOpt=None,

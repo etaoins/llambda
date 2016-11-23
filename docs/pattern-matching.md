@@ -3,7 +3,7 @@ Pattern Matching
 
 Llambda provide a simple [pattern matching](http://en.wikipedia.org/wiki/Pattern_matching) facility in the ``(llambda match)`` library. Pattern matching allows specific data structures to be matched and can extract values from within those structures. This is particularly useful for actors to recognise and deconstruct incoming messages.
 
-The ``(match)`` primitive is the basis of pattern matching. It takes a single value to match followed by one or more clauses. The clauses are evaluated in order until a match is encountered. When a clause matches the body of the clause is evaluated and its value is returned as the value of the ``(match)`` expression. If none of the clauses match then a ``match-error`` will be signalled.
+The ``(match)`` primitive is the basis of pattern matching. It takes a value to match followed by one or more clauses. The clauses are evaluated in order until a match is encountered. When a clause matches the body of the clause is evaluated and its value is returned as the value of the ``(match)`` expression. If none of the clauses match then a ``match-error`` will be signalled.
 
 Literal Matches
 ---------------

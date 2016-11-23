@@ -57,25 +57,6 @@ object PlanResultValuesPhi {
           resultTemp=phiResultTemp,
           resultValues=SingleValue(new iv.CellValue(phiSchemeType, boxedValue))
         )
-
-      case _ =>
-        // Construct value lists to deal with this
-        val leftValueList = leftValues.toMultipleValueList()(leftPlan)
-        val rightValueList = rightValues.toMultipleValueList()(rightPlan)
-
-        val phiResultListType = leftValueList.schemeType + rightValueList.schemeType
-        val phiResultTemp = ps.Temp(phiResultListType)
-
-        // Don't use TempValueToIntermediate because it will attempt to stablise our list type even though
-        // the value list types are modifiable at this point
-        val phiResultList = new iv.CellValue(phiResultListType, BoxedValue(phiResultListType.cellType, phiResultTemp))
-
-        Result(
-          leftTempValue=leftValueList.toTempValue(phiResultListType)(leftPlan),
-          rightTempValue=rightValueList.toTempValue(phiResultListType)(rightPlan),
-          resultTemp=phiResultTemp,
-          resultValues=MultipleValues(phiResultList)
-        )
     }
 }
 

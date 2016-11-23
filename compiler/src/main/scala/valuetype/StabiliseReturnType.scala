@@ -16,8 +16,5 @@ object StabiliseReturnType {
 
     case ReturnType.SingleValue(valueType) =>
       ReturnType.SingleValue[SchemeType](StabiliseType(valueType))
-
-    case ReturnType.MultipleValues(valueType) =>
-      ReturnType.MultipleValues(StabiliseType(valueType))
   }
 }

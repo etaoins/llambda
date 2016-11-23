@@ -320,25 +320,8 @@ object ExtractType {
       throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol or type constructor application")
   }
 
-  def extractReturnValueType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.ValueType] = datum match {
-    case sst.ScopedSymbol(_, "*") =>
-      vt.ReturnType.ArbitraryValues
-
-    case sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: argData) =>
-      constructorName.resolve match {
-        case Primitives.ValuesType =>
-          val valueTypes = argData.map(extractNonEmptySchemeType(_))
-          vt.ReturnType.SpecificValues(valueTypes)
-
-        case _ =>
-          vt.ReturnType.SingleValue(
-            applyTypeConstructor(constructorName, argData, RecursiveVars())
-          )
-      }
-
-    case otherDatum =>
-      vt.ReturnType.SingleValue(extractValueType(otherDatum))
-  }
+  def extractReturnValueType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.ValueType] =
+    vt.ReturnType.SingleValue(extractValueType(datum))
 
   def extractReturnSchemeType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.SchemeType] =
     extractReturnValueType(datum) match {
@@ -350,9 +333,6 @@ object ExtractType {
 
       case vt.ReturnType.SingleValue(_) =>
         throw new BadSpecialFormException(datum, "Native return type used where Scheme type expected")
-
-      case multipleValues : vt.ReturnType.MultipleValues =>
-        multipleValues
     }
 
   def extractLocTypeDeclaration(datum : sst.ScopedDatum) : LocTypeDeclaration = datum match {

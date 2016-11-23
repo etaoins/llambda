@@ -192,26 +192,6 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     }
   }
 
-  test("function taking double and returning arbitrary values") {
-    val expectedFunction = et.NativeFunction(
-      NativeSystemLibrary,
-      ProcedureSignature(
-        hasWorldArg=false,
-        hasSelfArg=false,
-        mandatoryArgTypes=List(vt.Double),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.ArbitraryValues,
-        attributes=Set()
-      ).toPolymorphic,
-      "lliby_newline"
-    )
-
-    assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (-> <native-double> *))""")
-    }
-  }
-
   test("function taking a integer cell and returning a rational cell") {
     val expectedFunction = et.NativeFunction(
       NativeSystemLibrary,

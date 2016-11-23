@@ -63,20 +63,6 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     returnType=ReturnType.SingleValue(StringType)
   )
 
-  val symbolToMultipleStringProcedure = ProcedureType(
-    mandatoryArgTypes=List(SymbolType),
-    optionalArgTypes=Nil,
-    restArgMemberTypeOpt=None,
-    returnType=ReturnType.SpecificValues(List(StringType, StringType))
-  )
-
-  val symbolToArbitraryProcedure = ProcedureType(
-    mandatoryArgTypes=List(SymbolType),
-    optionalArgTypes=Nil,
-    restArgMemberTypeOpt=None,
-    returnType=ReturnType.ArbitraryValues
-  )
-
   val symbolToUnitProcedure = ProcedureType(
     mandatoryArgTypes=List(SymbolType),
     optionalArgTypes=Nil,
@@ -227,28 +213,12 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(twoStringToPortProcedure, twoStringToNumberProcedure) === Some(false))
   }
 
-  test("procedure returning single value satisfies procedure returning unit") {
+  test("procedure returning a value satisfies procedure returning unit") {
     assert(SatisfiesType(symbolToUnitProcedure, symbolToStringProcedure) === Some(true))
   }
 
-  test("procedure returning unit does not satisfy procedure returning single value") {
+  test("procedure returning unit does not satisfy procedure returning a value") {
     assert(SatisfiesType(symbolToStringProcedure, symbolToUnitProcedure) === Some(false))
-  }
-
-  test("procedure returning multiple values satisfies procedure returning unit") {
-    assert(SatisfiesType(symbolToUnitProcedure, symbolToMultipleStringProcedure) === Some(true))
-  }
-
-  test("procedure returning unit does not satisfy procedure returning multiple values") {
-    assert(SatisfiesType(symbolToMultipleStringProcedure, symbolToUnitProcedure) === Some(false))
-  }
-
-  test("procedure returning arbitrary values satisfies procedure returning unit") {
-    assert(SatisfiesType(symbolToUnitProcedure, symbolToArbitraryProcedure) === Some(true))
-  }
-
-  test("procedure returning unit satisfies procedure returning multiple values") {
-    assert(SatisfiesType(symbolToArbitraryProcedure, symbolToUnitProcedure) === Some(true))
   }
 
   test("procedure with unreachable return satisfies procedure returning string") {
@@ -257,14 +227,6 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
 
   test("the union of two identical specific procedure types is that procedure type") {
     assert((twoStringToPortProcedure + twoStringToPortProcedure) === twoStringToPortProcedure)
-  }
-
-  test("procedure returning single value does not satisfy procedure returning multiple values") {
-    assert(SatisfiesType(symbolToMultipleStringProcedure, symbolToStringProcedure) === Some(false))
-  }
-
-  test("procedure returning multiple values does not satisfy procedure returning single value") {
-    assert(SatisfiesType(symbolToStringProcedure, symbolToMultipleStringProcedure) === Some(false))
   }
 
   test("procedure with optional string definitely satisfies procedure with mandatory string argument") {

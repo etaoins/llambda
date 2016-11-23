@@ -16,9 +16,5 @@ object TempValueToResults {
       case vt.ReturnType.SingleValue(valueType) =>
         val singleValue = TempValueToIntermediate(valueType, resultTemp)(plan.config)
         SingleValue(singleValue)
-
-      case multipleValues @ vt.ReturnType.MultipleValues(valueListType) =>
-        val multipleValueList = TempValueToIntermediate(valueListType, resultTemp)(plan.config)
-        MultipleValues(multipleValueList)
     }
 }

@@ -13,7 +13,7 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValues<AnyCell> *llbase_apply(World &world, TopProcedureCell *procedure, RestValues<AnyCell> *applyArgList)
+AnyCell* llbase_apply(World &world, TopProcedureCell *procedure, RestValues<AnyCell> *applyArgList)
 {
 	RestValues<AnyCell> *procArgHead;
 

@@ -141,14 +141,14 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     assert(result === expected)
   }
 
-  test("function taking union of port and symbol returning arbitrary multiple values") {
+  test("function taking union of port and symbol") {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
       mandatoryArgTypes=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.ArbitraryValues,
+      returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
       attributes=Set()
     )
 
@@ -156,7 +156,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
 
     val expected = ProcedureSignatureToIr.Result(
       irSignature=IrSignature(
-        result=Result(PointerType(ct.ListElementCell.irType)),
+        result=Result(PointerType(ct.AnyCell.irType)),
         arguments=List(Argument(PointerType(ct.AnyCell.irType))),
         attributes=Set(NoUnwind)
       ),
@@ -193,33 +193,6 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       callMetadata=Map(
         "range" -> RangeMetadata(IntegerType(32), (0x0, 0x110000))
       )
-    )
-
-    assert(result === expected)
-  }
-
-  test("function only self and returning specific multiple values") {
-    val procSignature = ProcedureSignature(
-      hasWorldArg=false,
-      hasSelfArg=true,
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SpecificValues(List(vt.FlonumType, vt.ExactIntegerType)),
-      attributes=Set()
-    )
-
-    val result = ProcedureSignatureToIr(procSignature)
-
-    val expected = ProcedureSignatureToIr.Result(
-      irSignature=IrSignature(
-        result=Result(PointerType(ct.PairCell.irType)),
-        arguments=List(
-          Argument(PointerType(ct.ProcedureCell.irType))
-        ),
-        attributes=Set(NoUnwind)
-      ),
-      callMetadata=Map()
     )
 
     assert(result === expected)

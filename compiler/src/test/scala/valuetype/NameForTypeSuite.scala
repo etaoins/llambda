@@ -101,7 +101,7 @@ class NameForTypeSuite extends FunSuite {
   
   test("multiple type union") {
     val memberTypes = Set[NonUnionSchemeType](TopProcedureType, EmptyListType, UnitType)
-    assert(NameForType(UnionType(memberTypes)) === "(U (-> <any> * *) <empty-list> <unit>)")
+    assert(NameForType(UnionType(memberTypes)) === "(U (-> <any> * <any>) <empty-list> <unit>)")
   }
 
   test("<any>") {
@@ -143,28 +143,6 @@ class NameForTypeSuite extends FunSuite {
     )
 
     assert(NameForType(procedureType) === "(-> <string> <symbol> * <number>)")
-  }
-
-  test("(-> <string> <symbol> * (values <port> <unit>)") {
-    val procedureType = ProcedureType(
-      mandatoryArgTypes=List(StringType),
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(SymbolType),
-      returnType=ReturnType.SpecificValues(List(PortType, UnitType))
-    )
-
-    assert(NameForType(procedureType) === "(-> <string> <symbol> * (values <port> <unit>))")
-  }
-
-  test("(-> <any> * *)") {
-    val procedureType = ProcedureType(
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(AnySchemeType),
-      returnType=ReturnType.ArbitraryValues
-    )
-
-    assert(NameForType(procedureType) === "(-> <any> * *)")
   }
 
   test("(-> <any> <unit> (unreachable))") {

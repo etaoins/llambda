@@ -242,28 +242,6 @@ class SatisfiesSignatureSuite extends FunSuite {
     assert(SatisfiesSignature(superSignature, derivedSignature) === true)
   }
 
-  test("procedure signature returning single Scheme value does not satisfy a single value list") {
-    val derivedSignature = ProcedureSignature(
-      hasWorldArg=false,
-      hasSelfArg=false,
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.ExactIntegerType),
-      attributes=Set()
-    )
-
-    // We need this gross constructor to avoid SpecificValues returning a SingleValue automatically
-    val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.MultipleValues(
-        vt.SpecificProperListType(List(
-          vt.ExactIntegerType
-        ))
-      ))
-
-    assert(SatisfiesSignature(superSignature, derivedSignature) === false)
-  }
-
   test("procedure signature returning single native value satisfies itself") {
     val derivedSignature = ProcedureSignature(
       hasWorldArg=false,
@@ -298,7 +276,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
   }
 
-  test("procedure signature returning single value satisfies covariant value") {
+  test("procedure signature returning value satisfies covariant value") {
     val derivedSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
@@ -316,7 +294,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     assert(SatisfiesSignature(superSignature, derivedSignature) === true)
   }
 
-  test("procedure signature returning single value does not satisfy contravariant value") {
+  test("procedure signature returning value does not satisfy contravariant value") {
     val derivedSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
@@ -329,77 +307,6 @@ class SatisfiesSignatureSuite extends FunSuite {
 
     val superSignature = derivedSignature.copy(
       returnType=vt.ReturnType.SingleValue(vt.ExactIntegerType)
-    )
-
-    assert(SatisfiesSignature(superSignature, derivedSignature) === false)
-  }
-
-
-  test("procedure signature returning multiple values satisfies itself") {
-    val derivedSignature = ProcedureSignature(
-      hasWorldArg=false,
-      hasSelfArg=false,
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SpecificValues(List(vt.ExactIntegerType, vt.ExactIntegerType)),
-      attributes=Set()
-    )
-
-    val superSignature = derivedSignature
-
-    assert(SatisfiesSignature(superSignature, derivedSignature) === true)
-  }
-
-  test("procedure signature returning multiple values satisfies covariant values") {
-    val derivedSignature = ProcedureSignature(
-      hasWorldArg=false,
-      hasSelfArg=false,
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SpecificValues(List(vt.ExactIntegerType, vt.ExactIntegerType)),
-      attributes=Set()
-    )
-
-    val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SpecificValues(List(vt.NumberType, vt.NumberType))
-    )
-
-    assert(SatisfiesSignature(superSignature, derivedSignature) === true)
-  }
-
-  test("procedure signature returning multiple values does not satisfy contravariant values") {
-    val derivedSignature = ProcedureSignature(
-      hasWorldArg=false,
-      hasSelfArg=false,
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SpecificValues(List(vt.NumberType, vt.NumberType)),
-      attributes=Set()
-    )
-
-    val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SpecificValues(List(vt.ExactIntegerType, vt.ExactIntegerType))
-    )
-
-    assert(SatisfiesSignature(superSignature, derivedSignature) === false)
-  }
-
-  test("procedure signature returning multiple values does not satisfy differing number of values") {
-    val derivedSignature = ProcedureSignature(
-      hasWorldArg=false,
-      hasSelfArg=false,
-      mandatoryArgTypes=Nil,
-      optionalArgTypes=Nil,
-      restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SpecificValues(List(vt.NumberType, vt.NumberType)),
-      attributes=Set()
-    )
-
-    val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SpecificValues(List(vt.NumberType, vt.NumberType, vt.NumberType))
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)

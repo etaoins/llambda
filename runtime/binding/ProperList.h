@@ -224,8 +224,7 @@ namespace lliby
 
 	};
 
-	// These aliases are for code documentation purposes. They use ProperLists for their representation in the ABI
-	template<class T> using ReturnValues = ProperList<T>;
+	// This aliases is for code documentation purposes. They use ProperLists for their representation in the ABI
 	template<class T> using RestValues = ProperList<T>;
 }
 

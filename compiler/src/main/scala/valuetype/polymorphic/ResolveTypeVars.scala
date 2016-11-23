@@ -103,10 +103,7 @@ object ResolveTypeVars {
       // <any> for the entire type. However, if it's not used to resolve types it will take on the type of the input
       // list. This adds additional type safety by ensuring the predicate procedure takes the input type.
 
-      val polyReturnListType = polyReturn.toValueListType
-      val evidenceReturnListType = evidenceReturn.toValueListType
-
-      visitType(typeVars, polyReturnListType, Nil, evidenceReturnListType, Nil)
+      visitType(typeVars, polyReturn.schemeType, Nil, evidenceReturn.schemeType, Nil)
 
     case _ =>
       Result()

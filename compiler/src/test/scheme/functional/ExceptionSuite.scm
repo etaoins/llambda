@@ -67,7 +67,7 @@
              (else 'fallthrough))
            (raise (list (cons 'c 23)))))
 
-  ; This doesn't invoke the handler it all and returns a single value
+  ; This doesn't invoke the handler it all
   (assert-equal 'no-except
     (guard (condition
              ((assv 'a condition) => cdr)

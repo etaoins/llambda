@@ -228,28 +228,6 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       )
     ))
 
-    bodyFor("(define-type <symbol-to-values-proc> (-> <symbol> (Values <exact-integer> <flonum>)))")(scope)
-    assert(scope("<symbol-to-values-proc>") === BoundType(
-      vt.ProcedureType(
-        mandatoryArgTypes=List(vt.SymbolType),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.MultipleValues(
-          vt.SpecificProperListType(List(vt.ExactIntegerType, vt.FlonumType))
-        )
-      )
-    ))
-
-    bodyFor("(define-type <values-with-rest-to-arbitrary-proc> (-> <port> <symbol> <pair> * *))")(scope)
-    assert(scope("<values-with-rest-to-arbitrary-proc>") === BoundType(
-      vt.ProcedureType(
-        mandatoryArgTypes=List(vt.PortType, vt.SymbolType),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=Some(vt.AnyPairType),
-        returnType=vt.ReturnType.ArbitraryValues
-      )
-    ))
-
     intercept[BadSpecialFormException] {
       bodyFor("(define-type <insufficient-args> (->))")(scope)
     }

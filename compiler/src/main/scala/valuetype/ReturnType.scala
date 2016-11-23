@@ -12,11 +12,11 @@ object ReturnType {
       */
     def representationTypeOpt : Option[T]
 
-    /** Returns proper list type contain the Scheme types of the return values
+    /** Returns the Scheme type of the return values
       *
       * This is useful for type checking or type arithmetic on return types
       */
-    def toValueListType : SchemeType
+    def schemeType : SchemeType
 
     override def toString =
       NameForReturnType(this)
@@ -41,49 +41,11 @@ object ReturnType {
         Some(otherType)
     }
 
-    def toValueListType : SchemeType =
-      SpecificPairType(
-        carTypeRef=DirectSchemeTypeRef(valueType.schemeType),
-        cdrTypeRef=DirectSchemeTypeRef(EmptyListType)
-      )
+    def schemeType : SchemeType = valueType.schemeType
 
     def schemeReturnType : ReturnType[SchemeType] =
       SingleValue(valueType.schemeType)
   }
-
-  /** Represents multiple values returned from a procedure
-    *
-    * This is internally represented as a proper list of values. This makes the implementation of (values) and
-    * (call-by-values) simpler
-    */
-  case class MultipleValues(valueListType : SchemeType) extends ReturnType[SchemeType] {
-    def representationType : SchemeType = valueListType
-
-    def representationTypeOpt : Option[SchemeType] =
-      Some(representationType)
-
-    def toValueListType : SchemeType =
-      valueListType
-
-    def schemeReturnType : ReturnType[SchemeType] =
-      this
-  }
-
-  /** Represents a fixed number of return values of specific types */
-  object SpecificValues {
-    def apply(valueTypes : List[SchemeType]) = valueTypes match {
-      case List(singleValue) =>
-        SingleValue(singleValue)
-
-      case multipleValues =>
-        MultipleValues(
-          SpecificProperListType(multipleValues)
-        )
-    }
-  }
-
-  /** Represents an arbitrary number of return values of any type */
-  object ArbitraryValues extends MultipleValues(UniformProperListType(AnySchemeType))
 
   /** Represents the return type of a procedure that cannot return
     *
@@ -93,11 +55,7 @@ object ReturnType {
   object UnreachableValue extends ReturnType[SchemeType] {
     def representationTypeOpt = None
 
-    def toValueListType : SchemeType =
-      SpecificPairType(
-        carTypeRef=DirectSchemeTypeRef(UnitType),
-        cdrTypeRef=DirectSchemeTypeRef(EmptyListType)
-      )
+    def schemeType : SchemeType = UnitType
 
     def schemeReturnType : ReturnType[SchemeType] =
       this

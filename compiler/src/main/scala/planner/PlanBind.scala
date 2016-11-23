@@ -103,53 +103,6 @@ private[planner] object PlanBind {
           val initialIntermediate = uncastIntermediate.castToSchemeType(storageLoc.schemeType)
 
           Map(storageLoc -> initialIntermediate)
-
-        case et.Binding(fixedLocs, restLocOpt, _) =>
-          val fixedValueCount = fixedLocs.length
-          val memberTypes = fixedLocs.map(_.schemeType)
-
-          val insufficientValuesMessage = if (restLocOpt.isDefined) {
-            RuntimeErrorMessage(
-              category=ErrorCategory.Arity,
-              name=s"insufficientValuesRequiresAtLeast${fixedValueCount}",
-              text=s"Insufficient values for multiple value binding; requires at least ${fixedValueCount} values."
-            )
-          }
-          else {
-            RuntimeErrorMessage(
-              category=ErrorCategory.Arity,
-              name=s"insufficientValueRequiresExactly${fixedValueCount}",
-              text=s"Insufficient values for multiple value binding; requires exactly ${fixedValueCount} values."
-            )
-          }
-
-          val destructureResult = DestructureList(
-            initialValueResult.values.toMultipleValueList,
-            memberTypes,
-            insufficientValuesMessage
-          )
-
-          if (!restLocOpt.isDefined) {
-            // Make sure we don't have extra values
-            val tooManyValuesMessage = RuntimeErrorMessage(
-              category=ErrorCategory.Arity,
-              s"tooManyValuesRequiresExactly${fixedValueCount}",
-              s"Too many values in multiple value binding; requires exactly ${fixedValueCount} values."
-            )
-
-            destructureResult.listTailValue.toTempValue(vt.EmptyListType, Some(tooManyValuesMessage))
-          }
-
-          val storageLocToFixedValue = (fixedLocs zip destructureResult.memberTemps) map {
-            case (storageLoc, tempValue) =>
-              storageLoc -> TempValueToIntermediate(storageLoc.schemeType, tempValue)(plan.config)
-          }
-
-          val storageLocToRestValue = restLocOpt map { restLoc =>
-            restLoc -> destructureResult.listTailValue.castToSchemeType(restLoc.schemeType)
-          }
-
-          storageLocToFixedValue ++ storageLocToRestValue
       }
 
       // Bind each intermediate value to its storage location

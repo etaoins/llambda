@@ -12,7 +12,7 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValues<AnyCell> *llbase_dynamic_wind(World &world, ThunkProcedureCell *before, ThunkProcedureCell *thunk, ThunkProcedureCell *after)
+AnyCell* llbase_dynamic_wind(World &world, ThunkProcedureCell *before, ThunkProcedureCell *thunk, ThunkProcedureCell *after)
 {
 	{
 		// pushActiveState() can call before which can GC
@@ -22,7 +22,7 @@ ReturnValues<AnyCell> *llbase_dynamic_wind(World &world, ThunkProcedureCell *bef
 		dynamic::State::pushActiveState(world, before, after);
 	}
 
-	alloc::StrongRef<ReturnValues<AnyCell>> thunkResult(world, thunk->apply(world));
+	alloc::StrongRef<AnyCell> thunkResult(world, thunk->apply(world));
 
 	dynamic::State::popActiveState(world);
 

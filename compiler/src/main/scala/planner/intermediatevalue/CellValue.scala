@@ -69,7 +69,7 @@ class CellValue(
       // We already have the correct type
       return toNonProcedureTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), errorMessageOpt)
     }
-    
+
     // Make sure our types are sane
     if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
       impossibleConversionToType(targetType, errorMessageOpt, false)

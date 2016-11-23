@@ -42,9 +42,6 @@ object InstantiateType {
 
     case ReturnType.SingleValue(valueType) =>
       ReturnType.SingleValue(apply(typeVars, valueType))
-
-    case ReturnType.MultipleValues(valueList) =>
-      ReturnType.MultipleValues(apply(typeVars, valueList))
   }
 
   /** Instantiates a polymorphic type based on reconciled type variables

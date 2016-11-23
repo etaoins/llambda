@@ -172,6 +172,8 @@ case class Binding(
 /** Companion object for bindings of a single value
   *
   * This is the vast majority of bindings in Scheme so this is a convenient shorthand for dealing with them
+  *
+  * VALUESTODO: Collapse in to Binding
   */
 object SingleBinding {
   def unapply(binding : Binding) : Option[(StorageLocation, Expr)] = binding match {

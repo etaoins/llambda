@@ -165,7 +165,7 @@
   (define (return-nothing))
   (return-nothing)))
 
-(define-test "procedure returning single value" (expect 7
+(define-test "procedure returning a value" (expect 7
   (define (return-7) 7)
   (return-7)))
 

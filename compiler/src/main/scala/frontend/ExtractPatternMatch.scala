@@ -13,7 +13,7 @@ object ExtractPatternMatch {
     mandatoryArgTypes=List(vt.AnySchemeType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.ArbitraryValues
+    returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
   )
 
   /** Loads a storage location from a Scheme library

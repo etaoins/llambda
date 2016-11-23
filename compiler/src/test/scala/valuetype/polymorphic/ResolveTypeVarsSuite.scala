@@ -147,21 +147,20 @@ class ResolveTypeVarsSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(polyA),
-      returnType=ReturnType.SpecificValues(List(polyB, polyC))
+      returnType=ReturnType.SingleValue(polyB)
     )
 
     val evidence = ProcedureType(
       mandatoryArgTypes=List(ExactIntegerType, ExactIntegerType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(FlonumType),
-      returnType=ReturnType.SpecificValues(List(PortType, BooleanType))
+      returnType=ReturnType.SingleValue(PortType)
     )
 
-    val result = ResolveTypeVars(Set(polyA, polyB, polyC), polyProc, evidence)
+    val result = ResolveTypeVars(Set(polyA, polyB), polyProc, evidence)
 
     assert(result.values == Map(
-      polyB -> PortType,
-      polyC -> BooleanType
+      polyB -> PortType
     ))
   }
 

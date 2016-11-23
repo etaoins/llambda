@@ -70,12 +70,12 @@ public:
  * for procedures explicitly defined the top procedure type. See the TypedProcedureCell documentation for a discussion
  * of why subtyping doesn't work ask expected here.
  */
-using TopProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*, RestValues<AnyCell>*>;
+using TopProcedureCell = TypedProcedureCell<AnyCell*, RestValues<AnyCell>*>;
 
 /**
  * TypedProcedureCell accepting no arguments and producing any value
  */
-using ThunkProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*>;
+using ThunkProcedureCell = TypedProcedureCell<AnyCell*>;
 
 }
 

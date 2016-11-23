@@ -233,7 +233,7 @@
     (define-r7rs boolean=? (native-function llbase "llbase_boolean_equal" (-> <boolean> <boolean> <boolean> * <native-bool>)))
 
     (define-r7rs procedure? (make-predicate <procedure>))
-    (define-r7rs apply (world-function llbase "llbase_apply" (-> <procedure> <any> * *)))
+    (define-r7rs apply (world-function llbase "llbase_apply" (-> <procedure> <any> * <any>)))
 
     (define-r7rs number? (make-predicate <number>))
 
@@ -518,7 +518,7 @@
       (([init : <any>] [converter : (-> <any> <any>)])
        (native-make-parameter init converter))))
 
-    (define-r7rs dynamic-wind (world-function llbase "llbase_dynamic_wind" (-> (-> *) (-> *) (-> *) *)))
+    (define-r7rs dynamic-wind (world-function llbase "llbase_dynamic_wind" (-> (-> <any>) (-> <any>) (-> <any>) <any>)))
 
     ; Port support
     (define-r7rs port? (make-predicate <port>))
@@ -537,7 +537,7 @@
     (define-r7rs get-output-bytevector (world-function llbase "llbase_get_output_bytevector" (-> <port> <bytevector>)))
     (define-r7rs open-input-string (world-function llbase "llbase_open_input_string" (-> <string> <port>)))
     (define-r7rs open-input-bytevector (world-function llbase "llbase_open_input_bytevector" (-> <bytevector> <port>)))
-    (define-r7rs call-with-port (world-function llbase "llbase_call_with_port" (-> <port> (-> <port> *) *)))
+    (define-r7rs call-with-port (world-function llbase "llbase_call_with_port" (-> <port> (-> <port> <any>) <any>)))
 
     (define-r7rs current-input-port (make-parameter ((world-function system-library "llcore_stdin_port" (-> <port>)))))
     (define-r7rs current-output-port (make-parameter ((world-function system-library "llcore_stdout_port" (-> <port>)))))
@@ -613,7 +613,7 @@
 
     #| This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient native
        native code implementation |#
-    (define guard-kernel (world-function llbase "llbase_guard_kernel" (-> (-> <any> *) (-> *) *)))
+    (define guard-kernel (world-function llbase "llbase_guard_kernel" (-> (-> <any> <any>) (-> <any>) <any>)))
 
     (define-syntax guard
       (syntax-rules ()
