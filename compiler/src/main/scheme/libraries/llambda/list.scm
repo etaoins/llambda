@@ -22,7 +22,7 @@
     (define (iota [count : <exact-integer>] [start : <number> 0] [step : <number> 1])
       (native-iota count start step))
 
-    (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A)))))
+    (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (Listof A) (Pairof (Listof A) (Listof A)))))
     (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (Listof <any>) (Listof <any>) * A)))
 
     (: reduce (All (A B) (-> (-> A A A) B (Listof A) (U A B))))
@@ -79,7 +79,7 @@
 
     (define drop (world-function lllist "lllist_drop" (-> <any> <native-uint32> <any>)))
     (define take (world-function lllist "lllist_take" (-> <any> <native-uint32> <any>)))
-    (define split-at (world-function lllist "lllist_split_at" (-> <any> <native-uint32> (Values (Listof <any>) <any>))))
+    (define split-at (world-function lllist "lllist_split_at" (-> <any> <native-uint32> (Pairof (Listof <any>) <any>))))
 
     (: take-while (All (A) (-> (-> A <boolean>) (Listof A) (Listof A))))
     (define (take-while pred? lis)
@@ -93,8 +93,8 @@
                      (drop-while pred? (cdr lis))
                      lis))
 
-    (define span (world-function lllist "lllist_span" (All (A) (-> (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A))))))
-    (define break (world-function lllist "lllist_break" (All (A) (-> (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A))))))
+    (define span (world-function lllist "lllist_span" (All (A) (-> (-> <any> <boolean>) (Listof A) (Pairof (Listof A) (Listof A))))))
+    (define break (world-function lllist "lllist_break" (All (A) (-> (-> <any> <boolean>) (Listof A) (Pairof (Listof A) (Listof A))))))
 
     (define any (world-function lllist "lllist_any" (All (A) (-> (-> <any> <any> * A) <list> <list> * (U #f A)))))
     (define every (world-function lllist "lllist_every" (All (A) (-> (-> <any> <any> * A) <list> <list> * (U #t A)))))

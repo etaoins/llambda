@@ -232,7 +232,7 @@ AnyCell* lllist_fold(World &world, FoldProc *foldProcRaw, AnyCell *initialValue,
 	}
 }
 
-ReturnValues<ProperList<AnyCell>>* lllist_partition(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *listHeadRaw)
+PairCell* lllist_partition(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *listHeadRaw)
 {
 	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
 	alloc::StrongRef<ListElementCell> listHead(world, listHeadRaw);
@@ -262,7 +262,7 @@ ReturnValues<ProperList<AnyCell>>* lllist_partition(World &world, PredicateProc 
 	alloc::StrongRef<ProperList<AnyCell>> trueList(world, ProperList<AnyCell>::create(world, trueValues));
 	ProperList<AnyCell> *falseList(ProperList<AnyCell>::create(world, falseValues));
 
-	return ReturnValues<ProperList<AnyCell>>::create(world, {trueList, falseList});
+	return PairCell::createInstance(world, trueList, falseList);
 }
 
 ProperList<AnyCell>* lllist_list_tabulate(World &world, std::uint32_t count, TabulateProc *initProcRaw)
@@ -305,13 +305,13 @@ AnyCell *lllist_drop(World &world, AnyCell *obj, std::uint32_t count)
 	return tail;
 }
 
-ReturnValues<AnyCell>* lllist_split_at(World &world, AnyCell *obj, std::uint32_t count)
+PairCell* lllist_split_at(World &world, AnyCell *obj, std::uint32_t count)
 {
 	SplitResult result = splitList(world, "(split-at)", obj, count);
-	return ReturnValues<AnyCell>::create(world, {result.head, result.tail});
+	return PairCell::createInstance(world, result.head, result.tail);
 }
 
-ReturnValues<ProperList<AnyCell>>* lllist_span(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
+PairCell* lllist_span(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
 {
 	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
 
@@ -319,10 +319,10 @@ ReturnValues<ProperList<AnyCell>>* lllist_span(World &world, PredicateProc *pred
 		return predicateProc->apply(world, datum);
 	});
 
-	return ReturnValues<ProperList<AnyCell>>::create(world, {result.head, result.tail});
+	return PairCell::createInstance(world, result.head, result.tail);
 }
 
-ReturnValues<ProperList<AnyCell>>* lllist_break(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
+PairCell* lllist_break(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
 {
 	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
 
@@ -330,7 +330,7 @@ ReturnValues<ProperList<AnyCell>>* lllist_break(World &world, PredicateProc *pre
 		return !predicateProc->apply(world, datum);
 	});
 
-	return ReturnValues<ProperList<AnyCell>>::create(world, {result.head, result.tail});
+	return PairCell::createInstance(world, result.head, result.tail);
 }
 
 AnyCell* lllist_any(World &world, AnyProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
