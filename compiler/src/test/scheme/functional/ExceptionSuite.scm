@@ -48,30 +48,30 @@
   ; This matches the first clause
   (assert-equal 42
     (guard (condition
-             ((assq 'a condition) => cdr)
-             ((assq 'b condition)))
+             ((assv 'a condition) => cdr)
+             ((assv 'b condition)))
            (raise (list (cons 'a 42)))))
 
   ; This matches the second clause
   (assert-equal '(b . 23)
     (guard (condition
-             ((assq 'a condition) => cdr)
-             ((assq 'b condition)))
+             ((assv 'a condition) => cdr)
+             ((assv 'b condition)))
            (raise (list (cons 'b 23)))))
 
   ; This matches the else
   (assert-equal 'fallthrough
     (guard (condition
-             ((assq 'a condition) => cdr)
-             ((assq 'b condition))
+             ((assv 'a condition) => cdr)
+             ((assv 'b condition))
              (else 'fallthrough))
            (raise (list (cons 'c 23)))))
 
   ; This doesn't invoke the handler it all and returns a single value
   (assert-equal 'no-except
     (guard (condition
-             ((assq 'a condition) => cdr)
-             ((assq 'b condition))
+             ((assv 'a condition) => cdr)
+             ((assv 'b condition))
              (else 'fallthrough))
            'no-except))
 
@@ -80,8 +80,8 @@
     (call-with-values
       (lambda ()
         (guard (condition
-                 ((assq 'a condition) => cdr)
-                 ((assq 'b condition))
+                 ((assv 'a condition) => cdr)
+                 ((assv 'b condition))
                  (else 'fallthrough))
                (values 1 2 3)))
       (lambda args args)))
@@ -91,8 +91,8 @@
   (parameterize ((test-parameter 'outer1))
     (assert-equal 'outer1
       (guard (condition
-               ((assq 'a condition) => cdr)
-               ((assq 'b condition))
+               ((assv 'a condition) => cdr)
+               ((assv 'b condition))
                (else (test-parameter)))
              (parameterize ((test-parameter 'inner1))
                (raise (list (cons 'c 23)))))))))

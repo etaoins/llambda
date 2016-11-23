@@ -270,7 +270,6 @@
     (define-r7rs string-length (native-function llbase "llbase_string_length" (-> <string> <native-uint32>)))
 
     (define-r7rs eqv? (native-function system-library "llcore_is_eqv" (-> <any> <any> <native-bool>)))
-    (define-r7rs eq? eqv?)
     (define-r7rs equal? (native-function system-library "llcore_is_equal" (-> <any> <any> <native-bool>)))
 
     (define-r7rs boolean? (make-predicate <boolean>))
@@ -453,12 +452,9 @@
     (define-r7rs append (world-function llbase "llbase_append" (-> <any> * <any>)))
 
     (define-r7rs memv (native-function llbase "llbase_memv" (All (A) A (Listof A) (U (Listof A) #f))))
-    ; (eq?) is defined as (eqv?) so define (memq) as (memv)
-    (define-r7rs memq memv)
     (define-r7rs member (native-function llbase "llbase_member" (All (A) A (Listof A) (U (Listof A) #f))))
 
     (define-r7rs assv (native-function llbase "llbase_assv" (All (A B) A (Alistof A B) (U (Pairof A B) #f))))
-    (define-r7rs assq assv)
     (define-r7rs assoc (native-function llbase "llbase_assoc" (All (A B) A (Alistof A B) (U (Pairof A B) #f))))
 
     (define-r7rs reverse (world-function llbase "llbase_reverse" (All (A) (Listof A) (Listof A))))

@@ -227,16 +227,6 @@
       (cast typeless-string <string>)
       (cast typeless-string <symbol>)))))
 
-(define-test "branching on (eq?) propagates type information" (expect-success
-  (import (llambda typed))
-
-  (define string-or-symbol (cast (typeless-cell 'Hello) (U <string> <symbol>)))
-  (define null-or-symbol (cast (typeless-cell 'Hello) (U <empty-list> <symbol>)))
-
-  (when (eq? string-or-symbol null-or-symbol)
-    (ann string-or-symbol <symbol>)
-    (ann null-or-symbol <symbol>))))
-
 (define-test "branching on (eqv?) propagates type information" (expect-success
   (import (llambda typed))
 

@@ -85,18 +85,14 @@
 (define-test "(append) with non-terminal non-list fails" (expect-error type-error?
   (append '(1 2) 3 '(4 5))))
 
-(define-test "(memq)" (expect-static-success
-  (assert-equal '(a b c) (memq 'a '(a b c)))
-  (assert-equal '(b c) (memq 'b '(a b c)))
-  (assert-false (memq 'a '(b c d)))))
+(define-test "(memv)" (expect-static-success
+  (assert-equal '(a b c) (memv 'a '(a b c)))
+  (assert-equal '(b c) (memv 'b '(a b c)))
+  (assert-equal '(101 102) (memv 101 '(100 101 102)))
+  (assert-false (memv 'a '(b c d)))))
 
 (define-test "(member) is recursive" (expect-static-success
   (assert-equal '((a) c) (member (list 'a) '(b (a) c)))))
-
-; This is technically unspecified for memq because integer comparison is
-; unspecified for eq?
-(define-test "(memv) on number list" (expect (101 102)
-  (memv 101 '(100 101 102))))
 
 (define-test "(reverse)" (expect-success
   (assert-equal '() (reverse '()))
@@ -114,9 +110,9 @@
 (define-test "association lists" (expect-success
   (define e '((a 1)(b 2)(c 3)))
 
-  (assert-equal '(a 1) (assq 'a e))
-  (assert-equal '(b 2) (assq 'b e))
-  (assert-equal #f (assq 'd e))
+  (assert-equal '(a 1) (assv 'a e))
+  (assert-equal '(b 2) (assv 'b e))
+  (assert-equal #f (assv 'd e))
 
   (assert-equal '((a)) (assoc (list 'a) '(((a)) ((b)) ((c)))))
 

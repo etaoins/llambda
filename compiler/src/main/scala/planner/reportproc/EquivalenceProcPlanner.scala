@@ -188,7 +188,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       reportName : String,
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
-    case (_, List((_, val1), (_, val2))) if List("eqv?", "eq?").contains(reportName) =>
+    case ("eqv?", List((_, val1), (_, val2))) =>
       StaticValueEqv.valuesAreEqv(val1, val2).map { staticResult =>
         PlanResult(
           state=state,

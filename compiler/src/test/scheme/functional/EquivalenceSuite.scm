@@ -187,38 +187,38 @@
 (define-test "1 and #t are not eqv" (expect #f
   (eqv? 1 #t)))
 
-(define-test "constant 'a and 'a are eq" (expect #t
-  (eq? 'a 'a)))
+(define-test "constant 'a and 'a are eqv" (expect #t
+  (eqv? 'a 'a)))
 
-(define-test "'() and '() are eq" (expect #t
-  (eq? '() '())))
+(define-test "'() and '() are eqv" (expect #t
+  (eqv? '() '())))
 
-(define-test "native functions are eq" (expect #t
-  (eq? car car)))
+(define-test "native functions are eqv" (expect #t
+  (eqv? car car)))
 
-(define-test "values in the same argument are eq" (expect-static-success
-  (define (arg-is-self-eq? x) (eq? x x))
+(define-test "values in the same argument are eqv" (expect-static-success
+  (define (arg-is-self-eqv? x) (eqv? x x))
 
-  (assert-true (arg-is-self-eq? '(a)))
-  (assert-true (arg-is-self-eq? #()))
-  (assert-true (arg-is-self-eq? #u8(1 2 3 4)))
-  (assert-true (arg-is-self-eq? (lambda (x) x)))))
+  (assert-true (arg-is-self-eqv? '(a)))
+  (assert-true (arg-is-self-eqv? #()))
+  (assert-true (arg-is-self-eqv? #u8(1 2 3 4)))
+  (assert-true (arg-is-self-eqv? (lambda (x) x)))))
 
-(define-test "values in the same variable are eq" (expect-static-success
+(define-test "values in the same variable are eqv" (expect-static-success
   (define test-list '(a))
-  (assert-true (eq? test-list test-list))
+  (assert-true (eqv? test-list test-list))
 
   (define test-vec #())
-  (assert-true (eq? test-vec test-vec))
+  (assert-true (eqv? test-vec test-vec))
 
   (define test-bytevec #u8(1 2 3 4))
-  (assert-true (eq? test-bytevec test-bytevec))
+  (assert-true (eqv? test-bytevec test-bytevec))
 
   (define test-proc (lambda (x) x))
-  (assert-true (eq? test-proc test-proc))))
+  (assert-true (eqv? test-proc test-proc))))
 
-(define-test "calculated 'test and 'test are eq" (expect #t
-  (eq? (string->symbol "test") (string->symbol "test"))))
+(define-test "calculated 'test and 'test are eqv" (expect #t
+  (eqv? (string->symbol "test") (string->symbol "test"))))
 
 (define-test "constant 'a and 'a are equal" (expect #t
   (equal? 'a 'a)))

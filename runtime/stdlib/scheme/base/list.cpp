@@ -15,7 +15,7 @@ using namespace lliby;
 
 namespace
 {
-	// This is used to implement memq, memv and member without a callback
+	// This is used to implement memv and member without a callback
 	const AnyCell* listSearch(const AnyCell *obj, ProperList<AnyCell> *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;
@@ -34,7 +34,7 @@ namespace
 		return BooleanCell::falseInstance();
 	}
 
-	// This is used to implement assq, assv and assoc
+	// This is used to implement assv and assoc
 	const AnyCell* alistSearch(const AnyCell *obj, ProperList<AnyCell> *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;

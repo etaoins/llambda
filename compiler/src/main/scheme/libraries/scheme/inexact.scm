@@ -1,7 +1,7 @@
 (define-library (scheme inexact)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
-  (import (only (scheme base) inexact eq?))
+  (import (only (scheme base) inexact eqv?))
 
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")
@@ -12,7 +12,7 @@
     (define-r7rs infinite? (native-function llinexact "llinexact_is_infinite" (-> <number> <native-bool>)))
 
     (define-r7rs (nan? [n : <number>])
-      (eq? n +nan.0))
+      (eqv? n +nan.0))
 
     ; These always return inexact numbers so we can use the C standard library. However, they need to be wrapped in a
     ; Scheme procedure to explicitly convert the number in to flonum.

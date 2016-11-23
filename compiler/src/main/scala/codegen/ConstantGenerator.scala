@@ -19,9 +19,9 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
    * This is ensure proper Scheme semantics are enforced with the lazily value instantiation the planner does. For
    * example, the following code:
    * (define x '(1 2 3))
-   * (eq? x x)
+   * (eqv? x x)
    * 
-   * Will actually plan the list for 'x' once for each argument. This breaks the Scheme semantics as (eq?) would
+   * Will actually plan the list for 'x' once for each argument. This breaks the Scheme semantics as (eqv?) would
    * return false there
    */
 

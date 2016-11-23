@@ -113,7 +113,7 @@ object ListProcPlanner extends ReportProcPlanner {
 
       Some(ValuesToList(headValues, terminator))
 
-    case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
+    case ("memv", List((_, needleValue), (_, listValue))) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)
 
     case ("member", List((_, needleValue), (_, listValue))) =>
