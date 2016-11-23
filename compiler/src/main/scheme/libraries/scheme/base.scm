@@ -380,11 +380,6 @@
     (define-r7rs floor-quotient (world-function llbase "llbase_floor_quotient" (-> <native-int64> <native-int64> <native-int64>)))
     (define-r7rs floor-remainder (world-function llbase "llbase_floor_remainder" (-> <native-int64> <native-int64> <native-int64>)))
 
-    ; R7RS defines these as legacy aliases
-    (define-r7rs quotient truncate-quotient)
-    (define-r7rs remainder truncate-remainder)
-    (define-r7rs modulo floor-remainder)
-
     (define-r7rs (odd? [val : <exact-integer>])
                  (not (= (truncate-remainder val 2) 0)))
 

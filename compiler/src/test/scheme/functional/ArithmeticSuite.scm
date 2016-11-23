@@ -298,16 +298,6 @@
 (define-test "(floor-remainder) by zero fails" (expect-error divide-by-zero-error?
   (floor-remainder 5 0)))
 
-; These are legacy aliases
-(define-test "(quotient)" (expect 5
-  (quotient 10 2)))
-
-(define-test "(remainder)" (expect 0
-  (remainder 10 2)))
-
-(define-test "(modulo)" (expect 0
-  (remainder 10 2)))
-
 (define-test "static (expt)" (expect-static-success
   (assert-equal 1 (expt 2 0))
   (assert-equal 2 (expt 2 1))

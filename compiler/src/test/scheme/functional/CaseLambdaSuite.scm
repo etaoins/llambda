@@ -121,7 +121,7 @@
                 (([a : <exact-integer>] [b : <exact-integer>])
                  (if (zero? b)
                    a
-                   (my-gcd b (modulo a b))))))
+                   (my-gcd b (floor-remainder a b))))))
 
   (my-gcd 15 25)))
 

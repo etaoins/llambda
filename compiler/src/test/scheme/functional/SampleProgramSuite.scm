@@ -182,7 +182,7 @@
     (: *factors (-> <exact-integer> <list-element>))
     (define (*factors d)
       (cond ((> d n) (list))
-            ((= (remainder n d) 0) (cons d (*factors (+ d 1))))
+            ((= (truncate-remainder n d) 0) (cons d (*factors (+ d 1))))
             (else (*factors (+ d 1)))))
     (*factors 1))
 
@@ -255,7 +255,7 @@
                 (hi (- len 1)))
         (if (> lo hi)
           lo
-          (let ((mid (quotient (+ lo hi) 2)))
+          (let ((mid (truncate-quotient (+ lo hi) 2)))
             (if (less? (car (vector-ref pile-tops mid)) x)
               (aux (+ mid 1) hi)
               (aux lo (- mid 1)))))))
