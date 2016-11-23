@@ -403,22 +403,6 @@
 
     (define-r7rs exact-integer-sqrt (world-function llbase "llbase_exact_integer_sqrt" (-> <native-int64> (Values <exact-integer> <exact-integer>))))
 
-    (define native-numerator (native-function llbase "llbase_numerator" (-> <native-double> <native-double>)))
-    (define-r7rs (numerator [value : <number>])
-      (if (exact-integer? value)
-        value
-        (native-numerator value)))
-
-    (define native-denominator (native-function llbase "llbase_denominator" (-> <native-double> <native-double>)))
-    (define-r7rs (denominator [value : <number>])
-      (if (exact-integer? value)
-        1
-        (native-denominator value)))
-
-    (define native-rationalize (world-function llbase "llbase_rationalize" (-> <number> <native-double> <number>)))
-    (define-r7rs (rationalize [val : <number>] [max-diff : <number>])
-      (native-rationalize val (inexact max-diff)))
-
     (define native-number->string (world-function llbase "llbase_number_to_string" (-> <number> <native-uint8> <string>)))
     (define-r7rs (number->string [num : <number>] [radix : <exact-integer> 10])
       (native-number->string num radix))
