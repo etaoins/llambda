@@ -87,7 +87,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     Some(PlanResult(
       state=state,
-      values=SingleValue(resultValue)
+      value=SingleValue(resultValue)
     ))
   }
 }

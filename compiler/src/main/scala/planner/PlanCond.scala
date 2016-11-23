@@ -82,11 +82,11 @@ object PlanCond {
   private def constrainResultValues(resultState : PlannerState)(
     testValue : iv.IntermediateValue,
     trueState : PlannerState,
-    trueValues : ResultValues,
+    trueValue : ResultValue,
     falseState : PlannerState,
-    falseValues : ResultValues,
-    resultValues : ResultValues
-  ) : PlannerState = (trueValues, falseValues, resultValues) match {
+    falseValue : ResultValue,
+    resultValue : ResultValue
+  ) : PlannerState = (trueValue, falseValue, resultValue) match {
     case (SingleValue(trueValue), SingleValue(falseValue), SingleValue(resultValue)) =>
       constrainIntermediateValues(resultState)(testValue, trueState, trueValue, falseState, falseValue, resultValue)
 
@@ -100,7 +100,7 @@ object PlanCond {
       falseExpr : et.Expr
   )(implicit plan : PlanWriter) : PlanResult = {
     val testResult = PlanExpr(initialState)(testExpr)
-    val testValue = testResult.values.toSingleValue()
+    val testValue = testResult.value.toSingleValue()
 
     vt.SatisfiesType(vt.LiteralBooleanType(false), testValue.schemeType) match {
       case Some(true) =>
@@ -119,16 +119,16 @@ object PlanCond {
         val trueConstraint = ConstrainType.SubtractType(vt.LiteralBooleanType(false))
         val initialTrueState = ConstrainType(testResult.state)(testValue, trueConstraint)(plan.config)
         val trueResult = PlanExpr(initialTrueState)(trueExpr)(trueWriter)
-        val trueValues = trueResult.values
+        val trueValue = trueResult.value
 
         val falseWriter = plan.forkPlan()
         // The test expression is definitely false in this branch
         val falseConstraint = ConstrainType.IntersectType(vt.LiteralBooleanType(false))
         val initialFalseState = ConstrainType(testResult.state)(testValue, falseConstraint)(plan.config)
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
-        val falseValues = falseResult.values
+        val falseValue = falseResult.value
 
-        if (trueValues == UnreachableValue) {
+        if (trueValue == UnreachableValue) {
           // True branch terminates unconditionally; place it inside the branch and move the false branch after so we
           // can avoid the phi
           plan.steps += ps.CondBranch(truthyPred, trueWriter.steps.toList, Nil, Nil)
@@ -136,15 +136,15 @@ object PlanCond {
           plan.steps ++= falseWriter.steps
           falseResult
         }
-        else if (falseValues == UnreachableValue) {
+        else if (falseValue == UnreachableValue) {
           plan.steps += ps.CondBranch(truthyPred, Nil, falseWriter.steps.toList, Nil)
 
           plan.steps ++= trueWriter.steps
           trueResult
         }
         else {
-          val planPhiResult = PlanResultValuesPhi(trueWriter, trueValues, falseWriter, falseValues)
-          val resultValues = planPhiResult.resultValues
+          val planPhiResult = PlanResultValuePhi(trueWriter, trueValue, falseWriter, falseValue)
+          val resultValue = planPhiResult.resultValue
 
           val valuesPhi = ps.ValuePhi(
             planPhiResult.resultTemp,
@@ -162,15 +162,15 @@ object PlanCond {
           val constrainedState = constrainResultValues(testResult.state)(
             testValue=testValue,
             trueState=trueResult.state,
-            trueValues=trueValues,
+            trueValue=trueValue,
             falseState=falseResult.state,
-            falseValues=falseValues,
-            resultValues=resultValues
+            falseValue=falseValue,
+            resultValue=resultValue
           )
 
           PlanResult(
             state=constrainedState,
-            values=resultValues
+            value=resultValue
           )
         }
     }

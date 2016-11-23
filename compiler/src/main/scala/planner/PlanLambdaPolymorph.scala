@@ -97,23 +97,23 @@ object PlanLambdaPolymorph {
       val defaultValueResult = PlanExpr(state)(defaultExpr)(defaultValuePlan)
 
       val defaultValue = defaultValuePlan.withContextLocation(defaultExpr) {
-        val uncastDefaultValue = defaultValueResult.values.toSingleValue()(defaultValuePlan)
+        val uncastDefaultValue = defaultValueResult.value.toSingleValue()(defaultValuePlan)
         uncastDefaultValue.castToSchemeType(storageLoc.schemeType)(defaultValuePlan)
       }
 
 
-      val valuePhiResult = PlanResultValuesPhi(
+      val valuePhiResult = PlanResultValuePhi(
         leftPlan=providedValuePlan,
-        leftValues=SingleValue(providedValue),
+        leftValue=SingleValue(providedValue),
         rightPlan=defaultValuePlan,
-        rightValues=SingleValue(defaultValue)
+        rightValue=SingleValue(defaultValue)
       )
 
-      val listHeadPhiResult = PlanResultValuesPhi(
+      val listHeadPhiResult = PlanResultValuePhi(
         leftPlan=providedValuePlan,
-        leftValues=SingleValue(providedListHead),
+        leftValue=SingleValue(providedListHead),
         rightPlan=defaultValuePlan,
-        rightValues=SingleValue(iv.EmptyListValue)
+        rightValue=SingleValue(iv.EmptyListValue)
       )
 
       val valuePhis = List(
@@ -123,10 +123,10 @@ object PlanLambdaPolymorph {
 
       plan.steps += ps.CondBranch(isPairPred, providedValuePlan.steps.toList, defaultValuePlan.steps.toList, valuePhis)
 
-      val argValue = valuePhiResult.resultValues.toSingleValue()
+      val argValue = valuePhiResult.resultValue.toSingleValue()
       val stateWithOptionalArg = state.withValue(storageLoc -> initLocationValue(storageLoc, argValue))
 
-      (listHeadPhiResult.resultValues.toSingleValue(), stateWithOptionalArg)
+      (listHeadPhiResult.resultValue.toSingleValue(), stateWithOptionalArg)
   }
 
   private def retypeFixedArg(
@@ -286,7 +286,7 @@ object PlanLambdaPolymorph {
       initialSignature.returnType
     }
     else {
-      val resultReturnType = planResult.values.preferredReturnType
+      val resultReturnType = planResult.value.preferredReturnType
       val declaredReturnType = initialSignature.returnType
 
       // This is essentially intersecting the return types
@@ -308,7 +308,7 @@ object PlanLambdaPolymorph {
 
     // Return from the function
     procPlan.withContextLocationOpt(lastExprOpt) {
-      val resultTempOpt = planResult.values.toReturnTempValue(finalReturnType)(procPlan)
+      val resultTempOpt = planResult.value.toReturnTempValue(finalReturnType)(procPlan)
       procPlan.steps += ps.Return(resultTempOpt)
     }
 
@@ -322,7 +322,7 @@ object PlanLambdaPolymorph {
       (Some(ps.WorldPtrValue), initialSignature.copy(returnType=finalReturnType))
     }
 
-    val procSignature = if (planResult.values == UnreachableValue) {
+    val procSignature = if (planResult.value == UnreachableValue) {
       strippedWorldPtrSignature.copy(
         attributes=strippedWorldPtrSignature.attributes + ProcedureAttribute.NoReturn
       )

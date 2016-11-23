@@ -4,22 +4,22 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-  
-object PlanResultValuesPhi {
+
+object PlanResultValuePhi {
   case class Result(
     leftTempValue : ps.TempValue,
     rightTempValue : ps.TempValue,
     resultTemp : ps.TempValue,
-    resultValues : ResultValues
+    resultValue : ResultValue
   )
 
   def apply(
       leftPlan : PlanWriter,
-      leftValues : ResultValues,
+      leftValue : ResultValue,
       rightPlan : PlanWriter,
-      rightValues : ResultValues
+      rightValue : ResultValue
   ) : Result =
-    (leftValues, rightValues) match {
+    (leftValue, rightValue) match {
       case (SingleValue(leftUnboxed : iv.UnboxedValue), SingleValue(rightUnboxed : iv.UnboxedValue))
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType
@@ -35,7 +35,7 @@ object PlanResultValuesPhi {
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
-          resultValues=SingleValue(resultValue)
+          resultValue=SingleValue(resultValue)
         )
 
       case (SingleValue(leftValue), SingleValue(rightValue)) =>
@@ -55,7 +55,7 @@ object PlanResultValuesPhi {
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
-          resultValues=SingleValue(new iv.CellValue(phiSchemeType, boxedValue))
+          resultValue=SingleValue(new iv.CellValue(phiSchemeType, boxedValue))
         )
     }
 }

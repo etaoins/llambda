@@ -180,7 +180,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
 
     PlanResult(
       state=val2RegisteredState,
-      values=SingleValue(resultValue)
+      value=SingleValue(resultValue)
     )
   }
 
@@ -192,17 +192,17 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       StaticValueEqv.valuesAreEqv(val1, val2).map { staticResult =>
         PlanResult(
           state=state,
-          values=SingleValue(iv.ConstantBooleanValue(staticResult))
+          value=SingleValue(iv.ConstantBooleanValue(staticResult))
         )
       } orElse {
         Some(planEquivalenceProc(state)(ptrCompareEqvTypes, RuntimeFunctions.isEqvSymbol, val1, val2))
       }
-    
+
     case ("equal?", List((_, val1), (_, val2))) =>
       StaticValueEqv.valuesAreEqual(val1, val2).map { staticResult =>
         PlanResult(
           state=state,
-          values=SingleValue(iv.ConstantBooleanValue(staticResult))
+          value=SingleValue(iv.ConstantBooleanValue(staticResult))
         )
       } orElse {
         Some(planEquivalenceProc(state)(ptrCompareEqualsTypes, RuntimeFunctions.isEqualSymbol, val1, val2))

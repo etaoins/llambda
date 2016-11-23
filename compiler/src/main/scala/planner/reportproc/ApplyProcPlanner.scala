@@ -25,7 +25,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
       }
 
       val argState = applyArgResults.last.state
-      val applyArgs = applyArgResults.tail.map(_.values.toSingleValue())
+      val applyArgs = applyArgResults.tail.map(_.value.toSingleValue())
 
       val argList = ValuesToList(applyArgs.dropRight(1), applyArgs.last)
       Some(PlanApplication.planWithArgList(argState)(applyProcExpr, argList))

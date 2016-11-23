@@ -52,7 +52,7 @@ class KnownParameterProc(
         if (constantParameters && (initialValueInScope || !initialValue.needsClosureRepresentation)) {
           return Some(PlanResult(
             state=state,
-            values=SingleValue(initialValue)
+            value=SingleValue(initialValue)
           ))
         }
 
@@ -71,7 +71,7 @@ class KnownParameterProc(
 
         Some(PlanResult(
           state=state,
-          values=SingleValue(resultValue)
+          value=SingleValue(resultValue)
         ))
 
       case _ =>

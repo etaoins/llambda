@@ -41,7 +41,7 @@ object NumberPredicateProcPlanner extends ReportProcPlanner {
 
     PlanResult(
       state=registeredState,
-      values=SingleValue(resultValue)
+      value=SingleValue(resultValue)
     )
   }
 

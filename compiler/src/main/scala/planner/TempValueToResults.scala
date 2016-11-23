@@ -8,7 +8,7 @@ object TempValueToResults {
   def apply(
       returnType : vt.ReturnType.ReturnType[vt.ValueType],
       resultTemp : ps.TempValue
-  )(implicit plan : PlanWriter) : ResultValues =
+  )(implicit plan : PlanWriter) : ResultValue =
     returnType match {
       case vt.ReturnType.UnreachableValue =>
         UnreachableValue

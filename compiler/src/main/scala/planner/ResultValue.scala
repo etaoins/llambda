@@ -10,10 +10,12 @@ import llambda.compiler.{valuetype => vt}
 
 import llambda.compiler.valuetype.Implicits._
 
-sealed abstract class ResultValues {
+sealed abstract class ResultValue {
   /** Returns an intermediate value containing the single value in this result
     *
     * If the result contains multiple values then ImpossibleTypeConversionException will be thrown
+    *
+    * VALUESTODO: Get rid of this
     */
   def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue
 
@@ -37,17 +39,17 @@ sealed abstract class ResultValues {
       Some(toSingleValue().toTempValue(resultType))
   }
 
-  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValue
 
   /** Casts this value to to another ReturnType
     *
     * This works analogously to IntermediateValue.toSchemeType(). If the value can't satisfy the target type then a
     * TypeException will be thrown. If the value may satisfy the target type then a runtime type check will be planned.
     */
-  def castToReturnType(targetType : vt.ReturnType.ReturnType[vt.SchemeType])(implicit plan : PlanWriter) : ResultValues
+  def castToReturnType(targetType : vt.ReturnType.ReturnType[vt.SchemeType])(implicit plan : PlanWriter) : ResultValue
 }
 
-case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
+case class SingleValue(value : iv.IntermediateValue) extends ResultValue {
   def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue =
     value
 
@@ -57,12 +59,12 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
   def preferredReturnType =
     vt.ReturnType.SingleValue(value.preferredRepresentation)
 
-  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValue =
     SingleValue(value.withSchemeType(newReturnType.schemeType))
 
   def castToReturnType(
       targetType : vt.ReturnType.ReturnType[vt.SchemeType]
-  )(implicit plan : PlanWriter) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValue = {
     SingleValue(value.castToSchemeType(targetType.schemeType))
   }
 }
@@ -71,32 +73,19 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
   *
   * This can safely be treated as a unit value but we can special case this for optimisation purposes
   */
-object UnreachableValue extends ResultValues {
+object UnreachableValue extends ResultValue {
   def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue =
     iv.UnitValue
 
-  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValue =
     this
 
   def castToReturnType(
       targetType : vt.ReturnType.ReturnType[vt.SchemeType]
-  )(implicit plan : PlanWriter) : ResultValues =
+  )(implicit plan : PlanWriter) : ResultValue =
     this
 
   def preferredReturnType = vt.ReturnType.UnreachableValue
 
   def returnType = vt.ReturnType.UnreachableValue
-}
-
-object ResultValues {
-  def apply(
-      values : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter) = values match {
-    case List(singleValue) =>
-      SingleValue(singleValue)
-
-    case multipleValues =>
-      // VALUESTODO: This shouldn't be possible - change this signature
-      throw new InternalCompilerErrorException("Multiple values unsupported")
-  }
 }

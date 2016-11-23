@@ -74,7 +74,7 @@ private[planner] object PlanProcedureTrampoline {
     // Plan the target
     val applyResult = PlanApplication.planWithArgList(procState)(et.VarRef(selfLoc), argList)(plan)
 
-    applyResult.values match {
+    applyResult.value match {
       case UnreachableValue =>
 
       case resultValues =>

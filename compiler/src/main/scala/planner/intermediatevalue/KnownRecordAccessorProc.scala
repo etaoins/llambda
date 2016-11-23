@@ -57,7 +57,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
 
         Some(PlanResult(
           state=state,
-          values=SingleValue(fieldValue)
+          value=SingleValue(fieldValue)
         ))
 
       case List((_, recordValue)) =>
@@ -76,7 +76,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
 
         Some(PlanResult(
           state=state,
-          values=SingleValue(resultValue)
+          value=SingleValue(resultValue)
         ))
 
       case _ =>

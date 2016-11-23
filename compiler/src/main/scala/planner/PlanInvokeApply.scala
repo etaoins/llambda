@@ -14,7 +14,7 @@ object PlanInvokeApply {
       invokableProc : iv.InvokableProc,
       fixedTemps : Seq[ps.TempValue],
       varArgTempOpt : Option[ps.TempValue]
-  )(implicit plan : PlanWriter) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValue = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.polySignature.upperBound
 
@@ -62,7 +62,7 @@ object PlanInvokeApply {
   def withArgumentList(
       invokableProc : iv.InvokableProc,
       argListValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValue = {
     val signature = invokableProc.polySignature.upperBound
 
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
@@ -108,7 +108,7 @@ object PlanInvokeApply {
   def withIntermediateValues(
       invokableProc : iv.InvokableProc,
       args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValue = {
     val signature = invokableProc.polySignature.upperBound
 
     // Convert all the args

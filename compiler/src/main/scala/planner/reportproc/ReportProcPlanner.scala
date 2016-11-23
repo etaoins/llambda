@@ -19,20 +19,11 @@ abstract trait ReportProcPlanner {
       reportName : String,
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[PlanResult] = {
-    planWithValues(initialState)(reportName, args) map { values =>
+    planWithValue(initialState)(reportName, args) map { value =>
       PlanResult(
         state=initialState,
-        values=values
+        value=SingleValue(value)
       )
-    }
-  }
-
-  def planWithValues(initialState : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[ResultValues] = {
-    planWithValue(initialState)(reportName, args) map { value =>
-      SingleValue(value)
     }
   }
 

@@ -49,7 +49,7 @@ private[planner] object PlanCaseLambda {
       closureType : vt.ClosureType,
       argListHeadTemp : ps.TempValue,
       argLengthTemp : ps.TempValue
-  )(implicit entryPlan : PlanWriter) : ResultValues = plannedClauses match {
+  )(implicit entryPlan : PlanWriter) : ResultValue = plannedClauses match {
     case Nil =>
       // We were called with no clauses
       // Note that the checkingClause match below will explicitly check for empty clauses before recursing so this will
@@ -124,7 +124,7 @@ private[planner] object PlanCaseLambda {
         )(falsePlan)
 
         // Now phi them together
-        val phiResult = PlanResultValuesPhi(truePlan, trueValues, falsePlan, falseValues)
+        val phiResult = PlanResultValuePhi(truePlan, trueValues, falsePlan, falseValues)
 
         val valuePhis = List(ps.ValuePhi(phiResult.resultTemp, phiResult.leftTempValue, phiResult.rightTempValue))
 
@@ -135,7 +135,7 @@ private[planner] object PlanCaseLambda {
           valuePhis=valuePhis
         )
 
-        phiResult.resultValues
+        phiResult.resultValue
       }
   }
 

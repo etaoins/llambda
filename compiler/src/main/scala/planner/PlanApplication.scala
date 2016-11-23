@@ -37,7 +37,7 @@ private[planner] object PlanApplication {
     // Use the final argument's state
     val argState = argResults.last.state
     // Zip with the original argument expr so we can use it to locate exceptions related to that argument
-    val args = argExprs.zip(argResults.tail.map(_.values.toSingleValue()))
+    val args = argExprs.zip(argResults.tail.map(_.value.toSingleValue()))
 
     planWithArgValues(argState)(procExpr, args)
   }
@@ -78,10 +78,10 @@ private[planner] object PlanApplication {
     procExpr match {
       case lambdaExpr : et.Lambda =>
         // We can apply this inline!
-        for(inlineValues <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
+        for(inlineValue <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
           return PlanResult(
             state=initialState,
-            values=inlineValues
+            value=inlineValue
           )
         }
 
@@ -89,7 +89,7 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procValue = procResult.values.toSingleValue().toApplicableValueForArgs(args.map(_._2.schemeType))
+    val procValue = procResult.value.toSingleValue().toApplicableValueForArgs(args.map(_._2.schemeType))
 
     val invokableProc = procValue.toInvokableProc()
 
@@ -128,7 +128,7 @@ private[planner] object PlanApplication {
     // Plan this as an invoke (function call)
     val invokePlan = plan.forkPlan()
 
-    val invokeValues = PlanInvokeApply.withIntermediateValues(invokableProc, args)(invokePlan)
+    val invokeValue = PlanInvokeApply.withIntermediateValues(invokableProc, args)(invokePlan)
 
     if (plan.config.optimise && (initialState.inlineDepth < 8)) {
       procValue match {
@@ -136,13 +136,13 @@ private[planner] object PlanApplication {
           // Try to plan this as in inline app[lication
           val inlinePlan = plan.forkPlan()
 
-          val inlineValuesOpt = AttemptInlineApply.fromManifiest(procResult.state)(
+          val inlineValueOpt = AttemptInlineApply.fromManifiest(procResult.state)(
             manifest=schemeProc.manifest,
             args=args,
             selfTempOpt=schemeProc.selfTempOpt
           )(inlinePlan)
 
-          for(inlineValues <- inlineValuesOpt) {
+          for(inlineValue <- inlineValueOpt) {
             val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
             val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
@@ -165,7 +165,7 @@ private[planner] object PlanApplication {
                 // No need to register types here - inlining wouldn't have succeeded if the types weren't already
                 // matches
                 state=procResult.state,
-                values=inlineValues
+                value=inlineValue
               )
             }
           }
@@ -179,7 +179,7 @@ private[planner] object PlanApplication {
 
     return PlanResult(
       state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
-      values=invokeValues.withReturnType(procedureType.returnType)
+      value=invokeValue.withReturnType(procedureType.returnType)
     )
   }
 
@@ -217,7 +217,7 @@ private[planner] object PlanApplication {
       case None =>
         val procResult = PlanExpr(initialState)(procExpr)
         val invokableProc = plan.withContextLocation(procExpr) {
-          procResult.values.toSingleValue.toInvokableProc
+          procResult.value.toSingleValue.toInvokableProc
         }
 
         PlanResult(

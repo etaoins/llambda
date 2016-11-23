@@ -263,10 +263,10 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
   }
 
-  override def planWithValues(state : PlannerState)(
+  override def planWithValue(state : PlannerState)(
     reportName : String,
     args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, args) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("truncate/", List(numerator, denominator)) =>
       // Handle this here because it produces multiple values
       val inlinePlan = plan.forkPlan()
@@ -277,7 +277,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       (quotientValueOpt, remainderValueOpt) match {
         case (Some(quotientValue), Some(remainderValue)) =>
           plan.steps ++= inlinePlan.steps
-          Some(SingleValue(ValuesToPair(quotientValue, remainderValue, None)))
+          Some(ValuesToPair(quotientValue, remainderValue, None))
 
         case _ =>
           None
@@ -285,7 +285,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
 
     case _ =>
       planWithSingleValue(state)(reportName, args) map { value =>
-        SingleValue(value)
+        value
       }
   }
 
