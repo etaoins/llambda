@@ -16,7 +16,7 @@ private[frontend] object FeaturesProcedure {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UniformProperListType(vt.SymbolType))
+      returnType=vt.ReturnType.Reachable(vt.UniformProperListType(vt.SymbolType))
     )
 
     var featuresProc = et.Lambda(

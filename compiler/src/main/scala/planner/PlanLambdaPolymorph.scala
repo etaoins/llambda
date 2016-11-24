@@ -176,8 +176,8 @@ object PlanLambdaPolymorph {
 
     // Prefer compact return types where possible
     val compactReturnType = polymorphType.returnType match {
-      case vt.ReturnType.SingleValue(schemeType) =>
-        vt.ReturnType.SingleValue(CompactRepresentationForType(schemeType))
+      case vt.ReturnType.Reachable(schemeType) =>
+        vt.ReturnType.Reachable(CompactRepresentationForType(schemeType))
 
       case other =>
         other

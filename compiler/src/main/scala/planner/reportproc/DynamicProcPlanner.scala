@@ -29,7 +29,7 @@ object DynamicProcPlanner extends ReportProcPlanner {
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
 
         converterProc._2.toTempValue(converterProcType)

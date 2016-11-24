@@ -13,7 +13,7 @@ class ProcedureSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Double),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set()
     )
 
@@ -21,7 +21,7 @@ class ProcedureSignatureSuite extends FunSuite {
       List(vt.FlonumType),
       Nil,
       None,
-      vt.ReturnType.SingleValue(vt.ExactIntegerType)
+      vt.ReturnType.Reachable(vt.ExactIntegerType)
     ))
   }
 
@@ -32,7 +32,7 @@ class ProcedureSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Double),
       optionalArgTypes=List(vt.ExactIntegerType),
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set()
     )
 
@@ -40,7 +40,7 @@ class ProcedureSignatureSuite extends FunSuite {
       List(vt.FlonumType),
       List(vt.ExactIntegerType),
       None,
-      vt.ReturnType.SingleValue(vt.ExactIntegerType)
+      vt.ReturnType.Reachable(vt.ExactIntegerType)
     ))
   }
 
@@ -51,7 +51,7 @@ class ProcedureSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Double),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.SymbolType),
-      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set()
     )
 
@@ -59,7 +59,7 @@ class ProcedureSignatureSuite extends FunSuite {
       List(vt.FlonumType),
       Nil,
       Some(vt.SymbolType),
-      vt.ReturnType.SingleValue(vt.ExactIntegerType)
+      vt.ReturnType.Reachable(vt.ExactIntegerType)
     ))
   }
 
@@ -70,7 +70,7 @@ class ProcedureSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Double),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set(ProcedureAttribute.NoReturn)
     )
 
@@ -78,7 +78,7 @@ class ProcedureSignatureSuite extends FunSuite {
       List(vt.FlonumType),
       Nil,
       None,
-      vt.ReturnType.SingleValue(vt.EmptySchemeType)
+      vt.ReturnType.Reachable(vt.EmptySchemeType)
     ))
   }
 }

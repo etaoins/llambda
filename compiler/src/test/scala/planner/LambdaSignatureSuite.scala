@@ -42,7 +42,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     assert(signature.hasWorldArg === false)
     assert(signature.mandatoryArgTypes === Nil)
     assert(signature.optionalArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Int64))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.Int64))
   }
 
   test("procedure returning its argument") {
@@ -52,7 +52,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     assert(signature.hasWorldArg === false)
     assert(signature.mandatoryArgTypes === List(vt.AnySchemeType))
     assert(signature.optionalArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("explicitly typed procedure returning its argument") {
@@ -61,7 +61,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     assert(signature.hasWorldArg === false)
     assert(signature.mandatoryArgTypes === List(vt.Int64))
     assert(signature.optionalArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Int64))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.Int64))
   }
 
   test("explicitly casting mandatory procedure argument to type") {
@@ -69,7 +69,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     assert(signature.mandatoryArgTypes === List(vt.UnicodeChar))
     assert(signature.optionalArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnicodeChar))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.UnicodeChar))
   }
 /*
   test("explicitly casting optional procedure argument to type") {
@@ -77,7 +77,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     assert(signature.mandatoryArgTypes === Nil)
     assert(signature.optionalArgTypes === List(vt.CharType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnicodeChar))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.UnicodeChar))
   }*/
 
   test("explicitly casting mandatory procedure argument to type with rest arg") {
@@ -85,7 +85,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     assert(signature.mandatoryArgTypes === List(vt.UnicodeChar))
     assert(signature.optionalArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnicodeChar))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.UnicodeChar))
   }
 
   test("assigning procedure argument to typed immutable") {
@@ -97,7 +97,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     assert(signature.mandatoryArgTypes === List(vt.Double))
     assert(signature.optionalArgTypes === Nil)
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Double))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.Double))
   }
 
   test("assigning procedure argument to typed mutable") {
@@ -116,14 +116,14 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     // This can be passed anything so it can return anything
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure proxying (make-vector)") {
     val signature = signatureFor("""(lambda (len fill) (make-vector len fill))""")
 
     assert(signature.mandatoryArgTypes === List(vt.Int64, vt.AnySchemeType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.VectorType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.VectorType))
   }
 
   test("typed procedure proxying (vector-ref)") {
@@ -131,7 +131,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     // We should refine <number> in to <exact-integer>
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("custom union typed procedure proxying (vector-ref)") {
@@ -139,14 +139,14 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     // We should refine <number> in to <exact-integer>
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnitType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.UnitType))
   }
 
   test("types used across (if) branches are unioned together") {
@@ -156,7 +156,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
           (cast value <string>)
           (cast value <symbol>)))""")
 
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
   }
 
   test("procedure proxying (vector-ref) past a conditional") {
@@ -168,7 +168,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     // Because the (vector-ref) is unconditionally executed the condition
     // should change the conditional
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure proxying function with typed rest arg") {
@@ -177,7 +177,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (+ 5 val1 val2))""")
 
     assert(signature.mandatoryArgTypes === List(vt.NumberType, vt.NumberType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.NumberType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.NumberType))
   }
 
   test("procedure proxying (vector-ref) past possible exception point") {
@@ -189,7 +189,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     // (/) can can throw an exception
     // This mean (vector-ref) may not be executed
     assert(signature.mandatoryArgTypes === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure proxying (vector-ref) past possible exception point in true branch") {
@@ -199,7 +199,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     assert(signature.mandatoryArgTypes === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure proxying (vector-ref) past possible exception point in false branch") {
@@ -209,7 +209,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     assert(signature.mandatoryArgTypes === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure proxying (>) inside a conditional test") {
@@ -220,7 +220,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (if (> 0 m n) #t #f))""")
 
     assert(signature.mandatoryArgTypes === List(vt.NumberType, vt.NumberType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Predicate))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.Predicate))
   }
 
   test("aborted retyping preserves original argument types") {
@@ -230,7 +230,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.NumberType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
 
@@ -242,7 +242,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     // The (vector-ref) is conditionally executed, we can't assert anything about our parameters
     assert(signature.mandatoryArgTypes === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
 
   test("procedure unconditionally terminating is annotated as NoReturn") {

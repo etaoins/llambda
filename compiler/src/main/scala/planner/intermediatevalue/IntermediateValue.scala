@@ -309,15 +309,15 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   final def toReturnTempValueOpt(
       returnType : vt.ReturnType.ReturnType[vt.ValueType]
   )(implicit plan : PlanWriter) : Option[ps.TempValue] = returnType match {
-    case vt.ReturnType.SingleValue(vt.UnitType) | vt.ReturnType.UnreachableValue =>
+    case vt.ReturnType.Reachable(vt.UnitType) | vt.ReturnType.Unreachable =>
       None
 
-    case vt.ReturnType.SingleValue(resultType) =>
+    case vt.ReturnType.Reachable(resultType) =>
       Some(toTempValue(resultType))
   }
 
   def preferredReturnType: vt.ReturnType.ReturnType[vt.ValueType] =
-    vt.ReturnType.SingleValue(preferredRepresentation)
+    vt.ReturnType.Reachable(preferredRepresentation)
 }
 
 object IntermediateValue {

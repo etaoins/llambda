@@ -11,35 +11,35 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
     mandatoryArgTypes=List(UnitType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(PortType)
+    returnType=ReturnType.Reachable(PortType)
   )
 
   val twoStringToNumberProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(NumberType)
+    returnType=ReturnType.Reachable(NumberType)
   )
 
   val twoStringToExactIntProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(ExactIntegerType)
+    returnType=ReturnType.Reachable(ExactIntegerType)
   )
 
   val threeSymbolToNullProcedure = ProcedureType(
     mandatoryArgTypes=List(SymbolType, SymbolType, SymbolType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(ListElementType)
+    returnType=ReturnType.Reachable(ListElementType)
   )
 
   val fourPortToNullProcedure = ProcedureType(
     mandatoryArgTypes=List(PortType, PortType, PortType, PortType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(ListElementType)
+    returnType=ReturnType.Reachable(ListElementType)
   )
 
   test("case procedure definitely satisfies itself") {

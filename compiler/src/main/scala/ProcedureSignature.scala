@@ -37,7 +37,7 @@ case class ProcedureSignature(
 
   def toSchemeProcedureType = {
     val schemeReturnType = if (attributes.contains(ProcedureAttribute.NoReturn)) {
-      vt.ReturnType.SingleValue(vt.EmptySchemeType)
+      vt.ReturnType.Reachable(vt.EmptySchemeType)
     }
     else {
       returnType.schemeReturnType

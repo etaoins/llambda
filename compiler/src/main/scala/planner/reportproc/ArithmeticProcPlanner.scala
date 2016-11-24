@@ -283,16 +283,6 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
           None
       }
 
-    case _ =>
-      planWithSingleValue(state)(reportName, args) map { value =>
-        value
-      }
-  }
-
-  private def planWithSingleValue(state : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("+", Nil) =>
       Some(iv.ConstantExactIntegerValue(0))
 

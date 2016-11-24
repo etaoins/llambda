@@ -11,10 +11,10 @@ object StabiliseReturnType {
   def apply(
       returnType : ReturnType.ReturnType[SchemeType]
   ) : ReturnType.ReturnType[SchemeType] = returnType match {
-    case ReturnType.UnreachableValue =>
-      ReturnType.UnreachableValue
+    case ReturnType.Unreachable =>
+      ReturnType.Unreachable
 
-    case ReturnType.SingleValue(valueType) =>
-      ReturnType.SingleValue[SchemeType](StabiliseType(valueType))
+    case ReturnType.Reachable(valueType) =>
+      ReturnType.Reachable[SchemeType](StabiliseType(valueType))
   }
 }

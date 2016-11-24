@@ -13,7 +13,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       mandatoryArgTypes=initializedFields.map(recordType.typeForField),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(recordType),
+      returnType=vt.ReturnType.Reachable(recordType),
       attributes=Set()
     ).toPolymorphic
 ){

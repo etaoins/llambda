@@ -13,7 +13,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
       mandatoryArgTypes=List(recordType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(recordType.typeForField(field)),
+      returnType=vt.ReturnType.Reachable(recordType.typeForField(field)),
       attributes=Set()
     ).toPolymorphic
 ) {

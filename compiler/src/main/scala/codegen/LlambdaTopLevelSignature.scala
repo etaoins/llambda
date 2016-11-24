@@ -11,7 +11,7 @@ object LlambdaTopLevelSignature extends ProcedureSignature(
   mandatoryArgTypes=Nil,
   optionalArgTypes=Nil,
   restArgMemberTypeOpt=None,
-  returnType=vt.ReturnType.SingleValue(vt.UnitType),
+  returnType=vt.ReturnType.Reachable(vt.UnitType),
   attributes=Set()
 ) {
   val nativeSymbol = "__llambda_top_level"

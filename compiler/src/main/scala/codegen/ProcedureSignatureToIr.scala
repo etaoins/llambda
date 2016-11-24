@@ -60,7 +60,7 @@ object ProcedureSignatureToIr {
     }
 
     val callMetadata = (signature.returnType match {
-      case vt.ReturnType.SingleValue(vt.UnicodeChar) =>
+      case vt.ReturnType.Reachable(vt.UnicodeChar) =>
         val int32Type = IntegerType(32)
 
         Map(

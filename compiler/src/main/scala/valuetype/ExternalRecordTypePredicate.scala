@@ -19,7 +19,7 @@ object ExternalRecordTypePredicate {
     mandatoryArgTypes=List(AnySchemeType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(Predicate),
+    returnType=ReturnType.Reachable(Predicate),
     attributes=Set()
   )
 }

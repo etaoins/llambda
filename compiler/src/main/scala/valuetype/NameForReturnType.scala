@@ -5,10 +5,10 @@ import llambda.compiler.InternalCompilerErrorException
 
 object NameForReturnType {
   def apply[T >: SchemeType <: ValueType](returnType : ReturnType.ReturnType[T]) : String = returnType match {
-    case ReturnType.UnreachableValue =>
+    case ReturnType.Unreachable =>
       "<unit> (unreachable)"
 
-    case ReturnType.SingleValue(valueType) =>
+    case ReturnType.Reachable(valueType) =>
       NameForType(valueType)
   }
 }

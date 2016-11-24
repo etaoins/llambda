@@ -11,105 +11,105 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(NumberType)
+    returnType=ReturnType.Reachable(NumberType)
   )
 
   val twoStringToExactIntProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(ExactIntegerType)
+    returnType=ReturnType.Reachable(ExactIntegerType)
   )
 
   val twoStringToPortProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(PortType)
+    returnType=ReturnType.Reachable(PortType)
   )
 
   val anyStringToNumberProcedure = ProcedureType(
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(StringType),
-    returnType=ReturnType.SingleValue(NumberType)
+    returnType=ReturnType.Reachable(NumberType)
   )
 
   val listElementToUnitProcedure = ProcedureType(
     mandatoryArgTypes=List(ListElementType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(UnitType)
+    returnType=ReturnType.Reachable(UnitType)
   )
 
   val pairToUnitProcedure = ProcedureType(
     mandatoryArgTypes=List(AnyPairType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(UnitType)
+    returnType=ReturnType.Reachable(UnitType)
   )
 
   val symbolToUnreachableProcedure = ProcedureType(
     mandatoryArgTypes=List(SymbolType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.UnreachableValue
+    returnType=ReturnType.Unreachable
   )
 
   val symbolToStringProcedure = ProcedureType(
     mandatoryArgTypes=List(SymbolType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(StringType)
+    returnType=ReturnType.Reachable(StringType)
   )
 
   val symbolToUnitProcedure = ProcedureType(
     mandatoryArgTypes=List(SymbolType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(UnitType)
+    returnType=ReturnType.Reachable(UnitType)
   )
 
   val listElementsToUnitProcedure = ProcedureType(
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(ListElementType),
-    returnType=ReturnType.SingleValue(UnitType)
+    returnType=ReturnType.Reachable(UnitType)
   )
 
   val pairsToUnitProcedure = ProcedureType(
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(AnyPairType),
-    returnType=ReturnType.SingleValue(UnitType)
+    returnType=ReturnType.Reachable(UnitType)
   )
 
   val symbolsToUnitProcedure = ProcedureType(
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(SymbolType),
-    returnType=ReturnType.SingleValue(UnitType)
+    returnType=ReturnType.Reachable(UnitType)
   )
 
   val higherOrderProcedure = ProcedureType(
     mandatoryArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(listElementToUnitProcedure),
-    returnType=ReturnType.SingleValue(twoStringToExactIntProcedure)
+    returnType=ReturnType.Reachable(twoStringToExactIntProcedure)
   )
 
   val optionalStringToNumberProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType),
     optionalArgTypes=List(StringType),
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(NumberType)
+    returnType=ReturnType.Reachable(NumberType)
   )
 
   val oneStringToNumberProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(NumberType)
+    returnType=ReturnType.Reachable(NumberType)
   )
 
   test("specific procedure type satisfies itself") {

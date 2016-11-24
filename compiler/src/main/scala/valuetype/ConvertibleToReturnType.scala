@@ -8,11 +8,11 @@ object ConvertibleToReturnType {
     */
   def apply(destType : ReturnType.ReturnType[ValueType], sourceType : ReturnType.ReturnType[ValueType]) : Option[Boolean] =
     (destType, sourceType) match {
-      case (ReturnType.SingleValue(UnitType), _) =>
+      case (ReturnType.Reachable(UnitType), _) =>
         // Everything is convertible to the unit type
         Some(true)
 
-      case (_, ReturnType.UnreachableValue) =>
+      case (_, ReturnType.Unreachable) =>
         // Everything is convertible from an unreachable value as the conversion will never occur
         Some(true)
 

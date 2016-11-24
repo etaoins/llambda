@@ -98,7 +98,7 @@ class InstantiateTypeSuite extends FunSuite {
       mandatoryArgTypes=List(polyA, PortType),
       optionalArgTypes=List(PortType, polyA),
       restArgMemberTypeOpt=Some(polyB),
-      returnType=ReturnType.SingleValue(polyA)
+      returnType=ReturnType.Reachable(polyA)
     )
 
     val reconciled = ReconcileTypeVars.Result(Map(
@@ -110,7 +110,7 @@ class InstantiateTypeSuite extends FunSuite {
       mandatoryArgTypes=List(ExactIntegerType, PortType),
       optionalArgTypes=List(PortType, ExactIntegerType),
       restArgMemberTypeOpt=Some(FlonumType),
-      returnType=ReturnType.SingleValue(ExactIntegerType)
+      returnType=ReturnType.Reachable(ExactIntegerType)
     )
 
     assert(InstantiateType(reconciled, polyProc) == expected)
@@ -122,13 +122,13 @@ class InstantiateTypeSuite extends FunSuite {
         mandatoryArgTypes=List(polyA),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(polyB)
+        returnType=ReturnType.Reachable(polyB)
       ),
       ProcedureType(
         mandatoryArgTypes=List(polyA, polyB),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(polyA)
+        returnType=ReturnType.Reachable(polyA)
       )
     ))
 
@@ -142,13 +142,13 @@ class InstantiateTypeSuite extends FunSuite {
         mandatoryArgTypes=List(ExactIntegerType),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(FlonumType)
+        returnType=ReturnType.Reachable(FlonumType)
       ),
       ProcedureType(
         mandatoryArgTypes=List(ExactIntegerType, FlonumType),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(ExactIntegerType)
+        returnType=ReturnType.Reachable(ExactIntegerType)
       )
     ))
 

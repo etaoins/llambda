@@ -13,7 +13,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -29,7 +29,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -45,7 +45,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -61,7 +61,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -77,7 +77,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.NumberType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -93,7 +93,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Int64),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -109,7 +109,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Int64),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -127,7 +127,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.NumberType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -143,7 +143,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.ExactIntegerType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -161,7 +161,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.NumberType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -179,7 +179,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -197,7 +197,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.NumberType),
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -215,7 +215,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.ExactIntegerType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -233,7 +233,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.ExactIntegerType),
+      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType),
       attributes=Set()
     )
 
@@ -249,7 +249,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set()
     )
 
@@ -265,12 +265,12 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.Int64),
+      returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set()
     )
 
     val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SingleValue(vt.ExactIntegerType)
+      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -283,12 +283,12 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.ExactIntegerType),
+      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType),
       attributes=Set()
     )
 
     val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SingleValue(vt.NumberType)
+      returnType=vt.ReturnType.Reachable(vt.NumberType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === true)
@@ -301,12 +301,12 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.NumberType),
+      returnType=vt.ReturnType.Reachable(vt.NumberType),
       attributes=Set()
     )
 
     val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SingleValue(vt.ExactIntegerType)
+      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -319,12 +319,12 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=List(vt.NumberType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
     val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+      returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -337,7 +337,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=List(vt.ExactIntegerType),
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -356,7 +356,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -374,7 +374,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 

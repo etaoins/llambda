@@ -214,7 +214,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.StringType)
+        returnType=vt.ReturnType.Reachable(vt.StringType)
       )
     ))
 
@@ -224,7 +224,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         mandatoryArgTypes=List(vt.PortType, vt.SymbolType),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.StringType)
+        returnType=vt.ReturnType.Reachable(vt.StringType)
       )
     ))
 
@@ -238,7 +238,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         mandatoryArgTypes=Nil,
         optionalArgTypes=List(vt.StringType),
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.StringType)
+        returnType=vt.ReturnType.Reachable(vt.StringType)
       )
     ))
 
@@ -248,7 +248,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         mandatoryArgTypes=List(vt.SymbolType),
         optionalArgTypes=List(vt.StringType, vt.PortType),
         restArgMemberTypeOpt=Some(vt.NumberType),
-        returnType=vt.ReturnType.SingleValue(vt.StringType)
+        returnType=vt.ReturnType.Reachable(vt.StringType)
       )
     ))
   }
@@ -266,7 +266,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.StringType)
+          returnType=vt.ReturnType.Reachable(vt.StringType)
         )
       ))
     ))
@@ -278,13 +278,13 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+          returnType=vt.ReturnType.Reachable(vt.NumberType)
         ),
         vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+          returnType=vt.ReturnType.Reachable(vt.NumberType)
         )
       ))
     ))
@@ -296,13 +296,13 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+          returnType=vt.ReturnType.Reachable(vt.NumberType)
         ),
         vt.ProcedureType(
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.StringType),
-          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+          returnType=vt.ReturnType.Reachable(vt.NumberType)
         )
       ))
     ))

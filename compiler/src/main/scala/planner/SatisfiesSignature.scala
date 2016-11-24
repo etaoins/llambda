@@ -93,7 +93,7 @@ object SatisfiesSignature {
           if superReturnType.representationTypeOpt.isDefined != derivedReturnType.representationTypeOpt.isDefined =>
         false
 
-      case (vt.ReturnType.SingleValue(superSingle), vt.ReturnType.SingleValue(derivedSingle)) =>
+      case (vt.ReturnType.Reachable(superSingle), vt.ReturnType.Reachable(derivedSingle)) =>
         satisfiesRepresentation(superSingle, derivedSingle)
 
       case _ =>

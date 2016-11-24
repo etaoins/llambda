@@ -223,7 +223,7 @@ case object UnreachableValue extends ConstantValue(ct.UnitCell) with BoxedOnlyVa
     BoxedValue(cellType, constantTemp)
   }
 
-  override def preferredReturnType = vt.ReturnType.UnreachableValue
+  override def preferredReturnType = vt.ReturnType.Unreachable
 
   override def castToSchemeType(
       targetType : vt.SchemeType,

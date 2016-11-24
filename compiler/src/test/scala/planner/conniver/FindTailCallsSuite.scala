@@ -15,7 +15,7 @@ class FindTailCallsSuite extends FunSuite {
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.UnitType),
+    returnType=vt.ReturnType.Reachable(vt.UnitType),
     attributes=Set()
   )
 

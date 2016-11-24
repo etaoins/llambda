@@ -15,7 +15,7 @@ class LiveValuesAtBarrierSuite extends FunSuite {
     mandatoryArgTypes=List(vt.ExactIntegerType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.UnitType),
+    returnType=vt.ReturnType.Reachable(vt.UnitType),
     attributes=Set()
   )
 
@@ -25,7 +25,7 @@ class LiveValuesAtBarrierSuite extends FunSuite {
     mandatoryArgTypes=List(vt.ExactIntegerType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.UnitType),
+    returnType=vt.ReturnType.Reachable(vt.UnitType),
     attributes=Set()
   )
 
@@ -35,7 +35,7 @@ class LiveValuesAtBarrierSuite extends FunSuite {
     mandatoryArgTypes=List(vt.ExactIntegerType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.UnitType),
+    returnType=vt.ReturnType.Reachable(vt.UnitType),
     attributes=Set(ProcedureAttribute.NoReturn)
   )
 

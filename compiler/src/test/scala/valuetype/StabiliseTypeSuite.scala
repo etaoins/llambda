@@ -12,7 +12,7 @@ class StabiliseTypeSuite extends FunSuite {
     mandatoryArgTypes=List(StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.SingleValue(StringType)
+    returnType=ReturnType.Reachable(StringType)
   )
 
   private val stringPair = SpecificPairType(StringType, StringType)

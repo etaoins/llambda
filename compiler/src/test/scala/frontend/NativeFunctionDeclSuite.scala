@@ -21,7 +21,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.UnitType),
+        returnType=vt.ReturnType.Reachable(vt.UnitType),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -41,7 +41,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.UnitType),
+        returnType=vt.ReturnType.Reachable(vt.UnitType),
         attributes=Set(ProcedureAttribute.NoReturn)
       ).toPolymorphic,
       "lliby_newline"
@@ -61,7 +61,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.UnitType),
+        returnType=vt.ReturnType.Reachable(vt.UnitType),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -81,7 +81,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.Int8),
+        returnType=vt.ReturnType.Reachable(vt.Int8),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -101,7 +101,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.Int16),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.Int32),
+        returnType=vt.ReturnType.Reachable(vt.Int32),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -121,7 +121,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.Int64, vt.Float),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.Double),
+        returnType=vt.ReturnType.Reachable(vt.Double),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -141,7 +141,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.UInt16),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.UInt32),
+        returnType=vt.ReturnType.Reachable(vt.UInt32),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -161,7 +161,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.Predicate),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.Predicate),
+        returnType=vt.ReturnType.Reachable(vt.Predicate),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -181,7 +181,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.Int8),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
+        returnType=vt.ReturnType.Reachable(vt.UnicodeChar),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -201,7 +201,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.ExactIntegerType),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.FlonumType),
+        returnType=vt.ReturnType.Reachable(vt.FlonumType),
         attributes=Set()
       ).toPolymorphic,
       "lliby_newline"
@@ -221,7 +221,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.AnySchemeType),
-        returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
+        returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
         attributes=Set()
       ).toPolymorphic,
       "lliby_vector"
@@ -241,7 +241,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.Predicate),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-        returnType=vt.ReturnType.SingleValue(vt.Int32),
+        returnType=vt.ReturnType.Reachable(vt.Int32),
         attributes=Set()
       ).toPolymorphic,
       "lliby_misc"
@@ -261,7 +261,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=List(vt.Predicate),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-        returnType=vt.ReturnType.SingleValue(vt.Int32),
+        returnType=vt.ReturnType.Reachable(vt.Int32),
         attributes=Set()
       ).toPolymorphic,
       "lliby_misc"
@@ -284,7 +284,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             List(fixedTypeVar : pm.TypeVar),
             Nil,
             Some(vt.ExactIntegerType),
-            vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
+            vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
             _
           )
         ),
@@ -309,7 +309,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             List(fixedTypeVar : pm.TypeVar),
             Nil,
             Some(vt.ExactIntegerType),
-            vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
+            vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
             _
           )
         ),
@@ -335,7 +335,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             List(fixedTypeVar : pm.TypeVar),
             Nil,
             Some(vt.ExactIntegerType),
-            vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
+            vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
             _
           )
         ),
@@ -358,7 +358,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=vt.ReturnType.SingleValue(vt.UnitType),
+        returnType=vt.ReturnType.Reachable(vt.UnitType),
         attributes=Set()
       ).toPolymorphic,
       "lliby_misc"

@@ -14,8 +14,8 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
     applicableType match {
       case procType : vt.ProcedureType =>
         val compactReturnType = procType.returnType match {
-          case vt.ReturnType.SingleValue(schemeType) =>
-            vt.ReturnType.SingleValue(CompactRepresentationForType(schemeType))
+          case vt.ReturnType.Reachable(schemeType) =>
+            vt.ReturnType.Reachable(CompactRepresentationForType(schemeType))
 
           case other =>
             other
@@ -39,7 +39,7 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
           attributes=Set()
         )
     }

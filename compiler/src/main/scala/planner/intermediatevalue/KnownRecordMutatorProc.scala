@@ -13,7 +13,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       mandatoryArgTypes=List(recordType, recordType.typeForField(field)),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     ).toPolymorphic
 ) {

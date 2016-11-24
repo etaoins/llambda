@@ -239,7 +239,7 @@ case class RecordConstructor(recordType : vt.RecordType, initializedFields : Lis
     mandatoryArgTypes=initializedFields.map(recordType.typeForField).map(_.schemeType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(recordType)
+    returnType=vt.ReturnType.Reachable(recordType)
   )
 }
 
@@ -251,7 +251,7 @@ case class RecordAccessor(recordType : vt.RecordType, field : vt.RecordField) ex
     mandatoryArgTypes=List(recordType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(recordType.typeForField(field).schemeType)
+    returnType=vt.ReturnType.Reachable(recordType.typeForField(field).schemeType)
   )
 }
 
@@ -263,7 +263,7 @@ case class RecordMutator(recordType : vt.RecordType, field : vt.RecordField) ext
     mandatoryArgTypes=List(recordType, recordType.typeForField(field).schemeType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.UnitType)
+    returnType=vt.ReturnType.Reachable(vt.UnitType)
   )
 }
 

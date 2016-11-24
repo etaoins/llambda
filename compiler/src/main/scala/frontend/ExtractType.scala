@@ -321,17 +321,17 @@ object ExtractType {
   }
 
   def extractReturnValueType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.ValueType] =
-    vt.ReturnType.SingleValue(extractValueType(datum))
+    vt.ReturnType.Reachable(extractValueType(datum))
 
   def extractReturnSchemeType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.SchemeType] =
     extractReturnValueType(datum) match {
-      case vt.ReturnType.UnreachableValue =>
-        vt.ReturnType.UnreachableValue
+      case vt.ReturnType.Unreachable =>
+        vt.ReturnType.Unreachable
 
-      case vt.ReturnType.SingleValue(schemeType : vt.SchemeType) =>
-        vt.ReturnType.SingleValue(schemeType)
+      case vt.ReturnType.Reachable(schemeType : vt.SchemeType) =>
+        vt.ReturnType.Reachable(schemeType)
 
-      case vt.ReturnType.SingleValue(_) =>
+      case vt.ReturnType.Reachable(_) =>
         throw new BadSpecialFormException(datum, "Native return type used where Scheme type expected")
     }
 

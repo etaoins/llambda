@@ -14,7 +14,7 @@ class DisposeValuesSuite extends FunSuite {
     mandatoryArgTypes=List(vt.ExactIntegerType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(vt.SymbolType),
-    returnType=vt.ReturnType.SingleValue(vt.PortType),
+    returnType=vt.ReturnType.Reachable(vt.PortType),
     attributes=Set()
   )
 

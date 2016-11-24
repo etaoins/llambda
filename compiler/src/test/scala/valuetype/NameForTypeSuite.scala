@@ -117,7 +117,7 @@ class NameForTypeSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=ReturnType.SingleValue(NumberType)
+      returnType=ReturnType.Reachable(NumberType)
     )
 
     assert(NameForType(procedureType) === "(-> <number>)")
@@ -128,7 +128,7 @@ class NameForTypeSuite extends FunSuite {
       mandatoryArgTypes=List(StringType, SymbolType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=ReturnType.SingleValue(NumberType)
+      returnType=ReturnType.Reachable(NumberType)
     )
 
   assert(NameForType(procedureType) === "(-> <string> <symbol> <number>)")
@@ -139,7 +139,7 @@ class NameForTypeSuite extends FunSuite {
       mandatoryArgTypes=List(StringType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(SymbolType),
-      returnType=ReturnType.SingleValue(NumberType)
+      returnType=ReturnType.Reachable(NumberType)
     )
 
     assert(NameForType(procedureType) === "(-> <string> <symbol> * <number>)")
@@ -150,7 +150,7 @@ class NameForTypeSuite extends FunSuite {
       mandatoryArgTypes=List(AnySchemeType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=ReturnType.UnreachableValue
+      returnType=ReturnType.Unreachable
     )
 
     assert(NameForType(procedureType) === "(-> <any> <unit> (unreachable))")
@@ -161,7 +161,7 @@ class NameForTypeSuite extends FunSuite {
       mandatoryArgTypes=List(StringType),
       optionalArgTypes=List(SymbolType),
       restArgMemberTypeOpt=None,
-      returnType=ReturnType.SingleValue(NumberType)
+      returnType=ReturnType.Reachable(NumberType)
     )
 
     assert(NameForType(procedureType) === "(->* (<string>) (<symbol>) <number>)")
@@ -172,7 +172,7 @@ class NameForTypeSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=List(BooleanType, SymbolType),
       restArgMemberTypeOpt=Some(PortType),
-      returnType=ReturnType.SingleValue(NumberType)
+      returnType=ReturnType.Reachable(NumberType)
     )
 
     assert(NameForType(procedureType) === "(->* () (<boolean> <symbol>) <port> * <number>)")
@@ -184,13 +184,13 @@ class NameForTypeSuite extends FunSuite {
         mandatoryArgTypes=Nil,
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(NumberType)
+        returnType=ReturnType.Reachable(NumberType)
       ),
       ProcedureType(
         mandatoryArgTypes=List(NumberType),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(NumberType)
+        returnType=ReturnType.Reachable(NumberType)
       )
     ))
 

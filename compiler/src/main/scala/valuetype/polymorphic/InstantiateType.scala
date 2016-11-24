@@ -37,11 +37,11 @@ object InstantiateType {
       typeVars : ReconcileTypeVars.Result,
       returnType : ReturnType.ReturnType[T]
   ) : ReturnType.ReturnType[T] = returnType match {
-    case ReturnType.UnreachableValue =>
-      ReturnType.UnreachableValue
+    case ReturnType.Unreachable =>
+      ReturnType.Unreachable
 
-    case ReturnType.SingleValue(valueType) =>
-      ReturnType.SingleValue(apply(typeVars, valueType))
+    case ReturnType.Reachable(valueType) =>
+      ReturnType.Reachable(apply(typeVars, valueType))
   }
 
   /** Instantiates a polymorphic type based on reconciled type variables

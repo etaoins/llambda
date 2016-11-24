@@ -17,7 +17,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -42,7 +42,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=List(vt.Predicate, vt.UInt16),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.Int32),
+      returnType=vt.ReturnType.Reachable(vt.Int32),
       attributes=Set(ProcedureAttribute.FastCC)
     )
 
@@ -68,7 +68,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=List(vt.SymbolType),
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
@@ -95,7 +95,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set(ProcedureAttribute.NoReturn)
     )
 
@@ -123,7 +123,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.SymbolType),
-      returnType=vt.ReturnType.SingleValue(vt.UInt32),
+      returnType=vt.ReturnType.Reachable(vt.UInt32),
       attributes=Set()
     )
 
@@ -148,7 +148,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
+      returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
       attributes=Set()
     )
 
@@ -173,7 +173,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       mandatoryArgTypes=List(vt.NumberType, vt.NumberType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-      returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
+      returnType=vt.ReturnType.Reachable(vt.UnicodeChar),
       attributes=Set()
     )
 

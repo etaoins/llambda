@@ -32,7 +32,7 @@ object ReturnType {
     *
     * This is the normal case. Single values are represented by the their native type without any wrapping
     */
-   case class SingleValue[+T >: SchemeType <: ValueType](valueType : T) extends ReturnType[T] {
+   case class Reachable[+T >: SchemeType <: ValueType](valueType : T) extends ReturnType[T] {
     def representationTypeOpt = valueType match {
       case UnitType =>
         None
@@ -44,7 +44,7 @@ object ReturnType {
     def schemeType : SchemeType = valueType.schemeType
 
     def schemeReturnType : ReturnType[SchemeType] =
-      SingleValue(valueType.schemeType)
+      Reachable(valueType.schemeType)
   }
 
   /** Represents the return type of a procedure that cannot return
@@ -52,7 +52,7 @@ object ReturnType {
     * This is distinct from the NoReturn ProcedureSignature attribute as its possible for native functions to have
     * non-void return types and also not return.
     */
-  object UnreachableValue extends ReturnType[SchemeType] {
+  object Unreachable extends ReturnType[SchemeType] {
     def representationTypeOpt = None
 
     def schemeType : SchemeType = UnitType

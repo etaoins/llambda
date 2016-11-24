@@ -110,7 +110,7 @@ object RuntimeFunctions {
     mandatoryArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.Predicate),
+    returnType=vt.ReturnType.Reachable(vt.Predicate),
     attributes=Set()
   )
 
@@ -122,7 +122,7 @@ object RuntimeFunctions {
     mandatoryArgTypes=List(vt.SymbolType, vt.SymbolType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.Predicate),
+    returnType=vt.ReturnType.Reachable(vt.Predicate),
     attributes=Set()
   )
 
@@ -132,7 +132,7 @@ object RuntimeFunctions {
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
+    returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
     attributes=Set()
   )
   

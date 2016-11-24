@@ -14,7 +14,7 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=ReturnType.SingleValue(NumberType)
+      returnType=ReturnType.Reachable(NumberType)
     ).toPolymorphic
 
     assert(NameForPolymorphicProcedureType(polyType) === "(-> <number>)")
@@ -27,7 +27,7 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
         mandatoryArgTypes=List(polyA),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(NumberType)
+        returnType=ReturnType.Reachable(NumberType)
       )
     )
 
@@ -41,7 +41,7 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
         mandatoryArgTypes=List(polyA),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(polyB)
+        returnType=ReturnType.Reachable(polyB)
       )
     )
 
@@ -55,7 +55,7 @@ class NameForPolymorphicProcedureTypeSuite extends FunSuite {
         mandatoryArgTypes=List(polyA),
         optionalArgTypes=List(UniformProperListType(polyA)),
         restArgMemberTypeOpt=None,
-        returnType=ReturnType.SingleValue(NumberType)
+        returnType=ReturnType.Reachable(NumberType)
       )
     )
 

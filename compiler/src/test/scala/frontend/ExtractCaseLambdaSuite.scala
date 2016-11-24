@@ -31,7 +31,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
@@ -39,7 +39,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val secondProcTypePoly = secondProcType.toPolymorphic
 
@@ -68,7 +68,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
@@ -76,7 +76,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.ExactIntegerType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val secondProcTypePoly = secondProcType.toPolymorphic
 
@@ -105,7 +105,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
@@ -113,7 +113,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val secondProcTypePoly = secondProcType.toPolymorphic
 
@@ -142,7 +142,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
@@ -150,7 +150,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val secondProcTypePoly = secondProcType.toPolymorphic
 
@@ -179,7 +179,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.SymbolType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val firstProcTypePoly = firstProcType.toPolymorphic
 
@@ -187,7 +187,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.PortType),
-          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         )
         val secondProcTypePoly = secondProcType.toPolymorphic
 
