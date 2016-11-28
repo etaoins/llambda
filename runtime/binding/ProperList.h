@@ -99,8 +99,8 @@ namespace lliby
 		/**
 		 * Returns this size of this proper list
 		 *
-		 * If the compiler produced a length hint then this is an O(1) operation. Otherwise it's O(n) with the length
-		 * of the list. For that reason the length should be cached whenever possible.
+		 * If we have a length hint then this is an O(1) operation. Otherwise it's O(n) with the length  of the list.
+		 * For that reason the length should be cached whenever possible.
 		 */
 		size_type size() const
 		{
@@ -162,7 +162,7 @@ namespace lliby
 				void *valueCell = *allocIt++;
 				auto cdr = (left == 1) ? EmptyListCell::instance() : static_cast<AnyCell*>(*allocIt);
 
-				new (pairCell) PairCell(new (valueCell) T(*valueIt++), cdr);
+				new (pairCell) PairCell(new (valueCell) T(*valueIt++), cdr, left);
 			}
 
 			return static_cast<ProperList<T>*>(*allocation.begin());
@@ -213,10 +213,11 @@ namespace lliby
 
 			auto it = elements.rbegin();
 			AnyCell *cdr = EmptyListCell::instance();
+			std::uint32_t tailSize = 0;
 
 			for(;it != elements.rend(); it++)
 			{
-				cdr = new (*--allocIt) PairCell(*it, cdr);
+				cdr = new (*--allocIt) PairCell(*it, cdr, ++tailSize);
 			}
 
 			return static_cast<ProperList<T>*>(cdr);

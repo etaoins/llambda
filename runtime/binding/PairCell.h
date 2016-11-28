@@ -14,9 +14,9 @@ class PairCell : public ListElementCell
 	friend class ListElementCell;
 #include "generated/PairCellMembers.h"
 public:
-	PairCell(AnyCell *car, AnyCell *cdr) :
+	PairCell(AnyCell *car, AnyCell *cdr, std::uint32_t listLength = 0) :
 		ListElementCell(CellTypeId::Pair),
-		m_listLength(0),
+		m_listLength(listLength),
 		m_car(car),
 		m_cdr(cdr)
 	{

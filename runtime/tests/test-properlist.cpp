@@ -1,6 +1,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/ProperList.h"
+#include "binding/ExactIntegerCell.h"
 
 #include "core/init.h"
 #include "core/World.h"
@@ -43,6 +44,24 @@ void testAll(World &world)
 		ASSERT_EQUAL(*it, valueB.data());
 
 		ASSERT_EQUAL(*(++it), valueC.data());
+
+		it++;
+		ASSERT_TRUE(it == properList->end());
+	}
+
+	{
+		ProperList<ExactIntegerCell> *properList = ProperList<ExactIntegerCell>::emplaceValues(world, {1, 2, 3});
+
+		ASSERT_TRUE(properList->begin() != properList->end());
+		ASSERT_EQUAL(properList->size(), 3);
+		ASSERT_FALSE(properList->empty());
+
+		auto it = properList->begin();
+		ASSERT_EQUAL((*(it++))->value(), 1);
+
+		ASSERT_EQUAL((*it)->value(), 2);
+
+		ASSERT_EQUAL((*(++it))->value(), 3);
 
 		it++;
 		ASSERT_TRUE(it == properList->end());

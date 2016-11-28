@@ -82,6 +82,7 @@ std::uint32_t llbase_length(ProperList<AnyCell> *list)
 ListElementCell* llbase_make_list(World &world, std::uint32_t count, AnyCell *fillRaw)
 {
 	ListElementCell *cdr = EmptyListCell::instance();
+	std::int32_t tailSize = 0;
 	alloc::AnyRef fill(world, fillRaw);
 
 	// Allocate all the new pairs at once
@@ -90,7 +91,7 @@ ListElementCell* llbase_make_list(World &world, std::uint32_t count, AnyCell *fi
 
 	while(allocIt != allocation.begin())
 	{
-		cdr = new (*--allocIt) PairCell(fill, cdr);
+		cdr = new (*--allocIt) PairCell(fill, cdr, ++tailSize);
 	}
 
 	return cdr;
