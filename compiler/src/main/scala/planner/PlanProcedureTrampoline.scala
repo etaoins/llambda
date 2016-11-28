@@ -65,7 +65,7 @@ private[planner] object PlanProcedureTrampoline {
     }
 
     val argTail = varArgsValueOpt getOrElse iv.EmptyListValue
-    val argList = ValuesToList(mandatoryArgValues, argTail, capturable=false)(plan)
+    val argList = ValuesToList(mandatoryArgValues, argTail)(plan)
 
     // This is a bit of a hack - create a state containing our self argument as a bound variable
     val selfLoc = new StorageLocation("self")

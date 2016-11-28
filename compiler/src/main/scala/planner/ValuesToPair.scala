@@ -14,14 +14,11 @@ private[planner] object ValuesToPair {
     * @param  carValue       car value for the new pair
     * @param  cdrValue       cdr value for the new pair
     * @param  listLengthOpt  Optional length of the proper list this pair is the head of
-    * @param  capturable     Indicates if this pair can be captured to a storage location during the lifetime of the
-    *                        returned IntermediateValue
     */
   def apply(
       carValue : iv.IntermediateValue,
       cdrValue : iv.IntermediateValue,
-      listLengthOpt : Option[Long],
-      capturable : Boolean = true
+      listLengthOpt : Option[Long]
   )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     (carValue, cdrValue) match {
       case (constantCar : iv.ConstantValue, constantCdr : iv.ConstantValue) =>

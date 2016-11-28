@@ -143,7 +143,7 @@ object PlanInvokeApply {
       }
 
       val varArgValues = optionalArgValues ++ restArgValues
-      Some(ValuesToList(varArgValues, capturable=false).toTempValue(vt.ListElementType))
+      Some(ValuesToList(varArgValues).toTempValue(vt.ListElementType))
     }
     else {
       None

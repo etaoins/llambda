@@ -14,13 +14,10 @@ private[planner] object ValuesToList {
     * @param  memberValues  Values to include in the proper list
     * @param  tailValue     Value for the tail of the list. To create a proper list pass iv.EmptyListValue or another
     *                       proper list.
-    * @param  capturable    Indicates if this list can be captured to a storage location during the lifetime of the
-    *                       returned IntermediateValue
     */
   def apply(
       memberValues : List[iv.IntermediateValue],
-      tailValue : iv.IntermediateValue = iv.EmptyListValue,
-      capturable : Boolean = true
+      tailValue : iv.IntermediateValue = iv.EmptyListValue
   )(implicit plan : PlanWriter) : iv.IntermediateValue =
     memberValues.foldRight(tailValue) { case(carValue, cdrValue) =>
       val listLengthOpt = cdrValue match {
@@ -31,6 +28,6 @@ private[planner] object ValuesToList {
           None
       }
 
-      ValuesToPair(carValue, cdrValue, listLengthOpt, capturable)
+      ValuesToPair(carValue, cdrValue, listLengthOpt)
     }
 }
