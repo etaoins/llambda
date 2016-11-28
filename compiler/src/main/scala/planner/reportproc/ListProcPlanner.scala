@@ -60,35 +60,12 @@ object ListProcPlanner extends ReportProcPlanner {
       reportName : String,
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
-    case ("length", List((_, singleArg))) =>
-      // Do we know the length at compile time?
-      singleArg match {
-        case knownListElement : iv.KnownListElement =>
-          for(listLength <- knownListElement.listLengthOpt) {
-            // Yes, return it directly
-            return Some(iv.ConstantExactIntegerValue(listLength))
-          }
-
-        case _ =>
-      }
-
-      if (singleArg.isDefiniteProperList) {
-        val listElementTemp = singleArg.toTempValue(vt.ListElementType)
-        val resultTemp = ps.Temp(vt.UInt32)
-
-        // This is a guaranteed proper list - we can quickly calculate the length inline
-        plan.steps += ps.CalcProperListLength(resultTemp, listElementTemp)
-
-        return Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
-      }
-      else {
-        // This can error out at runtime - let the stdlib deal with it
-        None
-      }
+    case ("length", List((_, knownListElement : iv.KnownListElement))) =>
+      knownListElement.listLengthOpt map iv.ConstantExactIntegerValue.apply
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       Some(ValuesToPair(carValue, cdrValue, None))
-    
+
     case ("append", args) =>
       val (listArgs, terminator) = args.map(_._2).reverse match {
         case Nil =>
