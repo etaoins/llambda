@@ -10,7 +10,6 @@ add_library(llcore
 	actor/PoisonPillCell.cpp
 	actor/Runner.cpp
 	actor/cloneCell.cpp
-	alloc/CellRootList.cpp
 	alloc/Finalizer.cpp
 	alloc/Heap.cpp
 	alloc/MemoryBlock.cpp

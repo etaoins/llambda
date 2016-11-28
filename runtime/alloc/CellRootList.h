@@ -28,8 +28,6 @@ public:
 		return m_next;
 	}
 
-	void relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd);
-
 protected:
 	mutable CellRootListNode *m_next;
 };
@@ -95,8 +93,6 @@ public:
 		return m_prev;
 	}
 
-	void relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd);
-
 protected:
 	CellRootListNode()
 	{
@@ -132,8 +128,6 @@ public:
 		return const_cast<AnyCell**>(&m_cell);
 	}
 
-	void relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd);
-
 protected:
 	AnyCell *m_cell;
 };
@@ -158,8 +152,6 @@ public:
 		return m_cellCount;
 	}
 
-	void relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd);
-
 protected:
 	AllocCell **m_basePointer;
 };
@@ -182,8 +174,6 @@ public:
 	{
 		return next();
 	}
-
-	void relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd);
 };
 
 }
