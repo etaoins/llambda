@@ -13,14 +13,16 @@ private[planner] object PlanBind {
     case et.VarRef(`storageLoc`) =>
       true
 
-    case nonVarRef => 
+    case nonVarRef =>
       nonVarRef.subexprs.exists(storageLocRefedByExpr(storageLoc, _))
   }
 
   def apply(initialState : PlannerState)(bindings : List[et.Binding])(implicit plan : PlanWriter) : PlannerState = {
-    val bindingLocs = bindings.flatMap(_.storageLocs).toSet
+    val bindingLocs = bindings.map(_.storageLoc).toSet
 
     bindings.foldLeft(initialState) { case (prerecursiveState, binding) =>
+      val storageLoc = binding.storageLoc
+
       // Check for any recursive values we may have to introduce
       val neededRecursives = (bindingLocs
         .filter(!prerecursiveState.values.contains(_))
@@ -28,24 +30,15 @@ private[planner] object PlanBind {
       )
 
       // Is this a lambda referring to itself recursively and is not a mutable value?
-      val (isSelfRecursiveLambda, neededNonSelfRecursives) = binding match {
-        case et.SingleBinding(storageLoc, _) =>
-          val isSelfRecursiveLambda = neededRecursives.contains(storageLoc) &&
-            !plan.config.analysis.mutableVars.contains(storageLoc) &&
-            binding.initialiser.isInstanceOf[et.Lambda]
+      val isSelfRecursiveLambda = neededRecursives.contains(storageLoc) &&
+        !plan.config.analysis.mutableVars.contains(storageLoc) &&
+        binding.initialiser.isInstanceOf[et.Lambda]
 
-          val neededNonSelfRecursives = if (isSelfRecursiveLambda) {
-            neededRecursives - storageLoc
-          }
-          else {
-            neededRecursives
-          }
-
-          (isSelfRecursiveLambda, neededNonSelfRecursives)
-
-        case _ =>
-          // Multiple value bindings can't be recursive
-          (false, neededRecursives)
+      val neededNonSelfRecursives = if (isSelfRecursiveLambda) {
+        neededRecursives - storageLoc
+      }
+      else {
+        neededRecursives
       }
 
       val postrecursiveState = neededNonSelfRecursives.foldLeft(prerecursiveState) { case (state, storageLoc) =>
@@ -56,9 +49,7 @@ private[planner] object PlanBind {
           vt.AnySchemeType
         }
         else {
-          bindings.collectFirst {
-            case et.SingleBinding(`storageLoc`, expr) => expr.schemeType
-          } getOrElse vt.AnySchemeType
+          bindings.find(_.storageLoc == storageLoc).map(_.initialiser.schemeType) getOrElse vt.AnySchemeType
         }
 
         val compactInnerType = CompactRepresentationForType(storageLoc.schemeType & valueType)
@@ -72,7 +63,7 @@ private[planner] object PlanBind {
       }
 
       val initialValueResult = binding match {
-        case et.SingleBinding(storageLoc, lambdaExpr : et.Lambda) if isSelfRecursiveLambda =>
+        case et.Binding(storageLoc, lambdaExpr : et.Lambda) if isSelfRecursiveLambda =>
           plan.withContextLocation(binding.initialiser) {
             val procValue = PlanLambda(postrecursiveState, plan)(
               lambdaExpr=lambdaExpr,
@@ -86,24 +77,18 @@ private[planner] object PlanBind {
             )
           }
 
-        case et.SingleBinding(storageLoc, otherExpr) =>
+        case et.Binding(storageLoc, otherExpr) =>
           PlanExpr(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
-
-        case et.Binding(_, _, initialiser) =>
-          // Multiple value bindings don't support source names as one expression maps to multiple storage locations
-          PlanExpr(postrecursiveState)(initialiser, None)
       }
 
-      val storageLocToValue = binding match {
-        case et.SingleBinding(storageLoc, _) =>
-          // Convert the result values to a single value
-          val uncastIntermediate = initialValueResult.value
 
-          // And cast to the correct type
-          val initialIntermediate = uncastIntermediate.castToSchemeType(storageLoc.schemeType)
+      // Convert the result values to a single value
+      val uncastIntermediate = initialValueResult.value
 
-          Map(storageLoc -> initialIntermediate)
-      }
+      // And cast to the correct type
+      val initialIntermediate = uncastIntermediate.castToSchemeType(storageLoc.schemeType)
+
+      val storageLocToValue = Map(storageLoc -> initialIntermediate)
 
       // Bind each intermediate value to its storage location
       storageLocToValue.foldLeft(initialValueResult.state) { case (state, (storageLoc, initialIntermediate)) =>

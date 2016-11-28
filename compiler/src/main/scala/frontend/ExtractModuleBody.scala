@@ -18,9 +18,9 @@ object ExtractModuleBody {
 
   private def handleExtractedDefine(
       located : SourceLocated,
-      extractedDefine : ExtractedVarsDefine
+      extractedDefine : ExtractedVarDefine
   )(implicit context : FrontendContext) : List[et.Expr] = extractedDefine match {
-    case ExtractedVarsDefine(List(valueTarget), None, exprBlock) =>
+    case ExtractedVarDefine(valueTarget, exprBlock) =>
       val symbol = valueTarget.definedSymbol
 
       symbol.resolveOpt match {
@@ -30,20 +30,8 @@ object ExtractModuleBody {
         case None =>
           // This is a fresh binding
           val boundValue = valueTarget.bindStorageLoc(vt.AnySchemeType)
-          List(et.TopLevelDefine(et.SingleBinding(boundValue, exprBlock())))
+          List(et.TopLevelDefine(et.Binding(boundValue, exprBlock())))
       }
-
-    case ExtractedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
-      for (symbol <- (fixedValueTargets ++ restValueTargetOpt).map(_.definedSymbol)) {
-        if (symbol.resolveOpt.isDefined) {
-          throw new DuplicateDefinitionException(symbol)
-        }
-      }
-
-      val fixedLocs = fixedValueTargets.map(_.bindStorageLoc(vt.AnySchemeType))
-      val restLocOpt = restValueTargetOpt.map(_.bindStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
-
-      List(et.TopLevelDefine(et.Binding(fixedLocs, restLocOpt, exprBlock())))
   }
 
   private def extractOutermostExpr(

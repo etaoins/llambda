@@ -173,7 +173,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -189,7 +189,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -207,7 +207,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
 
         assert(storageLoc.schemeType === vt.ExactIntegerType)
@@ -224,7 +224,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
 
         assert(storageLoc.schemeType === vt.ExactIntegerType)
@@ -274,8 +274,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside((scope.get("a").value, scope.get("b").value)) {
       case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
         assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(2)))),
-          et.TopLevelDefine(et.SingleBinding(storageLocB, et.VarRef(storageLocA)))
+          et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(et.Binding(storageLocB, et.VarRef(storageLocA)))
         ))
     }
   }
@@ -287,7 +287,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2)))),
           et.VarRef(storageLoc)
         ))
     }
@@ -298,7 +298,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
     inside(expressions) {
-      case List(et.TopLevelDefine(et.SingleBinding(shadowed, _)), et.Lambda(_, List(argX), Nil, None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(et.Binding(shadowed, _)), et.Lambda(_, List(argX), Nil, None, et.VarRef(inner), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -312,7 +312,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefine(et.SingleBinding(shadowed, _)), et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(et.Binding(shadowed, _)), et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -325,7 +325,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope)
 
     inside(expressions) {
-      case List(et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
+      case List(et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
     }
   }
 
@@ -340,7 +340,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefine(et.SingleBinding(shadowed, _)), et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(et.Binding(shadowed, _)), et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
         assert(inner != shadowed)
 
         assert(shadowed.schemeType === vt.AnySchemeType)
@@ -358,7 +358,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List( et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
+      case List( et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
         assert(inner.schemeType === vt.ExactIntegerType)
     }
   }
@@ -385,7 +385,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope)
 
     inside(expressions) {
-      case List( et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
+      case List( et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
         assert(inner.schemeType === vt.ExactIntegerType)
     }
   }
@@ -431,7 +431,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
     inside(expressions) {
-      case List(et.TopLevelDefine(et.SingleBinding(outer, _)), et.Lambda(_, List(argX), Nil, None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(et.Binding(outer, _)), et.Lambda(_, List(argX), Nil, None, et.VarRef(inner), _)) =>
         assert(outer === inner)
     }
   }
@@ -448,7 +448,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(loc, et.Lambda(_, Nil, Nil, None, et.Literal(ast.BooleanLiteral(false)), _))) =>
+      case et.TopLevelDefine(et.Binding(loc, et.Lambda(_, Nil, Nil, None, et.Literal(ast.BooleanLiteral(false)), _))) =>
         assert(loc === listBinding)
     }
 
@@ -492,8 +492,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           case storageLocB : StorageLocation =>
             assert(expressions ===
               List(
-                et.TopLevelDefine(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
-                et.TopLevelDefine(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
+                et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
+                et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
                 et.VarRef(storageLocA),
                 et.VarRef(storageLocB)
               )
@@ -507,9 +507,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(
-          et.SingleBinding(bindLocC, et.Literal(ast.IntegerLiteral(3))),
-          et.SingleBinding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
-          et.SingleBinding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
+          et.Binding(bindLocC, et.Literal(ast.IntegerLiteral(3))),
+          et.Binding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
+          et.Binding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
         ),
         et.Begin(List(
           et.VarRef(refLocA),
@@ -528,9 +528,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("""(define d (include "includes/definea.scm"))""")(scope)
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(_, et.InternalDefine(List(
-          et.SingleBinding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
-          et.SingleBinding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
+      case et.TopLevelDefine(et.Binding(_, et.InternalDefine(List(
+          et.Binding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
+          et.Binding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
         ),
         et.Begin(List(
           et.VarRef(refLocA),

@@ -30,15 +30,13 @@ case class ValueTarget(
   }
 }
 
-/** Parsed definition for zero or more variables
+/** Parsed definition for a variable
   *
-  * @param  fixedValueTargets   Targets for the fixed variables
-  * @param  restValueTargetOpt  Optional target for the rest list variable
-  * @param  expr                Closure providing the multiple value initialiser
+  * @param  valueTarget   Target for the initialiser's value
+  * @param  expr          Closure providing the value initialiser
   */
-case class ExtractedVarsDefine(
-    fixedValueTargets : List[ValueTarget],
-    restValueTargetOpt : Option[ValueTarget],
+case class ExtractedVarDefine(
+    valueTarget : ValueTarget,
     expr : () => et.Expr
 )
 
@@ -62,12 +60,12 @@ object ExtractDefine {
       located : SourceLocated,
       primitiveDefine : PrimitiveDefineExpr,
       operands : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : List[ExtractedVarsDefine] =
+  )(implicit context : FrontendContext) : List[ExtractedVarDefine] =
     (primitiveDefine, operands) match {
       case (Primitives.Define, List(symbol : sst.ScopedSymbol, value)) =>
         val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=None)
 
-        List(ExtractedVarsDefine(List(valueTarget), None, () => {
+        List(ExtractedVarDefine(valueTarget, () => {
           ExtractExpr(value)
         }))
 
@@ -80,14 +78,14 @@ object ExtractDefine {
         val providedType = ExtractType.extractStableType(typeDatum)(context.config)
         val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=Some(providedType))
 
-        List(ExtractedVarsDefine(List(valueTarget), None, () => {
+        List(ExtractedVarDefine(valueTarget, () => {
           ExtractExpr(value)
         }))
 
       case (Primitives.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
         val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=None)
 
-        List(ExtractedVarsDefine(List(valueTarget), None, () => {
+        List(ExtractedVarDefine(valueTarget, () => {
           ExtractLambda(
             located=located,
             argList=fixedArgs,
@@ -115,13 +113,13 @@ object ExtractDefine {
               storageLocConstructor=(new BoundRecordConstructor(constructorExpr, _, _))
             )
 
-            val constructorDefine = ExtractedVarsDefine(List(constructorTarget), None, { () => constructorExpr })
+            val constructorDefine = ExtractedVarDefine(constructorTarget, { () => constructorExpr })
 
             constructorDefine :: procedures.toList.map { case (procedureSymbol, expr) =>
               val schemeType = SchemeTypeForSymbol(procedureSymbol)
 
               val procTarget = ValueTarget(procedureSymbol, Some(schemeType))
-              ExtractedVarsDefine(List(procTarget), None, { () => expr })
+              ExtractedVarDefine(procTarget, { () => expr })
             }
         }
 
@@ -145,10 +143,7 @@ object ExtractDefine {
           storageLocConstructor=(new ReportProcedure(_, _))
         )
 
-        List(ExtractedVarsDefine(
-          fixedValueTargets=List(valueTarget),
-          restValueTargetOpt=None,
-          expr=() => {
+        List(ExtractedVarDefine(valueTarget, expr=() => {
             ExtractExpr(definitionData)
           }
         ))
@@ -160,9 +155,8 @@ object ExtractDefine {
           storageLocConstructor=(new ReportProcedure(_, _))
         )
 
-        List(ExtractedVarsDefine(
-          fixedValueTargets=List(valueTarget),
-          restValueTargetOpt=None,
+        List(ExtractedVarDefine(
+          valueTarget,
           expr=() => {
             ExtractLambda(
               located=located,

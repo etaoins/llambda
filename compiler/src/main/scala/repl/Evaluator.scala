@@ -109,8 +109,8 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
           // We can replace this with a static datum. This means we don't have to re-evaluate it on every REPL program
           //  and unstable values are fixed.
           defineExprs match {
-            case List(et.TopLevelDefine(et.SingleBinding(storageLoc, _))) =>
-              Some(List(et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(resultDatum)))))
+            case List(et.TopLevelDefine(et.Binding(storageLoc, _))) =>
+              Some(List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(resultDatum)))))
 
             case List(et.MutateVar(storageLoc, _)) =>
               Some(List(et.MutateVar(storageLoc, et.Literal(resultDatum))))

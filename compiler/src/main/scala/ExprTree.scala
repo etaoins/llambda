@@ -152,40 +152,14 @@ case class CaseLambda(
     vt.CaseProcedureType(clauses.map(_.schemeType))
 }
 
-/** Binding on an initialiser to zero or more values
+/** Binding on an initialiser to a value
   *
-  * @param  fixedArgLocs  Storage locations to deconstruct the initial values in to
-  * @param  restLocOpt    Optional location to place the rest list of values
-  * @param  initialiser   Initialiser producing the values to bind
+  * @param  storageLoc   Storage location to bind the value to
+  * @param  initialiser  Initialiser producing the value to bind
   */
-case class Binding(
-    fixedLocs : List[StorageLocation],
-    restLocOpt : Option[StorageLocation],
-    initialiser : Expr
-) {
-  def storageLocs = fixedLocs ++ restLocOpt.toList
-
+case class Binding(storageLoc : StorageLocation, initialiser : Expr) {
   def map(f : Expr => Expr) =
-    Binding(fixedLocs, restLocOpt, f(initialiser))
-}
-
-/** Companion object for bindings of a single value
-  *
-  * This is the vast majority of bindings in Scheme so this is a convenient shorthand for dealing with them
-  *
-  * VALUESTODO: Collapse in to Binding
-  */
-object SingleBinding {
-  def unapply(binding : Binding) : Option[(StorageLocation, Expr)] = binding match {
-    case Binding(List(singleLoc), None, initialiser) =>
-      Some((singleLoc, initialiser))
-
-    case _ =>
-      None
-  }
-
-  def apply(storageLoc : StorageLocation, expr : et.Expr) =
-    Binding(List(storageLoc), None, expr)
+    Binding(storageLoc, f(initialiser))
 }
 
 case class TopLevelDefine(binding : Binding) extends Expr {

@@ -10,7 +10,7 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 import annotation.tailrec
 
 private object FindBodyDefines {
-  case class Result(extractedDefines : List[ExtractedVarsDefine], bodyData : List[sst.ScopedDatum])
+  case class Result(extractedDefines : List[ExtractedVarDefine], bodyData : List[sst.ScopedDatum])
 
   /** Splits a body in to definitions and body expressions
     *
@@ -19,7 +19,7 @@ private object FindBodyDefines {
     */
   def apply(
       data : List[sst.ScopedDatum],
-      definesAcc : List[ExtractedVarsDefine] = Nil
+      definesAcc : List[ExtractedVarDefine] = Nil
   )(implicit context : FrontendContext) : Result = data match {
     case (pairDatum @ sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr)) :: restData =>
       (appliedSymbol.resolveOpt, cdr) match {
@@ -109,12 +109,11 @@ private[frontend] object ExtractBodyDefinition {
 
     // Expand our scopes with all of the defines
     val bindingBlocks = foundDefines.extractedDefines flatMap {
-      case ExtractedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
-        val fixedLocs = fixedValueTargets.map(_.bindStorageLoc(vt.AnySchemeType))
-        val restLocOpt = restValueTargetOpt.map(_.bindStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
+      case ExtractedVarDefine(valueTarget, exprBlock) =>
+        val storageLoc = valueTarget.bindStorageLoc(vt.AnySchemeType)
 
         List(
-          { () => et.Binding(fixedLocs, restLocOpt, exprBlock()) }
+          { () => et.Binding(storageLoc, exprBlock()) }
         )
     } : List[() => et.Binding]
 

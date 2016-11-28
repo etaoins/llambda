@@ -71,8 +71,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(exprs) {
           case List(
-            et.TopLevelDefine(et.SingleBinding(`consLoc`, et.RecordConstructor(`recordType`, Nil))),
-            et.TopLevelDefine(et.SingleBinding(`predLoc`, et.TypePredicate(`recordType`)))
+            et.TopLevelDefine(et.Binding(`consLoc`, et.RecordConstructor(`recordType`, Nil))),
+            et.TopLevelDefine(et.Binding(`predLoc`, et.TypePredicate(`recordType`)))
           ) =>
         }
     }
@@ -111,11 +111,11 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         inside(exprs) {
           case List(
             et.TopLevelDefine(
-              et.SingleBinding(`consLoc`, et.RecordConstructor(`recordType`, List(`constDatumField`)))
+              et.Binding(`consLoc`, et.RecordConstructor(`recordType`, List(`constDatumField`)))
             ),
-            et.TopLevelDefine(et.SingleBinding(`predLoc`, et.TypePredicate(`recordType`))),
+            et.TopLevelDefine(et.Binding(`predLoc`, et.TypePredicate(`recordType`))),
             et.TopLevelDefine(
-              et.SingleBinding(constDatumAccessorLoc, et.RecordAccessor(recordType, constDatumField))
+              et.Binding(constDatumAccessorLoc, et.RecordAccessor(recordType, constDatumField))
             )
           ) =>
         }
@@ -148,10 +148,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(exprs) {
           case List(
-            et.TopLevelDefine(et.SingleBinding(`consLoc`, et.RecordConstructor(`recordType`, List(`constIntField`)))),
-            et.TopLevelDefine(et.SingleBinding(`predLoc`, et.TypePredicate(`recordType`))),
+            et.TopLevelDefine(et.Binding(`consLoc`, et.RecordConstructor(`recordType`, List(`constIntField`)))),
+            et.TopLevelDefine(et.Binding(`predLoc`, et.TypePredicate(`recordType`))),
             et.TopLevelDefine(
-              et.SingleBinding(`constIntAccessorLoc`, et.RecordAccessor(`recordType`, `constIntField`))
+              et.Binding(`constIntAccessorLoc`, et.RecordAccessor(`recordType`, `constIntField`))
             )
           ) =>
         }
@@ -193,19 +193,19 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         inside(exprs) {
           case List(
             et.TopLevelDefine(
-              et.SingleBinding(`consLoc`, et.RecordConstructor(`recordType`, List(`mutableIntField`, `constDatumField`)))
+              et.Binding(`consLoc`, et.RecordConstructor(`recordType`, List(`mutableIntField`, `constDatumField`)))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`predLoc`, et.TypePredicate(`recordType`))
+              et.Binding(`predLoc`, et.TypePredicate(`recordType`))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`constAccessorLoc`, et.RecordAccessor(`recordType`, `constDatumField`))
+              et.Binding(`constAccessorLoc`, et.RecordAccessor(`recordType`, `constDatumField`))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`mutableAccessorLoc`, et.RecordAccessor(`recordType`, `mutableIntField`))
+              et.Binding(`mutableAccessorLoc`, et.RecordAccessor(`recordType`, `mutableIntField`))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`mutableMutatorLoc`, et.RecordMutator(`recordType`, `mutableIntField`))
+              et.Binding(`mutableMutatorLoc`, et.RecordMutator(`recordType`, `mutableIntField`))
             )
           ) =>
         }
@@ -229,8 +229,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(innerExprs) {
           case List(
-            et.TopLevelDefine(et.SingleBinding(`innerConsLoc`, et.RecordConstructor(`innerType`, List()))),
-            et.TopLevelDefine(et.SingleBinding(`innerPredLoc`, et.TypePredicate(`innerType`)))
+            et.TopLevelDefine(et.Binding(`innerConsLoc`, et.RecordConstructor(`innerType`, List()))),
+            et.TopLevelDefine(et.Binding(`innerPredLoc`, et.TypePredicate(`innerType`)))
           ) =>
         }
 
@@ -252,13 +252,13 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             inside(outerExprs) {
               case List(
                 et.TopLevelDefine(
-                  et.SingleBinding(`outerConsLoc`, et.RecordConstructor(`outerType`, List(`innerField`)))
+                  et.Binding(`outerConsLoc`, et.RecordConstructor(`outerType`, List(`innerField`)))
                 ),
                 et.TopLevelDefine(
-                  et.SingleBinding(`outerPredLoc`, et.TypePredicate(`outerType`))
+                  et.Binding(`outerPredLoc`, et.TypePredicate(`outerType`))
                 ),
                 et.TopLevelDefine(
-                  et.SingleBinding(`innerFieldAccessorLoc`, et.RecordAccessor(`outerType`, `innerField`))
+                  et.Binding(`innerFieldAccessorLoc`, et.RecordAccessor(`outerType`, `innerField`))
                 )
               ) =>
             }
@@ -295,13 +295,13 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         inside(parentExprs) {
           case List(
             et.TopLevelDefine(
-              et.SingleBinding(`parentConsLoc`, et.RecordConstructor(`parentType`, List(`constIntField`)))
+              et.Binding(`parentConsLoc`, et.RecordConstructor(`parentType`, List(`constIntField`)))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`parentPredLoc`, et.TypePredicate(`parentType`))
+              et.Binding(`parentPredLoc`, et.TypePredicate(`parentType`))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`constIntAccessorLoc`, et.RecordAccessor(`parentType`, `constIntField`))
+              et.Binding(`constIntAccessorLoc`, et.RecordAccessor(`parentType`, `constIntField`))
             )
           ) =>
         }
@@ -320,16 +320,16 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         inside(childExprs) {
           case List(
             et.TopLevelDefine(
-              et.SingleBinding(
+              et.Binding(
                 `childConsLoc`,
                 et.RecordConstructor(`childType`, List(`constIntField`, `constFlonumField`))
               )
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`childPredLoc`, et.TypePredicate(`childType`))
+              et.Binding(`childPredLoc`, et.TypePredicate(`childType`))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`constFlonumAccessorLoc`, et.RecordAccessor(`childType`, `constFlonumField`))
+              et.Binding(`constFlonumAccessorLoc`, et.RecordAccessor(`childType`, `constFlonumField`))
             )
           ) =>
         }
@@ -485,13 +485,13 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         inside(exprs) {
           case List(
             et.TopLevelDefine(
-              et.SingleBinding(`consLoc`, et.RecordConstructor(`recordType`, List(`parentField`)))
+              et.Binding(`consLoc`, et.RecordConstructor(`recordType`, List(`parentField`)))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`predLoc`, et.TypePredicate(`recordType`))
+              et.Binding(`predLoc`, et.TypePredicate(`recordType`))
             ),
             et.TopLevelDefine(
-              et.SingleBinding(`parentAccessorLoc`, et.RecordAccessor(`recordType`, `parentField`))
+              et.Binding(`parentAccessorLoc`, et.RecordAccessor(`recordType`, `parentField`))
             )
           ) =>
         }

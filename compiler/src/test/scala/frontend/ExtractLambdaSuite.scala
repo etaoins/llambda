@@ -19,7 +19,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: string-to-symbol (-> <string> <symbol>))
          (define (string-to-symbol x) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
@@ -35,7 +35,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: strings-to-symbol (-> <string> <string> * <symbol>))
          (define (strings-to-symbol x . rest) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
@@ -55,7 +55,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: string-to-symbol (->* (<string>) (<number>) <symbol>))
          (define (string-to-symbol x [y 1]) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=List(vt.NumberType),
@@ -71,7 +71,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: strings-to-symbol (-> <string> <string> * <symbol>))
          (define (strings-to-symbol x . rest) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
@@ -91,7 +91,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: string-to-symbol (All ([A : <number>]) (-> A <symbol>)))
          (define (string-to-symbol x) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         inside(polyType) {
           case pm.PolymorphicProcedureType(typeVars,
             vt.ProcedureType(List(polyVarA : pm.TypeVar), Nil, None, vt.ReturnType.Reachable(vt.SymbolType))
@@ -118,7 +118,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: string-to-symbol (All ([A : <number>]) (->* () (A) <number>)))
          (define (string-to-symbol [x 5]) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         inside(polyType) {
           case pm.PolymorphicProcedureType(typeVars,
             vt.ProcedureType(Nil, List(polyVarA : pm.TypeVar), None, vt.ReturnType.Reachable(vt.NumberType))
@@ -196,7 +196,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: string-to-symbol (-> <string> <symbol>))
          (define (string-to-symbol [x : <string>]) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
@@ -212,7 +212,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: strings-to-symbol (-> <string> <string> * <symbol>))
          (define (strings-to-symbol [x : <string>] rest : <string> *) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.StringType),
           optionalArgTypes=Nil,
@@ -232,7 +232,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: string-to-symbol (->* () (<string>) <symbol>))
          (define (string-to-symbol [x : <string> "Hello"]) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=Nil,
           optionalArgTypes=List(vt.StringType),
@@ -252,7 +252,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: le-to-symbol (-> <list-element> <symbol>))
          (define (le-to-symbol [x : <pair>]) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedStorageLocType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.ListElementType),
           optionalArgTypes=Nil,
@@ -275,7 +275,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: pair-to-symbol (-> <pair> <symbol>))
          (define (pair-to-symbol [x : <list-element>]) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=List(vt.AnyPairType),
           optionalArgTypes=Nil,
@@ -295,7 +295,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: le-to-symbol (-> <list-element> * <symbol>))
          (define (le-to-symbol x : <pair> *) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedStorageLocType = vt.ProcedureType(
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
@@ -318,7 +318,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       """(: pair-to-symbol (-> <pair> * <symbol>))
          (define (pair-to-symbol x : <list-element> *) x)"""
     )(scope)) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         val expectedType = vt.ProcedureType(
           mandatoryArgTypes=Nil,
           optionalArgTypes=Nil,
@@ -553,8 +553,8 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         (foo #t))""")) {
       case et.Lambda(_, List(xLoc), Nil, None, et.InternalDefine(
         List(
-          et.SingleBinding(fooLoc, et.Lambda(_, List(yLoc), Nil, None, fooExpr, _)),
-          et.SingleBinding(barLoc, et.Lambda(_, List(aLoc, bLoc), Nil, None, barExpr, _))
+          et.Binding(fooLoc, et.Lambda(_, List(yLoc), Nil, None, fooExpr, _)),
+          et.Binding(barLoc, et.Lambda(_, List(aLoc, bLoc), Nil, None, barExpr, _))
         ), bodyExpr), _) =>
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
           assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnitValue())))
@@ -570,7 +570,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, Nil, Nil, None, bodyExpr, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, Nil, Nil, None, bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=Nil,
@@ -595,7 +595,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, None, bodyExpr, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, None, bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=List(vt.AnySchemeType),
@@ -623,7 +623,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val expectedDefault = et.Literal(ast.BooleanLiteral(true))
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc,
+      case et.TopLevelDefine(et.Binding(storageLoc,
           et.Lambda(polyType, Nil, List(et.OptionalArg(fixedArg, expectedDefault)), None, bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
@@ -650,7 +650,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, None, _, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, None, _, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=List(vt.SymbolType),
@@ -670,7 +670,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, Some(restArg), bodyExpr, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, Some(restArg), bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=List(vt.AnySchemeType),
@@ -698,7 +698,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, Some(restArg), _, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, Some(restArg), _, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=List(vt.BooleanType),
@@ -719,7 +719,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, Nil, Nil, Some(restArg), _, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, Nil, Nil, Some(restArg), _, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=Nil,
@@ -744,7 +744,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
 
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, Some(restArg), _, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, List(fixedArg), Nil, Some(restArg), _, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=List(vt.BooleanType),
@@ -764,7 +764,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val expr = exprFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, Nil, Nil, Some(restArg), bodyExpr, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, Nil, Nil, Some(restArg), bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=Nil,
@@ -789,7 +789,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val expr = exprFor("(define (return-six rest : <port> *) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, Nil, Nil, Some(restArg), _, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, Nil, Nil, Some(restArg), _, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=Nil,
@@ -808,7 +808,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val expr = exprFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.TopLevelDefine(et.SingleBinding(storageLoc, et.Lambda(polyType, Nil, Nil, None, bodyExpr, _)))
+      case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, Nil, Nil, None, bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=Nil,

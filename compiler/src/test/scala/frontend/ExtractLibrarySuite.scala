@@ -52,7 +52,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
             case storageLoc : StorageLocation =>
-              assert(exprs === List(et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
+              assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
           }
      }
   }
@@ -73,7 +73,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
             case storageLoc : StorageLocation =>
-              assert(exprs === List(et.TopLevelDefine(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
+              assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
           }
      }
   }
@@ -142,8 +142,8 @@ class ExtractLibrarySuite extends FunSuite with Inside {
               case storageLocB : StorageLocation =>
                 assert(exprs === 
                   List(
-                    et.TopLevelDefine(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
-                    et.TopLevelDefine(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
+                    et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
+                    et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
                     et.VarRef(storageLocA),
                     et.VarRef(storageLocB)
                   )
@@ -165,8 +165,8 @@ class ExtractLibrarySuite extends FunSuite with Inside {
               case storageLocB : StorageLocation =>
                 assert(exprs === 
                   List(
-                    et.TopLevelDefine(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
-                    et.TopLevelDefine(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
+                    et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
+                    et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
                     et.VarRef(storageLocA),
                     et.VarRef(storageLocB)
                   )

@@ -63,7 +63,7 @@ object ExtractPatternMatch {
 
         (bindings : List[(sst.ScopedSymbol, StorageLocation)]) =>
           et.InternalDefine(
-            bindings=List(et.SingleBinding(fieldLoc, fieldExpr)),
+            bindings=List(et.Binding(fieldLoc, fieldExpr)),
             body=parsePattern(fieldLoc, patternDatum, successExpr, failExpr, bindings)
           )
       }
@@ -103,8 +103,8 @@ object ExtractPatternMatch {
       val cdrLoc = new StorageLocation("<cdr-match-value>")
 
       val testBindings = List(
-        et.SingleBinding(carLoc, carExpr),
-        et.SingleBinding(cdrLoc, cdrExpr)
+        et.Binding(carLoc, carExpr),
+        et.Binding(cdrLoc, cdrExpr)
       )
 
       et.Cond(
@@ -163,7 +163,7 @@ object ExtractPatternMatch {
 
             (bindings : List[(sst.ScopedSymbol, StorageLocation)]) =>
               et.InternalDefine(
-                bindings=List(et.SingleBinding(elementLoc, elementExpr)),
+                bindings=List(et.Binding(elementLoc, elementExpr)),
                 body=parsePattern(elementLoc, patternDatum, successExpr, failExpr, bindings)
               )
           }
@@ -295,7 +295,7 @@ object ExtractPatternMatch {
         val innerValLoc = new StorageLocation("<match-value>")
 
         val nextClauseLoc = new StorageLocation("<next-clause>")
-        val nextClauseBindings = List(et.SingleBinding(nextClauseLoc, nextClauseExpr))
+        val nextClauseBindings = List(et.Binding(nextClauseLoc, nextClauseExpr))
 
         val failExpr = et.Apply(
           et.VarRef(nextClauseLoc),
