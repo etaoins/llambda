@@ -570,7 +570,7 @@ case class UnboxChar(result : TempValue, boxed : TempValue) extends UnboxValue {
 // These aren't quite an unboxing because there's two values per boxed value
 
 /** Loads the car of the passed PairCell as a AnyCell */
-case class LoadPairCar(result : TempValue, boxed : TempValue) extends DiscardableStep {
+case class LoadPairCar(result : TempValue, boxed : TempValue) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
 
@@ -579,7 +579,7 @@ case class LoadPairCar(result : TempValue, boxed : TempValue) extends Discardabl
 }
 
 /** Loads the cdr of the passed PairCell as a AnyCell */
-case class LoadPairCdr(result : TempValue, boxed : TempValue) extends DiscardableStep {
+case class LoadPairCdr(result : TempValue, boxed : TempValue) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
 
@@ -817,7 +817,7 @@ case class InitPair(
     carValue : TempValue,
     cdrValue : TempValue,
     listLengthOpt : Option[Long] = None
-) extends DiscardableStep with CellConsumer {
+) extends DiscardableStep with MergeableStep with CellConsumer {
   lazy val inputValues = Set(carValue, cdrValue)
   lazy val outputValues = Set(result)
 
