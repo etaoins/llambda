@@ -6,7 +6,6 @@
 #include "alloc/cellref.h"
 #include "alloc/allocator.h"
 #include "binding/EmptyListCell.h"
-#include "binding/DynamicStateCell.h"
 #include "binding/ProperList.h"
 
 namespace lliby
@@ -14,37 +13,10 @@ namespace lliby
 namespace dynamic
 {
 
-namespace
-{
-	/**
-	 * Returns the path of states from "descendant" to "ancestor" in descendant to ancestor order
-	 *
-	 * If "descendant" isn't a descendant of "ancestor" an empty list is returned
-	 */
-	std::vector<DynamicStateCell*> pathToAncestorState(DynamicStateCell *descendant, DynamicStateCell *ancestor)
-	{
-		std::vector<DynamicStateCell*> path;
-
-		while(descendant != nullptr)
-		{
-			if (descendant == ancestor)
-			{
-				return path;
-			}
-
-			path.push_back(descendant);
-			descendant = descendant->state()->parentCell();
-		}
-
-		// Fell off the end of the list; we're not an ancestor
-		return std::vector<DynamicStateCell*>();
-	}
-}
-
-State::State(ThunkProcedureCell *before, ThunkProcedureCell *after, DynamicStateCell *parentCell) :
+State::State(ThunkProcedureCell *before, ThunkProcedureCell *after, State *parent) :
 	m_before(before),
 	m_after(after),
-	m_parentCell(parentCell)
+	m_parent(parent)
 {
 }
 
@@ -56,9 +28,9 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 	{
 		return valueIt->second;
 	}
-	else if (m_parentCell)
+	else if (m_parent)
 	{
-		return m_parentCell->state()->valueForParameter(param);
+		return m_parent->valueForParameter(param);
 	}
 	else
 	{
@@ -83,7 +55,7 @@ void State::setValueForParameter(World &world, ParameterProcedureCell *param, An
 
 State* State::activeState(World &world)
 {
-	return world.activeStateCell()->state();
+	return world.activeState();
 }
 
 void State::pushActiveState(World &world, ThunkProcedureCell *before, ThunkProcedureCell *after)
@@ -97,81 +69,47 @@ void State::pushActiveState(World &world, ThunkProcedureCell *before, ThunkProce
 		beforeRef->apply(world);
 	}
 
-	// Allocate the dynamic state cell
-	DynamicStateCell *pushedDynamicStateCell = DynamicStateCell::createInstance(world, nullptr);
-
-	// Create a state and associated it with the dynamic state cell
-	auto pushedState = new State(beforeRef, afterRef, world.activeStateCell());
-	pushedDynamicStateCell->setState(pushedState);
-
-	world.activeStateCell() = pushedDynamicStateCell;
+	// Create a state and associated it with the dynamic state
+	world.setActiveState(new State(beforeRef, afterRef, world.activeState()));
 }
 
 void State::popActiveState(World &world)
 {
-	State *oldActiveState = world.activeStateCell()->state();
+	State *oldActiveState = world.activeState();
 
 	// Make the old state active and reference it
-	world.activeStateCell() = world.activeStateCell()->state()->parentCell();
+	world.setActiveState(oldActiveState->parent());
 
 	// After is executed in the "outer" state
 	if (oldActiveState->afterProcedure())
 	{
 		oldActiveState->afterProcedure()->apply(world);
 	}
+
+	delete oldActiveState;
 }
 
 void State::popAllStates(World &world)
 {
-	while(world.activeStateCell()->state()->parentCell() != nullptr)
+	while(world.activeState()->parent() != nullptr)
 	{
 		popActiveState(world);
 	}
 }
 
-void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
+void State::popUntilState(World &world, State *targetState)
 {
-	alloc::DynamicStateRef targetStateRef(world, targetStateCell);
-
 #ifdef _LLIBY_ALWAYS_GC
 	// We can potentially GC if we cross a state that has a before/after procedure that allocates memory. However, this
 	// isn't very common. Ensure people are properly rooting their values by forcing a collection on every state switch.
 	alloc::forceCollection(world);
 #endif
 
-	while(true)
+	while(world.activeState() != targetState)
 	{
-		if (world.activeStateCell() == targetStateRef.data())
-		{
-			// We're done
-			return;
-		}
-
-		// Is the target state a descendant of our current state?
-		std::vector<DynamicStateCell*> pathToTargetState = pathToAncestorState(targetStateRef, world.activeStateCell());
-
-		if (!pathToTargetState.empty())
-		{
-			// Root the path in case the before procedures cause GC
-			alloc::StrongRoot<DynamicStateCell> pathRef(world, pathToTargetState.data(), pathToTargetState.size());
-
-			for(auto it = pathToTargetState.rbegin(); it != pathToTargetState.rend(); it++)
-			{
-				if ((*it)->state()->beforeProcedure())
-				{
-					(*it)->state()->beforeProcedure()->apply(world);
-				}
-
-				world.activeStateCell() = *it;
-			}
-
-			// We're done
-			return;
-		}
-
-		// No, climb the state tree more
 		popActiveState(world);
 	}
+
 }
 
 }

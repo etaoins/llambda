@@ -156,11 +156,3 @@ concrete cell Mailbox : Any {
 concrete internal cell HashMap : Any {
 	DatumHashTree *datumHashTree;
 };
-
-// Internal runtime-only cell to track dynamic states with the garbage collector
-// Ideally this should be at the end of the file so the compiler visible types have a consecutive type IDs. Otherwise
-// the compiler will generate range metadata with a hole in the middle which is both ugly and might generate suboptimal
-// code.
-concrete runtime cell DynamicState : Any {
-	State *state;
-};

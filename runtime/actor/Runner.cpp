@@ -100,7 +100,7 @@ std::shared_ptr<Mailbox> Runner::start(World &parentWorld, ActorClosureCell *clo
 	auto *actorWorld = new World;
 
 	// Clone our closure in to the new world
-	dynamic::State *captureState = parentWorld.activeStateCell()->state();
+	dynamic::State *captureState = parentWorld.activeState();
 	auto clonedClosureCell = static_cast<ActorClosureCell*>(cloneCell(actorWorld->cellHeap, closureCell, captureState));
 
 	// Find our supervisor

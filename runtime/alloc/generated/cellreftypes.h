@@ -35,7 +35,6 @@ typedef StrongRef<ErrorObjectCell> ErrorObjectRef;
 typedef StrongRef<PortCell> PortRef;
 typedef StrongRef<MailboxCell> MailboxRef;
 typedef StrongRef<HashMapCell> HashMapRef;
-typedef StrongRef<DynamicStateCell> DynamicStateRef;
 
 }
 }

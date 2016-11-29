@@ -42,7 +42,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 100L
+  val nextMetadataIndex = 97L
 }
 
 sealed trait AnyFields {

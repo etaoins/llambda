@@ -12,7 +12,6 @@
 #include "BytevectorCell.h"
 #include "StringCell.h"
 #include "PortCell.h"
-#include "DynamicStateCell.h"
 #include "CharCell.h"
 #include "MailboxCell.h"
 #include "ErrorObjectCell.h"
@@ -293,10 +292,6 @@ void AnyCell::finalize()
 	else if (auto thisPort = cell_cast<PortCell>(this))
 	{
 		thisPort->finalizePort();
-	}
-	else if (auto thisDynamicState = cell_cast<DynamicStateCell>(this))
-	{
-		thisDynamicState->finalizeDynamicState();
 	}
 	else if (auto thisMailbox = cell_cast<MailboxCell>(this))
 	{

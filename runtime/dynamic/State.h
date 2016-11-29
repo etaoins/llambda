@@ -4,7 +4,6 @@
 #include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/TypedProcedureCell.h"
-#include "binding/DynamicStateCell.h"
 
 #include "dynamic/ConverterProcedureCell.h"
 #include "alloc/cellref.h"
@@ -32,13 +31,13 @@ public:
 	/**
 	 * Creates a new state with a specified parent and before/after procedures
 	 *
-	 * @param  before      Procedure to invoke before activating this state or its children. nullptr will disable this
-	 *                     functionality.
-	 * @param  after       Procedure to invoke after deactivating this state or children. nullptr will disable this
-	 *                     functionality.
-	 * @param  parentCell  Cell pointer to the parent state or nullptr if this is a root state.
+	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this
+	 *                 functionality.
+	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this
+	 *                 functionality.
+	 * @param  parent  Pointer to the parent state or nullptr if this is a root state.
 	 */
-	State(ThunkProcedureCell *before, ThunkProcedureCell *after, DynamicStateCell *parentCell = nullptr);
+	State(ThunkProcedureCell *before, ThunkProcedureCell *after, State *parent = nullptr);
 
 	/**
 	 * Returns the value for the passed parameter
@@ -55,34 +54,11 @@ public:
 	void setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value);
 
 	/**
-	 * Returns the parent cell for this state or nullptr if this is a root state
-	 */
-	DynamicStateCell *parentCell() const
-	{
-		return m_parentCell;
-	}
-
-	/**
 	 * Returns a pointer to our parent state or nullptr if this is the root state
 	 */
 	State *parent() const
 	{
-		if (m_parentCell != nullptr)
-		{
-			return m_parentCell->state();
-		}
-
-		return nullptr;
-	}
-
-	/**
-	 * Returns a pointer to the parent cell
-	 *
-	 * This is used by the garbage collector to replace our parent pointer
-	 */
-	DynamicStateCell** parentCellRef()
-	{
-		return &m_parentCell;
+		return m_parent;
 	}
 
 	/**
@@ -182,12 +158,12 @@ public:
 	 *
 	 * All "after" procedures for exiting states will be called followed by all "before" procedures for entering states.
 	 */
-	static void switchStateCell(World &world, DynamicStateCell *);
+	static void popUntilState(World &world, State *);
 
 private:
 	ThunkProcedureCell *m_before;
 	ThunkProcedureCell *m_after;
-	DynamicStateCell *m_parentCell;
+	State *m_parent;
 	ParameterValueMap m_selfValues;
 };
 

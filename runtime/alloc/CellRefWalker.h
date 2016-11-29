@@ -20,7 +20,6 @@
 #include "binding/RecordLikeCell.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
-#include "binding/DynamicStateCell.h"
 #include "binding/MailboxCell.h"
 #include "binding/HashMapCell.h"
 
@@ -112,13 +111,6 @@ public:
 				visitCell(keyRef, visitor);
 				visitCell(valueRef, visitor);
 			});
-		}
-		else if (auto dynamicStateCell = cell_cast<DynamicStateCell>(*rootCellRef))
-		{
-			if (dynamicStateCell->state() != nullptr)
-			{
-				visitDynamicState(dynamicStateCell->state(), visitor);
-			}
 		}
 #ifndef NDEBUG
 		else if (cell_cast<UnitCell>(*rootCellRef) ||
@@ -239,9 +231,9 @@ public:
 			state->setSelfValues(rebuiltMap);
 		}
 
-		if (state->parentCell() != nullptr)
+		if (state->parent() != nullptr)
 		{
-			visitCell(reinterpret_cast<AnyCell**>(state->parentCellRef()), visitor);
+			visitDynamicState(state->parent(), visitor);
 		}
 	}
 

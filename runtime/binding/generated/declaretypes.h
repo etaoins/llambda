@@ -35,7 +35,6 @@ class PortCell;
 class EofObjectCell;
 class MailboxCell;
 class HashMapCell;
-class DynamicStateCell;
 
 }
 #endif

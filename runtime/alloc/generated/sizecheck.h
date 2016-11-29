@@ -20,7 +20,6 @@
 #include "binding/EofObjectCell.h"
 #include "binding/MailboxCell.h"
 #include "binding/HashMapCell.h"
-#include "binding/DynamicStateCell.h"
 
 using lliby::alloc::AllocCell;
 
@@ -46,4 +45,3 @@ static_assert(sizeof(lliby::PortCell) <= sizeof(AllocCell), "PortCell does not f
 static_assert(sizeof(lliby::EofObjectCell) <= sizeof(AllocCell), "EofObjectCell does not fit in to a cell");
 static_assert(sizeof(lliby::MailboxCell) <= sizeof(AllocCell), "MailboxCell does not fit in to a cell");
 static_assert(sizeof(lliby::HashMapCell) <= sizeof(AllocCell), "HashMapCell does not fit in to a cell");
-static_assert(sizeof(lliby::DynamicStateCell) <= sizeof(AllocCell), "DynamicStateCell does not fit in to a cell");

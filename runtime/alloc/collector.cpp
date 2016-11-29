@@ -122,10 +122,7 @@ size_t collect(World &world, Heap &newHeap)
 	walker.visitShadowStack(world.shadowStackHead, rootVisitor);
 
 	// Visit the dynamic state
-	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
-	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
-	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
-	walker.visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell()), rootVisitor);
+	walker.visitDynamicState(world.activeState(), rootVisitor);
 
 	// Is this world an actor?
 	if (world.actorContext())

@@ -18,7 +18,6 @@ add_library(llcore
 	binding/BytevectorCell.cpp
 	binding/CharCell.cpp
 	binding/AnyCell.cpp
-	binding/DynamicStateCell.cpp
 	binding/ErrorObjectCell.cpp
 	binding/HashMapCell.cpp
 	binding/ListElementCell.cpp

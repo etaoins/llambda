@@ -8,8 +8,6 @@
 #include "actor/Mailbox.h"
 #include "actor/ActorContext.h"
 
-#include "binding/DynamicStateCell.h"
-
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
 
@@ -18,7 +16,6 @@ using namespace lliby;
 namespace
 {
 	dynamic::State sharedRootState(nullptr, nullptr, nullptr);
-	DynamicStateCell sharedRootStateCell(&sharedRootState, GarbageState::GlobalConstant);
 }
 
 namespace lliby
@@ -26,7 +23,7 @@ namespace lliby
 
 World::World() :
 	cellHeap(InitialHeapSegmentSize),
-	m_activeStateCell(&sharedRootStateCell)
+	m_activeState(&sharedRootState)
 {
 }
 

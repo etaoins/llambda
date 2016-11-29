@@ -23,6 +23,11 @@ class ActorContext;
 class Mailbox;
 }
 
+namespace dynamic
+{
+class State;
+}
+
 class World
 {
 public:
@@ -63,13 +68,21 @@ public: // Normal C++ API
 	void run(const std::function<void(World &)> &func);
 
 	/**
-	 * Returns the dynamic state cell containing the active dynamic state of the world
-	 *
-	 * This is a reference to a pointer for the GC
+	 * Returns the active dynamic state of the world
 	 */
-	DynamicStateCell*& activeStateCell()
+	dynamic::State* activeState()
 	{
-		return m_activeStateCell;
+		return m_activeState;
+	}
+
+	/**
+	 * Sets the active state for the world
+	 *
+	 * This is intended for use by dynamic::State
+	 */
+	void setActiveState(dynamic::State *state)
+	{
+		m_activeState = state;
 	}
 
 	/**
@@ -114,7 +127,7 @@ public: // Normal C++ API
 	void addChildActor(const std::weak_ptr<actor::Mailbox> &childActor);
 
 private:
-	DynamicStateCell *m_activeStateCell;
+	dynamic::State *m_activeState;
 
 	alloc::CellRootList m_strongRoots;
 	alloc::CellRootList m_weakRoots;

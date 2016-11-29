@@ -31,7 +31,6 @@ enum class CellTypeId : std::uint8_t
 	EofObject = 16,
 	Mailbox = 17,
 	HashMap = 18,
-	DynamicState = 19,
 };
 
 }
