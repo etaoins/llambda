@@ -96,7 +96,6 @@ add_library(ll_scheme_base
 	stdlib/scheme/base/bytevector.cpp
 	stdlib/scheme/base/char.cpp
 	stdlib/scheme/base/control.cpp
-	stdlib/scheme/base/dynamic.cpp
 	stdlib/scheme/base/exception.cpp
 	stdlib/scheme/base/input.cpp
 	stdlib/scheme/base/list.cpp

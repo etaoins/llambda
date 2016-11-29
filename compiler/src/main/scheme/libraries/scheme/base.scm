@@ -518,8 +518,6 @@
       (([init : <any>] [converter : (-> <any> <any>)])
        (native-make-parameter init converter))))
 
-    (define-r7rs dynamic-wind (world-function llbase "llbase_dynamic_wind" (-> (-> <any>) (-> <any>) (-> <any>) <any>)))
-
     ; Port support
     (define-r7rs port? (make-predicate <port>))
     (define-r7rs input-port? (native-function llbase "llbase_is_input_port" (-> <any> <native-bool>)))

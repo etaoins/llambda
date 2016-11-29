@@ -345,7 +345,7 @@
   ; implementations
   (write-string "ABC")
   (flush-output-port)
-  (emergency-exit #t)))
+  (exit #t)))
 
 (define-test "(read-bytevector!)" (expect-success
   (define test-bytevector (make-bytevector 4))

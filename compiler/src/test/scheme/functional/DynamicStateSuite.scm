@@ -77,35 +77,3 @@
     (param))
 
   (param)))
-
-(define-test "trivial dynamic-wind" (expect (56.1 . 60)
-  (define testValue 0)
-
-  (define returnValue
-    (dynamic-wind
-    ; Add 10 before the thunk - testValue will then be 10
-    (lambda () (set! testValue (+ testValue 10)))
-    ; Multiply by 4 in the thunk and return 56.1 - testValue will then be 40
-    (lambda () (set! testValue (* testValue 4)) 56.1)
-    ; Add 20 - testValue will then be 60
-    (lambda () (set! testValue (+ testValue 20)))))
-
-  (cons returnValue testValue)))
-
-(define-test "dynamic-wind with incorrect before proc arity fails at compile time" (expect-compile-error type-error?
-  (dynamic-wind
-    (lambda (too))
-    (lambda ())
-    (lambda ()))))
-
-(define-test "dynamic-wind with incorrect thunk proc arity fails at compile time" (expect-compile-error type-error?
-  (dynamic-wind
-    (lambda ())
-    (lambda (many))
-    (lambda ()))))
-
-(define-test "dynamic-wind with incorrect after proc arity fails at compile time" (expect-compile-error type-error?
-  (dynamic-wind
-    (lambda ())
-    (lambda ())
-    (lambda (args)))))

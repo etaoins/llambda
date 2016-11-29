@@ -1,30 +1,6 @@
 (define-test "uncaught exceptions terminate the program" (expect-exit-value 255
   (raise 0)))
 
-(define-test "uncaught exceptions unwind all states" (expect-output (two one)
-  (import (scheme write))
-  (import (scheme process-context))
-  (dynamic-wind
-    (lambda ())
-    (lambda ()
-     (dynamic-wind
-      (lambda ())
-      (lambda ()
-        (raise 0)
-        (dynamic-wind
-         (lambda ())
-         (lambda ())
-         (lambda ()
-          (write 'three)
-          (newline))))
-      (lambda ()
-        (write 'two)
-        (newline))))
-    (lambda ()
-     (write 'one)
-     (newline)
-     (exit 0)))))
-
 (define-test "empty lists are not error objects" (expect #f
   (error-object? '())))
 

@@ -47,13 +47,7 @@ extern char **environ;
 
 void llprocesscontext_exit(World &world, AnyCell *exitValue)
 {
-	dynamic::State::popAllStates(world);
 	exit(cellToStatusCode(exitValue));
-}
-
-void llprocesscontext_emergency_exit(AnyCell *exitValue)
-{
-	_exit(cellToStatusCode(exitValue));
 }
 
 AnyCell *llprocesscontext_get_environment_variable(World &world, StringCell *name)

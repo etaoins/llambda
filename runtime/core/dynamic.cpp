@@ -17,7 +17,7 @@ extern "C"
 
 void llcore_dynamicenv_push(World &world)
 {
-	dynamic::State::pushActiveState(world, nullptr, nullptr);
+	dynamic::State::pushActiveState(world);
 }
 
 void llcore_dynamicenv_set_value(World &world, ProcedureCell *procCell, AnyCell *value)

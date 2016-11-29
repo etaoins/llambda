@@ -201,17 +201,6 @@ public:
 		dynamic::State::ParameterValueMap rebuiltMap;
 		const size_t valueCount = state->selfValues().size();
 
-		// Visit the before and after procedures
-		if (state->beforeProcedure())
-		{
-			visitCell(reinterpret_cast<AnyCell**>(state->beforeProcedureRef()), visitor);
-		}
-
-		if (state->afterProcedure())
-		{
-			visitCell(reinterpret_cast<AnyCell**>(state->afterProcedureRef()), visitor);
-		}
-
 		if (valueCount > 0)
 		{
 			// The new map will be the exact size of the old map

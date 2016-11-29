@@ -15,7 +15,7 @@ using namespace lliby;
 
 namespace
 {
-	dynamic::State sharedRootState(nullptr, nullptr, nullptr);
+	dynamic::State sharedRootState(nullptr);
 }
 
 namespace lliby
@@ -61,12 +61,8 @@ void World::run(const std::function<void(World &)> &func)
 	}
 	catch (dynamic::SchemeException &except)
 	{
-		// Call all unwind handlers
-		dynamic::State::popAllStates(*this);
 		throw;
 	}
-
-	dynamic::State::popAllStates(*this);
 }
 
 void World::addChildActor(const std::weak_ptr<actor::Mailbox> &childActor)

@@ -1047,10 +1047,7 @@ case class PushDynamicState(parameterValues : List[ParameterizedValue]) extends 
       .assignLocationFrom(this)
 }
 
-/** Pops the last dynamic state
-  *
-  * This must be a state pushed with PushDynamicState, not through stdlib functions such as dynamic-wind
-  */
+/** Pops the last dynamic state */
 case class PopDynamicState() extends Step {
   lazy val inputValues = Set[TempValue](WorldPtrValue)
   val outputValues = Set[TempValue]()

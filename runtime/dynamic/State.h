@@ -18,10 +18,10 @@ namespace dynamic
 class ParameterProcedureCell;
 
 /**
- * Represents a dynamic state created by (parameterize) or (dynamic-wind)
+ * Represents a dynamic state created by (parameterize)
  *
  * This can be viewed as a parallel stack the the program's call stack. Arbitrary values can be attached to the state
- * with (make-parameter) and (parameterize) and entry and exit procedures can be defined with (dynamic-wind)
+ * with (make-parameter) and (parameterize)
  */
 class State
 {
@@ -31,13 +31,9 @@ public:
 	/**
 	 * Creates a new state with a specified parent and before/after procedures
 	 *
-	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this
-	 *                 functionality.
-	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this
-	 *                 functionality.
 	 * @param  parent  Pointer to the parent state or nullptr if this is a root state.
 	 */
-	State(ThunkProcedureCell *before, ThunkProcedureCell *after, State *parent = nullptr);
+	State(State *parent = nullptr);
 
 	/**
 	 * Returns the value for the passed parameter
@@ -59,42 +55,6 @@ public:
 	State *parent() const
 	{
 		return m_parent;
-	}
-
-	/**
-	 * Returns the procedure to invoke before activating this state or its children
-	 */
-	ThunkProcedureCell *beforeProcedure()
-	{
-		return m_before;
-	}
-
-	/**
-	 * Returns a pointer to the before procedure cell
-	 *
-	 * This is intended for use by the garbage collector
-	 */
-	ThunkProcedureCell** beforeProcedureRef()
-	{
-		return &m_before;
-	}
-
-	/**
-	 * Returns the procedure to invoke after deactivating this state or its children
-	 */
-	ThunkProcedureCell *afterProcedure()
-	{
-		return m_after;
-	}
-
-	/**
-	 * Returns a pointer to the after procedure cell
-	 *
-	 * This is intended for use by the garbage collector
-	 */
-	ThunkProcedureCell** afterProcedureRef()
-	{
-		return &m_after;
 	}
 
 	/**
@@ -126,14 +86,8 @@ public:
 	 * Creates a child active of the currently active state and makes it active
 	 *
 	 * @param  world   World the state is being pushed in to
-	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this
-	 *                 functionality.
-	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this
-	 *                 functionality.
-	 *
-	 * This may re-enter Scheme and invoke the garbage collector if before is not null
 	 */
-	static void pushActiveState(World &world, ThunkProcedureCell *before, ThunkProcedureCell *after);
+	static void pushActiveState(World &world);
 
 	/**
 	 * Makes the parent of the currently active state active
@@ -145,15 +99,6 @@ public:
 	static void popActiveState(World &world);
 
 	/**
-	 * Pops all active states
-	 *
-	 * @param  world   World the states are being popped from
-	 *
-	 * This should be used when cleanly exiting from the world
-	 */
-	static void popAllStates(World &world);
-
-	/**
 	 * Switches to the specified state cell
 	 *
 	 * All "after" procedures for exiting states will be called followed by all "before" procedures for entering states.
@@ -161,8 +106,6 @@ public:
 	static void popUntilState(World &world, State *);
 
 private:
-	ThunkProcedureCell *m_before;
-	ThunkProcedureCell *m_after;
 	State *m_parent;
 	ParameterValueMap m_selfValues;
 };

@@ -27,7 +27,7 @@
 (export string? make-string string string-length string-ref string-set! string-append list->string string->list
         string-copy string-copy! substring string-fill! string=? string<? string>? string<=? string>=?)
 (export procedure? apply vector-map vector-for-each map for-each string-map string-for-each)
-(export make-parameter dynamic-wind)
+(export make-parameter)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port textual-port?
         binary-port? input-port-open? output-port-open? close-port close-input-port close-output-port open-output-string
         get-output-string open-output-bytevector get-output-bytevector open-input-string open-input-bytevector
