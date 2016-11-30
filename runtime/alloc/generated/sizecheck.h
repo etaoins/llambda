@@ -8,7 +8,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/CharCell.h"
 #include "binding/VectorCell.h"
@@ -33,7 +33,7 @@ static_assert(sizeof(lliby::SymbolCell) <= sizeof(AllocCell), "SymbolCell does n
 static_assert(sizeof(lliby::InlineSymbolCell) <= sizeof(AllocCell), "InlineSymbolCell does not fit in to a cell");
 static_assert(sizeof(lliby::HeapSymbolCell) <= sizeof(AllocCell), "HeapSymbolCell does not fit in to a cell");
 static_assert(sizeof(lliby::BooleanCell) <= sizeof(AllocCell), "BooleanCell does not fit in to a cell");
-static_assert(sizeof(lliby::ExactIntegerCell) <= sizeof(AllocCell), "ExactIntegerCell does not fit in to a cell");
+static_assert(sizeof(lliby::IntegerCell) <= sizeof(AllocCell), "IntegerCell does not fit in to a cell");
 static_assert(sizeof(lliby::FlonumCell) <= sizeof(AllocCell), "FlonumCell does not fit in to a cell");
 static_assert(sizeof(lliby::CharCell) <= sizeof(AllocCell), "CharCell does not fit in to a cell");
 static_assert(sizeof(lliby::VectorCell) <= sizeof(AllocCell), "VectorCell does not fit in to a cell");

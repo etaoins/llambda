@@ -4,7 +4,7 @@
 #include "core/World.h"
 
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/EofObjectCell.h"
@@ -144,26 +144,26 @@ void testEnclosedSymbols(World &world)
 
 void testIntegers(World &world)
 {
-	ASSERT_PARSES("0", ExactIntegerCell::fromValue(world, 0));
-	ASSERT_PARSES("000", ExactIntegerCell::fromValue(world, 0));
-	ASSERT_PARSES("1000", ExactIntegerCell::fromValue(world, 1000));
-	ASSERT_PARSES("-1000", ExactIntegerCell::fromValue(world, -1000));
+	ASSERT_PARSES("0", IntegerCell::fromValue(world, 0));
+	ASSERT_PARSES("000", IntegerCell::fromValue(world, 0));
+	ASSERT_PARSES("1000", IntegerCell::fromValue(world, 1000));
+	ASSERT_PARSES("-1000", IntegerCell::fromValue(world, -1000));
 
-	ASSERT_PARSES("3.", ExactIntegerCell::fromValue(world, 3));
+	ASSERT_PARSES("3.", IntegerCell::fromValue(world, 3));
 
-	ASSERT_PARSES("#b111", ExactIntegerCell::fromValue(world, 7));
-	ASSERT_PARSES("#b-1000", ExactIntegerCell::fromValue(world, -8));
+	ASSERT_PARSES("#b111", IntegerCell::fromValue(world, 7));
+	ASSERT_PARSES("#b-1000", IntegerCell::fromValue(world, -8));
 
-	ASSERT_PARSES("#o1234", ExactIntegerCell::fromValue(world, 668));
-	ASSERT_PARSES("#o-010", ExactIntegerCell::fromValue(world, -8));
+	ASSERT_PARSES("#o1234", IntegerCell::fromValue(world, 668));
+	ASSERT_PARSES("#o-010", IntegerCell::fromValue(world, -8));
 
-	ASSERT_PARSES("#d1234", ExactIntegerCell::fromValue(world, 1234));
-	ASSERT_PARSES("#d-010", ExactIntegerCell::fromValue(world, -10));
+	ASSERT_PARSES("#d1234", IntegerCell::fromValue(world, 1234));
+	ASSERT_PARSES("#d-010", IntegerCell::fromValue(world, -10));
 
-	ASSERT_PARSES("#xdead", ExactIntegerCell::fromValue(world, 57005));
-	ASSERT_PARSES("#x-b00b5", ExactIntegerCell::fromValue(world, -721077));
+	ASSERT_PARSES("#xdead", IntegerCell::fromValue(world, 57005));
+	ASSERT_PARSES("#x-b00b5", IntegerCell::fromValue(world, -721077));
 
-	ASSERT_PARSES("9007199254740993", ExactIntegerCell::fromValue(world, 9007199254740993LL));
+	ASSERT_PARSES("9007199254740993", IntegerCell::fromValue(world, 9007199254740993LL));
 
 	// Out-of-range
 	ASSERT_INVALID_PARSE("9223372036854775808");
@@ -193,8 +193,8 @@ void testReals(World &world)
 	ASSERT_PARSES(".5e0", FlonumCell::fromValue(world, 0.5));
 	ASSERT_PARSES("-5e6", FlonumCell::fromValue(world, -5000000.0));
 
-	ASSERT_PARSES("10eat", ExactIntegerCell::fromValue(world, 10));
-	ASSERT_PARSES("10+eat", ExactIntegerCell::fromValue(world, 10));
+	ASSERT_PARSES("10eat", IntegerCell::fromValue(world, 10));
+	ASSERT_PARSES("10+eat", IntegerCell::fromValue(world, 10));
 
 	ASSERT_PARSES("+inf.0", FlonumCell::positiveInfinity(world));
 	ASSERT_PARSES("-inf.0", FlonumCell::negativeInfinity(world));
@@ -244,7 +244,7 @@ void testProperList(World &world)
 {
 	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
 	alloc::SymbolRef integerSymbol(world, SymbolCell::fromUtf8StdString(world, "integer?"));
-	alloc::ExactIntegerRef negativeOne(world, ExactIntegerCell::fromValue(world, -1));
+	alloc::IntegerRef negativeOne(world, IntegerCell::fromValue(world, -1));
 	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
 
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
@@ -280,7 +280,7 @@ void testSquareProperList(World &world)
 {
 	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
 	alloc::SymbolRef integerSymbol(world, SymbolCell::fromUtf8StdString(world, "integer?"));
-	alloc::ExactIntegerRef negativeOne(world, ExactIntegerCell::fromValue(world, -1));
+	alloc::IntegerRef negativeOne(world, IntegerCell::fromValue(world, -1));
 	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
 
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
@@ -301,8 +301,8 @@ void testSquareImproperList(World &world)
 
 void testVector(World &world)
 {
-	alloc::ExactIntegerRef zero(world, ExactIntegerCell::fromValue(world, 0));
-	alloc::ExactIntegerRef two(world, ExactIntegerCell::fromValue(world, 2));
+	alloc::IntegerRef zero(world, IntegerCell::fromValue(world, 0));
+	alloc::IntegerRef two(world, IntegerCell::fromValue(world, 2));
 	alloc::SymbolRef annaSymbol(world, SymbolCell::fromUtf8StdString(world, "Anna"));
 
 	alloc::AnyRef innerList(world, ProperList<AnyCell>::create(world, {two, two, two, two}));
@@ -379,16 +379,16 @@ void testSymbolShorthand(World &world, std::string shorthand, std::string expans
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, fooSymbol});
 	ASSERT_PARSES(shorthand + "foo", expectedList);
 
-	alloc::ExactIntegerRef exactOne(world, ExactIntegerCell::fromValue(world, 1));
-	alloc::ExactIntegerRef exactTwo(world, ExactIntegerCell::fromValue(world, 2));
-	alloc::PairRef oneTwoPair(world, PairCell::createInstance(world, exactOne, exactTwo));
+	alloc::IntegerRef integerOne(world, IntegerCell::fromValue(world, 1));
+	alloc::IntegerRef integerTwo(world, IntegerCell::fromValue(world, 2));
+	alloc::PairRef oneTwoPair(world, PairCell::createInstance(world, integerOne, integerTwo));
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, oneTwoPair});
 	ASSERT_PARSES(shorthand + " (1 . 2)", expectedList);
 
 	alloc::SymbolRef realPSymbol(world, SymbolCell::fromUtf8StdString(world, "rational?"));
-	alloc::FlonumRef inexactOne(world, FlonumCell::fromValue(world, 1.0));
-	alloc::StrongRef<ProperList<AnyCell>> realPList(world, ProperList<AnyCell>::create(world, {realPSymbol, inexactOne}));
+	alloc::FlonumRef flonumOne(world, FlonumCell::fromValue(world, 1.0));
+	alloc::StrongRef<ProperList<AnyCell>> realPList(world, ProperList<AnyCell>::create(world, {realPSymbol, flonumOne}));
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, realPList});
 	ASSERT_PARSES(shorthand + "(rational? 1.0)", expectedList);
@@ -507,11 +507,11 @@ void testErrorRecovery(World &world)
 		AnyCell *nextDatum = reader.parse();
 
 		// Make sure it's an integer
-		ExactIntegerCell *nextExactInt = cell_cast<ExactIntegerCell>(nextDatum);
-		ASSERT_TRUE(nextExactInt != nullptr);
+		IntegerCell *nextInteger = cell_cast<IntegerCell>(nextDatum);
+		ASSERT_TRUE(nextInteger != nullptr);
 
 		// Make sure it has the correct value
-		ASSERT_EQUAL(nextExactInt->value(), 123);
+		ASSERT_EQUAL(nextInteger->value(), 123);
 	}
 
 	{
@@ -538,11 +538,11 @@ void testErrorRecovery(World &world)
 		AnyCell *nextDatum = reader.parse();
 
 		// Make sure it's an integer
-		ExactIntegerCell *nextExactInt = cell_cast<ExactIntegerCell>(nextDatum);
-		ASSERT_TRUE(nextExactInt != nullptr);
+		IntegerCell *nextInteger = cell_cast<IntegerCell>(nextDatum);
+		ASSERT_TRUE(nextInteger != nullptr);
 
 		// Make sure it has the correct value
-		ASSERT_EQUAL(nextExactInt->value(), 123);
+		ASSERT_EQUAL(nextInteger->value(), 123);
 	}
 }
 

@@ -9,7 +9,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/CharCell.h"
@@ -94,11 +94,11 @@ void testAll(World &world)
 	testValues.push_back(BooleanCell::falseInstance());
 	testValues.push_back(BooleanCell::trueInstance());
 
-	testValues.push_back(ExactIntegerCell::fromValue(world, std::numeric_limits<std::int64_t>::min()));
-	testValues.push_back(ExactIntegerCell::fromValue(world, -1));
-	testValues.push_back(ExactIntegerCell::fromValue(world, 0));
-	testValues.push_back(ExactIntegerCell::fromValue(world, 1));
-	testValues.push_back(ExactIntegerCell::fromValue(world, std::numeric_limits<std::int64_t>::max()));
+	testValues.push_back(IntegerCell::fromValue(world, std::numeric_limits<std::int64_t>::min()));
+	testValues.push_back(IntegerCell::fromValue(world, -1));
+	testValues.push_back(IntegerCell::fromValue(world, 0));
+	testValues.push_back(IntegerCell::fromValue(world, 1));
+	testValues.push_back(IntegerCell::fromValue(world, std::numeric_limits<std::int64_t>::max()));
 
 	testValues.push_back(FlonumCell::fromValue(world, std::numeric_limits<double>::quiet_NaN()));
 	testValues.push_back(FlonumCell::fromValue(world, std::numeric_limits<double>::min()));
@@ -128,8 +128,8 @@ void testAll(World &world)
 	testValues.push_back(PairCell::createInstance(world, testValues[0], testValues[1]));
 	testValues.push_back(PairCell::createInstance(world, testValues[1], testValues[0]));
 
-	testValues.push_back(ProperList<ExactIntegerCell>::emplaceValues(world, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}));
-	testValues.push_back(ProperList<ExactIntegerCell>::emplaceValues(world, {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}));
+	testValues.push_back(ProperList<IntegerCell>::emplaceValues(world, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}));
+	testValues.push_back(ProperList<IntegerCell>::emplaceValues(world, {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}));
 
 	testValues.push_back(BytevectorCell::fromData(world, nullptr, 0));
 

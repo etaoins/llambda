@@ -46,7 +46,7 @@
 (define (error-category-raise-function [cat : <error-category>])
   (string-append "llerror_raise_" (error-category-nfi-name cat)))
 
-(: number-categories (-> <exact-integer> (Listof <error-category>) (Listof (Pairof <exact-integer> <error-category>))))
+(: number-categories (-> <integer> (Listof <error-category>) (Listof (Pairof <integer> <error-category>))))
 (define (number-categories start-at categories)
   (if (null? categories)
     categories

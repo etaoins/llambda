@@ -172,7 +172,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=true,
       mandatoryArgTypes=List(vt.NumberType, vt.NumberType),
       optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+      restArgMemberTypeOpt=Some(vt.IntegerType),
       returnType=vt.ReturnType.Reachable(vt.UnicodeChar),
       attributes=Set()
     )

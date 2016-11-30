@@ -103,7 +103,7 @@
 (define-test "datum cells can be converted to specific procedure type" (expect 8
   (import (llambda typed))
 
-  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
+  (: double-binary-op (-> (-> <integer> <integer> <integer>) <integer> <integer>))
   (define (double-binary-op proc arg)
     (proc arg arg))
 
@@ -115,7 +115,7 @@
   (define plus : (-> <number> * <number>) *)
   (set! plus +)
 
-  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
+  (: double-binary-op (-> (-> <integer> <integer> <integer>) <integer> <integer>))
   (define (double-binary-op proc arg)
     (proc arg arg))
 
@@ -130,7 +130,7 @@
   (define construct : (-> <number> <number> <any>) *)
   (set! construct cons)
 
-  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <any>) <exact-integer> <any>))
+  (: double-binary-op (-> (-> <integer> <integer> <any>) <integer> <any>))
   (define (double-binary-op proc arg)
     (proc arg arg))
 
@@ -143,7 +143,7 @@
   (define plus : (U <unit> (-> <number> * <number>)) #!unit)
   (set! plus +)
 
-  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
+  (: double-binary-op (-> (-> <integer> <integer> <integer>) <integer> <integer>))
   (define (double-binary-op proc arg)
     (proc arg arg))
 
@@ -184,24 +184,24 @@
 
 (define-test "typed procedure returning its only argument" (expect 7
   (import (llambda typed))
-  (define (return-value (value : <exact-integer>)) value)
+  (define (return-value (value : <integer>)) value)
   (return-value 7)))
 
 (define-test "typed procedure invoked with wrong type fails" (expect-error type-error?
   (import (llambda typed))
-  (define (return-value (value : <exact-integer>)) value)
+  (define (return-value (value : <integer>)) value)
   (return-value 'symbol)))
 
 (define-test "typed procedure invoked with wrong rest arg type fails" (expect-error type-error?
   (import (llambda typed))
-  (define (return-value vals : <exact-integer> *)
+  (define (return-value vals : <integer> *)
     vals)
 
   (return-value 'symbol)))
 
 (define-test "typed procedure invoked as datum cell with wrong rest arg type fails" (expect-error type-error?
   (import (llambda typed))
-  (define (return-value vals : <exact-integer> *)
+  (define (return-value vals : <integer> *)
     vals)
 
   ((typeless-cell return-value) 'symbol)))
@@ -217,8 +217,8 @@
 
 (define-test "typed procedure invoked with correct rest arg types" (expect-success
   (import (llambda typed))
-  (define (add-values vals : <exact-integer> *)
-    (ann vals (Listof <exact-integer>))
+  (define (add-values vals : <integer> *)
+    (ann vals (Listof <integer>))
     (apply + vals))
 
   (assert-equal 6 (add-values 1 2 3))))
@@ -229,13 +229,13 @@
 
 (define-test "typed procedure adding its arguments" (expect 7
   (import (llambda typed))
-  (define (add-two-values [a : <exact-integer>] [b : <exact-integer>]) (+ a b))
+  (define (add-two-values [a : <integer>] [b : <integer>]) (+ a b))
   (add-two-values 4 3)))
 
 (define-test "procedure returning value can be passed as procedure returning unit" (expect finished
   (import (llambda typed))
 
-  (: invoke-unit-thunk (-> <exact-integer> <exact-integer> (-> <exact-integer> <exact-integer> <unit>) <unit>))
+  (: invoke-unit-thunk (-> <integer> <integer> (-> <integer> <integer> <unit>) <unit>))
   (define (invoke-unit-thunk val1 val2 thunk)
     (thunk val1 val1)
     'finished)
@@ -276,7 +276,7 @@
   (import (llambda typed))
 
   (define (create-counter)
-    (define value : <exact-integer> 0)
+    (define value : <integer> 0)
     (lambda ()
      (set! value (+ value 1))
      value))
@@ -336,7 +336,7 @@
 
 (define-test "procedure taking typed procedure argument" (expect 50
   (import (llambda typed))
-  (: apply-number-proc (-> (-> <number> <number> <number>) <exact-integer> <exact-integer> <number>))
+  (: apply-number-proc (-> (-> <number> <number> <number>) <integer> <integer> <number>))
   (define (apply-number-proc binary-op val1 val2)
     (binary-op val1 val2))
 
@@ -344,7 +344,7 @@
 
 (define-test "procedure taking typed procedure argument of wrong type fails" (expect-compile-error type-error?
   (import (llambda typed))
-  (: apply-number-proc (-> (-> <number> <number> <number>) <exact-integer> <exact-integer> <number>))
+  (: apply-number-proc (-> (-> <number> <number> <number>) <integer> <integer> <number>))
   (define (apply-number-proc binary-op val1 val2)
     (binary-op val1 val2))
 
@@ -353,9 +353,9 @@
 (define-test "typed procedure returning typed, recursive, capturing procedure" (expect-success
   (import (llambda typed))
 
-  (: make-length-counter (-> <boolean> (-> <any> <exact-integer>)))
+  (: make-length-counter (-> <boolean> (-> <any> <integer>)))
   (define (make-length-counter fail-on-improper)
-    (: manual-length (-> <any> <exact-integer>))
+    (: manual-length (-> <any> <integer>))
     (define (manual-length obj)
       (if (pair? obj)
         (+ (manual-length (cdr obj)) 1)
@@ -417,7 +417,7 @@
 (define-test "tail recursion with a counter" (expect (3)
   (import (llambda typed))
 
-  (: my-list-tail (-> <list-element> <exact-integer> <any>))
+  (: my-list-tail (-> <list-element> <integer> <any>))
   (define (my-list-tail head count)
     (if (zero? count)
       head

@@ -50,7 +50,7 @@ class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Pred
   }
 }
 
-class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType) extends NativeValue(nativeType, ct.ExactIntegerCell, tempValue) {
+class NativeIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType) extends NativeValue(nativeType, ct.IntegerCell, tempValue) {
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case intType : vt.IntType =>
       AssertIntInRange(tempValue, nativeType, intType)
@@ -81,8 +81,8 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 
   def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = {
     // We can only box 64bit signed ints
-    val boxedTemp = ps.CellTemp(ct.ExactIntegerCell)
-    plan.steps += ps.BoxExactInteger(boxedTemp, toTempValue(vt.Int64))
+    val boxedTemp = ps.CellTemp(ct.IntegerCell)
+    plan.steps += ps.BoxInteger(boxedTemp, toTempValue(vt.Int64))
 
     BoxedValue(cellType, boxedTemp)
   }

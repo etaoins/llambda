@@ -5,7 +5,7 @@
 
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/UnitCell.h"
 #include "binding/CharCell.h"
 #include "binding/StringCell.h"
@@ -119,7 +119,7 @@ AnyCell *llbase_read_u8(World &world, PortCell *portCell)
 	}
 	else
 	{
-		return ExactIntegerCell::fromValue(world, readChar);
+		return IntegerCell::fromValue(world, readChar);
 	}
 }
 
@@ -135,7 +135,7 @@ AnyCell *llbase_peek_u8(World &world, PortCell *portCell)
 	}
 	else
 	{
-		return ExactIntegerCell::fromValue(world, peekChar);
+		return IntegerCell::fromValue(world, peekChar);
 	}
 }
 
@@ -222,7 +222,7 @@ AnyCell *llbase_mutating_read_bytevector(World &world, BytevectorCell *bytevecto
 		return EofObjectCell::instance();
 	}
 
-	return ExactIntegerCell::fromValue(world, totalRead);
+	return IntegerCell::fromValue(world, totalRead);
 }
 
 AnyCell *llbase_read_string(World &world, std::int64_t requestedChars, PortCell *portCell)

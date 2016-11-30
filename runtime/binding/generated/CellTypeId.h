@@ -19,7 +19,7 @@ enum class CellTypeId : std::uint8_t
 	String = 4,
 	Symbol = 5,
 	Boolean = 6,
-	ExactInteger = 7,
+	Integer = 7,
 	Flonum = 8,
 	Char = 9,
 	Vector = 10,

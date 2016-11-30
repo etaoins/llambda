@@ -16,24 +16,24 @@ object GenBoxing {
 
       (state, irValue)
 
-    case _ : ps.BoxExactInteger =>
+    case _ : ps.BoxInteger =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
-      val (newAllocation, boxedIntCons) = allocation.consumeCells(block)(1, ct.ExactIntegerCell) 
-      ct.ExactIntegerCell.genStoreToValue(block)(nativeValue, boxedIntCons)
+      val (newAllocation, boxedIntCons) = allocation.consumeCells(block)(1, ct.IntegerCell)
+      ct.IntegerCell.genStoreToValue(block)(nativeValue, boxedIntCons)
 
       val newState = state.copy(
         currentAllocation=newAllocation
       )
 
       (newState, boxedIntCons)
-    
+
     case _ : ps.BoxFlonum =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
-      val (newAllocation, boxedFlonumCons) = allocation.consumeCells(block)(1, ct.FlonumCell) 
+      val (newAllocation, boxedFlonumCons) = allocation.consumeCells(block)(1, ct.FlonumCell)
       ct.FlonumCell.genStoreToValue(block)(nativeValue, boxedFlonumCons)
 
       val newState = state.copy(
@@ -46,9 +46,9 @@ object GenBoxing {
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
-      val (newAllocation, boxedCharCons) = allocation.consumeCells(block)(1, ct.CharCell) 
+      val (newAllocation, boxedCharCons) = allocation.consumeCells(block)(1, ct.CharCell)
       ct.CharCell.genStoreToUnicodeChar(block)(nativeValue, boxedCharCons)
-      
+
       val newState = state.copy(
         currentAllocation=newAllocation
       )

@@ -41,14 +41,14 @@ trait ConstantNumberValue extends ConstantValue with UnboxedValue {
   def doubleValue : Double
 }
 
-case class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) with ConstantNumberValue {
-  val typeDescription = "constant exact integer"
+case class ConstantIntegerValue(value : Long) extends TrivialConstantValue(ct.IntegerCell, value, ps.CreateIntegerCell.apply) with ConstantNumberValue {
+  val typeDescription = "constant integer"
   val nativeType = vt.Int64
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
       if ((value < intType.minIntValue) || (value > intType.maxIntValue)) {
-        val message = s"Constant exact integer ${value} cannot be represented by native integer type ${nativeType}"
+        val message = s"Constant integer ${value} cannot be represented by native integer type ${nativeType}"
         impossibleConversion(message)
       }
 

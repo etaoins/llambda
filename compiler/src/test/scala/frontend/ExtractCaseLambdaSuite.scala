@@ -61,7 +61,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     inside(exprFor(
       """(case-lambda
            (() #t)
-           (([one : <exact-integer>]) #f))"""
+           (([one : <integer>]) #f))"""
     )(scope)) {
       case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
         val firstProcType = vt.ProcedureType(
@@ -73,7 +73,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
         val firstProcTypePoly = firstProcType.toPolymorphic
 
         val secondProcType = vt.ProcedureType(
-          mandatoryArgTypes=List(vt.ExactIntegerType),
+          mandatoryArgTypes=List(vt.IntegerType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.Reachable(vt.AnySchemeType)

@@ -13,8 +13,8 @@ object EmptyListType extends SchemeTypeAtom(ct.EmptyListCell)
 object StringType extends SchemeTypeAtom(ct.StringCell)
 object SymbolType extends SchemeTypeAtom(ct.SymbolCell)
 object BooleanType extends SchemeTypeAtom(ct.BooleanCell)
-object NumberType extends UnionType(Set(SchemeTypeAtom(ct.ExactIntegerCell), SchemeTypeAtom(ct.FlonumCell)))
-object ExactIntegerType extends SchemeTypeAtom(ct.ExactIntegerCell)
+object NumberType extends UnionType(Set(SchemeTypeAtom(ct.IntegerCell), SchemeTypeAtom(ct.FlonumCell)))
+object IntegerType extends SchemeTypeAtom(ct.IntegerCell)
 object FlonumType extends SchemeTypeAtom(ct.FlonumCell)
 object CharType extends SchemeTypeAtom(ct.CharCell)
 object VectorType extends SchemeTypeAtom(ct.VectorCell)
@@ -33,7 +33,7 @@ object IntrinsicSchemeTypes {
     (ct.SymbolCell.schemeName -> SymbolType),
     (ct.BooleanCell.schemeName -> BooleanType),
     (ct.NumberCell.schemeName -> NumberType),
-    (ct.ExactIntegerCell.schemeName -> ExactIntegerType),
+    (ct.IntegerCell.schemeName -> IntegerType),
     (ct.FlonumCell.schemeName -> FlonumType),
     (ct.CharCell.schemeName -> CharType),
     (ct.VectorCell.schemeName -> VectorType),

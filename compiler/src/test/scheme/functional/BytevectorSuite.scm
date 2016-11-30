@@ -9,7 +9,7 @@
   (assert-equal #u8(0 0 0) (make-bytevector 3))
   (assert-equal #u8(5 5 5) (make-bytevector 3 5))))
 
-(define-test "(make-bytevector) with an inexact rational fill fails" (expect-error type-error?
+(define-test "(make-bytevector) with a flonum fill fails" (expect-error type-error?
   (make-bytevector 3 5.0)))
 
 (define-test "(make-bytevector) with a negative length fails" (expect-error range-error?

@@ -10,7 +10,7 @@ object CompactRepresentationForType extends (vt.ValueType => vt.ValueType) {
     * unboxed value for types that have unboxed representations
     */
   def apply(valueType : vt.ValueType) : vt.ValueType = valueType match {
-    case vt.ExactIntegerType => vt.Int64
+    case vt.IntegerType => vt.Int64
     case vt.FlonumType => vt.Double
     case vt.BooleanType => vt.Predicate
     case vt.CharType => vt.UnicodeChar

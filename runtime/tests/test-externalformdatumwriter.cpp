@@ -8,7 +8,7 @@
 #include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
@@ -78,11 +78,11 @@ void testBoolean()
 	assertForm(BooleanCell::falseInstance(), "#f");
 }
 
-void testExactInteger(World &world)
+void testInteger(World &world)
 {
-	assertForm(ExactIntegerCell::fromValue(world, 25), "25");
-	assertForm(ExactIntegerCell::fromValue(world, 0), "0");
-	assertForm(ExactIntegerCell::fromValue(world,-31337), "-31337");
+	assertForm(IntegerCell::fromValue(world, 25), "25");
+	assertForm(IntegerCell::fromValue(world, 0), "0");
+	assertForm(IntegerCell::fromValue(world,-31337), "-31337");
 }
 
 void testFlonum(World &world)
@@ -241,8 +241,8 @@ void testVector(World &world)
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			auto newExactInt = ExactIntegerCell::fromValue(world, i);
-			fillVector->setElementAt(i, newExactInt);
+			auto newInteger = IntegerCell::fromValue(world, i);
+			fillVector->setElementAt(i, newInteger);
 		}
 
 		assertForm(fillVector, "#(0 1 2 3 4)");
@@ -323,7 +323,7 @@ void testAll(World &world)
 	testUnit();
 	testEmptyList();
 	testBoolean();
-	testExactInteger(world);
+	testInteger(world);
 	testFlonum(world);
 	testSymbol(world);
 	testString(world);

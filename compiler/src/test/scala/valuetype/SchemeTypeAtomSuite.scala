@@ -8,69 +8,69 @@ import Implicits._
 
 class SchemeTypeAtomSuite extends SchemeTypeSuite {
   test("creating scheme types from concrete cell types") {
-    assert(SchemeType.fromCellType(ct.ExactIntegerCell) ===
-      ExactIntegerType
+    assert(SchemeType.fromCellType(ct.IntegerCell) ===
+      IntegerType
     )
   }
   
   test("creating scheme types from abstract cell types") {
     assert(SchemeType.fromCellType(ct.NumberCell) ===
-      UnionType(Set(ExactIntegerType, FlonumType))
+      UnionType(Set(IntegerType, FlonumType))
     )
   }
 
   test("union of two type atoms is a simple union") {
-    assert(SchemeType.fromTypeUnion(List(ExactIntegerType, FlonumType)) ===
-      UnionType(Set(ExactIntegerType, FlonumType))
+    assert(SchemeType.fromTypeUnion(List(IntegerType, FlonumType)) ===
+      UnionType(Set(IntegerType, FlonumType))
     )
   }
   
   test("union types are flattened when creating a new union") {
-    assert(SchemeType.fromTypeUnion(List(ExactIntegerType, UnionType(Set(FlonumType, StringType)))) ===
-      UnionType(Set(ExactIntegerType, FlonumType, StringType))
+    assert(SchemeType.fromTypeUnion(List(IntegerType, UnionType(Set(FlonumType, StringType)))) ===
+      UnionType(Set(IntegerType, FlonumType, StringType))
     )
   }
 
   test("atom types satisfy themselves") {
-    assert(SatisfiesType(ExactIntegerType, ExactIntegerType) ===
+    assert(SatisfiesType(IntegerType, IntegerType) ===
       Some(true)
     )
   }
 
   test("atom types satisfy the unit type") {
-    assert(ConvertibleToType(UnitType, ExactIntegerType) ===
+    assert(ConvertibleToType(UnitType, IntegerType) ===
       Some(true)
     )
   }
 
   test("atom types definitely don't satisfy other atom types") {
-    assert(SatisfiesType(ExactIntegerType, FlonumType) ===
+    assert(SatisfiesType(IntegerType, FlonumType) ===
       Some(false)
     )
   }
 
   test("atom types minus themselves is an empty union") {
-    assert((ExactIntegerType - ExactIntegerType) === EmptySchemeType)
+    assert((IntegerType - IntegerType) === EmptySchemeType)
   }
   
   test("atom type minus the empty type is itself") {
-    assert((ExactIntegerType - EmptySchemeType) === ExactIntegerType)
+    assert((IntegerType - EmptySchemeType) === IntegerType)
   }
 
   test("atom type minus another atom type is original type") {
-    assert((ExactIntegerType - FlonumType) === ExactIntegerType)
+    assert((IntegerType - FlonumType) === IntegerType)
   }
  
 
   test("atom types intersected with themselves is the original type") {
-    assertIntersection(ExactIntegerType, ExactIntegerType, ExactIntegerType)
+    assertIntersection(IntegerType, IntegerType, IntegerType)
   }
   
   test("atom types intersected with another atom is the empty type") {
-    assertIntersection(ExactIntegerType, FlonumType, EmptySchemeType)
+    assertIntersection(IntegerType, FlonumType, EmptySchemeType)
   }
   
   test("atom types intersected with the empty type is the empty type") {
-    assertIntersection(ExactIntegerType, EmptySchemeType, EmptySchemeType)
+    assertIntersection(IntegerType, EmptySchemeType, EmptySchemeType)
   }
 }

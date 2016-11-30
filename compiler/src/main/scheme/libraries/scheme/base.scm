@@ -209,13 +209,13 @@
     (define-syntax define-slice-proc
       (syntax-rules ()
         ((define-slice-proc name native-proc <source-type> source-length-proc)
-         (define-r7rs (name [source : <source-type>] [start : <exact-integer> 0] [end : <exact-integer> (source-length-proc source)])
+         (define-r7rs (name [source : <source-type>] [start : <integer> 0] [end : <integer> (source-length-proc source)])
            (native-proc source start end)))))
 
     (define-syntax define-mutating-copy-proc
       (syntax-rules ()
         ((define-mutating-copy-proc name native-proc <type> length-proc)
-         (define-r7rs (name [to : <type>] [at : <exact-integer>] [from : <type>] [start : <exact-integer> 0] [end : <exact-integer> (length-proc from)])
+         (define-r7rs (name [to : <type>] [at : <integer>] [from : <type>] [start : <integer> 0] [end : <integer> (length-proc from)])
            (native-proc to at from start end)))))
 
     (define-native-library llbase (static-library "ll_scheme_base"))
@@ -237,7 +237,7 @@
 
     (define-r7rs number? (make-predicate <number>))
     (define-r7rs flonum? (make-predicate <flonum>))
-    (define-r7rs integer? (make-predicate <exact-integer>))
+    (define-r7rs integer? (make-predicate <integer>))
 
     (define-r7rs rational? (native-function llbase "llbase_is_rational" (-> <any> <native-bool>)))
 
@@ -308,43 +308,43 @@
             (- num)
             num))))
 
-    (define-r7rs truncate/ (world-function llbase "llbase_truncate_div" (-> <native-int64> <native-int64> (Pairof <exact-integer> <exact-integer>))))
+    (define-r7rs truncate/ (world-function llbase "llbase_truncate_div" (-> <native-int64> <native-int64> (Pairof <integer> <integer>))))
     (define-r7rs truncate-quotient (world-function llbase "llbase_truncate_quotient" (-> <native-int64> <native-int64> <native-int64>)))
     (define-r7rs truncate-remainder (world-function llbase "llbase_truncate_remainder" (-> <native-int64> <native-int64> <native-int64>)))
 
-    (define-r7rs floor/ (world-function llbase "llbase_floor_div" (-> <native-int64> <native-int64> (Pairof <exact-integer> <exact-integer>))))
+    (define-r7rs floor/ (world-function llbase "llbase_floor_div" (-> <native-int64> <native-int64> (Pairof <integer> <integer>))))
     (define-r7rs floor-quotient (world-function llbase "llbase_floor_quotient" (-> <native-int64> <native-int64> <native-int64>)))
     (define-r7rs floor-remainder (world-function llbase "llbase_floor_remainder" (-> <native-int64> <native-int64> <native-int64>)))
 
-    (define-r7rs (odd? [val : <exact-integer>])
+    (define-r7rs (odd? [val : <integer>])
                  (not (= (truncate-remainder val 2) 0)))
 
-    (define-r7rs (even? [val : <exact-integer>])
+    (define-r7rs (even? [val : <integer>])
                  (= (truncate-remainder val 2) 0))
 
     (define-r7rs max (world-function llbase "llbase_max" (All ([N : <number>]) N N * N)))
     (define-r7rs min (world-function llbase "llbase_min" (All ([N : <number>]) N N * N)))
 
-    (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <exact-integer> * <native-int64>)))
+    (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <integer> * <native-int64>)))
     (define-r7rs gcd (case-lambda
                        (() 0)
-                       (([single : <exact-integer>]) (abs single))
+                       (([single : <integer>]) (abs single))
                        (rest (apply native-gcd rest))))
 
-    (define native-lcm (native-function llbase "llbase_lcm" (-> <native-int64> <native-int64> <exact-integer> * <native-int64>)))
+    (define native-lcm (native-function llbase "llbase_lcm" (-> <native-int64> <native-int64> <integer> * <native-int64>)))
     (define-r7rs lcm (case-lambda
                        (() 1)
-                       (([single : <exact-integer>]) (abs single))
+                       (([single : <integer>]) (abs single))
                        (rest (apply native-lcm rest))))
 
-    (define-r7rs integer-sqrt (world-function llbase "llbase_integer_sqrt" (-> <native-int64> (Pairof <exact-integer> <exact-integer>))))
+    (define-r7rs integer-sqrt (world-function llbase "llbase_integer_sqrt" (-> <native-int64> (Pairof <integer> <integer>))))
 
     (define native-number->string (world-function llbase "llbase_number_to_string" (-> <number> <native-uint8> <string>)))
-    (define-r7rs (number->string [num : <number>] [radix : <exact-integer> 10])
+    (define-r7rs (number->string [num : <number>] [radix : <integer> 10])
       (native-number->string num radix))
 
     (define native-string->number (world-function llbase "llbase_string_to_number" (-> <string> <native-uint8> (U #f <number>))))
-    (define-r7rs (string->number [str : <string>] [radix : <exact-integer> 10])
+    (define-r7rs (string->number [str : <string>] [radix : <integer> 10])
       (native-string->number str radix))
 
     (define-r7rs pair? (make-predicate <pair>))
@@ -376,7 +376,7 @@
 
     (define-r7rs list-tail (world-function llbase "llbase_list_tail" (All (A) (Listof A) <native-uint32> (Listof A))))
 
-    (: list-ref (All (A) (-> (Listof A) <exact-integer> A)))
+    (: list-ref (All (A) (-> (Listof A) <integer> A)))
     (define-r7rs (list-ref l n)
       (define tail (list-tail l n))
       (if (pair? tail)
@@ -384,7 +384,7 @@
         (raise-range-error "(list-ref) at exact end of list" n)))
 
     (define native-make-list (world-function llbase "llbase_make_list" (All (A) <native-uint32> A (Listof A))))
-    (define-r7rs (make-list [len : <exact-integer>] [fill : <any> #!unit])
+    (define-r7rs (make-list [len : <integer>] [fill : <any> #!unit])
       (native-make-list len fill))
 
     (define-r7rs symbol? (make-predicate <symbol>))
@@ -419,11 +419,11 @@
     (define-mutating-copy-proc vector-copy! native-vector-copy! <vector> vector-length)
 
     (define native-vector-fill! (world-function llbase "llbase_vector_mutating_fill" (-> <vector> <any> <native-int64> <native-int64> <unit>)))
-    (define-r7rs (vector-fill! [target : <vector>] [fill : <any>] [start : <exact-integer> 0] [end : <exact-integer> (vector-length target)])
+    (define-r7rs (vector-fill! [target : <vector>] [fill : <any>] [start : <integer> 0] [end : <integer> (vector-length target)])
       (native-vector-fill! target fill start end))
 
     (define native-make-vector (world-function llbase "llbase_make_vector" (-> <native-int64> <any> <vector>)))
-    (define-r7rs (make-vector [len : <exact-integer>] [fill : <any> #!unit])
+    (define-r7rs (make-vector [len : <integer>] [fill : <any> #!unit])
       (native-make-vector len fill))
 
     (define native-vector->string (world-function llbase "llbase_vector_to_string" (-> <vector> <native-int64> <native-int64> <string>)))
@@ -433,7 +433,7 @@
     (define-slice-proc string->vector native-string->vector <string> string-length)
 
     (define-r7rs bytevector? (make-predicate <bytevector>))
-    (define-r7rs bytevector (world-function llbase "llbase_bytevector" (-> <exact-integer> * <bytevector>)))
+    (define-r7rs bytevector (world-function llbase "llbase_bytevector" (-> <integer> * <bytevector>)))
     (define-r7rs bytevector-u8-ref (world-function llbase "llbase_bytevector_u8_ref" (-> <bytevector> <native-int64> <native-uint8>)))
     (define-r7rs bytevector-u8-set! (world-function llbase "llbase_bytevector_u8_set" (-> <bytevector> <native-int64> <native-uint8> <unit>)))
     (define-r7rs bytevector-append (world-function llbase "llbase_bytevector_append" (-> <bytevector> * <bytevector>)))
@@ -448,7 +448,7 @@
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 
     (define native-make-bytevector (world-function llbase "llbase_make_bytevector" (-> <native-int64> <native-uint8> <bytevector>)))
-    (define-r7rs (make-bytevector [len : <exact-integer>] [fill : <exact-integer> 0])
+    (define-r7rs (make-bytevector [len : <integer>] [fill : <integer> 0])
       (native-make-bytevector len fill))
 
     (define-r7rs string? (make-predicate <string>))
@@ -475,7 +475,7 @@
     (define-mutating-copy-proc string-copy! native-string-copy! <string> string-length)
 
     (define native-string-fill! (world-function llbase "llbase_string_mutating_fill" (-> <string> <native-unicode-char> <native-int64> <native-int64> <unit>)))
-    (define-r7rs (string-fill! [target : <string>] [fill : <char>] [start : <exact-integer> 0] [end : <exact-integer> (string-length target)])
+    (define-r7rs (string-fill! [target : <string>] [fill : <char>] [start : <integer> 0] [end : <integer> (string-length target)])
       (native-string-fill! target fill start end))
 
     (define-r7rs string=? (native-function llbase "llbase_string_equal" (-> <string> <string> <string> * <native-bool>)))
@@ -531,19 +531,19 @@
                     ((define-input-proc name native-symbol (-> <native-int64> <result-type>))
                      (define-r7rs name
                                   (let ((native-proc (world-function llbase native-symbol (-> <native-int64> <port> (U <result-type> <eof-object>)))))
-                                    (lambda ([count : <exact-integer>] [port : <port> (current-input-port)])
+                                    (lambda ([count : <integer>] [port : <port> (current-input-port)])
                                       (native-proc count port)))))))
 
-    (define-input-proc read-u8 "llbase_read_u8" (-> <exact-integer>))
-    (define-input-proc peek-u8 "llbase_peek_u8" (-> <exact-integer>))
+    (define-input-proc read-u8 "llbase_read_u8" (-> <integer>))
+    (define-input-proc peek-u8 "llbase_peek_u8" (-> <integer>))
     (define-input-proc read-char "llbase_read_char" (-> <char>))
     (define-input-proc peek-char "llbase_peek_char" (-> <char>))
     (define-input-proc read-line "llbase_read_line" (-> <string>))
     (define-input-proc read-bytevector "llbase_read_bytevector" (-> <native-int64> <bytevector>))
     (define-input-proc read-string "llbase_read_string" (-> <native-int64> <string>))
 
-    (define native-read-bytevector! (world-function llbase "llbase_mutating_read_bytevector" (-> <bytevector> <port> <native-int64> <native-int64> (U <exact-integer> <eof-object>))))
-    (define-r7rs (read-bytevector! [bv : <bytevector>] [port : <port> (current-input-port)] [start : <exact-integer> 0] [end : <exact-integer> (bytevector-length bv)])
+    (define native-read-bytevector! (world-function llbase "llbase_mutating_read_bytevector" (-> <bytevector> <port> <native-int64> <native-int64> (U <integer> <eof-object>))))
+    (define-r7rs (read-bytevector! [bv : <bytevector>] [port : <port> (current-input-port)] [start : <integer> 0] [end : <integer> (bytevector-length bv)])
                  (native-read-bytevector! bv port start end))
 
     (define native-u8-ready? (world-function llbase "llbase_u8_ready" (-> <port> <native-bool>)))
@@ -559,7 +559,7 @@
                  (native-newline port))
 
     (define native-write-u8 (world-function llbase "llbase_write_u8" (-> <native-uint8> <port> <unit>)))
-    (define-r7rs (write-u8 [byte : <exact-integer>] [port : <port> (current-output-port)])
+    (define-r7rs (write-u8 [byte : <integer>] [port : <port> (current-output-port)])
                  (native-write-u8 byte port))
 
     (define native-write-char (world-function llbase "llbase_write_char" (-> <native-unicode-char> <port> <unit>)))
@@ -567,11 +567,11 @@
                  (native-write-char char port))
 
     (define native-write-string (world-function llbase "llbase_write_string" (-> <string> <port> <native-int64> <native-int64> <unit>)))
-    (define-r7rs (write-string [str : <string>] [port : <port> (current-output-port)] [start : <exact-integer> 0] [end : <exact-integer> (string-length str)])
+    (define-r7rs (write-string [str : <string>] [port : <port> (current-output-port)] [start : <integer> 0] [end : <integer> (string-length str)])
                  (native-write-string str port start end))
 
     (define native-write-bytevector (world-function llbase "llbase_write_bytevector" (-> <bytevector> <port> <native-int64> <native-int64> <unit>)))
-    (define-r7rs (write-bytevector [str : <bytevector>] [port : <port> (current-output-port)] [start : <exact-integer> 0] [end : <exact-integer> (bytevector-length str)])
+    (define-r7rs (write-bytevector [str : <bytevector>] [port : <port> (current-output-port)] [start : <integer> 0] [end : <integer> (bytevector-length str)])
                  (native-write-bytevector str port start end))
 
     (define native-flush-output-port (world-function llbase "llbase_flush_output_port" (-> <port> <unit>)))

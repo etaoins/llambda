@@ -22,7 +22,7 @@ protected:
 	virtual void renderUnit(const UnitCell *value);
 	virtual void renderEmptyList(const EmptyListCell *value);
 	virtual void renderBoolean(const BooleanCell *value);
-	virtual void renderExactInteger(const ExactIntegerCell *value, int defaultRadix = 10);
+	virtual void renderInteger(const IntegerCell *value, int defaultRadix = 10);
 	virtual void renderFlonum(const FlonumCell *value);
 	virtual void renderStringLike(const std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint8_t quoteChar, bool needsQuotes);
 	virtual void renderPair(const PairCell *value, bool inList = false);

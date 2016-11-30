@@ -37,7 +37,7 @@ class CellTypeSuite extends FunSuite {
 
   test("concreteTypes") {
     assert(ct.ListElementCell.concreteTypes === Set(ct.PairCell, ct.EmptyListCell))
-    assert(ct.NumberCell.concreteTypes === Set(ct.ExactIntegerCell, ct.FlonumCell))
+    assert(ct.NumberCell.concreteTypes === Set(ct.IntegerCell, ct.FlonumCell))
     assert(ct.StringCell.concreteTypes === Set(ct.StringCell))
   }
   

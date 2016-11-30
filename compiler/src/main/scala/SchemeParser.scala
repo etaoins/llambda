@@ -216,7 +216,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def ExponentiatedInteger = rule {
-    UnradixedExactInteger ~ Exponent ~> { (number, exponent) =>
+    UnradixedInteger ~ Exponent ~> { (number, exponent) =>
       number * Math.pow(10, exponent)
     }
   }
@@ -240,10 +240,10 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def IntegerDatum = rule {
-    UnradixedExactInteger ~> (ast.IntegerLiteral(_))
+    UnradixedInteger ~> (ast.IntegerLiteral(_))
   }
 
-  def UnradixedExactInteger = rule {
+  def UnradixedInteger = rule {
     capture(optional(SignCharacter) ~ oneOrMore(Digit)) ~ optional('.') ~> ({ number =>
       java.lang.Long.parseLong(number)
     })
@@ -255,10 +255,10 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def RadixedNonDecimal = rule {
-    RadixedExactInteger ~> (ast.IntegerLiteral(_))
+    RadixedInteger ~> (ast.IntegerLiteral(_))
   }
 
-  def RadixedExactInteger = rule {
+  def RadixedInteger = rule {
     BinaryInteger | OctalInteger | HexInteger
   }
 
@@ -364,7 +364,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def Byte = rule {
-    (RadixedExactInteger | UnradixedExactInteger | ("#d" ~ UnradixedExactInteger)) ~ Whitespace
+    (RadixedInteger | UnradixedInteger | ("#d" ~ UnradixedInteger)) ~ Whitespace
   }
 
   // Characters

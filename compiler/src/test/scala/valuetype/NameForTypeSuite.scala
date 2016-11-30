@@ -53,9 +53,9 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(LiteralBooleanType(false)) === "#f")
   }
 
-  test("(Pairof <exact-integer> <flonum>)") {
-    val pairType = PairType(ExactIntegerType, FlonumType)
-    assert(NameForType(pairType) === "(Pairof <exact-integer> <flonum>)")
+  test("(Pairof <integer> <flonum>)") {
+    val pairType = PairType(IntegerType, FlonumType)
+    assert(NameForType(pairType) === "(Pairof <integer> <flonum>)")
   }
   
   test("<pair>") {

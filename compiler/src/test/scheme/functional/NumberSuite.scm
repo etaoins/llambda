@@ -125,7 +125,7 @@
 
   ; This is testing that we correctly deal with generating code that does multiple value comparisons
   ; The type annotations make it eligible for native code generation
-  (: in-range (-> <exact-integer> <exact-integer> <exact-integer> <boolean>))
+  (: in-range (-> <integer> <integer> <integer> <boolean>))
   (define (in-range lower val upper)
     (<= lower val upper))
 
@@ -137,7 +137,7 @@
   (assert-false (typeless-in-range 5 -5 10))
   (assert-false (typeless-in-range 5 15 10))
 
-  (: byte-in-range (-> <exact-integer> <exact-integer> <exact-integer> <boolean>))
+  (: byte-in-range (-> <integer> <integer> <integer> <boolean>))
   (define (byte-in-range lower val upper)
     (<= 0 lower val upper 255))
 

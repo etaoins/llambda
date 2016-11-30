@@ -21,11 +21,11 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
     returnType=ReturnType.Reachable(NumberType)
   )
 
-  val twoStringToExactIntProcedure = ProcedureType(
+  val twoStringToIntProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.Reachable(ExactIntegerType)
+    returnType=ReturnType.Reachable(IntegerType)
   )
 
   val threeSymbolToNullProcedure = ProcedureType(
@@ -96,7 +96,7 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
     )
     
     val testingCase = CaseProcedureType(
-      List(oneUnitToPortProcedure, twoStringToExactIntProcedure)
+      List(oneUnitToPortProcedure, twoStringToIntProcedure)
     )
 
     assert(SatisfiesType(superCase, testingCase) === Some(true))
@@ -104,7 +104,7 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
   
   test("case procedure may satisfy case with sub clauses") {
     val superCase = CaseProcedureType(
-      List(oneUnitToPortProcedure, twoStringToExactIntProcedure)
+      List(oneUnitToPortProcedure, twoStringToIntProcedure)
     )
     
     val testingCase = CaseProcedureType(

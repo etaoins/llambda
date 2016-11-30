@@ -136,7 +136,7 @@
   (assert-equal 'd (list-ref (list 'a 'b 'c 'd) 3))))
 
 (define-test "dynamic (list-ref)" (expect-success
-  (assert-equal 'c (list-ref '(a b c d) (typed-dynamic 2 <exact-integer>)))))
+  (assert-equal 'c (list-ref '(a b c d) (typed-dynamic 2 <integer>)))))
 
 (define-test "(list-ref) at exact end of list fails" (expect-error range-error?
   (list-ref '(1 2 3) 3)))
@@ -148,7 +148,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (filter even? '(3 1 4 1 5 9)) (Listof <exact-integer>))
+  (ann (filter even? '(3 1 4 1 5 9)) (Listof <integer>))
 
   (assert-equal '(0 7 8 8 43 -4) (filter number? '(0 7 8 8 43 -4)))
   (assert-equal '(0 8 8 -4) (filter even? '(0 7 8 8 43 -4)))
@@ -159,7 +159,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (remove even? '(0 7 8 8 43 -4)) (Listof <exact-integer>))
+  (ann (remove even? '(0 7 8 8 43 -4)) (Listof <integer>))
 
   (assert-equal '(0 7 8 8 43 -4) (remove symbol? '(0 7 8 8 43 -4)))
   (assert-equal '(7 43) (remove even? '(0 7 8 8 43 -4)))
@@ -170,7 +170,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (find even? '(3 1 4 1 5 9)) (U <exact-integer> #f))
+  (ann (find even? '(3 1 4 1 5 9)) (U <integer> #f))
 
   (assert-equal 4 (find even? '(3 1 4 1 5 9)))
   (assert-equal #f (find even? '()))
@@ -180,7 +180,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (find-tail even? '(3 1 37 -8 -5 0 0)) (U (Listof <exact-integer>) #f))
+  (ann (find-tail even? '(3 1 37 -8 -5 0 0)) (U (Listof <integer>) #f))
 
   (assert-equal '(-8 -5 0 0) (find-tail even? '(3 1 37 -8 -5 0 0)))
   (assert-equal #f (find-tail even? '(3 1 37 -5)))))
@@ -189,7 +189,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (take-while number? '(2 18 3 10 22 9)) (Listof <exact-integer>))
+  (ann (take-while number? '(2 18 3 10 22 9)) (Listof <integer>))
 
   (assert-equal '(2 18 3 10 22 9) (take-while number? '(2 18 3 10 22 9)))
   (assert-equal '(2 18) (take-while even? '(2 18 3 10 22 9)))
@@ -200,7 +200,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (drop-while even? '(2 18 3 10 22 9)) (Listof <exact-integer>))
+  (ann (drop-while even? '(2 18 3 10 22 9)) (Listof <integer>))
 
   (assert-equal '() (drop-while number? '(2 18 3 10 22 9)))
   (assert-equal '(3 10 22 9) (drop-while even? '(2 18 3 10 22 9)))
@@ -223,8 +223,8 @@
   (let* ((result-pair (partition (lambda (x) x) '(one 2 3 four five 6)))
          (true-list (car result-pair))
          (false-list (cdr result-pair)))
-    (ann true-list (Listof (U <symbol> <exact-integer>)))
-    (ann false-list (Listof (U <symbol> <exact-integer>)))
+    (ann true-list (Listof (U <symbol> <integer>)))
+    (ann false-list (Listof (U <symbol> <integer>)))
 
     (assert-equal true-list '(one 2 3 four five 6))
     (assert-equal false-list '()))
@@ -232,8 +232,8 @@
   (let* ((result-pair (partition symbol? '(one 2 3 four five 6)))
          (true-list (car result-pair))
          (false-list (cdr result-pair)))
-    (ann true-list (Listof (U <symbol> <exact-integer>)))
-    (ann false-list (Listof (U <symbol> <exact-integer>)))
+    (ann true-list (Listof (U <symbol> <integer>)))
+    (ann false-list (Listof (U <symbol> <integer>)))
 
     (assert-equal true-list '(one four five))
     (assert-equal false-list '(2 3 6)))
@@ -241,8 +241,8 @@
   (let* ((result-pair (partition number? '(one 2 3 four five 6)))
          (true-list (car result-pair))
          (false-list (cdr result-pair)))
-    (ann true-list (Listof (U <symbol> <exact-integer>)))
-    (ann false-list (Listof (U <symbol> <exact-integer>)))
+    (ann true-list (Listof (U <symbol> <integer>)))
+    (ann false-list (Listof (U <symbol> <integer>)))
 
     (assert-equal true-list '(2 3 6))
     (assert-equal false-list '(one four five)))
@@ -250,8 +250,8 @@
   (let* ((result-pair (partition port? '(one 2 3 four five 6)))
          (true-list (car result-pair))
          (false-list (cdr result-pair)))
-    (ann true-list (Listof (U <symbol> <exact-integer>)))
-    (ann false-list (Listof (U <symbol> <exact-integer>)))
+    (ann true-list (Listof (U <symbol> <integer>)))
+    (ann false-list (Listof (U <symbol> <integer>)))
 
     (assert-equal true-list '())
     (assert-equal false-list '(one 2 3 four five 6)))))
@@ -273,7 +273,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (ann (xcons 1 'foo) (Pairof <symbol> <exact-integer>))
+  (ann (xcons 1 'foo) (Pairof <symbol> <integer>))
 
   (assert-equal '(a b c) (xcons '(b c) 'a))))
 
@@ -351,8 +351,8 @@
   (let* ((result-pair (span even? '(2 18 3 10 22 9)))
          (head (car result-pair))
          (tail (cdr result-pair)))
-    (ann head (Listof <exact-integer>))
-    (ann tail (Listof <exact-integer>))
+    (ann head (Listof <integer>))
+    (ann tail (Listof <integer>))
 
     (assert-equal '(2 18) head)
     (assert-equal '(3 10 22 9) tail))
@@ -380,8 +380,8 @@
   (let* ((result-pair (break even? '(3 1 4 1 5 9)))
          (head (car result-pair))
          (tail (cdr result-pair)))
-    (ann head (Listof <exact-integer>))
-    (ann tail (Listof <exact-integer>))
+    (ann head (Listof <integer>))
+    (ann tail (Listof <integer>))
 
     (assert-equal '(3 1) head)
     (assert-equal '(4 1 5 9) tail))

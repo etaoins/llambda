@@ -61,7 +61,7 @@ object ListProcPlanner extends ReportProcPlanner {
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("length", List((_, knownListElement : iv.KnownListElement))) =>
-      knownListElement.listLengthOpt map iv.ConstantExactIntegerValue.apply
+      knownListElement.listLengthOpt map iv.ConstantIntegerValue.apply
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       Some(ValuesToPair(carValue, cdrValue, None))
@@ -95,10 +95,10 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case ("member", List((_, needleValue), (_, listValue))) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqual, needleValue, listValue)
-    
+
     case ("list-tail", List((_, listValue), (_, indexValue))) =>
       (listValue, indexValue) match {
-        case (knownListElement : iv.KnownListElement, iv.ConstantExactIntegerValue(index)) =>
+        case (knownListElement : iv.KnownListElement, iv.ConstantIntegerValue(index)) =>
           // If listLengthOpt is defined we're a proper list
           knownListElement.listLengthOpt map { listLength =>
             if ((index < 0) || (index > listLength)) {

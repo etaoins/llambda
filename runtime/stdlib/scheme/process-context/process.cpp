@@ -1,6 +1,6 @@
 #include "binding/AnyCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
 
@@ -28,10 +28,10 @@ namespace
 			// #f is failure
 			return -1;
 		}
-		else if (auto exactInt = cell_cast<ExactIntegerCell>(datum))
+		else if (auto integer = cell_cast<IntegerCell>(datum))
 		{
-			// Return the exact integer
-			return exactInt->value();
+			// Return the integer
+			return integer->value();
 		}
 
 		// XXX: Should we warn here?

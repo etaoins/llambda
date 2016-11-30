@@ -56,22 +56,22 @@ class PairTypeSuite extends SchemeTypeSuite {
   
   test("partially compatible specific pair types do not satisfy each other") {
     // car may satisfy, cdr does not satisfy
-    val specificPairType1 = PairType(ExactIntegerType, StringType)
+    val specificPairType1 = PairType(IntegerType, StringType)
     val specificPairType2 = PairType(NumberType, SymbolType)
 
     assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
   }
   
-  test("exact int binary tree definitely satisfies itself") {
-    assert(SatisfiesType(binaryTreeType(ExactIntegerType), binaryTreeType(ExactIntegerType)) === Some(true))
+  test("integer binary tree definitely satisfies itself") {
+    assert(SatisfiesType(binaryTreeType(IntegerType), binaryTreeType(IntegerType)) === Some(true))
   }
   
-  test("exact int binary tree definitely satisfies number binary tree") {
-    assert(SatisfiesType(binaryTreeType(NumberType), binaryTreeType(ExactIntegerType)) === Some(true))
+  test("integer binary tree definitely satisfies number binary tree") {
+    assert(SatisfiesType(binaryTreeType(NumberType), binaryTreeType(IntegerType)) === Some(true))
   }
   
-  test("number binary tree may satisfy exact int binary tree") {
-    assert(SatisfiesType(binaryTreeType(ExactIntegerType), binaryTreeType(NumberType)) === None)
+  test("number binary tree may satisfy integer binary tree") {
+    assert(SatisfiesType(binaryTreeType(IntegerType), binaryTreeType(NumberType)) === None)
   }
   
   test("binary tree type minus itself is the empty type") {

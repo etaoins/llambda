@@ -11,7 +11,7 @@ public:
 public:
 	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
-		return typeId == CellTypeId::ExactInteger;
+		return typeId == CellTypeId::Integer;
 	}
 
 	static bool isInstance(const AnyCell *cell)

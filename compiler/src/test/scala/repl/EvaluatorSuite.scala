@@ -39,7 +39,7 @@ class EvaluatorSuite extends FunSuite {
     val eval = testEvaluator()
 
     assert(eval(datum"""(import (llambda typed))""") === "loaded")
-    assert(eval(datum"""(define x : <exact-integer> 10)""") === "x => 10")
+    assert(eval(datum"""(define x : <integer> 10)""") === "x => 10")
     assert(eval(datum"""x""") === "10")
   }
 
@@ -71,8 +71,8 @@ class EvaluatorSuite extends FunSuite {
     assert(eval(datum"""(import (scheme read))""") === "loaded")
 
     intercept[ReplProcessNonZeroExitException] {
-      // 1.5 isn't an exact integer
-      eval(datum"""(define x : <exact-integer> (string->number "1.5"))""")
+      // 1.5 isn't an integer
+      eval(datum"""(define x : <integer> (string->number "1.5"))""")
     }
 
     intercept[UnboundVariableException] {
@@ -106,7 +106,7 @@ class EvaluatorSuite extends FunSuite {
     val eval = testEvaluator()
 
     assert(eval(datum"""(import (llambda typed))""") === "loaded")
-    assert(eval(datum"""(define-type <my-int> <exact-integer>)""") === "defined")
+    assert(eval(datum"""(define-type <my-int> <integer>)""") === "defined")
     assert(eval(datum"""(define x : <my-int> 10)""") === "x => 10")
     assert(eval(datum"""x""") === "10")
   }

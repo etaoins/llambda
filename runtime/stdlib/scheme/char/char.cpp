@@ -1,5 +1,5 @@
 #include "binding/CharCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
 
@@ -65,7 +65,7 @@ const AnyCell *llchar_digit_value(World &world, UnicodeChar character)
 		return BooleanCell::falseInstance();
 	}
 
-	return ExactIntegerCell::fromValue(world, digitValue);
+	return IntegerCell::fromValue(world, digitValue);
 }
 
 StringCell* llchar_string_upcase(World &world, StringCell *sourceString)

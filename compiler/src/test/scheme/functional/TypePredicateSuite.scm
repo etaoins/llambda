@@ -1,11 +1,11 @@
 (define-test "(make-predicate) for intrinsic types" (expect-success
   (import (llambda typed))
 
-  (assert-true ((make-predicate <exact-integer>) 10))
+  (assert-true ((make-predicate <integer>) 10))
   (assert-true ((make-predicate <number>) 10))
   (assert-true ((make-predicate <any>) 10))
 
-  (assert-false ((make-predicate <exact-integer>) 'test))
+  (assert-false ((make-predicate <integer>) 'test))
   (assert-false ((make-predicate <number>) 'test))
   (assert-true ((make-predicate <any>) 'test))))
 
@@ -148,7 +148,7 @@
   (define symbol-to-int-alist '((one 1) (two 2) (three 3)))
   (define string-to-int-alist '(("one" 1) ("two" 2) ("three" 3)))
 
-  (define-predicate symbol-to-int-alist? (Assocof <symbol> (Listof <exact-integer>)))
+  (define-predicate symbol-to-int-alist? (Assocof <symbol> (Listof <integer>)))
 
   (assert-false (symbol-to-int-alist? symbol-list))
   (assert-false (symbol-to-int-alist? bare-symbol))
@@ -189,7 +189,7 @@
   (import (llambda typed))
 
   ; This is testing that we preserve recursive union structure when flattening them in to larger union
-  (define-predicate int-list-or-false? (U (Listof <exact-integer>) #f))
+  (define-predicate int-list-or-false? (U (Listof <integer>) #f))
 
   (define false #f)
   (define int-list '(1 2 3))

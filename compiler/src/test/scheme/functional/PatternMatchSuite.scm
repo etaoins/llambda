@@ -85,7 +85,7 @@
 
   (define matcher
     (match-lambda
-      ((cons [int-var : <exact-integer>] _) (ann int-var <exact-integer>))
+      ((cons [int-var : <integer>] _) (ann int-var <integer>))
       ((cons _ [symbol-var : <symbol>]) (ann symbol-var <symbol>))
       (_ 'other)))
 

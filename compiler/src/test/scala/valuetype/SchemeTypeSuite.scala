@@ -20,14 +20,14 @@ trait SchemeTypeSuite extends FunSuite {
 
   protected val stringList = UniformProperListType(StringType)
   protected val numericList = UniformProperListType(NumberType)
-  protected val exactIntList = UniformProperListType(ExactIntegerType)
-  protected val inexactList = UniformProperListType(FlonumType)
-    
+  protected val integerList = UniformProperListType(IntegerType)
+  protected val flonumList = UniformProperListType(FlonumType)
+
   protected val knownNumberList = PairType(NumberType,
-    PairType(ExactIntegerType,
+    PairType(IntegerType,
       PairType(FlonumType,
         EmptyListType)))
-  
+
   protected def nonEmptyProperList(memberType : SchemeType) : SchemeType = 
     PairType(memberType, UniformProperListType(memberType))
 

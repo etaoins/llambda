@@ -23,7 +23,7 @@ class ResolveIncludeListSuite extends FunSuite with Inside {
     }
   }
 
-  test("including an exact integer fails") {
+  test("including an integer fails") {
     intercept[BadSpecialFormException] {
       ResolveIncludeList(NoSourceLocation, List(ast.IntegerLiteral(1)))
     }

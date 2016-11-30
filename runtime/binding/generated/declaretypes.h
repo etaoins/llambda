@@ -22,7 +22,7 @@ class InlineSymbolCell;
 class HeapSymbolCell;
 class BooleanCell;
 class NumberCell;
-class ExactIntegerCell;
+class IntegerCell;
 class FlonumCell;
 class CharCell;
 class VectorCell;

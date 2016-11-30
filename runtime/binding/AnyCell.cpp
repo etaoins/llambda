@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cmath>
 
-#include "ExactIntegerCell.h"
+#include "IntegerCell.h"
 #include "FlonumCell.h"
 #include "SymbolCell.h"
 #include "ProcedureCell.h"
@@ -77,9 +77,9 @@ bool AnyCell::isEqv(const AnyCell *other) const
 	}
 
 	// These require more than address comparison by eqv?
-	if (auto thisInteger = cell_cast<ExactIntegerCell>(this))
+	if (auto thisInteger = cell_cast<IntegerCell>(this))
 	{
-		if (auto otherInteger = cell_cast<ExactIntegerCell>(other))
+		if (auto otherInteger = cell_cast<IntegerCell>(other))
 		{
 			return thisInteger->value() == otherInteger->value();
 		}

@@ -1,5 +1,5 @@
 #include "binding/NumberCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProperList.h"
 #include "binding/TypedPairCell.h"
@@ -16,7 +16,7 @@ using namespace lliby;
 namespace
 {
 	// Helper used by llbase_div
-	FlonumCell *inexactDivision(World &world, double startValue, ProperList<NumberCell>::Iterator begin, ProperList<NumberCell>::Iterator end)
+	FlonumCell *flonumDivision(World &world, double startValue, ProperList<NumberCell>::Iterator begin, ProperList<NumberCell>::Iterator end)
 	{
 		double numeratorValue = startValue;
 
@@ -24,13 +24,13 @@ namespace
 		{
 			NumberCell *denominatorCell = *it;
 
-			if (auto denomintorExactInt = cell_cast<ExactIntegerCell>(denominatorCell))
+			if (auto denomintorInteger = cell_cast<IntegerCell>(denominatorCell))
 			{
-				auto denominatorInt = denomintorExactInt->value();
+				auto denominatorInt = denomintorInteger->value();
 
 				if (denominatorInt == 0)
 				{
-					signalError(world, ErrorCategory::DivideByZero, "Attempted (/) by exact zero");
+					signalError(world, ErrorCategory::DivideByZero, "Attempted (/) by integer zero");
 				}
 
 				numeratorValue /= static_cast<double>(denominatorInt);
@@ -127,40 +127,40 @@ extern "C"
 
 NumberCell *llbase_add(World &world, RestValues<NumberCell> *argList)
 {
-	std::int64_t exactSum = 0;
-	double inexactSum = 0.0;
-	bool resultInexact = false;
+	std::int64_t integerSum = 0;
+	double flonumSum = 0.0;
+	bool resultIsFlonum = false;
 	bool integerOverflowed = false;
 
 	for (auto numeric : *argList)
 	{
-		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
+		if (auto integer = cell_cast<IntegerCell>(numeric))
 		{
 			long long nonOverflowSum;
 
-			if (__builtin_saddll_overflow(exactSum, exactInteger->value(), &nonOverflowSum))
+			if (__builtin_saddll_overflow(integerSum, integer->value(), &nonOverflowSum))
 			{
-				// Convert to inexact and continue
-				inexactSum += exactInteger->value();
+				// Convert to flonum and continue
+				flonumSum += integer->value();
 				integerOverflowed = true;
 			}
 			else
 			{
-				exactSum = nonOverflowSum;
+				integerSum = nonOverflowSum;
 			}
 		}
 		else
 		{
 			auto flonum = cell_unchecked_cast<FlonumCell>(numeric);
 
-			inexactSum += flonum->value();
-			resultInexact = true;
+			flonumSum += flonum->value();
+			resultIsFlonum = true;
 		}
 	}
 
-	if (resultInexact)
+	if (resultIsFlonum)
 	{
-		return FlonumCell::fromValue(world, exactSum + inexactSum);
+		return FlonumCell::fromValue(world, integerSum + flonumSum);
 	}
 	else
 	{
@@ -169,46 +169,46 @@ NumberCell *llbase_add(World &world, RestValues<NumberCell> *argList)
 			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (+)");
 		}
 
-		return ExactIntegerCell::fromValue(world, exactSum);
+		return IntegerCell::fromValue(world, integerSum);
 	}
 }
 
 NumberCell *llbase_mul(World &world, RestValues<NumberCell> *argList)
 {
-	std::int64_t exactProduct = 1;
-	double inexactProduct = 1.0;
-	bool resultInexact = false;
+	std::int64_t integerProduct = 1;
+	double flonumProduct = 1.0;
+	bool resultIsFlonum = false;
 	bool integerOverflowed = false;
 
 	for (auto numeric : *argList)
 	{
-		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
+		if (auto integer = cell_cast<IntegerCell>(numeric))
 		{
 			long long nonOverflowProduct;
 
-			if (__builtin_smulll_overflow(exactProduct, exactInteger->value(), &nonOverflowProduct))
+			if (__builtin_smulll_overflow(integerProduct, integer->value(), &nonOverflowProduct))
 			{
-				// Convert to inexact and continue
-				inexactProduct *= exactInteger->value();
+				// Convert to flonum and continue
+				flonumProduct *= integer->value();
 				integerOverflowed = true;
 			}
 			else
 			{
-				exactProduct = nonOverflowProduct;
+				integerProduct = nonOverflowProduct;
 			}
 		}
 		else
 		{
 			auto flonum = cell_unchecked_cast<FlonumCell>(numeric);
 
-			inexactProduct *= flonum->value();
-			resultInexact = true;
+			flonumProduct *= flonum->value();
+			resultIsFlonum = true;
 		}
 	}
 
-	if (resultInexact)
+	if (resultIsFlonum)
 	{
-		return FlonumCell::fromValue(world, exactProduct * inexactProduct);
+		return FlonumCell::fromValue(world, integerProduct * flonumProduct);
 	}
 	else
 	{
@@ -217,35 +217,35 @@ NumberCell *llbase_mul(World &world, RestValues<NumberCell> *argList)
 			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (*)");
 		}
 
-		return ExactIntegerCell::fromValue(world, exactProduct);
+		return IntegerCell::fromValue(world, integerProduct);
 	}
 }
 
 NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCell> *argList)
 {
-	std::int64_t exactDifference;
-	double inexactDifference;
-	bool resultInexact;
+	std::int64_t integerDifference;
+	double flonumDifference;
+	bool resultIsFlonum;
 	bool integerOverflowed = false;
 
-	if (auto exactInteger = cell_cast<ExactIntegerCell>(startValue))
+	if (auto integer = cell_cast<IntegerCell>(startValue))
 	{
 		if (argList->empty())
 		{
 			// Return the inverse
 			long long inverse;
 
-			if (__builtin_ssubll_overflow(0LL, exactInteger->value(), &inverse))
+			if (__builtin_ssubll_overflow(0LL, integer->value(), &inverse))
 			{
 				signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in inverting (-)");
 			}
 
-			return ExactIntegerCell::fromValue(world, inverse);
+			return IntegerCell::fromValue(world, inverse);
 		}
 
-		exactDifference = exactInteger->value();
-		inexactDifference = 0.0;
-		resultInexact = false;
+		integerDifference = integer->value();
+		flonumDifference = 0.0;
+		resultIsFlonum = false;
 	}
 	else
 	{
@@ -257,40 +257,40 @@ NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCe
 			return FlonumCell::fromValue(world, -flonum->value());
 		}
 
-		exactDifference = 0;
-		inexactDifference = flonum->value();
-		resultInexact = true;
+		integerDifference = 0;
+		flonumDifference = flonum->value();
+		resultIsFlonum = true;
 	}
 
 	for (auto numeric : *argList)
 	{
-		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
+		if (auto integer = cell_cast<IntegerCell>(numeric))
 		{
 			long long nonOverflowDifference;
 
-			if (__builtin_ssubll_overflow(exactDifference, exactInteger->value(), &nonOverflowDifference))
+			if (__builtin_ssubll_overflow(integerDifference, integer->value(), &nonOverflowDifference))
 			{
-				// Convert to inexact and continue
-				inexactDifference -= exactInteger->value();
+				// Convert to flonum and continue
+				flonumDifference -= integer->value();
 				integerOverflowed = true;
 			}
 			else
 			{
-				exactDifference = nonOverflowDifference;
+				integerDifference = nonOverflowDifference;
 			}
 		}
 		else
 		{
 			auto flonum = cell_unchecked_cast<FlonumCell>(numeric);
 
-			inexactDifference -= flonum->value();
-			resultInexact = true;
+			flonumDifference -= flonum->value();
+			resultIsFlonum = true;
 		}
 	}
 
-	if (resultInexact)
+	if (resultIsFlonum)
 	{
-		return FlonumCell::fromValue(world, exactDifference + inexactDifference);
+		return FlonumCell::fromValue(world, integerDifference + flonumDifference);
 	}
 	else
 	{
@@ -299,7 +299,7 @@ NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCe
 			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in subtracting (-)");
 		}
 
-		return ExactIntegerCell::fromValue(world, exactDifference);
+		return IntegerCell::fromValue(world, integerDifference);
 	}
 }
 
@@ -308,42 +308,42 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCe
 	if (argList->empty())
 	{
 		// Return the reciprocal
-		// This can only be exact if startValue is an exact 1 or -1
-		if (auto startExactInt = cell_cast<ExactIntegerCell>(startValue))
+		// This can only be an integer if startValue is an integer 1 or -1
+		if (auto startIntCell = cell_cast<IntegerCell>(startValue))
 		{
-			std::int64_t startInt = startExactInt->value();
+			std::int64_t startInt = startIntCell->value();
 
 			if (startInt == 0)
 			{
-				signalError(world, ErrorCategory::DivideByZero, "Attempted reciprocal (/) by exact zero");
+				signalError(world, ErrorCategory::DivideByZero, "Attempted reciprocal (/) by integer zero");
 			}
 
 			if ((startInt == 1) || (startInt == -1))
 			{
-				return startExactInt;
+				return startIntCell;
 			}
 		}
 
-		// Perform inexact reciprocal
+		// Perform flonum reciprocal
 		return FlonumCell::fromValue(world, 1.0 / startValue->toDouble());
 	}
 
-	if (auto startExactInt = cell_cast<ExactIntegerCell>(startValue))
+	if (auto startIntCell = cell_cast<IntegerCell>(startValue))
 	{
-		// Perform integer division until we hit an inexact value
-		std::int64_t numeratorInt = startExactInt->value();
+		// Perform integer division until we hit a flonum value
+		std::int64_t numeratorInt = startIntCell->value();
 
 		for (auto it = argList->begin(); it != argList->end(); it++)
 		{
-			if (auto denomintorExactInt = cell_cast<ExactIntegerCell>(*it))
+			if (auto denomintorInteger = cell_cast<IntegerCell>(*it))
 			{
 				// We have another integer!
-				std::int64_t denominatorInt = denomintorExactInt->value();
+				std::int64_t denominatorInt = denomintorInteger->value();
 
 				// Check for divide by zero
 				if (denominatorInt == 0)
 				{
-					signalError(world, ErrorCategory::DivideByZero, "Attempted (/) by exact zero");
+					signalError(world, ErrorCategory::DivideByZero, "Attempted (/) by integer zero");
 				}
 
 				// Does it divide exactly and is not an or overflow?
@@ -355,29 +355,29 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCe
 				}
 				else
 				{
-					// No; perform this division as inexact and pass the tail to inexactDivision()
-					double inexactResult = static_cast<double>(numeratorInt) / static_cast<double>(denominatorInt);
-					return inexactDivision(world, inexactResult, ++it, argList->end());
+					// No; perform this division as flonum and pass the tail to flonumDivision()
+					double flonumResult = static_cast<double>(numeratorInt) / static_cast<double>(denominatorInt);
+					return flonumDivision(world, flonumResult, ++it, argList->end());
 				}
 			}
 			else
 			{
-				// Nope, this is a flonum. Have inexactDivision() handle this value
-				return inexactDivision(world, static_cast<double>(numeratorInt), it, argList->end());
+				// Nope, this is a flonum. Have flonumDivision() handle this value
+				return flonumDivision(world, static_cast<double>(numeratorInt), it, argList->end());
 			}
 		}
 
-		// We have an exact result somehow!
-		return ExactIntegerCell::fromValue(world, numeratorInt);
+		// We have an integer result somehow!
+		return IntegerCell::fromValue(world, numeratorInt);
 	}
 	else
 	{
 		double startDouble = cell_unchecked_cast<FlonumCell>(startValue)->value();
-		return inexactDivision(world, startDouble, argList->begin(), argList->end());
+		return flonumDivision(world, startDouble, argList->begin(), argList->end());
 	}
 }
 
-TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+TypedPairCell<IntegerCell, IntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -392,7 +392,7 @@ TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_truncate_div(World &wo
 	auto quotient = numerator / denominator;
 	auto remainder = numerator % denominator;
 
-	return TypedPairCell<ExactIntegerCell, ExactIntegerCell>::emplaceValues(world, quotient, remainder);
+	return TypedPairCell<IntegerCell, IntegerCell>::emplaceValues(world, quotient, remainder);
 }
 
 std::int64_t llbase_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -426,7 +426,7 @@ std::int64_t llbase_truncate_remainder(World &world, std::int64_t numerator, std
 	return numerator % denominator;
 }
 
-TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+TypedPairCell<IntegerCell, IntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -439,7 +439,7 @@ TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_floor_div(World &world
 	}
 
 	auto floorResult = floorDivision(numerator, denominator);
-	return TypedPairCell<ExactIntegerCell, ExactIntegerCell>::emplaceValues(world, floorResult.quotient, floorResult.remainder);
+	return TypedPairCell<IntegerCell, IntegerCell>::emplaceValues(world, floorResult.quotient, floorResult.remainder);
 }
 
 std::int64_t llbase_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -475,17 +475,17 @@ std::int64_t llbase_floor_remainder(World &world, std::int64_t numerator, std::i
 
 NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 {
-	const bool bothExact = base->isExact() && power->isExact();
+	const bool bothInteger = IntegerCell::isInstance(base) && IntegerCell::isInstance(power);
 
-	if (bothExact)
+	if (bothInteger)
 	{
-		auto exactBase = static_cast<ExactIntegerCell*>(base)->value();
-		auto exactPower = static_cast<ExactIntegerCell*>(power)->value();
+		auto integerBase = static_cast<IntegerCell*>(base)->value();
+		auto integerPower = static_cast<IntegerCell*>(power)->value();
 
 		// Allow most powers of two to be exactly handled even on platforms with 64bit doubles
-		if ((exactBase == 2) && (exactPower >= 0) && (exactPower <= 62))
+		if ((integerBase == 2) && (integerPower >= 0) && (integerPower <= 62))
 		{
-			return ExactIntegerCell::fromValue(world, 1LL << exactPower);
+			return IntegerCell::fromValue(world, 1LL << integerPower);
 		}
 	}
 
@@ -496,7 +496,7 @@ NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 
 	const long double floatResult = powl(floatBase, floatPower);
 
-	if (bothExact)
+	if (bothInteger)
 	{
 		if (!floatValueCanBeExactlyConverted<long double, std::int64_t>(floatResult))
 		{
@@ -504,7 +504,7 @@ NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 		}
 		else
 		{
-			return ExactIntegerCell::fromValue(world, floatResult);
+			return IntegerCell::fromValue(world, floatResult);
 		}
 	}
 	else
@@ -513,7 +513,7 @@ NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 	}
 }
 
-std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, RestValues<ExactIntegerCell> *restInts)
+std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, RestValues<IntegerCell> *restInts)
 {
 	std::int64_t result = greatestCommonDivisor(a, b);
 
@@ -525,7 +525,7 @@ std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, RestValues<ExactIntegerC
 	return (result < 0) ? -result : result;
 }
 
-std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<ExactIntegerCell> *restInts)
+std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<IntegerCell> *restInts)
 {
 	std::int64_t result = leastCommonMultiple(a, b);
 
@@ -537,7 +537,7 @@ std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<ExactIntegerC
 	return (result < 0) ? -result : result;
 }
 
-TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_integer_sqrt(World &world, std::int64_t val)
+TypedPairCell<IntegerCell, IntegerCell>* llbase_integer_sqrt(World &world, std::int64_t val)
 {
 	if (val < 0)
 	{
@@ -548,7 +548,7 @@ TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_integer_sqrt(World &wo
 	const std::int64_t floorResult = std::sqrt(val);
 	const std::int64_t remainder = val - (floorResult * floorResult);
 
-	return TypedPairCell<ExactIntegerCell, ExactIntegerCell>::emplaceValues(world, floorResult, remainder);
+	return TypedPairCell<IntegerCell, IntegerCell>::emplaceValues(world, floorResult, remainder);
 }
 
 }

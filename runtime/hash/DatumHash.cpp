@@ -6,7 +6,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/CharCell.h"
@@ -78,9 +78,9 @@ DatumHash::ResultType DatumHash::operator()(AnyCell *datum) const
 			return 0x5898b4bf;
 		}
 	}
-	else if (auto exactIntCell = cell_cast<ExactIntegerCell>(datum))
+	else if (auto integerCell = cell_cast<IntegerCell>(datum))
 	{
-		return convertToResultType(exactIntCell->value()) ^ 0x392ed847;
+		return convertToResultType(integerCell->value()) ^ 0x392ed847;
 	}
 	else if (auto flonumCell = cell_cast<FlonumCell>(datum))
 	{

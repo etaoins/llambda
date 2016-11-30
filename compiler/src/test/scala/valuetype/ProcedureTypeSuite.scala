@@ -14,11 +14,11 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     returnType=ReturnType.Reachable(NumberType)
   )
 
-  val twoStringToExactIntProcedure = ProcedureType(
+  val twoStringToIntProcedure = ProcedureType(
     mandatoryArgTypes=List(StringType, StringType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
-    returnType=ReturnType.Reachable(ExactIntegerType)
+    returnType=ReturnType.Reachable(IntegerType)
   )
 
   val twoStringToPortProcedure = ProcedureType(
@@ -95,7 +95,7 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     mandatoryArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(listElementToUnitProcedure),
-    returnType=ReturnType.Reachable(twoStringToExactIntProcedure)
+    returnType=ReturnType.Reachable(twoStringToIntProcedure)
   )
 
   val optionalStringToNumberProcedure = ProcedureType(
@@ -202,11 +202,11 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   }
 
   test("procedure definitely satisfies procedure with less specific return type") {
-    assert(SatisfiesType(twoStringToNumberProcedure, twoStringToExactIntProcedure) === Some(true))
+    assert(SatisfiesType(twoStringToNumberProcedure, twoStringToIntProcedure) === Some(true))
   }
 
   test("procedure may satisfy procedure with more specific return type") {
-    assert(SatisfiesType(twoStringToExactIntProcedure, twoStringToNumberProcedure) === None)
+    assert(SatisfiesType(twoStringToIntProcedure, twoStringToNumberProcedure) === None)
   }
 
   test("procedure definitely doesn't satisfy procedure with disjoint return type") {
@@ -250,7 +250,7 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   }
 
   test("the union of two related specific procedure types is the most general procedure type") {
-    assert((twoStringToNumberProcedure + twoStringToExactIntProcedure) === twoStringToNumberProcedure)
+    assert((twoStringToNumberProcedure + twoStringToIntProcedure) === twoStringToNumberProcedure)
   }
 
   test("the union of a specific procedure type and the top procedure type is the top procedure type") {

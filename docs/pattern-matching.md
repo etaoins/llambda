@@ -87,7 +87,7 @@ The following code will return string description of some basic values.
     "Symbol"]
   [+nan.0
     "NaN"]
-  [[_ : <exact-integer>]
+  [[_ : <integer>]
     "Integer"]
   [[_ : <flonum>]
     "Floating point number"])

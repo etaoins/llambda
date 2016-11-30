@@ -5,7 +5,7 @@
 public:
 	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
-		return (typeId == CellTypeId::ExactInteger) || (typeId == CellTypeId::Flonum);
+		return (typeId == CellTypeId::Integer) || (typeId == CellTypeId::Flonum);
 	}
 
 	static bool isInstance(const AnyCell *cell)

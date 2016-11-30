@@ -6,17 +6,17 @@
   (define ref-result (vector-ref typeless-vector typeless-1))
 
   (assert-equal #(1 2 3) (ann typeless-vector <vector>))
-  (assert-equal 1 (ann typeless-1 <exact-integer>))
+  (assert-equal 1 (ann typeless-1 <integer>))
   (assert-equal 2 ref-result)))
 
 (define-test "applying optional arg storage locs constrains their type" (expect-success
   (import (llambda typed))
   (define typeless-1 (typeless-cell 1))
 
-  (define (take-optional-number [val : <exact-integer> 2]) val)
+  (define (take-optional-number [val : <integer> 2]) val)
   (define take-result (take-optional-number typeless-1))
 
-  (assert-equal 1 (ann typeless-1 <exact-integer>))
+  (assert-equal 1 (ann typeless-1 <integer>))
   (assert-equal 1 take-result)))
 
 (define-test "applying fixed arg storage locs to a case procedure constrains their type" (expect 4
@@ -24,8 +24,8 @@
   (import (llambda typed))
 
   (define typed-case (case-lambda
-    (([first : <exact-integer>]) first)
-    (([first : <flonum>] [second : <exact-integer>]) first)))
+    (([first : <integer>]) first)
+    (([first : <flonum>] [second : <integer>]) first)))
 
   (define first (typeless-cell 1.5))
   (define second (typeless-cell 4))
@@ -34,15 +34,15 @@
   (typed-case first second)
 
   (ann first <flonum>)
-  (ann second <exact-integer>)))
+  (ann second <integer>)))
 
 (define-test "applying fixed arg storage locs through a typed procedure value constrains their type" (expect 2
   (import (llambda typed))
-  (: apply-vector-proc (-> (-> <vector> <exact-integer> <any>) <any> <any> <any>))
+  (: apply-vector-proc (-> (-> <vector> <integer> <any>) <any> <any> <any>))
   (define (apply-vector-proc vector-proc vec offset)
     (define result (vector-proc vec offset))
     (ann vec <vector>)
-    (ann offset <exact-integer>)
+    (ann offset <integer>)
     result)
 
   (apply-vector-proc vector-ref #(1 2 3) 1)))
@@ -174,7 +174,7 @@
 (define-test "branching on type predicates with (cond)" (expect-success
   (import (llambda typed))
 
-  (define typeless-string (cast (typeless-cell "test") (U <string> <exact-integer>)))
+  (define typeless-string (cast (typeless-cell "test") (U <string> <integer>)))
   (define typeless-symbol (cast (typeless-cell 'test) <any>))
 
   (cond
@@ -183,7 +183,7 @@
     ((symbol? typeless-symbol)
      (ann typeless-symbol <symbol>))
     (else
-     (ann typeless-string <exact-integer>)))))
+     (ann typeless-string <integer>)))))
 
 (define-test "branching on type predicates with (or)" (expect-success
   (import (llambda typed))
@@ -233,9 +233,9 @@
 (define-test "(if) with terminating branch uses other branch type information afterwards" (expect-success
   (import (llambda typed))
 
-  (define string-or-int (typed-dynamic 5 (U <string> <exact-integer>)))
+  (define string-or-int (typed-dynamic 5 (U <string> <integer>)))
 
   (if (string? string-or-int)
     (error "I hate strings!"))
 
-  (ann string-or-int <exact-integer>)))
+  (ann string-or-int <integer>)))

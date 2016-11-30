@@ -181,7 +181,7 @@
 
   ; Inline records
   (define-record-type <inline-record> (inline-record native-field cell-field) inline-record?
-                      ([native-field : <exact-integer>] inline-record-native-field set-inline-record-native-field!)
+                      ([native-field : <integer>] inline-record-native-field set-inline-record-native-field!)
                       (cell-field inline-record-cell-field))
 
   (define test-inline-record (inline-record -67 test-vec))
@@ -196,7 +196,7 @@
 
   ; Out-of-line records
   (define-record-type <ool-record> (ool-record native-field cell-field1 cell-field2) ool-record?
-                      ([native-field : <exact-integer>] ool-record-native-field set-ool-record-native-field!)
+                      ([native-field : <integer>] ool-record-native-field set-ool-record-native-field!)
                       (cell-field1 ool-record-cell-field1)
                       (cell-field2 ool-record-cell-field2))
 
@@ -231,16 +231,16 @@
   (import (llambda duration))
 
   (define-record-type <start-message> (start-message children) start-message?
-                      ([children : <exact-integer>] start-message-children))
+                      ([children : <integer>] start-message-children))
 
   (define-record-type <result-message> (result-message count) result-message?
-                      ([count : <exact-integer>] result-message-count))
+                      ([count : <integer>] result-message-count))
 
   (: replicating-actor (-> (-> <any> <unit>)))
   (define (replicating-actor)
-    (define waiting-children : <exact-integer> 0)
+    (define waiting-children : <integer> 0)
     (define started-mailbox #!unit)
-    (define reply-sum : <exact-integer> 0)
+    (define reply-sum : <integer> 0)
 
     (lambda (msg)
       (cond

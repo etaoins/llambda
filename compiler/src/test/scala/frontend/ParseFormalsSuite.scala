@@ -59,10 +59,10 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   }
 
   test("typed fixed args") {
-    inside(formalsFor("([fixed1 : <exact-integer>] fixed2)")) {
+    inside(formalsFor("([fixed1 : <integer>] fixed2)")) {
       case ParsedFormals(
         List(
-          (sst.ScopedSymbol(_, "fixed1"), Some(vt.ExactIntegerType)),
+          (sst.ScopedSymbol(_, "fixed1"), Some(vt.IntegerType)),
           (sst.ScopedSymbol(_, "fixed2"), None)
         ),
         Nil,
@@ -106,13 +106,13 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   }
 
   test("typed fixed arg with default") {
-    inside(formalsFor("([fixed1 : <exact-integer> 1] [fixed2 : <symbol> val])", allowOptionals=true)) {
+    inside(formalsFor("([fixed1 : <integer> 1] [fixed2 : <symbol> val])", allowOptionals=true)) {
       case ParsedFormals(
         Nil,
         List(
           ParsedOptional(
             sst.ScopedSymbol(_, "fixed1"),
-            Some(vt.ExactIntegerType),
+            Some(vt.IntegerType),
             sst.NonSymbolLeaf(ast.IntegerLiteral(1))
           ),
           ParsedOptional(
@@ -128,7 +128,7 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
 
   test("argument without default following argument with default fails") {
     intercept[BadSpecialFormException] {
-      formalsFor("([fixed1 : <exact-integer> 1] [fixed2 : <symbol>])", allowOptionals=true)
+      formalsFor("([fixed1 : <integer> 1] [fixed2 : <symbol>])", allowOptionals=true)
     }
   }
 

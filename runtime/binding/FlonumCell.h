@@ -65,11 +65,11 @@ public:
 		return isInfinite() && (value() < 0);
 	}
 
-	bool isInteger() const
+	bool isIntegral() const
 	{
 		double unused;
 		return std::modf(value(), &unused) == 0.0;
-	}	
+	}
 };
 
 }

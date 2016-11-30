@@ -14,8 +14,8 @@ object TempValueToIntermediate {
       new iv.NativePredicateValue(tempValue)
 
     case intType : vt.IntType =>
-      new iv.NativeExactIntegerValue(tempValue, intType)
-    
+      new iv.NativeIntegerValue(tempValue, intType)
+
     case fpType : vt.FpType =>
       new iv.NativeFlonumValue(tempValue, fpType)
 

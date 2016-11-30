@@ -23,7 +23,7 @@ typedef StrongRef<SymbolCell> SymbolRef;
 typedef StrongRef<InlineSymbolCell> InlineSymbolRef;
 typedef StrongRef<HeapSymbolCell> HeapSymbolRef;
 typedef StrongRef<NumberCell> NumberRef;
-typedef StrongRef<ExactIntegerCell> ExactIntegerRef;
+typedef StrongRef<IntegerCell> IntegerRef;
 typedef StrongRef<FlonumCell> FlonumRef;
 typedef StrongRef<CharCell> CharRef;
 typedef StrongRef<VectorCell> VectorRef;

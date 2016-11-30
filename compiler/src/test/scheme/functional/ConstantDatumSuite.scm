@@ -8,16 +8,16 @@
 (define-test "heap string" (expect "Greetings dear neighbour!!"
   "Greetings dear neighbour!!"))
 
-(define-test "exact integer" (expect 31337
+(define-test "integer" (expect 31337
   31337))
 
-(define-test "exact integer greater than 32bits" (expect 9007199254740993
+(define-test "integer greater than 32bits" (expect 9007199254740993
   9007199254740993))
 
-(define-test "very large inexact rational" (expect 9007199254740992.0
+(define-test "very large flonum" (expect 9007199254740992.0
   9007199254740992.0))
 
-(define-test "inexact rational" (expect -12.0
+(define-test "flonum" (expect -12.0
   -12.0))
 
 (define-test "positive infinity" (expect +inf.0

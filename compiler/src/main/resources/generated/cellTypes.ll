@@ -76,10 +76,10 @@
 !43 = !{!"Any::gcState->Number", !11}
 
 ; {supertype, signed value}
-%exactInteger = type {%number, i64}
-!44 = !{!"Any::typeId->Number->ExactInteger", !42}
-!45 = !{!"Any::gcState->Number->ExactInteger", !43}
-!46 = !{!"ExactInteger::value"}
+%integer = type {%number, i64}
+!44 = !{!"Any::typeId->Number->Integer", !42}
+!45 = !{!"Any::gcState->Number->Integer", !43}
+!46 = !{!"Integer::value"}
 
 ; {supertype, value}
 %flonum = type {%number, double}

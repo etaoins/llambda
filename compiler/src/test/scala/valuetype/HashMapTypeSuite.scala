@@ -22,7 +22,7 @@ class HashMapTypeSuite extends SchemeTypeSuite {
 
   test("completely compatible specific hash map types satisfy each other") {
     val superHashMapType = HashMapType(SymbolType, NumberType)
-    val derivedHashMapType = HashMapType(SymbolType, ExactIntegerType)
+    val derivedHashMapType = HashMapType(SymbolType, IntegerType)
 
     assert(SatisfiesType(superHashMapType, derivedHashMapType) === Some(true))
   }
@@ -36,7 +36,7 @@ class HashMapTypeSuite extends SchemeTypeSuite {
 
   test("partially compatible specific hash map types do not satisfy each other") {
     // car may satisfy, cdr does not satisfy
-    val specificHashMapType1 = HashMapType(ExactIntegerType, StringType)
+    val specificHashMapType1 = HashMapType(IntegerType, StringType)
     val specificHashMapType2 = HashMapType(NumberType, SymbolType)
 
     assert(SatisfiesType(specificHashMapType1, specificHashMapType2) === Some(false))

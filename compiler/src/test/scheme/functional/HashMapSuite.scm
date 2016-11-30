@@ -17,7 +17,7 @@
 
   (define one-value-hash-map (hash-map-assoc empty-hash-map 1 'one))
 
-  (ann one-value-hash-map (HashMap <exact-integer> 'one))
+  (ann one-value-hash-map (HashMap <integer> 'one))
 
   (assert-true  (hash-map-exists? one-value-hash-map 1))
   (assert-equal 'one (ann (hash-map-ref/default one-value-hash-map 1 #f) (U #f 'one)))
@@ -74,7 +74,7 @@
   (assert-equal 0 (hash-map-size empty-hash-map))
 
   (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
-  (ann number-hash-map (HashMap <exact-integer> <symbol>))
+  (ann number-hash-map (HashMap <integer> <symbol>))
 
   (assert-equal 3 (hash-map-size number-hash-map))
   (assert-equal 'one (hash-map-ref/default number-hash-map 1 #f))
@@ -88,7 +88,7 @@
   (import (llambda error))
 
   (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
-  (ann number-hash-map (HashMap <exact-integer> <symbol>))
+  (ann number-hash-map (HashMap <integer> <symbol>))
 
   (assert-equal 3 (hash-map-size number-hash-map))
   (assert-equal 'one (hash-map-ref number-hash-map 1))
@@ -106,7 +106,7 @@
   (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
 
   (define number-assoc (hash-map->alist number-hash-map))
-  (ann number-assoc (Listof (Pairof <exact-integer> <symbol>)))
+  (ann number-assoc (Listof (Pairof <integer> <symbol>)))
 
   (assert-equal 3 (length number-assoc))
 
@@ -122,7 +122,7 @@
   (define number-hash-map (alist->hash-map '((1 . one) (2 . one) (3 . three) (2 . two))))
 
   (define number-keys (hash-map-keys number-hash-map))
-  (ann number-keys (Listof <exact-integer>))
+  (ann number-keys (Listof <integer>))
 
   (assert-equal 3 (length number-keys))
 
@@ -196,7 +196,7 @@
   (define actual-hash-map (hash-map-merge source-hash-map-1 source-hash-map-2))
   (define expected-hash-map (alist->hash-map '((1 . #t) (2 . #f) (3 . #t) (4 . #f))))
 
-  (ann actual-hash-map (HashMap <exact-integer> <boolean>))
+  (ann actual-hash-map (HashMap <integer> <boolean>))
 
   (assert-equal 4 (hash-map-size actual-hash-map))
   (assert-equal actual-hash-map expected-hash-map)))

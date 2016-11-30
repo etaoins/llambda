@@ -1,5 +1,5 @@
 #include "NumberCell.h"
-#include "ExactIntegerCell.h"
+#include "IntegerCell.h"
 #include "FlonumCell.h"
 
 #include <limits>
@@ -12,9 +12,9 @@ namespace
 	template<typename T>
 	T cellToFloat(const NumberCell *value)
 	{
-		if (auto exactInteger = cell_cast<const ExactIntegerCell>(value))
+		if (auto integer = cell_cast<const IntegerCell>(value))
 		{
-			return exactInteger->value();
+			return integer->value();
 		}
 		else
 		{
@@ -37,11 +37,6 @@ double NumberCell::toDouble() const
 long double NumberCell::toLongDouble() const
 {
 	return cellToFloat<long double>(this);
-}
-
-bool NumberCell::isExact() const
-{
-	return ExactIntegerCell::isInstance(this);
 }
 
 }

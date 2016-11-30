@@ -19,10 +19,10 @@ The core types are provided by the compiler. By convention all type names are en
 | ``<char>``          | Scheme character. All valid Unicode characters are supported
 | ``<empty-list>``    | The empty list value. This is also known as "null" in some Lisp languages
 | ``<eof-object>``    | End-of-file object returned by ``(read)`` procedure
-| ``<exact-integer>`` | 64-bit signed integer. This is used to represent lengths and indices as well as being suitable for direct arithmetic
+| ``<integer>`` | 64-bit signed integer. This is used to represent lengths and indices as well as being suitable for direct arithmetic
 | ``<flonum>``        | 64-bit IEEE floating point value
 | ``<list-element>``  | Union of ``<pair>`` and ``<empty-list>``
-| ``<number>``        | Union of ``<exact-integer>`` and ``<flonum>``
+| ``<number>``        | Union of ``<integer>`` and ``<flonum>``
 | ``<pair>``          | Standard Scheme pair
 | ``<port>``          | Scheme port
 | ``<procedure>``     | General procedure type. More specific procedure types are available through the ``->`` type constructor
@@ -41,7 +41,7 @@ By convention type constructors are named with an initial uppercase letter
 
 | Type Constructor          | Description
 |---------------------------|------------
-| ``(U <member> ...)``      | Creates a union of the passed types. For example, the ``<number>`` type is equivalent to ``(U <exact-integer> <flonum>)``. |
+| ``(U <member> ...)``      | Creates a union of the passed types. For example, the ``<number>`` type is equivalent to ``(U <integer> <flonum>)``. |
 | ``(Pairof <car> <cdr>)``  | Creates a pair type with the passed ``car`` and ``cdr`` types
 | ``(Listof <member>)``     | Creates a proper list type with the containing members of type ``<member>``. The proper list can be of any length.
 | ``(List <member> ...)``   | Creates a proper list type of fixed length with the specified member types
@@ -54,12 +54,12 @@ The procedure type constructor is ``->``. It defines which values a procedure ta
 
 For example, a procedure taking an integer and a string and returning a character has the following type
 ```racket
-(-> <exact-integer> <string> <char>)
+(-> <integer> <string> <char>)
 ```
 
 If a procedure takes a rest argument list a ``*`` can be suffixed after the final argument. For example, a procedure taking zero or more floating point numbers and returning a boolean has the following type
 ```racket
-(-> <flonum> * <exact-integer>)
+(-> <flonum> * <integer>)
 ```
 
 Scheme procedures can return multiple values using the ``(values)`` procedure. To indicate a procedure returns a specific number values the ``(Values)`` type constructor can be used with the types of the values returned. Alternatively, the special ``*`` type can be used to indicate the procedure returns an arbitrary number of values with unknown types.
@@ -94,7 +94,7 @@ Expressions can be annotated as producing a value of a given type. `(ann)` ensur
 
 Alternatively `(cast)` can be used to create a runtime check for a type. If the expression produces an incompatible type then a `type-error` will be signalled.
 ```racket
-(cast (string->number "56") <exact-integer>) ;; => 56
+(cast (string->number "56") <integer>) ;; => 56
 ```
 
 Annotating Procedures
@@ -120,9 +120,9 @@ The square brackets are an extension to R7RS that are treated identically to rou
 
 Procedures taking a rest argument list need to use ``rest : <type> *``. A procedure taking another procedure and zero or more integers would look like the following
 ```racket
-(define (sum-integers [inexact-result : <boolean>] ints : <exact-integer> *)
+(define (sum-integers [flonum-result : <boolean>] ints : <integer> *)
   (define sum (apply + ints))
-  (if inexact-result (inexact sum) sum))
+  (if flonum-result (flonum sum) sum))
 
 (sum-integers #t 1 2 3 4 5) ;; => 15.0
 ```
@@ -203,8 +203,8 @@ Typed fields allow record type definitions to specify any field's type using typ
 ```racket
 (define-record-type <file-position> (file-position filename line column) file-position?
   [[filename : <string>] file-position-filename]
-  [[line : <exact-integer>] file-position-line]
-  [[column : <exact-intger>] file-position-column])
+  [[line : <integer>] file-position-line]
+  [[column : <integer>] file-position-column])
 ```
 
 Record type inheritance allows a record type to inherit the fields of another. A child record type instance can be used whenever an instance of the parent type is expected. Inheritance is specified providing a parent record type name as an additional argument after the child record type's name. Fields in any inherited record types can be initialised by specifying their field name in the child record type's constructor.

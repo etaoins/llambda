@@ -13,7 +13,7 @@ class ReconcileTypeVarsSuite extends FunSuite {
   val polyNumA = new TypeVar("A", NumberType)
   val polyNumB = new TypeVar("B", NumberType)
 
-  val polyIntC = new TypeVar("C", ExactIntegerType)
+  val polyIntC = new TypeVar("C", IntegerType)
 
   test("reconciling empty vars") {
     val typeVars = Set[TypeVar]()
@@ -30,7 +30,7 @@ class ReconcileTypeVarsSuite extends FunSuite {
 
     val expected = ReconcileTypeVars.Result(Map(
       polyNumA -> NumberType,
-      polyIntC -> ExactIntegerType
+      polyIntC -> IntegerType
     ))
 
     assert(ReconcileTypeVars(typeVars, resolved) === expected)
@@ -39,11 +39,11 @@ class ReconcileTypeVarsSuite extends FunSuite {
   test("reconciling vars with partial resolved vars") {
     val typeVars = Set(polyNumA, polyNumB)
     val resolved = ResolveTypeVars.Result(Map(
-      polyNumA -> ExactIntegerType
+      polyNumA -> IntegerType
     ))
 
     val expected = ReconcileTypeVars.Result(Map(
-      polyNumA -> ExactIntegerType,
+      polyNumA -> IntegerType,
       polyNumB -> NumberType
     ))
 
@@ -54,12 +54,12 @@ class ReconcileTypeVarsSuite extends FunSuite {
     val typeVars = Set(polyNumA, polyNumB)
     val resolved = ResolveTypeVars.Result(Map(
       polyNumA -> FlonumType,
-      polyNumB -> ExactIntegerType
+      polyNumB -> IntegerType
     ))
 
     val expected = ReconcileTypeVars.Result(Map(
       polyNumA -> FlonumType,
-      polyNumB -> ExactIntegerType
+      polyNumB -> IntegerType
     ))
 
     assert(ReconcileTypeVars(typeVars, resolved) === expected)

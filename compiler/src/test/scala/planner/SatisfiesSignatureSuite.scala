@@ -114,7 +114,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     )
 
     val superSignature = derivedSignature.copy(
-      mandatoryArgTypes=List(vt.ExactIntegerType)
+      mandatoryArgTypes=List(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -140,7 +140,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     val derivedSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      mandatoryArgTypes=List(vt.ExactIntegerType),
+      mandatoryArgTypes=List(vt.IntegerType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.Reachable(vt.UnitType),
@@ -166,7 +166,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     )
 
     val superSignature = derivedSignature.copy(
-      mandatoryArgTypes=List(vt.ExactIntegerType)
+      mandatoryArgTypes=List(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === true)
@@ -178,7 +178,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       hasSelfArg=false,
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+      restArgMemberTypeOpt=Some(vt.IntegerType),
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
@@ -202,7 +202,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     )
 
     val superSignature = derivedSignature.copy(
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType)
+      restArgMemberTypeOpt=Some(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === true)
@@ -212,7 +212,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     val derivedSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      mandatoryArgTypes=List(vt.ExactIntegerType),
+      mandatoryArgTypes=List(vt.IntegerType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.Reachable(vt.UnitType),
@@ -220,7 +220,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     )
 
     val superSignature = derivedSignature.copy(
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType)
+      restArgMemberTypeOpt=Some(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -233,7 +233,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType),
+      returnType=vt.ReturnType.Reachable(vt.IntegerType),
       attributes=Set()
     )
 
@@ -270,7 +270,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     )
 
     val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType)
+      returnType=vt.ReturnType.Reachable(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -283,7 +283,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=None,
-      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType),
+      returnType=vt.ReturnType.Reachable(vt.IntegerType),
       attributes=Set()
     )
 
@@ -306,7 +306,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     )
 
     val superSignature = derivedSignature.copy(
-      returnType=vt.ReturnType.Reachable(vt.ExactIntegerType)
+      returnType=vt.ReturnType.Reachable(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -335,7 +335,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       hasWorldArg=false,
       hasSelfArg=false,
       mandatoryArgTypes=Nil,
-      optionalArgTypes=List(vt.ExactIntegerType),
+      optionalArgTypes=List(vt.IntegerType),
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
@@ -343,7 +343,7 @@ class SatisfiesSignatureSuite extends FunSuite {
 
     val superSignature = derivedSignature.copy(
       optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType)
+      restArgMemberTypeOpt=Some(vt.IntegerType)
     )
 
     assert(SatisfiesSignature(superSignature, derivedSignature) === false)
@@ -355,7 +355,7 @@ class SatisfiesSignatureSuite extends FunSuite {
       hasSelfArg=false,
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+      restArgMemberTypeOpt=Some(vt.IntegerType),
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
@@ -373,13 +373,13 @@ class SatisfiesSignatureSuite extends FunSuite {
       hasSelfArg=false,
       mandatoryArgTypes=Nil,
       optionalArgTypes=Nil,
-      restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+      restArgMemberTypeOpt=Some(vt.IntegerType),
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
 
     val superSignature = derivedSignature.copy(
-      optionalArgTypes=List(vt.ExactIntegerType),
+      optionalArgTypes=List(vt.IntegerType),
       restArgMemberTypeOpt=None
     )
 

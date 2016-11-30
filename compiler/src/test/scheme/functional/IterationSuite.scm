@@ -14,7 +14,7 @@
     (import (llambda typed))
 
     (do (([vec : <vector>] (make-vector 5 #!unit))
-         ([i : <exact-integer>] 0 (+ i 1)))
+         ([i : <integer>] 0 (+ i 1)))
       ((= i 5) vec)
       (vector-set! vec i i))))
 
@@ -42,9 +42,9 @@
 
 (define-test "typed named let" (expect ((6 1 3) (-5 -2))
   (import (llambda typed))
-  (let loop ([numbers : (Listof <exact-integer>) '(3 -2 1 6 -5)]
-             [nonneg : (Listof <exact-integer>) '()]
-             [neg : (Listof <exact-integer>) '()])
+  (let loop ([numbers : (Listof <integer>) '(3 -2 1 6 -5)]
+             [nonneg : (Listof <integer>) '()]
+             [neg : (Listof <integer>) '()])
     (cond ((null? numbers) (list nonneg neg))
           ((>= (car numbers) 0)
            (loop (cdr numbers)

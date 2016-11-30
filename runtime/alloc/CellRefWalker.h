@@ -9,7 +9,7 @@
 #include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
@@ -116,7 +116,7 @@ public:
 		else if (cell_cast<UnitCell>(*rootCellRef) ||
 			cell_cast<EmptyListCell>(*rootCellRef) ||
 			cell_cast<BooleanCell>(*rootCellRef) ||
-			cell_cast<ExactIntegerCell>(*rootCellRef) ||
+			cell_cast<IntegerCell>(*rootCellRef) ||
 			cell_cast<FlonumCell>(*rootCellRef) ||
 			cell_cast<StringCell>(*rootCellRef) ||
 			cell_cast<SymbolCell>(*rootCellRef) ||

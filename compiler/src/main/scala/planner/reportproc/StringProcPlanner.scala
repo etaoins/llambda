@@ -18,7 +18,7 @@ object StringProcPlanner extends ReportProcPlanner {
           // This is easy
           val codePoints = stringValue.codePointCount(0, stringValue.length)
 
-          Some(iv.ConstantExactIntegerValue(codePoints))
+          Some(iv.ConstantIntegerValue(codePoints))
 
         case _ =>
           None

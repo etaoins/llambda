@@ -22,7 +22,7 @@
                     '#(0 1 2 3 4))
                   v))
 
-  (define counter : <exact-integer> 0)
+  (define counter : <integer> 0)
 
   (vector-for-each
     (lambda (i)
@@ -55,7 +55,7 @@
                     '(0 1 2 3 4))
                   v))
 
-  (define acc : <exact-integer> 0)
+  (define acc : <integer> 0)
 
   (for-each
     (lambda (i)
@@ -95,11 +95,11 @@
   (assert-equal '(four three two one) (ann (fold cons '() '(one two three four)) <list-element>))
   (assert-equal '() (ann (fold cons '() '()) <list-element>))
 
-  (define symbol-count (fold (lambda (x [count : <exact-integer>]) (if (symbol? x) (+ count 1) count))
+  (define symbol-count (fold (lambda (x [count : <integer>]) (if (symbol? x) (+ count 1) count))
                              0
                              '(one 2 three four 5 six)))
 
-  (assert-equal 4 (ann symbol-count <exact-integer>))
+  (assert-equal 4 (ann symbol-count <integer>))
 
   (assert-equal '(c 3 b 2 a 1) (fold cons* '() '(a b c) '(1 2 3 4 5)))))
 

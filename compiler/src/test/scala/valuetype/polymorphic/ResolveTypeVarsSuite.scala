@@ -12,18 +12,18 @@ class ResolveTypeVarsSuite extends FunSuite {
   val polyC = new TypeVar("C")
 
   test("resolving leaf types") {
-    val polyLeaf = ExactIntegerType
-    val evidence = ExactIntegerType
+    val polyLeaf = IntegerType
+    val evidence = IntegerType
 
     assert(ResolveTypeVars(Set(), polyLeaf, evidence).values == Map())
   }
 
   test("resolving a type var directly") {
     val polyVar = polyA
-    val evidence = ExactIntegerType
+    val evidence = IntegerType
 
     assert(ResolveTypeVars(Set(polyA), polyVar, evidence).values == Map(
-      polyA -> ExactIntegerType
+      polyA -> IntegerType
     ))
   }
 
@@ -31,19 +31,19 @@ class ResolveTypeVarsSuite extends FunSuite {
     val polyPair = SpecificPairType(polyA, polyB)
 
     val evidence = SpecificPairType(
-      ExactIntegerType,
+      IntegerType,
       FlonumType
     )
 
     assert(ResolveTypeVars(Set(polyA, polyB), polyPair, evidence).values == Map(
-      polyA -> ExactIntegerType,
+      polyA -> IntegerType,
       polyB -> FlonumType
     ))
   }
 
   test("resolving a pair with empty scheme type") {
     val polyEmpty = EmptySchemeType
-    val evidence = SpecificPairType(ExactIntegerType, FlonumType)
+    val evidence = SpecificPairType(IntegerType, FlonumType)
 
     assert(ResolveTypeVars(Set(polyA), polyEmpty, evidence).values == Map())
   }
@@ -59,7 +59,7 @@ class ResolveTypeVarsSuite extends FunSuite {
     val polyPair = SpecificPairType(polyA, polyA)
 
     val evidence = SpecificPairType(
-      ExactIntegerType,
+      IntegerType,
       FlonumType
     )
 
@@ -77,10 +77,10 @@ class ResolveTypeVarsSuite extends FunSuite {
       )
     ))
 
-    val evidence = UniformProperListType(ExactIntegerType)
+    val evidence = UniformProperListType(IntegerType)
 
     assert(ResolveTypeVars(Set(polyA), polyList, evidence).values == Map(
-      polyA -> ExactIntegerType
+      polyA -> IntegerType
     ))
   }
 
@@ -93,7 +93,7 @@ class ResolveTypeVarsSuite extends FunSuite {
       )
     ))
 
-    val evidence = SpecificProperListType(Vector(ExactIntegerType, FlonumType, ExactIntegerType))
+    val evidence = SpecificProperListType(Vector(IntegerType, FlonumType, IntegerType))
 
     assert(ResolveTypeVars(Set(polyA), polyList, evidence).values == Map(
       polyA -> NumberType
@@ -129,7 +129,7 @@ class ResolveTypeVarsSuite extends FunSuite {
     )
 
     val evidence = ProcedureType(
-      mandatoryArgTypes=List(ExactIntegerType, FlonumType),
+      mandatoryArgTypes=List(IntegerType, FlonumType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(FlonumType),
       returnType=ReturnType.Reachable(PortType)
@@ -151,7 +151,7 @@ class ResolveTypeVarsSuite extends FunSuite {
     )
 
     val evidence = ProcedureType(
-      mandatoryArgTypes=List(ExactIntegerType, ExactIntegerType),
+      mandatoryArgTypes=List(IntegerType, IntegerType),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(FlonumType),
       returnType=ReturnType.Reachable(PortType)
@@ -167,12 +167,12 @@ class ResolveTypeVarsSuite extends FunSuite {
   test("resolve a hash map type") {
     val polyHashMap = HashMapType(polyA, polyB)
 
-    val evidence = HashMapType(ExactIntegerType, FlonumType)
+    val evidence = HashMapType(IntegerType, FlonumType)
 
     val result = ResolveTypeVars(Set(polyA, polyB), polyHashMap, evidence)
 
     assert(result.values === Map(
-      polyA -> ExactIntegerType,
+      polyA -> IntegerType,
       polyB -> FlonumType
     ))
   }

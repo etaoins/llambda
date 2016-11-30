@@ -76,8 +76,8 @@
 
   (define fixed-lambda
     (case-lambda
-      (((first : <exact-integer>)) 'first)
-      (((first : <exact-integer>) (second : <symbol>)) 'second)))
+      (((first : <integer>)) 'first)
+      (((first : <integer>) (second : <symbol>)) 'second)))
   (fixed-lambda 0 1)))
 
 (define-test "(case-lambda) returns value with case-> type" (expect-success
@@ -86,10 +86,10 @@
 
   (define fixed-lambda
     (case-lambda
-      (((first : <exact-integer>)) 'first)
-      (((first : <exact-integer>) (second : <symbol>)) 'second)))
+      (((first : <integer>)) 'first)
+      (((first : <integer>) (second : <symbol>)) 'second)))
 
-  (ann fixed-lambda (case-> (-> <exact-integer> <any>) (-> <exact-integer> <symbol> <any>)))))
+  (ann fixed-lambda (case-> (-> <integer> <any>) (-> <integer> <symbol> <any>)))))
 
 (define-test "(case-lambda) cannot be annotated with incompatible case-> type" (expect-compile-error type-error?
   (import (scheme case-lambda))
@@ -97,10 +97,10 @@
 
   (define fixed-lambda
     (case-lambda
-      (((first : <exact-integer>)) 'first)
-      (((first : <exact-integer>) (second : <symbol>)) 'second)))
+      (((first : <integer>)) 'first)
+      (((first : <integer>) (second : <symbol>)) 'second)))
 
-  (ann fixed-lambda (case-> (-> <exact-integer> <any>) (-> <exact-integer> <string> <any>)))))
+  (ann fixed-lambda (case-> (-> <integer> <any>) (-> <integer> <string> <any>)))))
 
 (define-test "R7RS (case-lambda) with wrong arity fails at runtime" (expect-error error-object?
   (import (llambda r7rs-case-lambda))
@@ -117,8 +117,8 @@
 
   (define my-gcd (case-lambda
                 (() 0)
-                (([a : <exact-integer>]) a)
-                (([a : <exact-integer>] [b : <exact-integer>])
+                (([a : <integer>]) a)
+                (([a : <integer>] [b : <integer>])
                  (if (zero? b)
                    a
                    (my-gcd b (floor-remainder a b))))))
@@ -134,7 +134,7 @@
     ((x y) (+ x y))
     ((x y z) (+ x y z))))
 
-  (: int-mapper (-> <exact-integer> (-> <exact-integer> <exact-integer>) <exact-integer>))
+  (: int-mapper (-> <integer> (-> <integer> <integer>) <integer>))
   (define (int-mapper val mapper)
     (mapper val))
 

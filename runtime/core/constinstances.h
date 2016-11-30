@@ -9,20 +9,20 @@ namespace lliby
 	class BooleanCell;
 	class EmptyListCell;
 	class EofObjectCell;
-	class ExactIntegerCell;
+	class IntegerCell;
 }
 
 extern "C"
 {
 
-static const std::size_t SmallExactIntegerCount = 16;
+static const std::size_t SmallIntegerCount = 16;
 
 extern const lliby::UnitCell llcore_unit_value;
 extern const lliby::BooleanCell llcore_false_value;
 extern const lliby::BooleanCell llcore_true_value;
 extern const lliby::EmptyListCell llcore_empty_list_value;
 extern const lliby::EofObjectCell llcore_eof_object_value;
-extern const lliby::ExactIntegerCell llcore_small_exact_integer_values[SmallExactIntegerCount];
+extern const lliby::IntegerCell llcore_small_integer_values[SmallIntegerCount];
 
 }
 

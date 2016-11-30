@@ -4,7 +4,7 @@
 
 #include "alloc/cellref.h"
 #include "alloc/StrongRefVector.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/BooleanCell.h"
@@ -30,10 +30,10 @@ DatumHashTree* pivotTree(DatumHashTree *&treeLoc, DatumHashTree *tree)
 
 void testBasicImmutable(World &world)
 {
-	alloc::ExactIntegerRef intZero(world, ExactIntegerCell::fromValue(world, 0));
-	alloc::ExactIntegerRef intOne(world, ExactIntegerCell::fromValue(world, 1));
-	alloc::ExactIntegerRef intTwo(world, ExactIntegerCell::fromValue(world, 2));
-	alloc::ExactIntegerRef intThree(world, ExactIntegerCell::fromValue(world, 3));
+	alloc::IntegerRef intZero(world, IntegerCell::fromValue(world, 0));
+	alloc::IntegerRef intOne(world, IntegerCell::fromValue(world, 1));
+	alloc::IntegerRef intTwo(world, IntegerCell::fromValue(world, 2));
+	alloc::IntegerRef intThree(world, IntegerCell::fromValue(world, 3));
 
 	alloc::StringRef stringZero(world, StringCell::fromUtf8StdString(world, "0"));
 	alloc::StringRef stringOne(world, StringCell::fromUtf8StdString(world, "1"));
@@ -136,7 +136,7 @@ void testBasicImmutable(World &world)
 		bool seenValues[4] = {false};
 		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
-			std::int64_t intValue = cell_cast<ExactIntegerCell>(value)->value();
+			std::int64_t intValue = cell_cast<IntegerCell>(value)->value();
 
 			ASSERT_TRUE(intValue < 4);
 			ASSERT_FALSE(seenValues[intValue]);
@@ -172,7 +172,7 @@ void testBasicImmutable(World &world)
 		bool seenValues[4] = {false};
 		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
-			std::int64_t intValue = cell_cast<ExactIntegerCell>(value)->value();
+			std::int64_t intValue = cell_cast<IntegerCell>(value)->value();
 
 			ASSERT_TRUE(intValue < 4);
 			ASSERT_FALSE(seenValues[intValue]);
@@ -298,7 +298,7 @@ void testLargeImmutableTree(World &world)
 {
 	static const std::size_t testIntegerCount = 2000;
 
-	alloc::StrongRefVector<ExactIntegerCell> intVector(world);
+	alloc::StrongRefVector<IntegerCell> intVector(world);
 	alloc::StrongRefVector<FlonumCell> flonumVector(world);
 	intVector.reserve(testIntegerCount);
 
@@ -312,8 +312,8 @@ void testLargeImmutableTree(World &world)
 		auto randomNumber = distribution(gen);
 
 		// These should have colliding hash codes
-		intVector.push_back(ExactIntegerCell::fromValue(world, randomNumber));
-		intVector.push_back(ExactIntegerCell::fromValue(world, randomNumber + (1ULL << 32)));
+		intVector.push_back(IntegerCell::fromValue(world, randomNumber));
+		intVector.push_back(IntegerCell::fromValue(world, randomNumber + (1ULL << 32)));
 
 		flonumVector.push_back(FlonumCell::fromValue(world, randomNumber));
 	}
@@ -378,7 +378,7 @@ void testLargeImmutableTree(World &world)
 
 		DatumHashTree::every(oddFalseTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
-			std::int64_t intValue = cell_cast<ExactIntegerCell>(key)->value();
+			std::int64_t intValue = cell_cast<IntegerCell>(key)->value();
 
 			if (intValue % 2)
 			{
@@ -428,7 +428,7 @@ void testLargeImmutableTree(World &world)
 
 		DatumHashTree::every(removedEvenTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 		{
-			std::int64_t intValue = cell_cast<ExactIntegerCell>(key)->value();
+			std::int64_t intValue = cell_cast<IntegerCell>(key)->value();
 			ASSERT_TRUE(intValue % 2);
 			return true;
 		});
@@ -477,11 +477,11 @@ void testLargeImmutableTree(World &world)
 
 void testToFromAssocList(World &world)
 {
-	alloc::ExactIntegerRef intZero(world, ExactIntegerCell::fromValue(world, 0));
-	alloc::ExactIntegerRef intOne(world, ExactIntegerCell::fromValue(world, 1));
-	alloc::ExactIntegerRef intTwo(world, ExactIntegerCell::fromValue(world, 2));
-	alloc::ExactIntegerRef intThree(world, ExactIntegerCell::fromValue(world, 2));
-	alloc::ExactIntegerRef intFour(world, ExactIntegerCell::fromValue(world, 4));
+	alloc::IntegerRef intZero(world, IntegerCell::fromValue(world, 0));
+	alloc::IntegerRef intOne(world, IntegerCell::fromValue(world, 1));
+	alloc::IntegerRef intTwo(world, IntegerCell::fromValue(world, 2));
+	alloc::IntegerRef intThree(world, IntegerCell::fromValue(world, 2));
+	alloc::IntegerRef intFour(world, IntegerCell::fromValue(world, 4));
 
 	alloc::StringRef stringZero(world, StringCell::fromUtf8StdString(world, "0"));
 	alloc::StringRef stringOne(world, StringCell::fromUtf8StdString(world, "1"));

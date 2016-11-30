@@ -21,7 +21,7 @@ class ProcedureSignatureSuite extends FunSuite {
       List(vt.FlonumType),
       Nil,
       None,
-      vt.ReturnType.Reachable(vt.ExactIntegerType)
+      vt.ReturnType.Reachable(vt.IntegerType)
     ))
   }
 
@@ -30,7 +30,7 @@ class ProcedureSignatureSuite extends FunSuite {
       hasWorldArg=true,
       hasSelfArg=false,
       mandatoryArgTypes=List(vt.Double),
-      optionalArgTypes=List(vt.ExactIntegerType),
+      optionalArgTypes=List(vt.IntegerType),
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.Reachable(vt.Int64),
       attributes=Set()
@@ -38,9 +38,9 @@ class ProcedureSignatureSuite extends FunSuite {
 
     assert(returningSignature.toSchemeProcedureType === vt.ProcedureType(
       List(vt.FlonumType),
-      List(vt.ExactIntegerType),
+      List(vt.IntegerType),
       None,
-      vt.ReturnType.Reachable(vt.ExactIntegerType)
+      vt.ReturnType.Reachable(vt.IntegerType)
     ))
   }
 
@@ -59,7 +59,7 @@ class ProcedureSignatureSuite extends FunSuite {
       List(vt.FlonumType),
       Nil,
       Some(vt.SymbolType),
-      vt.ReturnType.Reachable(vt.ExactIntegerType)
+      vt.ReturnType.Reachable(vt.IntegerType)
     ))
   }
 

@@ -8,7 +8,7 @@ object ReportProcHasSideEffects {
     case ("eqv?", 2) | ("equals?", 2) =>
       false
 
-    case ("number?", 1) | ("integer?", 1) | ("rational?", 1) =>
+    case ("number?", 1) | ("integer?", 1) | ("flonum?", 1) | ("rational?", 1) =>
       false
 
     case ("boolean?", 1) | ("not?", 1) =>

@@ -44,7 +44,7 @@ case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
 sealed abstract class NumberLiteral extends NonSymbolLeaf 
 
 case class IntegerLiteral(value : Long) extends NumberLiteral {
-  val schemeType = vt.ExactIntegerType
+  val schemeType = vt.IntegerType
 
   override def toString = value.toString
 }

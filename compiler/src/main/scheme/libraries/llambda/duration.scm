@@ -5,7 +5,7 @@
   (export microseconds milliseconds seconds minutes hours <duration>)
 
   (begin
-    (define-type <duration> <exact-integer>)
+    (define-type <duration> <integer>)
 
     (: microseconds (-> <number> <duration>))
     (define (microseconds x)

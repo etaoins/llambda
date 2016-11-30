@@ -8,14 +8,14 @@ import llambda.compiler.ast
 
 object GenUnboxing {
   def apply(state : GenerationState)(unboxStep : ps.UnboxValue, boxedValue : IrValue) : IrValue = unboxStep match {
-    case _ : ps.UnboxExactInteger =>
+    case _ : ps.UnboxInteger =>
       val block = state.currentBlock
-      ct.ExactIntegerCell.genLoadFromValue(block)(boxedValue)
-    
+      ct.IntegerCell.genLoadFromValue(block)(boxedValue)
+
     case _ : ps.UnboxFlonum =>
       val block = state.currentBlock
       ct.FlonumCell.genLoadFromValue(block)(boxedValue)
-    
+
     case _ : ps.UnboxChar =>
       val block = state.currentBlock
 

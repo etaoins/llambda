@@ -6,7 +6,7 @@
   (assert-equal 300.0 (+ 100.5 -0.5 200.0))
   (assert-equal 300.0 (+ 100.5 -0.5 200))
 
-  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
+  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is a flonum
   (assert-within 9223372036854775807 32.0 (+ 9223372036854775807 9223372036854775807 -9223372036854775807.0))))
 
 (define-test "dynamic (+)" (expect-success
@@ -20,7 +20,7 @@
   (force-evaluation (+ 9223372036854775807 1))))
 
 (define-test "dynamic typed (+) fails on integer overflow" (expect-error integer-overflow-error?
-  (force-evaluation (+ 9223372036854775807 (typed-dynamic 1 <exact-integer>)))))
+  (force-evaluation (+ 9223372036854775807 (typed-dynamic 1 <integer>)))))
 
 (define-test "dynamic untyped (+) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (+ 9223372036854775807 (typed-dynamic 1 <any>)))))
@@ -33,7 +33,7 @@
   (assert-equal -10050.0 (* 100.5 -0.5 200.0))
   (assert-equal 10050.0 (* 100.5 0.5 200))
 
-  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
+  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is a flonum
   (assert-within 9223372036854775807 32.0 (* 9223372036854775807 2 0.5))))
 
 (define-test "dynamic (*)" (expect-success
@@ -47,7 +47,7 @@
   (force-evaluation (* 9223372036854775807 2))))
 
 (define-test "dynamic typed (*) fails on integer overflow" (expect-error integer-overflow-error?
-  (force-evaluation (* 9223372036854775807 (typed-dynamic 2 <exact-integer>)))))
+  (force-evaluation (* 9223372036854775807 (typed-dynamic 2 <integer>)))))
 
 (define-test "dynamic untyped (*) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (* 9223372036854775807 (typed-dynamic 2 <any>)))))
@@ -59,7 +59,7 @@
   (assert-equal -99.0 (- 100.5 -0.5 200.0))
   (assert-equal -100.0 (- 100.5 0.5 200))
 
-  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
+  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is a flonum
   (assert-within 9 32.0 (- -9223372036854775807 9223372036854775807 -9223372036854775807 -9223372036854775807.0))))
 
 (define-test "dynamic (-)" (expect-success
@@ -77,7 +77,7 @@
   (force-evaluation (- -9223372036854775808))))
 
 (define-test "dynamic typed inverting (-) fails on integer overflow" (expect-error integer-overflow-error?
-  (force-evaluation (- (typed-dynamic -9223372036854775808 <exact-integer>)))))
+  (force-evaluation (- (typed-dynamic -9223372036854775808 <integer>)))))
 
 (define-test "dynamic untyped inverting (-) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (- (typed-dynamic -9223372036854775808 <any>)))))
@@ -86,7 +86,7 @@
   (force-evaluation (- -9223372036854775808 1))))
 
 (define-test "dynamic typed subtracting (-) fails on integer overflow" (expect-error integer-overflow-error?
-  (force-evaluation (- -9223372036854775808 (typed-dynamic 1 <exact-integer>)))))
+  (force-evaluation (- -9223372036854775808 (typed-dynamic 1 <integer>)))))
 
 (define-test "dynamic untyped subtracting (-) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (- -9223372036854775808 (typed-dynamic 1 <any>)))))
@@ -108,41 +108,41 @@
   ; This divides exactly
   (assert-equal 2 (/ 20 5 2))
 
-  ; This divides exactly but contains an inexact value
+  ; This divides exactly but contains a flonum value
   (assert-equal 2.0 (/ 20 5.0 2))
 
   ; This divides exactly but it causes an integer overflow
   (assert-equal 9223372036854775808.0 (/ -9223372036854775808 -1))))
 
 (define-test "dynamic (/)" (expect-success
-  (assert-equal 9223372036854775808.0 (/ (typed-dynamic -9223372036854775808 <exact-integer>) -1))
-  (assert-equal 9223372036854775808.0 (/ -9223372036854775808 (typed-dynamic -1 <exact-integer>)))))
+  (assert-equal 9223372036854775808.0 (/ (typed-dynamic -9223372036854775808 <integer>) -1))
+  (assert-equal 9223372036854775808.0 (/ -9223372036854775808 (typed-dynamic -1 <integer>)))))
 
-(define-test "reciprocal (/) with static exact zero fails" (expect-error divide-by-zero-error?
+(define-test "reciprocal (/) with static integer zero fails" (expect-error divide-by-zero-error?
   (/ 0)))
 
-(define-test "reciprocal (/) with dynamic typed exact zero fails" (expect-error divide-by-zero-error?
-  (/ (typed-dynamic 0 <exact-integer>))))
+(define-test "reciprocal (/) with dynamic typed integer zero fails" (expect-error divide-by-zero-error?
+  (/ (typed-dynamic 0 <integer>))))
 
-(define-test "reciprocal (/) with dynamic untyped exact zero fails" (expect-error divide-by-zero-error?
+(define-test "reciprocal (/) with dynamic untyped integer zero fails" (expect-error divide-by-zero-error?
   (/ (typed-dynamic 0 <any>))))
 
-(define-test "(/) with integer and static exact zero fails" (expect-error divide-by-zero-error?
+(define-test "(/) with integer and static integer zero fails" (expect-error divide-by-zero-error?
   (/ 5 0)))
 
-(define-test "(/) with integer and dynamic typed exact zero fails" (expect-error divide-by-zero-error?
-  (/ 5 (typed-dynamic 0 <exact-integer>))))
+(define-test "(/) with integer and dynamic typed integer zero fails" (expect-error divide-by-zero-error?
+  (/ 5 (typed-dynamic 0 <integer>))))
 
-(define-test "(/) with integer and dynamic untyped exact zero fails" (expect-error divide-by-zero-error?
+(define-test "(/) with integer and dynamic untyped integer zero fails" (expect-error divide-by-zero-error?
   (/ 5 (typed-dynamic 0 <any>))))
 
-(define-test "(/) with flonum and static exact zero fails" (expect-error divide-by-zero-error?
+(define-test "(/) with flonum and static integer zero fails" (expect-error divide-by-zero-error?
   (/ 5.0 0)))
 
-(define-test "(/) with flonum and dynamic typed exact zero fails" (expect-error divide-by-zero-error?
-  (/ 5.0 (typed-dynamic 0 <exact-integer>))))
+(define-test "(/) with flonum and dynamic typed integer zero fails" (expect-error divide-by-zero-error?
+  (/ 5.0 (typed-dynamic 0 <integer>))))
 
-(define-test "(/) with flonum and dynamic untyped exact zero fails" (expect-error divide-by-zero-error?
+(define-test "(/) with flonum and dynamic untyped integer zero fails" (expect-error divide-by-zero-error?
   (/ 5.0 (typed-dynamic 0 <any>))))
 
 (define-test "dividing single string fails" (expect-error type-error?
@@ -177,25 +177,25 @@
     (assert-equal -1 remain))
 
   ; Our native code generation requires a constant denominator to avoid divide by zero checks
-  (let* ((result (truncate/ (typed-dynamic 5 <exact-integer>) 2))
+  (let* ((result (truncate/ (typed-dynamic 5 <integer>) 2))
          (quot (car result))
          (remain (cdr result)))
     (assert-equal 2 quot)
     (assert-equal 1 remain))
 
-  (let* ((result (truncate/ (typed-dynamic -5 <exact-integer>) 2))
+  (let* ((result (truncate/ (typed-dynamic -5 <integer>) 2))
          (quot (car result))
          (remain (cdr result)))
     (assert-equal -2 quot)
     (assert-equal -1 remain))
 
-  (let* ((result (truncate/ (typed-dynamic 5 <exact-integer>) -2))
+  (let* ((result (truncate/ (typed-dynamic 5 <integer>) -2))
          (quot (car result))
          (remain (cdr result)))
     (assert-equal -2 quot)
     (assert-equal 1 remain))
 
-  (let* ((result (truncate/ (typed-dynamic -5 <exact-integer>) -2))
+  (let* ((result (truncate/ (typed-dynamic -5 <integer>) -2))
          (quot (car result))
          (remain (cdr result)))
     (assert-equal 2 quot)
@@ -208,10 +208,10 @@
   (truncate/ -9223372036854775808 -1)))
 
 (define-test "dynamic numerator (truncate/ INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (truncate/ (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+  (truncate/ (typed-dynamic -9223372036854775808 <integer>) -1)))
 
 (define-test "dynamic denominator (truncate/ INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (truncate/ -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+  (truncate/ -9223372036854775808 (typed-dynamic -1 <integer>))))
 
 (define-test "static (truncate-quotient)" (expect-static-success
   (assert-equal 2 (truncate-quotient 5 2))
@@ -220,10 +220,10 @@
   (assert-equal 2 (truncate-quotient -5 -2))))
 
 (define-test "dynamic (truncate-quotient)" (expect-success
-  (assert-equal 2 (truncate-quotient (typed-dynamic 5 <exact-integer>) 2))
-  (assert-equal -2 (truncate-quotient (typed-dynamic -5 <exact-integer>) 2))
-  (assert-equal -2 (truncate-quotient (typed-dynamic 5 <exact-integer>) -2))
-  (assert-equal 2 (truncate-quotient (typed-dynamic -5 <exact-integer>) -2))))
+  (assert-equal 2 (truncate-quotient (typed-dynamic 5 <integer>) 2))
+  (assert-equal -2 (truncate-quotient (typed-dynamic -5 <integer>) 2))
+  (assert-equal -2 (truncate-quotient (typed-dynamic 5 <integer>) -2))
+  (assert-equal 2 (truncate-quotient (typed-dynamic -5 <integer>) -2))))
 
 (define-test "(truncate-quotient) by zero fails" (expect-error divide-by-zero-error?
     (truncate-quotient 5 0)))
@@ -232,10 +232,10 @@
   (truncate-quotient -9223372036854775808 -1)))
 
 (define-test "dynamic numerator (truncate-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (truncate-quotient (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+  (truncate-quotient (typed-dynamic -9223372036854775808 <integer>) -1)))
 
 (define-test "dynamic denominator (truncate-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (truncate-quotient -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+  (truncate-quotient -9223372036854775808 (typed-dynamic -1 <integer>))))
 
 (define-test "static (truncate-remainder)" (expect-static-success
   (assert-equal 1 (truncate-remainder 5 2))
@@ -246,11 +246,11 @@
   (assert-equal 0 (truncate-remainder -9223372036854775808 -1))))
 
 (define-test "dynamic (truncate-remainder)" (expect-success
-  (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) 2))
-  (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) 2))
-  (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
-  (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))
-  (assert-equal 0 (truncate-remainder -9223372036854775808 (typed-dynamic -1 <exact-integer>)))))
+  (assert-equal 1 (truncate-remainder (typed-dynamic 5 <integer>) 2))
+  (assert-equal -1 (truncate-remainder (typed-dynamic -5 <integer>) 2))
+  (assert-equal 1 (truncate-remainder (typed-dynamic 5 <integer>) -2))
+  (assert-equal -1 (truncate-remainder (typed-dynamic -5 <integer>) -2))
+  (assert-equal 0 (truncate-remainder -9223372036854775808 (typed-dynamic -1 <integer>)))))
 
 (define-test "(truncate-remainder) by zero fails" (expect-error divide-by-zero-error?
     (truncate-remainder 5 0)))
@@ -287,10 +287,10 @@
   (floor/ -9223372036854775808 -1)))
 
 (define-test "dynamic numerator (floor/ INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (floor/ (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+  (floor/ (typed-dynamic -9223372036854775808 <integer>) -1)))
 
 (define-test "dynamic denominator (floor/ INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (floor/ -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+  (floor/ -9223372036854775808 (typed-dynamic -1 <integer>))))
 
 (define-test "(floor-quotient)" (expect-success
   (assert-equal 2 (floor-quotient 5 2))
@@ -305,10 +305,10 @@
   (floor-quotient -9223372036854775808 -1)))
 
 (define-test "dynamic numerator (floor-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (floor-quotient (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+  (floor-quotient (typed-dynamic -9223372036854775808 <integer>) -1)))
 
 (define-test "dynamic denominator (floor-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
-  (floor-quotient -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+  (floor-quotient -9223372036854775808 (typed-dynamic -1 <integer>))))
 
 (define-test "(floor-remainder)" (expect-success
   (assert-equal 1 (floor-remainder 5 2))
@@ -331,7 +331,7 @@
   (assert-equal 4611686018427387904 (expt 2 62))))
 
 (define-test "dynamic (expt)" (expect-success
-  ; These are inexact versions of the above
+  ; These are flonum versions of the above
   (assert-true (eqv? (expt 2.0 16) 65536.0))
   (assert-true (eqv? (expt 2 16.0) 65536.0))
   (assert-true (eqv? (expt 2.0 16) 65536.0))
@@ -365,7 +365,7 @@
 (define-test "typed procedure adding multiple number types" (expect-success
   (import (llambda typed))
 
-  (: add-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (: add-nums (-> <flonum> <flonum> <integer> <flonum>))
   (define (add-nums op1 op2 op3)
     (+ op1 op2 op3))
 
@@ -374,7 +374,7 @@
 (define-test "typed procedure muliplying multiple number types" (expect-success
   (import (llambda typed))
 
-  (: mul-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (: mul-nums (-> <flonum> <flonum> <integer> <flonum>))
   (define (mul-nums op1 op2 op3)
     (* op1 op2 op3))
 
@@ -383,7 +383,7 @@
 (define-test "typed procedure subtracting multiple number types" (expect-success
   (import (llambda typed))
 
-  (: sub-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (: sub-nums (-> <flonum> <flonum> <integer> <flonum>))
   (define (sub-nums op1 op2 op3)
     (- op1 op2 op3))
 
@@ -392,7 +392,7 @@
 (define-test "typed procedure dividing multiple number types" (expect-success
   (import (llambda typed))
 
-  (: div-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (: div-nums (-> <flonum> <flonum> <integer> <flonum>))
   (define (div-nums op1 op2 op3)
     (/ op1 op2 op3))
 
@@ -406,7 +406,7 @@
   (force-evaluation (square 281474976710656))))
 
 (define-test "dynamic typed (square) fails on integer overflow" (expect-error integer-overflow-error?
-  (force-evaluation (square (typed-dynamic 281474976710656 <exact-integer>)))))
+  (force-evaluation (square (typed-dynamic 281474976710656 <integer>)))))
 
 (define-test "(abs)" (expect-static-success
   (assert-equal 0 (abs 0))

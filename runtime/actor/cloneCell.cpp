@@ -7,10 +7,10 @@
 #include "alloc/Heap.h"
 #include "core/error.h"
 
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/CharCell.h"
@@ -52,7 +52,7 @@ namespace
 	// Replaces a cell with a value that can be safely garbage collected
 	void stubCell(void *placement)
 	{
-		new (placement) ExactIntegerCell(0);
+		new (placement) IntegerCell(0);
 	}
 
 	AnyCell *cloneParamProcCell(alloc::Heap &heap, ParameterProcedureCell *paramProcCell, Context &context)
@@ -205,10 +205,10 @@ namespace
 
 	AnyCell *uncachedClone(alloc::Heap &heap, AnyCell *cell, Context &context)
 	{
-		if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
+		if (auto integerCell = cell_cast<IntegerCell>(cell))
 		{
 			auto placement = heap.allocate();
-			return new (placement) ExactIntegerCell(exactIntCell->value());
+			return new (placement) IntegerCell(integerCell->value());
 		}
 		else if (auto flonumCell = cell_cast<FlonumCell>(cell))
 		{

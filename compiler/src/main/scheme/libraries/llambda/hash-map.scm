@@ -40,5 +40,5 @@
     (define hash-map-merge (world-function llhashmap "llhashmap_hash_map_merge" (All (K V) (-> (HashMap K V) (HashMap K V) (HashMap K V)))))
 
     (define native-hash (native-function llhashmap "llhashmap_hash" (-> <any> <native-int64> <native-uint32>)))
-    (define (hash value [bound : <exact-integer> (expt 2 32)])
+    (define (hash value [bound : <integer> (expt 2 32)])
       (native-hash value bound))))

@@ -17,35 +17,35 @@ void testAll(World &world)
 		FlonumCell *value = FlonumCell::fromValue(world, 0.0);
 		ASSERT_EQUAL(value->value(), 0.0);
 
-		ASSERT_TRUE(value->isInteger());
+		ASSERT_TRUE(value->isIntegral());
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_FALSE(value->isInfinite());
 		ASSERT_FALSE(value->isPositiveInfinity());
 		ASSERT_FALSE(value->isNegativeInfinity());
 	}
-	
+
 	{
 		FlonumCell *value = FlonumCell::fromValue(world, 256.5);
 		ASSERT_EQUAL(value->value(), 256.5);
-		
-		ASSERT_FALSE(value->isInteger());
+
+		ASSERT_FALSE(value->isIntegral());
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_FALSE(value->isInfinite());
 		ASSERT_FALSE(value->isPositiveInfinity());
 		ASSERT_FALSE(value->isNegativeInfinity());
 	}
-	
+
 	{
 		FlonumCell *value = FlonumCell::fromValue(world, -500);
 		ASSERT_EQUAL(value->value(), -500);
-		
-		ASSERT_TRUE(value->isInteger());
+
+		ASSERT_TRUE(value->isIntegral());
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_FALSE(value->isInfinite());
 		ASSERT_FALSE(value->isPositiveInfinity());
 		ASSERT_FALSE(value->isNegativeInfinity());
 	}
-	
+
 	{
 		FlonumCell *value = FlonumCell::NaN(world);
 
@@ -54,7 +54,7 @@ void testAll(World &world)
 		ASSERT_FALSE(value->isPositiveInfinity());
 		ASSERT_FALSE(value->isNegativeInfinity());
 	}
-	
+
 	{
 		FlonumCell *value = FlonumCell::positiveInfinity(world);
 
@@ -63,7 +63,7 @@ void testAll(World &world)
 		ASSERT_TRUE(value->isPositiveInfinity());
 		ASSERT_FALSE(value->isNegativeInfinity());
 	}
-	
+
 	{
 		FlonumCell *value = FlonumCell::negativeInfinity(world);
 

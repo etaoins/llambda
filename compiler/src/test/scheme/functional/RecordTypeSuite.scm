@@ -67,7 +67,7 @@
   (import (llambda typed))
 
   (define-record-type <mutable-value> (mutable-value field) mutable-value?
-    ((field : <exact-integer>) mutable-value-field set-mutable-value-field!))
+    ((field : <integer>) mutable-value-field set-mutable-value-field!))
 
   (define instance (mutable-value 50))
   (set-mutable-value-field! instance -20)
@@ -77,7 +77,7 @@
   (import (llambda typed))
 
   (define-record-type <mutable-value> (mutable-value field) mutable-value?
-    ((field : <exact-integer>) mutable-value-field set-mutable-value-field!))
+    ((field : <integer>) mutable-value-field set-mutable-value-field!))
 
   (set-mutable-value-field! (mutable-value 50) #t)))
 
@@ -86,7 +86,7 @@
 
   ; Use at least three 64bit fields to force out-of-line storage
   (define-record-type <three-value> (three-value field1 field2 field3) three-value?
-    ((field1 : <exact-integer>) three-value-field1)
+    ((field1 : <integer>) three-value-field1)
     (field2 three-value-field2 set-three-value-field2!)
     ((field3 : <flonum>) three-value-field3 set-three-value-field3!))
 
@@ -99,7 +99,7 @@
   (import (llambda typed))
 
   (define-record-type <two-value> (two-value field1 field2) two-value?
-    ((field1 : <exact-integer>) two-value-field1)
+    ((field1 : <integer>) two-value-field1)
     (field2 two-value-field2 set-two-value-field2!))
 
   (define instance ((typeless-cell two-value) 20 30))
@@ -113,7 +113,7 @@
 
   (define-record-type <single-value> (single-value field1 field2 field3) single-value?
     ((field1 : <char>) single-value-field1)
-    ((field2 : <exact-integer>) single-value-field2)
+    ((field2 : <integer>) single-value-field2)
     ((field3 : <char>) single-value-field3))
 
   (define instance (single-value #\a 2 #\c))
@@ -124,9 +124,9 @@
   (import (llambda typed))
 
   (define-record-type <single-value> (single-value field1 field2 field3) single-value?
-    ((field1 : <exact-integer>) single-value-field1)
-    ((field2 : <exact-integer>) single-value-field2)
-    ((field3 : <exact-integer>) single-value-field3))
+    ((field1 : <integer>) single-value-field1)
+    ((field2 : <integer>) single-value-field2)
+    ((field3 : <integer>) single-value-field3))
 
   (define instance (single-value 1 2 3))
 
@@ -150,7 +150,7 @@
   (import (llambda typed))
 
   (define-record-type <world-value> (world-value world) world-value?
-    ((world : <exact-integer>) single-value-field2))
+    ((world : <integer>) single-value-field2))
 
   (world-value 5)
   ((typeless-cell world-value) 5)))
@@ -163,7 +163,7 @@
                       ([name : <string>] named-number-name set-named-number-name!))
 
   (define-record-type <named-int> <named-number> (named-int name value) named-int?
-                      ([value : <exact-integer>] named-int-value set-named-int-value!))
+                      ([value : <integer>] named-int-value set-named-int-value!))
 
   (define-record-type <named-flonum> <named-number> (named-flonum name value) named-flonum?
                       ([value : <flonum>] named-flonum-value set-named-flonum-value!))
@@ -250,11 +250,11 @@
   (import (llambda typed))
 
   (define-record-type <base-record> (base-record field1 field2) base-record?
-                      ([field1 : <exact-integer>] base-record-field1)
-                      ([field2 : <exact-integer>] base-record-field2))
+                      ([field1 : <integer>] base-record-field1)
+                      ([field2 : <integer>] base-record-field2))
 
   (define-record-type <child-record> <base-record> (child-record field1 field2 field3) child-record?
-                      ([field3 : <exact-integer>] child-record-field3))
+                      ([field3 : <integer>] child-record-field3))
 
   (define instance (child-record 1 2 3))
 

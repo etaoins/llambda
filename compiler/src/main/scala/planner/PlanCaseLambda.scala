@@ -35,7 +35,7 @@ private[planner] object PlanCaseLambda {
         vt.SpecificPairType(vt.AnySchemeType, cdrType)
     }
   }
-  
+
   private def listOfExactly(length : Int) : vt.SchemeType = {
     (0 until length).foldRight(vt.EmptyListType : vt.SchemeType) {
       case (_, cdrType) =>

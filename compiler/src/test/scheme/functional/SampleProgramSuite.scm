@@ -177,9 +177,9 @@
 (define-test "integer factorization" (expect (1 239 4649 1111111)
   (import (llambda typed))
 
-  (: factors (-> <exact-integer> <list-element>))
+  (: factors (-> <integer> <list-element>))
   (define (factors n)
-    (: *factors (-> <exact-integer> <list-element>))
+    (: *factors (-> <integer> <list-element>))
     (define (*factors d)
       (cond ((> d n) (list))
             ((= (truncate-remainder n d) 0) (cons d (*factors (+ d 1))))
@@ -202,7 +202,7 @@
 (define-test "recursive fibonacci" (expect 144
   (import (llambda typed))
 
-  (: fib-rec (-> <exact-integer> <exact-integer>))
+  (: fib-rec (-> <integer> <integer>))
   (define (fib-rec n)
     (if (< n 2)
       n
@@ -215,9 +215,9 @@
 (define-test "Dijkstra fibonacci" (expect 144
   (import (llambda typed))
 
-  (: fib (-> <exact-integer> <exact-integer>))
+  (: fib (-> <integer> <integer>))
   (define (fib n)
-    (: fib-aux (-> <exact-integer> <exact-integer> <exact-integer> <exact-integer> <exact-integer> <exact-integer>))
+    (: fib-aux (-> <integer> <integer> <integer> <integer> <integer> <integer>))
     (define (fib-aux a b p q count)
       (cond ((= count 0) b)
             ((even? count)
@@ -277,9 +277,9 @@
 (define-test "levenshtein distance" (expect 3
   (import (llambda typed))
 
-  (: levenshtein (-> <string> <string> <exact-integer>))
+  (: levenshtein (-> <string> <string> <integer>))
   (define (levenshtein s t)
-    (: %levenshtein (-> (Listof <char>) <exact-integer> (Listof <char>) <exact-integer> <exact-integer>))
+    (: %levenshtein (-> (Listof <char>) <integer> (Listof <char>) <integer> <integer>))
     (define (%levenshtein s sl t tl)
       (cond ((zero? sl) tl)
             ((zero? tl) sl)

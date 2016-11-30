@@ -6,7 +6,7 @@
 #include "assertions.h"
 #include "stubdefinitions.h"
 
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
@@ -330,14 +330,14 @@ void testLargeNumberOfAllocations(World &world)
 
 void testAll(World &world)
 {
-	// Test exact integers
-	testNonRecursiveGc<ExactIntegerCell>(world, [&world] ()
+	// Test integers
+	testNonRecursiveGc<IntegerCell>(world, [&world] ()
 	{
 		// Use a large value so we don't get a global constant
-		return ExactIntegerCell::fromValue(world, 10000);
+		return IntegerCell::fromValue(world, 10000);
 	});
 
-	// Test inexact rationals
+	// Test flonums
 	testNonRecursiveGc<FlonumCell>(world, [&world] ()
 	{
 		return FlonumCell::fromValue(world, 5.0);

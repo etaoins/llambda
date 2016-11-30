@@ -17,24 +17,24 @@ object NumberProcPlanner extends ReportProcPlanner {
   private type StaticDoubleOp = (Double, Double) => Double
 
   private sealed abstract class CompareResult
-  private case class StaticCompare(result : Boolean, inexact : Boolean) extends CompareResult
-  private case class DynamicCompare(nativePred : ps.TempValue, inexact : Boolean) extends CompareResult
+  private case class StaticCompare(result : Boolean, flonum : Boolean) extends CompareResult
+  private case class DynamicCompare(nativePred : ps.TempValue, flonum : Boolean) extends CompareResult
   private case object UnplannableCompare extends CompareResult
 
   private def integerValue(
       value : iv.IntermediateValue
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
       value match  {
-        case knownExactInt if knownExactInt.hasDefiniteType(vt.ExactIntegerType) =>
-          // Already an exact int
-          Some(knownExactInt)
+        case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
+          // Already an  int
+          Some(knownInt)
 
         case iv.ConstantFlonumValue(constFlonumVal) =>
           val longValue = constFlonumVal.toLong
 
           // Make sure this was lossless
           if (longValue.toDouble == constFlonumVal) {
-            Some(iv.ConstantExactIntegerValue(longValue))
+            Some(iv.ConstantIntegerValue(longValue))
           }
           else {
             None
@@ -53,12 +53,12 @@ object NumberProcPlanner extends ReportProcPlanner {
           // Already a flonum
           Some(knownFlonum)
 
-        case iv.ConstantExactIntegerValue(constExactIntVal) =>
+        case iv.ConstantIntegerValue(constIntegerVal) =>
           // Statically convert it to a double
-          Some(iv.ConstantFlonumValue(constExactIntVal.toDouble))
+          Some(iv.ConstantFlonumValue(constIntegerVal.toDouble))
 
-        case knownInt if knownInt.hasDefiniteType(vt.ExactIntegerType) =>
-          val intTemp = knownInt.toTempValue(vt.ExactIntegerType)
+        case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
+          val intTemp = knownInt.toTempValue(vt.IntegerType)
           val doubleTemp = ps.Temp(vt.Double)
 
           plan.steps += ps.ConvertNativeIntegerToFloat(doubleTemp, intTemp, true, vt.Double)
@@ -78,17 +78,17 @@ object NumberProcPlanner extends ReportProcPlanner {
       val2 : iv.IntermediateValue
   )(implicit plan : PlanWriter) : CompareResult = {
     (val1, val2) match {
-      case (iv.ConstantExactIntegerValue(constExactIntVal1), iv.ConstantExactIntegerValue(constExactIntVal2)) =>
-        val compareResult = staticIntCalc(constExactIntVal1, constExactIntVal2)
-        StaticCompare(compareResult, inexact=false)
+      case (iv.ConstantIntegerValue(constIntegerVal1), iv.ConstantIntegerValue(constIntegerVal2)) =>
+        val compareResult = staticIntCalc(constIntegerVal1, constIntegerVal2)
+        StaticCompare(compareResult, flonum=false)
 
       case (constNum1 : iv.ConstantNumberValue, constNum2 : iv.ConstantNumberValue) =>
         val compareResult = staticFlonumCalc(constNum1.doubleValue, constNum2.doubleValue)
-        StaticCompare(compareResult, inexact=true)
+        StaticCompare(compareResult, flonum=true)
 
-      case (exactInt1, exactInt2) if exactInt1.hasDefiniteType(vt.ExactIntegerType) && exactInt2.hasDefiniteType(vt.ExactIntegerType) =>
-        val val1Temp = exactInt1.toTempValue(vt.Int64)
-        val val2Temp = exactInt2.toTempValue(vt.Int64)
+      case (integer1, integer2) if integer1.hasDefiniteType(vt.IntegerType) && integer2.hasDefiniteType(vt.IntegerType) =>
+        val val1Temp = integer1.toTempValue(vt.Int64)
+        val val2Temp = integer2.toTempValue(vt.Int64)
 
         val predicateTemp = ps.Temp(vt.Predicate)
 
@@ -102,7 +102,7 @@ object NumberProcPlanner extends ReportProcPlanner {
         // Do a direct integer compare
         plan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
 
-        DynamicCompare(predicateTemp, inexact=false)
+        DynamicCompare(predicateTemp, flonum=false)
 
       case (flonum1, flonum2) if flonum1.hasDefiniteType(vt.FlonumType) && flonum2.hasDefiniteType(vt.FlonumType) =>
         val val1Temp = flonum1.toTempValue(vt.Double)
@@ -113,7 +113,7 @@ object NumberProcPlanner extends ReportProcPlanner {
         // Do a direct float compare
         plan.steps += ps.FloatCompare(predicateTemp, compareCond, val1Temp, val2Temp)
 
-        DynamicCompare(predicateTemp, inexact=true)
+        DynamicCompare(predicateTemp, flonum=true)
 
       case _ =>
         UnplannableCompare
@@ -175,9 +175,9 @@ object NumberProcPlanner extends ReportProcPlanner {
 
   private def selectValue(
       value : iv.IntermediateValue,
-      forceInexact : Boolean
+      forceFlonum : Boolean
   )(implicit plan : PlanWriter) : iv.IntermediateValue = {
-    if (!forceInexact) {
+    if (!forceFlonum) {
       value
     }
     else {
@@ -214,21 +214,21 @@ object NumberProcPlanner extends ReportProcPlanner {
           // We can't compare this at compile time
           return None
 
-        case StaticCompare(true, inexactCompare) =>
+        case StaticCompare(true, flonumCompare) =>
           // Statically select the left value
-          selectValue(left, forceInexact=inexactCompare)
+          selectValue(left, forceFlonum=flonumCompare)
 
-        case StaticCompare(false, inexactCompare) =>
+        case StaticCompare(false, flonumCompare) =>
           // Statically select the right value
-          selectValue(right, forceInexact=inexactCompare)
+          selectValue(right, forceFlonum=flonumCompare)
 
-        case DynamicCompare(nativePred, inexactCompare) =>
-          // Create our branches and select our values (which may cause them to become inexact)
+        case DynamicCompare(nativePred, flonumCompare) =>
+          // Create our branches and select our values (which may cause them to become flonjm)
           val truePlan = comparePlan.forkPlan()
-          val selectedLeft = selectValue(left, forceInexact=inexactCompare)(truePlan)
+          val selectedLeft = selectValue(left, forceFlonum=flonumCompare)(truePlan)
 
           val falsePlan = comparePlan.forkPlan()
-          val selectedRight = selectValue(right, forceInexact=inexactCompare)(falsePlan)
+          val selectedRight = selectValue(right, forceFlonum=flonumCompare)(falsePlan)
 
           // Phi the results together
           val resultType = phiTypeForSelect(selectedLeft, selectedRight)

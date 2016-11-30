@@ -127,16 +127,16 @@ class CellValue(
       unboxedTemp
 
     case intType : vt.IntType =>
-      val boxedExactInt = toTempValue(vt.ExactIntegerType)
+      val boxedInt = toTempValue(vt.IntegerType)
       val unboxedTemp = ps.Temp(vt.Int64)
-      plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
+      plan.steps += ps.UnboxInteger(unboxedTemp, boxedInt)
 
       if (intType.bits == 64) {
         // Correct width
         unboxedTemp
       }
       else {
-        AssertIntInRange(unboxedTemp, vt.Int64, intType, evidenceOpt=Some(boxedExactInt))
+        AssertIntInRange(unboxedTemp, vt.Int64, intType, evidenceOpt=Some(boxedInt))
 
         // Convert to the right width
         val convTemp = ps.Temp(intType)

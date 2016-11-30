@@ -9,7 +9,7 @@
 #include <cmath>
 #include <ctype.h>
 
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/EofObjectCell.h"
 #include "binding/BooleanCell.h"
@@ -761,7 +761,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 
 			if (previousSize != numberString.size())
 			{
-				// We took more numbers - we're not exact
+				// We took more numbers after the decimal place - we're a flonum
 				double doubleValue;
 
 				try
@@ -798,7 +798,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	}
 	catch(std::out_of_range)
 	{
-		throw MalformedDatumException(inputOffset(rdbuf()), "Exact integer value out-of-range");
+		throw MalformedDatumException(inputOffset(rdbuf()), "Integer value out-of-range");
 	}
 
 	if (negative)
@@ -812,13 +812,13 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 
 		if (!std::isnan(exponentValue))
 		{
-			// We have an exponent - we're inexact
+			// We have an exponent - we're a flonum
 			double doubleValue = intValue * std::pow(10, exponentValue);
 			return FlonumCell::fromValue(m_world, doubleValue);
 		}
 	}
 
-	return ExactIntegerCell::fromValue(m_world, intValue);
+	return IntegerCell::fromValue(m_world, intValue);
 }
 
 AnyCell* DatumReader::parseList(char closeChar)
@@ -966,14 +966,14 @@ AnyCell* DatumReader::parseBytevector()
 		// discard it
 		AnyCell *element = parse();
 
-		if (auto exactInt = cell_cast<ExactIntegerCell>(element))
+		if (auto integerCell = cell_cast<IntegerCell>(element))
 		{
-			if ((exactInt->value() < 0) || (exactInt->value() > 255))
+			if ((integerCell->value() < 0) || (integerCell->value() > 255))
 			{
 				throw MalformedDatumException(inputOffset(rdbuf()), "Value out of byte range while reading bytevector");
 			}
 
-			elements.push_back(exactInt->value());
+			elements.push_back(integerCell->value());
 		}
 		else
 		{

@@ -14,7 +14,7 @@ object DatumToConstantValue {
         iv.ConstantSymbolValue(content)
 
       case ast.IntegerLiteral(value) =>
-        iv.ConstantExactIntegerValue(value)
+        iv.ConstantIntegerValue(value)
 
       case ast.FlonumLiteral(value) =>
         iv.ConstantFlonumValue(value)

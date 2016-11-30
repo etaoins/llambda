@@ -102,9 +102,9 @@
 (define-test "applying a typed procedure checks its return type" (expect-error type-error?
   (import (llambda typed))
 
-  (: exact-half (-> <exact-integer> <exact-integer>))
-  (define (exact-half n)
+  (: integer-half (-> <integer> <integer>))
+  (define (integer-half n)
     (/ n 2))
 
-  ; This would normally result in 1.5 but the return type is declared as <exact-integer>
-  (exact-half 3)))
+  ; This would normally result in 1.5 but the return type is declared as <integer>
+  (integer-half 3)))

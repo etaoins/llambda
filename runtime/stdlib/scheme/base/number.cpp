@@ -1,5 +1,5 @@
 #include "binding/NumberCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProperList.h"
 
@@ -11,57 +11,57 @@ using namespace lliby;
 
 namespace
 {
-	template<class ExactCompare, class InexactCompare>
-	bool numericCompare(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	template<class IntegerCompare, class FlonumCompare>
+	bool numericCompare(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead, IntegerCompare integerCompare, FlonumCompare flonumCompare)
 	{
 		auto compareCells = [&] (NumberCell *number1, NumberCell *number2) -> bool
 		{
-			auto exactNumber1 = cell_cast<ExactIntegerCell>(number1);
-			auto exactNumber2 = cell_cast<ExactIntegerCell>(number2);
+			auto integerNumber1 = cell_cast<IntegerCell>(number1);
+			auto integerNumber2 = cell_cast<IntegerCell>(number2);
 
-			if (exactNumber1 && exactNumber2)
+			if (integerNumber1 && integerNumber2)
 			{
-				// Both cells are exact
-				return exactCompare(exactNumber1->value(), exactNumber2->value());
+				// Both cells are integers
+				return integerCompare(integerNumber1->value(), integerNumber2->value());
 			}
-			else if (!exactNumber1 && !exactNumber2)
+			else if (!integerNumber1 && !integerNumber2)
 			{
-				// Both cells are inexact
-				auto inexactNumber1 = cell_unchecked_cast<FlonumCell>(number1);
-				auto inexactNumber2 = cell_unchecked_cast<FlonumCell>(number2);
+				// Both cells are flonums
+				auto flonumNumber1 = cell_unchecked_cast<FlonumCell>(number1);
+				auto flonumNumber2 = cell_unchecked_cast<FlonumCell>(number2);
 
-				return inexactCompare(inexactNumber1->value(), inexactNumber2->value());
+				return flonumCompare(flonumNumber1->value(), flonumNumber2->value());
 			}
-			else if (!exactNumber1 && exactNumber2)
+			else if (!integerNumber1 && integerNumber2)
 			{
-				auto inexactNumber1 = cell_unchecked_cast<FlonumCell>(number1);
+				auto flonumNumber1 = cell_unchecked_cast<FlonumCell>(number1);
 
-				// Try to convert to exact
-				auto inexactNumber1AsExact = static_cast<std::int64_t>(inexactNumber1->value());
-				if (inexactNumber1->value() == inexactNumber1AsExact)
+				// Try to convert to integer
+				auto flonumNumber1AsInteger = static_cast<std::int64_t>(flonumNumber1->value());
+				if (flonumNumber1->value() == flonumNumber1AsInteger)
 				{
-					// Compare as exact
-					return exactCompare(inexactNumber1AsExact, exactNumber2->value());
+					// Compare as integer
+					return integerCompare(flonumNumber1AsInteger, integerNumber2->value());
 				}
 
-				// Compare as inexact
-				return inexactCompare(inexactNumber1->value(), exactNumber2->value());
+				// Compare as inteer
+				return flonumCompare(flonumNumber1->value(), integerNumber2->value());
 			}
-			else // if (exactNumber1 && !exactNumber2)
+			else // if (integerNumber1 && !integerNumber2)
 			{
-				auto inexactNumber2 = cell_unchecked_cast<FlonumCell>(number2);
+				auto flonumNumber2 = cell_unchecked_cast<FlonumCell>(number2);
 
-				// Try to convert to exact
-				auto inexactNumber2AsExact = static_cast<std::int64_t>(inexactNumber2->value());
+				// Try to convert to integer
+				auto flonumNumber2AsInteger = static_cast<std::int64_t>(flonumNumber2->value());
 
-				if (inexactNumber2->value() == inexactNumber2AsExact)
+				if (flonumNumber2->value() == flonumNumber2AsInteger)
 				{
-					// Compare as exact
-					return exactCompare(exactNumber1->value(), inexactNumber2AsExact);
+					// Compare as integer
+					return integerCompare(integerNumber1->value(), flonumNumber2AsInteger);
 				}
 
-				// Compare as inexact
-				return inexactCompare(exactNumber1->value(), inexactNumber2->value());
+				// Compare as flonum
+				return flonumCompare(integerNumber1->value(), flonumNumber2->value());
 			}
 		};
 
@@ -85,21 +85,21 @@ namespace
 		return true;
 	}
 
-	template<class ExactCompare, class InexactCompare>
-	NumberCell *selectNumericValue(World &world, NumberCell *initialNumber, RestValues<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	template<class IntegerCompare, class FlonumCompare>
+	NumberCell *selectNumericValue(World &world, NumberCell *initialNumber, RestValues<NumberCell> *argHead, IntegerCompare integerCompare, FlonumCompare flonumCompare)
 	{
 		NumberCell *selectedNumber = initialNumber;
-		bool resultExact = true;
+		bool resultIsFlonum = true;
 
 		for(auto otherNumber : *argHead)
 		{
-			auto selectedInt = cell_cast<ExactIntegerCell>(selectedNumber);
-			auto otherInt = cell_cast<ExactIntegerCell>(otherNumber);
+			auto selectedInt = cell_cast<IntegerCell>(selectedNumber);
+			auto otherInt = cell_cast<IntegerCell>(otherNumber);
 
 			if (selectedInt && otherInt)
 			{
 				// We can compare these as integers
-				if (exactCompare(otherInt->value(), selectedInt->value()))
+				if (integerCompare(otherInt->value(), selectedInt->value()))
 				{
 					// Switch the selected number
 					selectedNumber = otherInt;
@@ -107,20 +107,20 @@ namespace
 			}
 			else
 			{
-				// We have to compare these as doubles - even if we don't select the inexact value the entire result
-				// becomes inexact
-				resultExact = false;
+				// We have to compare these as doubles - even if we don't select the flonum value the entire result
+				// becomes flonum
+				resultIsFlonum = false;
 
-				if (inexactCompare(otherNumber->toDouble(), selectedNumber->toDouble()))
+				if (flonumCompare(otherNumber->toDouble(), selectedNumber->toDouble()))
 				{
 					selectedNumber = otherNumber;
 				}
 			}
 		}
 
-		if (!resultExact && selectedNumber->isExact())
+		if (!resultIsFlonum && IntegerCell::isInstance(selectedNumber))
 		{
-			// We have to allocate a new cell to de-exact this number
+			// We have to allocate a new cell to convert this number to flonum
 			return FlonumCell::fromValue(world, selectedNumber->toDouble());
 		}
 		else
@@ -135,18 +135,18 @@ extern "C"
 
 std::int64_t llbase_integer(World &world, NumberCell *numeric)
 {
-	if (auto exactInt = cell_cast<ExactIntegerCell>(numeric))
+	if (auto integer = cell_cast<IntegerCell>(numeric))
 	{
-		// This is already exact
-		return exactInt->value();
+		// This is already an integer
+		return integer->value();
 	}
 
-	// This must be rational; we don't need a type check
+	// This must be a flonum; we don't need a type check
 	auto flonum = cell_unchecked_cast<FlonumCell>(numeric);
 
-	if (!flonum->isInteger())
+	if (!flonum->isIntegral())
 	{
-		signalError(world, ErrorCategory::InvalidArgument, "Attempted to convert non-integral inexact rational to exact value", {numeric});
+		signalError(world, ErrorCategory::InvalidArgument, "Attempted to convert non-integral flonum to integer", {numeric});
 	}
 
 	return static_cast<std::int64_t>(flonum->value());
@@ -156,20 +156,20 @@ double llbase_flonum(NumberCell *numeric)
 {
 	if (auto flonum = cell_cast<FlonumCell>(numeric))
 	{
-		// This is already inexact
+		// This is already a flonum
 		return flonum->value();
 	}
 
-	// This must be an exact int; we don't need a type check
-	auto exactInt = cell_unchecked_cast<ExactIntegerCell>(numeric);
+	// This must be an integer; we don't need a type check
+	auto integer = cell_unchecked_cast<IntegerCell>(numeric);
 
 	// Cast to a double
-	return static_cast<double>(exactInt->value());
+	return static_cast<double>(integer->value());
 }
 
 bool llbase_is_rational(AnyCell *anyCell)
 {
-	if (ExactIntegerCell::isInstance(anyCell))
+	if (IntegerCell::isInstance(anyCell))
 	{
 		return true;
 	}

@@ -140,8 +140,8 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
         // We can fast path this; the possible types for either value consist entirely of fast path types
         directCompareAsType(vt.AnySchemeType, val1, val2)
       }
-      else if (val1.hasDefiniteType(vt.ExactIntegerType) && 
-               val2.hasDefiniteType(vt.ExactIntegerType)) {
+      else if (val1.hasDefiniteType(vt.IntegerType) &&
+               val2.hasDefiniteType(vt.IntegerType)) {
         directCompareAsType(vt.Int64, val1, val2)
       }
       else if (val1.hasDefiniteType(vt.CharType) && 

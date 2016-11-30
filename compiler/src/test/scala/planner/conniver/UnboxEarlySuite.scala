@@ -18,13 +18,13 @@ class UnboxEarlySuite extends FunSuite {
 
   test("optimal unboxing is preserved") {
     val initialTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp = ps.Temp(vt.IntegerType)
     val unboxedTemp = ps.Temp(vt.Int64)
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp, initialTemp),
-      ps.UnboxExactInteger(unboxedTemp, boxedTemp),
+      ps.BoxInteger(boxedTemp, initialTemp),
+      ps.UnboxInteger(unboxedTemp, boxedTemp),
       ps.Return(Some(unboxedTemp))
     )
 
@@ -35,24 +35,24 @@ class UnboxEarlySuite extends FunSuite {
 
   test("unboxing is moved across unrelated steps") {
     val initialTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp = ps.Temp(vt.IntegerType)
     val unboxedTemp = ps.Temp(vt.Int64)
 
     val symbolTemp = ps.Temp(vt.SymbolType)
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp, initialTemp),
-      // There is no need for the boxed exact integer to be live here if the unboxing is moved earlier
+      ps.BoxInteger(boxedTemp, initialTemp),
+      // There is no need for the boxed integer to be live here if the unboxing is moved earlier
       ps.CreateSymbolCell(symbolTemp, "Test"),
-      ps.UnboxExactInteger(unboxedTemp, boxedTemp),
+      ps.UnboxInteger(unboxedTemp, boxedTemp),
       ps.Return(Some(unboxedTemp))
     )
 
     val expectedSteps  = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp, initialTemp),
-      ps.UnboxExactInteger(unboxedTemp, boxedTemp),
+      ps.BoxInteger(boxedTemp, initialTemp),
+      ps.UnboxInteger(unboxedTemp, boxedTemp),
       ps.CreateSymbolCell(symbolTemp, "Test"),
       ps.Return(Some(unboxedTemp))
     )
@@ -63,28 +63,28 @@ class UnboxEarlySuite extends FunSuite {
   test("moving multiple unboxing steps") {
     val initialTemp = ps.Temp(vt.Int64)
 
-    val boxedTemp1 = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp1 = ps.Temp(vt.IntegerType)
     val unboxedTemp1 = ps.Temp(vt.Int64)
-    val boxedTemp2 = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp2 = ps.Temp(vt.IntegerType)
     val unboxedTemp2 = ps.Temp(vt.Int64)
 
     val symbolTemp = ps.Temp(vt.SymbolType)
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp1, initialTemp),
-      ps.BoxExactInteger(boxedTemp2, initialTemp),
+      ps.BoxInteger(boxedTemp1, initialTemp),
+      ps.BoxInteger(boxedTemp2, initialTemp),
       ps.CreateSymbolCell(symbolTemp, "Test"),
-      ps.UnboxExactInteger(unboxedTemp1, boxedTemp1),
-      ps.UnboxExactInteger(unboxedTemp2, boxedTemp2)
+      ps.UnboxInteger(unboxedTemp1, boxedTemp1),
+      ps.UnboxInteger(unboxedTemp2, boxedTemp2)
     )
 
     val expectedSteps  = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp1, initialTemp),
-      ps.UnboxExactInteger(unboxedTemp1, boxedTemp1),
-      ps.BoxExactInteger(boxedTemp2, initialTemp),
-      ps.UnboxExactInteger(unboxedTemp2, boxedTemp2),
+      ps.BoxInteger(boxedTemp1, initialTemp),
+      ps.UnboxInteger(unboxedTemp1, boxedTemp1),
+      ps.BoxInteger(boxedTemp2, initialTemp),
+      ps.UnboxInteger(unboxedTemp2, boxedTemp2),
       ps.CreateSymbolCell(symbolTemp, "Test")
     )
 
@@ -93,7 +93,7 @@ class UnboxEarlySuite extends FunSuite {
 
   test("unboxing won't cross step using boxed version as input") {
     val initialTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp = ps.Temp(vt.IntegerType)
     val unboxedTemp = ps.Temp(vt.Int64)
 
     val symbolTemp = ps.Temp(vt.SymbolType)
@@ -101,18 +101,18 @@ class UnboxEarlySuite extends FunSuite {
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp, initialTemp),
-      ps.TestCellType(testTemp, boxedTemp, ct.ExactIntegerCell),
+      ps.BoxInteger(boxedTemp, initialTemp),
+      ps.TestCellType(testTemp, boxedTemp, ct.IntegerCell),
       ps.CreateSymbolCell(symbolTemp, "Test"),
-      ps.UnboxExactInteger(unboxedTemp, boxedTemp),
+      ps.UnboxInteger(unboxedTemp, boxedTemp),
       ps.Return(Some(unboxedTemp))
     )
 
     val expectedSteps  = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(boxedTemp, initialTemp),
-      ps.TestCellType(testTemp, boxedTemp, ct.ExactIntegerCell),
-      ps.UnboxExactInteger(unboxedTemp, boxedTemp),
+      ps.BoxInteger(boxedTemp, initialTemp),
+      ps.TestCellType(testTemp, boxedTemp, ct.IntegerCell),
+      ps.UnboxInteger(unboxedTemp, boxedTemp),
       ps.CreateSymbolCell(symbolTemp, "Test"),
       ps.Return(Some(unboxedTemp))
     )
@@ -121,22 +121,22 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("external boxed values are unboxed at top") {
-    val boxedTemp1 = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp1 = ps.Temp(vt.IntegerType)
     val unboxedTemp1 = ps.Temp(vt.Int64)
-    val boxedTemp2 = ps.Temp(vt.ExactIntegerType)
+    val boxedTemp2 = ps.Temp(vt.IntegerType)
     val unboxedTemp2 = ps.Temp(vt.Int64)
 
     val symbolTemp = ps.Temp(vt.SymbolType)
 
     val inputSteps = List(
       ps.CreateSymbolCell(symbolTemp, "Test"),
-      ps.UnboxExactInteger(unboxedTemp1, boxedTemp1),
-      ps.UnboxExactInteger(unboxedTemp2, boxedTemp2)
+      ps.UnboxInteger(unboxedTemp1, boxedTemp1),
+      ps.UnboxInteger(unboxedTemp2, boxedTemp2)
     )
 
     val expectedSteps  = List(
-      ps.UnboxExactInteger(unboxedTemp1, boxedTemp1),
-      ps.UnboxExactInteger(unboxedTemp2, boxedTemp2),
+      ps.UnboxInteger(unboxedTemp1, boxedTemp1),
+      ps.UnboxInteger(unboxedTemp2, boxedTemp2),
       ps.CreateSymbolCell(symbolTemp, "Test")
     )
 
@@ -146,28 +146,28 @@ class UnboxEarlySuite extends FunSuite {
   test("unboxing in branches") {
     val initialTemp = ps.Temp(vt.Int64)
 
-    val trueBoxedTemp = ps.Temp(vt.ExactIntegerType)
+    val trueBoxedTemp = ps.Temp(vt.IntegerType)
     val trueSymbolTemp = ps.Temp(vt.SymbolType)
     val trueUnboxedTemp = ps.Temp(vt.Int64)
 
     val inputTrueSteps = List(
-      ps.BoxExactInteger(trueBoxedTemp, initialTemp),
+      ps.BoxInteger(trueBoxedTemp, initialTemp),
       ps.CreateSymbolCell(trueSymbolTemp, "True"),
-      ps.UnboxExactInteger(trueUnboxedTemp, trueBoxedTemp)
+      ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp)
     )
 
-    val falseBoxedTemp = ps.Temp(vt.ExactIntegerType)
+    val falseBoxedTemp = ps.Temp(vt.IntegerType)
     val falseSymbolTemp = ps.Temp(vt.SymbolType)
     val falseUnboxedTemp = ps.Temp(vt.Int64)
 
     val inputFalseSteps = List(
-      ps.BoxExactInteger(trueBoxedTemp, initialTemp),
+      ps.BoxInteger(trueBoxedTemp, initialTemp),
       ps.CreateSymbolCell(trueSymbolTemp, "False"),
-      ps.UnboxExactInteger(trueUnboxedTemp, trueBoxedTemp)
+      ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp)
     )
 
     val condBranchResult = ps.Temp(vt.Int64)
-    val outerBoxedTemp = ps.Temp(vt.ExactIntegerType)
+    val outerBoxedTemp = ps.Temp(vt.IntegerType)
     val outerSymbolTemp = ps.Temp(vt.SymbolType)
     val outerUnboxedTemp = ps.Temp(vt.Int64)
 
@@ -175,29 +175,29 @@ class UnboxEarlySuite extends FunSuite {
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(outerBoxedTemp, initialTemp),
+      ps.BoxInteger(outerBoxedTemp, initialTemp),
       ps.CondBranch(outerBoxedTemp, inputTrueSteps, inputFalseSteps, List(valuePhi)),
       ps.CreateSymbolCell(outerSymbolTemp, "Outer"),
-      ps.UnboxExactInteger(outerUnboxedTemp, outerBoxedTemp)
+      ps.UnboxInteger(outerUnboxedTemp, outerBoxedTemp)
     )
 
     val expectedTrueSteps = List(
-      ps.BoxExactInteger(trueBoxedTemp, initialTemp),
-      ps.UnboxExactInteger(trueUnboxedTemp, trueBoxedTemp),
+      ps.BoxInteger(trueBoxedTemp, initialTemp),
+      ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp),
       ps.CreateSymbolCell(trueSymbolTemp, "True")
     )
 
     val expectedFalseSteps = List(
-      ps.BoxExactInteger(trueBoxedTemp, initialTemp),
-      ps.UnboxExactInteger(trueUnboxedTemp, trueBoxedTemp),
+      ps.BoxInteger(trueBoxedTemp, initialTemp),
+      ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp),
       ps.CreateSymbolCell(trueSymbolTemp, "False")
     )
 
     val expectedSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
-      ps.BoxExactInteger(outerBoxedTemp, initialTemp),
+      ps.BoxInteger(outerBoxedTemp, initialTemp),
       ps.CondBranch(outerBoxedTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
-      ps.UnboxExactInteger(outerUnboxedTemp, outerBoxedTemp),
+      ps.UnboxInteger(outerUnboxedTemp, outerBoxedTemp),
       ps.CreateSymbolCell(outerSymbolTemp, "Outer")
     )
 

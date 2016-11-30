@@ -56,7 +56,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   }
 
   test("explicitly typed procedure returning its argument") {
-    val signature = signatureFor("""(lambda ([x : <exact-integer>]) x)""")
+    val signature = signatureFor("""(lambda ([x : <integer>]) x)""")
 
     assert(signature.hasWorldArg === false)
     assert(signature.mandatoryArgTypes === List(vt.Int64))
@@ -129,7 +129,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   test("typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda ([vec : <vector>] [index : <number>]) (vector-ref vec index))""")
 
-    // We should refine <number> in to <exact-integer>
+    // We should refine <number> in to <integer>
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }
@@ -137,7 +137,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   test("custom union typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda ([vec : (U <vector> <char>)] [index : <number>]) (vector-ref vec index))""")
 
-    // We should refine <number> in to <exact-integer>
+    // We should refine <number> in to <integer>
     assert(signature.mandatoryArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.Reachable(vt.AnySchemeType))
   }

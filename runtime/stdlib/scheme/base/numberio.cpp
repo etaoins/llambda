@@ -1,7 +1,7 @@
 #include <sstream>
 #include <cmath>
 
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/BooleanCell.h"
@@ -35,7 +35,7 @@ StringCell* llbase_number_to_string(World &world, NumberCell *numberCell, std::u
 		// R7RS allows us to render +nan.0, -inf.0 and +inf.0 in non-decimal radix
 		if ((!std::isnan(floatValue) && !std::isinf(floatValue)) && (radix != 10))
 		{
-			signalError(world, ErrorCategory::InvalidArgument, "(number->string) with inexact number and non-decimal radix", {numberCell});
+			signalError(world, ErrorCategory::InvalidArgument, "(number->string) with flonum and non-decimal radix", {numberCell});
 		}
 	}
 

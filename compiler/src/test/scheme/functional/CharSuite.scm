@@ -125,7 +125,7 @@
   (assert-equal #\x1f3c2 (integer->char #x1f3c2))))
 
 (define-test "dynamic (integer->char)" (expect-success
-  (assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <exact-integer>)))))
+  (assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <integer>)))))
 
 (define-test "(integer->char) with negative code point fails" (expect-error range-error?
   (integer->char -1)))

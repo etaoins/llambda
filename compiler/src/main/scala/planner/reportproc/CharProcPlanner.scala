@@ -76,16 +76,16 @@ object CharProcPlanner extends ReportProcPlanner {
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("char->integer", List((_, iv.ConstantCharValue(constantCharVal)))) =>
-      Some(iv.ConstantExactIntegerValue(constantCharVal))
+      Some(iv.ConstantIntegerValue(constantCharVal))
 
     case ("char->integer", List((charLocated, charValue))) =>
       val int32Temp = plan.withContextLocation(charLocated) {
         charValue.toTempValue(vt.UnicodeChar)
       }
 
-      Some(new iv.NativeExactIntegerValue(int32Temp, vt.Int32))
+      Some(new iv.NativeIntegerValue(int32Temp, vt.Int32))
 
-    case ("integer->char", List((intLocated, iv.ConstantExactIntegerValue(constantIntVal)))) =>
+    case ("integer->char", List((intLocated, iv.ConstantIntegerValue(constantIntVal)))) =>
       if ((constantIntVal < ast.CharLiteral.firstCodePoint) || (constantIntVal > ast.CharLiteral.lastCodePoint)) {
         throw new RangeException(intLocated, "(integer->char) with invalid Unicode code point")
       }

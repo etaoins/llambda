@@ -98,7 +98,7 @@ preconstructed cell Boolean : Any {
 abstract cell Number : Any {
 };
 
-concrete cell ExactInteger : Number {
+concrete cell Integer : Number {
 	int64 value;
 };
 

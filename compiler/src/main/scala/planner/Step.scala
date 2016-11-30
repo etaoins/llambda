@@ -420,11 +420,11 @@ case class CreateSymbolCell(result : TempValue, value : String) extends CreateCo
     CreateSymbolCell(f(result), value).assignLocationFrom(this)
 }
 
-case class CreateExactIntegerCell(result : TempValue, value : Long) extends CreateConstantCell {
+case class CreateIntegerCell(result : TempValue, value : Long) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) =
-    CreateExactIntegerCell(f(result), value).assignLocationFrom(this)
+    CreateIntegerCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateFlonumCell(result : TempValue, value : Double) extends CreateConstantCell {
@@ -552,9 +552,9 @@ sealed trait UnboxValue extends DiscardableStep with MergeableStep {
   lazy val outputValues = Set(result)
 }
 
-case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue {
+case class UnboxInteger(result : TempValue, boxed : TempValue) extends UnboxValue {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxExactInteger(f(result), f(boxed)).assignLocationFrom(this)
+    UnboxInteger(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 case class UnboxFlonum(result : TempValue, boxed : TempValue) extends UnboxValue {
@@ -779,11 +779,11 @@ case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue 
     BoxBoolean(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
+case class BoxInteger(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   lazy val inputValues = Set(unboxed)
 
   def renamed(f : (TempValue) => TempValue) =
-    BoxExactInteger(f(result), f(unboxed)).assignLocationFrom(this)
+    BoxInteger(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxFlonum(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {

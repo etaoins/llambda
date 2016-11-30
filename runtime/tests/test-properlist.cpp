@@ -1,7 +1,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/ProperList.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 
 #include "core/init.h"
 #include "core/World.h"
@@ -50,7 +50,7 @@ void testAll(World &world)
 	}
 
 	{
-		ProperList<ExactIntegerCell> *properList = ProperList<ExactIntegerCell>::emplaceValues(world, {1, 2, 3});
+		ProperList<IntegerCell> *properList = ProperList<IntegerCell>::emplaceValues(world, {1, 2, 3});
 
 		ASSERT_TRUE(properList->begin() != properList->end());
 		ASSERT_EQUAL(properList->size(), 3);

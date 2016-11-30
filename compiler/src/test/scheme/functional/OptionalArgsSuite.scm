@@ -26,7 +26,7 @@
   (assert-equal '(1 2 3) (multi-optional))
   (assert-equal '(4 5 6 7 8 9) (multi-optional 4 5 6 7 8 9))
 
-  (define (typed-optional [value : <exact-integer> 10]) value)
+  (define (typed-optional [value : <integer> 10]) value)
 
   (assert-equal 10 (typed-optional))
   (assert-equal 5 (typed-optional 5))
@@ -37,7 +37,7 @@
 (define-test "optional arg with incompatible type fails" (expect-compile-error type-error?
   (import (llambda typed))
 
-  (define (typed-optional [val : <exact-integer> #t]) val)
+  (define (typed-optional [val : <integer> #t]) val)
 
   (typed-optional)))
 
@@ -50,7 +50,7 @@
   (import (llambda list))
   (import (llambda typed))
 
-  (define (multiply-value val [factor : <exact-integer> 2])
+  (define (multiply-value val [factor : <integer> 2])
     (* val factor))
 
   (assert-equal '(0 2 4) (list-tabulate 3 multiply-value))))
@@ -66,7 +66,7 @@
 (define-test "procedures can be passed in optional args" (expect-success
   (import (llambda typed))
 
-  (define (call-thunk [thunk : (-> <exact-integer>) (lambda () 0)])
+  (define (call-thunk [thunk : (-> <integer>) (lambda () 0)])
     (thunk))
 
   (assert-equal 100 (call-thunk (lambda () 100)))))
@@ -74,7 +74,7 @@
 (define-test "procedures taking optional args can be passed as optional args" (expect-success
   (import (llambda typed))
 
-  (define (call-thunk [thunk : (-> <exact-integer>) (lambda () 0)])
+  (define (call-thunk [thunk : (-> <integer>) (lambda () 0)])
     (thunk))
 
   (assert-equal 100 (call-thunk (lambda ([val 100]) val)))))

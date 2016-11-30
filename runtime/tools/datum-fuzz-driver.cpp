@@ -7,7 +7,7 @@
 #include "../tests/stubdefinitions.h"
 
 #include "binding/EofObjectCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
@@ -45,9 +45,9 @@ namespace
 		}
 
 		// These require more than address comparison by eqv?
-		if (auto leftInteger = cell_cast<ExactIntegerCell>(left))
+		if (auto leftInteger = cell_cast<IntegerCell>(left))
 		{
-			if (auto rightInteger = cell_cast<ExactIntegerCell>(right))
+			if (auto rightInteger = cell_cast<IntegerCell>(right))
 			{
 				return leftInteger->value() == rightInteger->value();
 			}

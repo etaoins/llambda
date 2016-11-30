@@ -27,7 +27,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
   private val stringCache = new mutable.HashMap[String, IrConstant]
   private val symbolCache = new mutable.HashMap[String, IrConstant]
-  private val exactIntegerCache = new mutable.LongMap[IrConstant]
+  private val integerCache = new mutable.LongMap[IrConstant]
   private val flonumCache = new mutable.LongMap[IrConstant]
   private val characterCache = new mutable.LongMap[IrConstant]
   private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
@@ -332,11 +332,11 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
           genSymbolCell(module)(value)
         })
 
-      case ps.CreateExactIntegerCell(_, value) =>
-        exactIntegerCache.getOrElseUpdate(value, {
-          val intCellName = module.nameSource.allocate("schemeExactInteger")
+      case ps.CreateIntegerCell(_, value) =>
+        integerCache.getOrElseUpdate(value, {
+          val intCellName = module.nameSource.allocate("schemeInteger")
 
-          val intCell = ct.ExactIntegerCell.createConstant(
+          val intCell = ct.IntegerCell.createConstant(
             value=value
           )
 

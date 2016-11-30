@@ -16,10 +16,10 @@
     (define (xcons d a)
       (cons a d))
 
-    (define list-tabulate (world-function lllist "lllist_list_tabulate" (All (A) <native-uint32> (-> <exact-integer> A) (Listof A))))
+    (define list-tabulate (world-function lllist "lllist_list_tabulate" (All (A) <native-uint32> (-> <integer> A) (Listof A))))
 
     (define native-iota (world-function lllist "lllist_iota" (All ([N : <number>]) <native-uint32> N N (Listof N))))
-    (define (iota [count : <exact-integer>] [start : <number> 0] [step : <number> 1])
+    (define (iota [count : <integer>] [start : <number> 0] [step : <number> 1])
       (native-iota count start step))
 
     (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (Listof A) (Pairof (Listof A) (Listof A)))))

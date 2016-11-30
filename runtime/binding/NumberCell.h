@@ -17,13 +17,6 @@ public:
 	double toDouble() const;
 	long double toLongDouble() const;
 
-	/**
-	 * Returns if this number is an exact value
-	 *
-	 * See R7RS for further discussion of exact values. Our implementation currently only supports exact integers
-	 */
-	bool isExact() const;
-
 protected:
 	explicit NumberCell(CellTypeId typeId, GarbageState gcState = GarbageState::AllocatedCell) :
 		AnyCell(typeId, gcState)

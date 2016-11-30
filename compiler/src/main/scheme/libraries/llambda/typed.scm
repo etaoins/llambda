@@ -6,7 +6,7 @@
   (export define-type cast ann : make-predicate U Rec Listof Pairof List -> case-> All HashMap)
 
   ; Export our type names
-  (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>
+  (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char>
           <vector> <bytevector> <procedure> <port> <unit> <eof-object>)
 
   ; Type constructors

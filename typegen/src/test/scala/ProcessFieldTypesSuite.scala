@@ -96,15 +96,15 @@ class ProcessFieldTypesSuite extends FunSuite {
   test("field type aliasing another user defined field type") {
     val fieldTypes = processString("""
       fieldtype DoublePtr : double*;
-      fieldtype InexactPtr : DoublePtr;
+      fieldtype FlonumPtr : DoublePtr;
     """)
 
     val doubleType = fieldTypes("DoublePtr") 
 
-    val inexactType = fieldTypes("InexactPtr")
-    assert(inexactType.aliasedType === doubleType)
-    assert(inexactType.cppTypeName === None)
-    assert(inexactType.needsDefinition === false)
+    val flonumType = fieldTypes("FlonumPtr")
+    assert(flonumType.aliasedType === doubleType)
+    assert(flonumType.cppTypeName === None)
+    assert(flonumType.needsDefinition === false)
   }
   
   test("field type aliasing function pointer with forward declared cell types") {

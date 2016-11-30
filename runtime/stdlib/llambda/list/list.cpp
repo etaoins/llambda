@@ -7,7 +7,7 @@
 #include "binding/ProperList.h"
 #include "binding/TypedProcedureCell.h"
 #include "binding/FlonumCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 
 #include "alloc/StrongRefVector.h"
 
@@ -457,12 +457,12 @@ ProperList<AnyCell>* lllist_filter_map(World &world, FilterMapProc *mapProcRaw, 
 
 ListElementCell* lllist_iota(World &world, std::uint32_t count, NumberCell *startCell, NumberCell *stepCell)
 {
-	if (auto startExactIntCell = cell_cast<ExactIntegerCell>(startCell))
+	if (auto startIntegerCell = cell_cast<IntegerCell>(startCell))
 	{
-		if (auto stepExactIntCell = cell_cast<ExactIntegerCell>(stepCell))
+		if (auto stepIntegerCell = cell_cast<IntegerCell>(stepCell))
 		{
-			std::uint32_t start = startExactIntCell->value();
-			std::uint32_t step = stepExactIntCell->value();
+			std::uint32_t start = startIntegerCell->value();
+			std::uint32_t step = stepIntegerCell->value();
 
 			std::vector<std::uint32_t> values(count);
 
@@ -471,7 +471,7 @@ ListElementCell* lllist_iota(World &world, std::uint32_t count, NumberCell *star
 				values[i] = start + (step * i);
 			}
 
-			return ProperList<ExactIntegerCell>::emplaceValues(world, values);
+			return ProperList<IntegerCell>::emplaceValues(world, values);
 		}
 	}
 

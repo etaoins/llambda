@@ -5,10 +5,9 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Type of any value known to the compiler
-  * 
+  *
   * These are more specific than the types defined in R7RS in that they define both the semantic type and the runtime
-  * representation. For example, Int32 and ExactIntegerType are both exact integers but have different native
-  * representations.
+  * representation. For example, Int32 and IntegerType are both integers but have different native representations.
   */
 sealed abstract class ValueType {
   val schemeType : SchemeType
@@ -44,9 +43,9 @@ case object Predicate extends IntLikeType(1, false) {
   val schemeType = BooleanType
 }
 
-/** Native integer type representing a Scheme exact integer */
+/** Native integer type representing a Scheme integer */
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed) {
-  val schemeType = ExactIntegerType
+  val schemeType = IntegerType
 
   def minIntValue = if (signed) {
     -1L << (bits - 1)
@@ -73,7 +72,7 @@ case object UInt16 extends IntType(16, false)
 case object UInt32 extends IntType(32, false)
 // UInt64 is outside the range we can represent
 
-/** Native floating point type representing a Scheme inexact rational */
+/** Native floating point type representing a Scheme flonum */
 sealed abstract class FpType extends NativeType {
   val schemeType = FlonumType
 }
@@ -501,9 +500,9 @@ object SchemeType {
       case union : UnionType =>
         // This is a bit tricky
         // We attempt to flatten any union types together in to the returned union. For example,
-        // (U (U <exact-integer> <flonum>) (U <symbol> <string>))
+        // (U (U <integer> <flonum>) (U <symbol> <string>))
         // Will become:
-        // (U <exact-integer> <flonum> <symbol> <string>)
+        // (U <integer> <flonum> <symbol> <string>)
         //
         // However, e.g. for proper lists this would naively change:
         // (U (Rec A (U '() (Pairof <any> A))) #f)

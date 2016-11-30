@@ -192,13 +192,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     }
   }
 
-  test("function taking a integer cell and returning a rational cell") {
+  test("function taking a integer cell and returning a flonum cell") {
     val expectedFunction = et.NativeFunction(
       NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        mandatoryArgTypes=List(vt.ExactIntegerType),
+        mandatoryArgTypes=List(vt.IntegerType),
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.Reachable(vt.FlonumType),
@@ -208,7 +208,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (-> <exact-integer> <flonum>))""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <integer> <flonum>))""")
     }
   }
 
@@ -240,7 +240,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         hasSelfArg=false,
         mandatoryArgTypes=List(vt.Predicate),
         optionalArgTypes=Nil,
-        restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+        restArgMemberTypeOpt=Some(vt.IntegerType),
         returnType=vt.ReturnType.Reachable(vt.Int32),
         attributes=Set()
       ).toPolymorphic,
@@ -248,7 +248,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_misc" (-> <native-bool> <exact-integer> * <native-int>))""")
+      exprFor("""(native-function system-library "lliby_misc" (-> <native-bool> <integer> * <native-int>))""")
     }
   }
 
@@ -260,7 +260,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         hasSelfArg=false,
         mandatoryArgTypes=List(vt.Predicate),
         optionalArgTypes=Nil,
-        restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+        restArgMemberTypeOpt=Some(vt.IntegerType),
         returnType=vt.ReturnType.Reachable(vt.Int32),
         attributes=Set()
       ).toPolymorphic,
@@ -268,12 +268,12 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_misc" (All () (-> <native-bool> <exact-integer> * <native-int>)))""")
+      exprFor("""(native-function system-library "lliby_misc" (All () (-> <native-bool> <integer> * <native-int>)))""")
     }
   }
 
   test("polymorphic function with one type var") {
-    inside(exprFor("""(native-function system-library "lliby_misc" (All (A) (-> A <exact-integer> * A)))""")) {
+    inside(exprFor("""(native-function system-library "lliby_misc" (All (A) (-> A <integer> * A)))""")) {
       case et.NativeFunction(
         NativeSystemLibrary,
         PolymorphicSignature(
@@ -283,7 +283,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             false,
             List(fixedTypeVar : pm.TypeVar),
             Nil,
-            Some(vt.ExactIntegerType),
+            Some(vt.IntegerType),
             vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
             _
           )
@@ -298,7 +298,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
   }
 
   test("polymorphic function with two type vars") {
-    inside(exprFor("""(native-function system-library "lliby_misc" (All ([A : <number>] B) (-> A <exact-integer> * B)))""")) {
+    inside(exprFor("""(native-function system-library "lliby_misc" (All ([A : <number>] B) (-> A <integer> * B)))""")) {
       case et.NativeFunction(
         NativeSystemLibrary,
         PolymorphicSignature(
@@ -308,7 +308,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             false,
             List(fixedTypeVar : pm.TypeVar),
             Nil,
-            Some(vt.ExactIntegerType),
+            Some(vt.IntegerType),
             vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
             _
           )
@@ -324,7 +324,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
   }
 
   test("polymorphic function shorthand with two type vars") {
-    inside(exprFor("""(native-function system-library "lliby_misc" (All ([A : <number>] B) A <exact-integer> * B))""")) {
+    inside(exprFor("""(native-function system-library "lliby_misc" (All ([A : <number>] B) A <integer> * B))""")) {
       case et.NativeFunction(
         NativeSystemLibrary,
         PolymorphicSignature(
@@ -334,7 +334,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
             false,
             List(fixedTypeVar : pm.TypeVar),
             Nil,
-            Some(vt.ExactIntegerType),
+            Some(vt.IntegerType),
             vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
             _
           )

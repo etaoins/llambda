@@ -36,8 +36,8 @@ object InterpretStep {
       val datumCell = DatumCell(ast.BooleanLiteral(value), ct.BooleanCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
-    case ps.CreateExactIntegerCell(resultTemp, value) =>
-      val datumCell = DatumCell(ast.IntegerLiteral(value), ct.ExactIntegerCell)
+    case ps.CreateIntegerCell(resultTemp, value) =>
+      val datumCell = DatumCell(ast.IntegerLiteral(value), ct.IntegerCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateFlonumCell(resultTemp, value) =>

@@ -19,7 +19,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
     val lengthValue = length._2
 
     val knownLengthOpt = lengthValue match {
-      case iv.ConstantExactIntegerValue(knownLength) =>
+      case iv.ConstantIntegerValue(knownLength) =>
         plan.withContextLocation(length._1) {
           assertLengthValid("(make-vector)", "vector length", vt.Int64.maxIntValue, knownLength)
         }
@@ -77,7 +77,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
       Some(new iv.KnownVectorCellValue(initialElements.length, vectorTemp))
 
     case ("vector-length", List((_, knownVector : iv.KnownVector))) =>
-      Some(iv.ConstantExactIntegerValue(knownVector.vectorLength))
+      Some(iv.ConstantIntegerValue(knownVector.vectorLength))
 
     case ("vector-length", List((located, vectorValue))) =>
       val vectorTemp = plan.withContextLocation(located) {
@@ -89,12 +89,12 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
       Some(TempValueToIntermediate(vt.Int64, resultTemp)(plan.config))
 
-    case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantExactIntegerValue(index)))) =>
+    case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantIntegerValue(index)))) =>
       assertIndexValid("(vector-ref)", elements.size, index)
 
       Some(elements(index.toInt))
 
-    case ("vector-ref", List((_, knownVector : iv.KnownVector), (_, constantInt : iv.ConstantExactIntegerValue))) =>
+    case ("vector-ref", List((_, knownVector : iv.KnownVector), (_, constantInt : iv.ConstantIntegerValue))) =>
       val index = constantInt.value
 
       assertIndexValid("(vector-ref)", knownVector.vectorLength, index)
@@ -115,7 +115,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
     case ("vector-set!", List(
         (_, vectorCellValue : iv.KnownVectorCellValue),
-        (_, constantInt : iv.ConstantExactIntegerValue),
+        (_, constantInt : iv.ConstantIntegerValue),
         (_, objectValue)
     )) =>
       val index = constantInt.value

@@ -917,7 +917,7 @@ object NumberCell extends CellType with NumberFields {
   val llvmName = "number"
   val irType = UserDefinedType("number")
   val schemeName = "<number>"
-  val directSubtypes = Set[CellType](ExactIntegerCell, FlonumCell)
+  val directSubtypes = Set[CellType](IntegerCell, FlonumCell)
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -932,7 +932,7 @@ object NumberCell extends CellType with NumberFields {
   }
 }
 
-sealed trait ExactIntegerFields extends NumberFields {
+sealed trait IntegerFields extends NumberFields {
   val irType : FirstClassType
 
   val valueIrType = IntegerType(64)
@@ -965,10 +965,10 @@ sealed trait ExactIntegerFields extends NumberFields {
   }
 }
 
-object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
-  val llvmName = "exactInteger"
-  val irType = UserDefinedType("exactInteger")
-  val schemeName = "<exact-integer>"
+object IntegerCell extends ConcreteCellType with IntegerFields {
+  val llvmName = "integer"
+  val irType = UserDefinedType("integer")
+  val schemeName = "<integer>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 7L

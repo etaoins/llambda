@@ -141,8 +141,8 @@ namespace lliby
 		 * Creates a new ProperList instance by passing each value to our member type's constructor
 		 *
 		 * This is useful for creating lists of boxed values from containers of unboxsed values - for example, a list of
-		 * ExactIntegerCell from a std::vector<std::int64_t>. In addition to being more convenient than constructing
-		 * each value it also has significantly less GC overhead due to allocating the list's values and pairs at once.
+		 * IntegerCell from a std::vector<std::int64_t>. In addition to being more convenient than constructing each
+		 * value it also has significantly less GC overhead due to allocating the list's values and pairs at once.
 		 */
 		template<typename Container>
 		static ProperList<T> *emplaceValues(World &world, const Container &values)

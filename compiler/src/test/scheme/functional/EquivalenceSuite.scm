@@ -233,7 +233,7 @@
 (define-test "constant strings are equal" (expect-static-success
   (assert-true (equal? "abc" "abc"))))
 
-(define-test "constant exact integers are equal" (expect-static-success
+(define-test "constant integers are equal" (expect-static-success
   (assert-true (equal? 2 2))))
 
 (define-test "static vector (equal?)" (expect-static-success
@@ -302,7 +302,7 @@
 
   (define-record-type <constant-ool> (constant-ool field1 field2 field3 field4) constant-ool?
                       ([field1 : <flonum>] constant-ool-field1)
-                      ([field2 : <exact-integer>] constant-ool-field2)
+                      ([field2 : <integer>] constant-ool-field2)
                       ([field3 : <flonum>] constant-ool-field3)
                       ([field4 : <vector>] constant-ool-field4))
 
@@ -326,21 +326,21 @@
 
   (define-record-type <unboxed-ool> (unboxed-ool field1 field2 field3 field4) unboxed-ool?
                       ([field1 : <flonum>] unboxed-ool-field1)
-                      ([field2 : <exact-integer>] unboxed-ool-field2)
+                      ([field2 : <integer>] unboxed-ool-field2)
                       ([field3 : <flonum>] unboxed-ool-field3)
-                      ([field4 : <exact-integer>] unboxed-ool-field4))
+                      ([field4 : <integer>] unboxed-ool-field4))
 
   (define-record-type <boxed-inline> (boxed-inline field1) boxed-inline?
                       ([field1 : <bytevector>] boxed-inline-field1))
 
   (define-record-type <boxed-ool> (boxed-ool field1 field2 field3 field4) boxed-ool?
                       ([field1 : <flonum>] boxed-ool-field1)
-                      ([field2 : <exact-integer>] boxed-ool-field2)
+                      ([field2 : <integer>] boxed-ool-field2)
                       ([field3 : <flonum>] boxed-ool-field3)
                       ([field4 : <vector>] boxed-ool-field4))
 
   (define-record-type <mutable-inline> (mutable-inline field1) mutable-inline?
-                      ([field1 : <exact-integer>] mutable-inline-field1 set-mutable-inline-field1!))
+                      ([field1 : <integer>] mutable-inline-field1 set-mutable-inline-field1!))
 
   (assert-true  (equal? (unboxed-inline 1.0) (unboxed-inline (typeless-cell 1.0))))
   (assert-true  (equal? (unboxed-inline (typeless-cell +nan.0)) (unboxed-inline +nan.0)))

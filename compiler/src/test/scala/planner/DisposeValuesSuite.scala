@@ -11,7 +11,7 @@ class DisposeValuesSuite extends FunSuite {
   val testSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=true,
-    mandatoryArgTypes=List(vt.ExactIntegerType),
+    mandatoryArgTypes=List(vt.IntegerType),
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=Some(vt.SymbolType),
     returnType=vt.ReturnType.Reachable(vt.PortType),
@@ -24,7 +24,7 @@ class DisposeValuesSuite extends FunSuite {
     }
 
   val selfTemp = namedTemp(vt.TopProcedureType, "self")
-  val fixedArgTemp = namedTemp(vt.ExactIntegerType, "fixedArg")
+  val fixedArgTemp = namedTemp(vt.IntegerType, "fixedArg")
   val restArgTemp = namedTemp(vt.ListElementType, "restArg")
 
   def functionForSteps(steps : List[ps.Step]) : PlannedFunction =
@@ -54,7 +54,7 @@ class DisposeValuesSuite extends FunSuite {
     val unboxResult = namedTemp(vt.Int64, "unboxResult")
 
     val testSteps = List(
-      ps.UnboxExactInteger(unboxResult, fixedArgTemp)
+      ps.UnboxInteger(unboxResult, fixedArgTemp)
     )
 
     val testFunction = functionForSteps(testSteps)
@@ -70,7 +70,7 @@ class DisposeValuesSuite extends FunSuite {
     val unboxResult = namedTemp(vt.Int64, "unboxResult")
 
     val testSteps = List(
-      ps.UnboxExactInteger(unboxResult, fixedArgTemp),
+      ps.UnboxInteger(unboxResult, fixedArgTemp),
       ps.Return(Some(unboxResult))
     )
 
@@ -78,7 +78,7 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp, restArgTemp)),
-      ps.UnboxExactInteger(unboxResult, fixedArgTemp),
+      ps.UnboxInteger(unboxResult, fixedArgTemp),
       ps.DisposeValues(Set(fixedArgTemp)),
       ps.Return(Some(unboxResult)),
       ps.DisposeValues(Set(unboxResult))
@@ -91,13 +91,13 @@ class DisposeValuesSuite extends FunSuite {
     val trueUnboxResult = namedTemp(vt.Int64, "trueUnboxResult")
 
     val trueSteps = List(
-      ps.UnboxExactInteger(trueUnboxResult, fixedArgTemp)
+      ps.UnboxInteger(trueUnboxResult, fixedArgTemp)
     )
     
     val falseUnboxResult = namedTemp(vt.Int64, "falseUnboxResult")
 
     val falseSteps = List(
-      ps.UnboxExactInteger(falseUnboxResult, fixedArgTemp)
+      ps.UnboxInteger(falseUnboxResult, fixedArgTemp)
     )
 
     val condResult = namedTemp(vt.Int64, "condResult")
@@ -112,13 +112,13 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedTrueSteps = List(
       ps.DisposeValues(Set(restArgTemp)),
-      ps.UnboxExactInteger(trueUnboxResult, fixedArgTemp),
+      ps.UnboxInteger(trueUnboxResult, fixedArgTemp),
       ps.DisposeValues(Set(fixedArgTemp))
     )
     
     val expectedFalseSteps = List(
       ps.DisposeValues(Set(restArgTemp)),
-      ps.UnboxExactInteger(falseUnboxResult, fixedArgTemp),
+      ps.UnboxInteger(falseUnboxResult, fixedArgTemp),
       ps.DisposeValues(Set(fixedArgTemp))
     )
 
@@ -156,11 +156,11 @@ class DisposeValuesSuite extends FunSuite {
   }
   
   test("condition using outer value as branch result can dispose that value") {
-    val condResult = namedTemp(vt.ExactIntegerType, "condResult")
+    val condResult = namedTemp(vt.IntegerType, "condResult")
 
-    val trueResult = namedTemp(vt.ExactIntegerType, "trueResult")
+    val trueResult = namedTemp(vt.IntegerType, "trueResult")
     val trueSteps = List(
-      ps.CreateExactIntegerCell(trueResult, 25)
+      ps.CreateIntegerCell(trueResult, 25)
     )
 
     val falseSteps = Nil
@@ -175,7 +175,7 @@ class DisposeValuesSuite extends FunSuite {
     // This can dispose the fixed arg temp immedately
     val expectedTrueSteps = List(
       ps.DisposeValues(Set(restArgTemp, fixedArgTemp)),
-      ps.CreateExactIntegerCell(trueResult, 25)
+      ps.CreateIntegerCell(trueResult, 25)
     )
 
     val expectedFalseSteps = List(
@@ -193,16 +193,16 @@ class DisposeValuesSuite extends FunSuite {
   
   test("condition using outer value in only one branch disposes value in other branch") {
     val condResult = namedTemp(vt.Int64, "condResult")
-    val outerValue = namedTemp(vt.ExactIntegerType, "outerValue")
+    val outerValue = namedTemp(vt.IntegerType, "outerValue")
 
     // Make sure we don't try to unroot internal result in the other branch
     val internalUnboxResult = namedTemp(vt.Int64, "internalUnbox")
-    val internalReboxResult = namedTemp(vt.ExactIntegerType, "internalReboxResult")
+    val internalReboxResult = namedTemp(vt.IntegerType, "internalReboxResult")
     val trueResult = namedTemp(vt.Int64, "trueResult")
     val trueSteps = List(
-      ps.UnboxExactInteger(internalUnboxResult, outerValue),
-      ps.BoxExactInteger(internalReboxResult, internalUnboxResult),
-      ps.UnboxExactInteger(trueResult, internalReboxResult)
+      ps.UnboxInteger(internalUnboxResult, outerValue),
+      ps.BoxInteger(internalReboxResult, internalUnboxResult),
+      ps.UnboxInteger(trueResult, internalReboxResult)
     )
 
     val falseResult = namedTemp(vt.Int64, "falseResult")
@@ -212,7 +212,7 @@ class DisposeValuesSuite extends FunSuite {
 
     val valuePhi = ps.ValuePhi(condResult, trueResult, falseResult)
     val testSteps = List(
-      ps.CreateExactIntegerCell(outerValue, 50),
+      ps.CreateIntegerCell(outerValue, 50),
       ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
     )
 
@@ -220,11 +220,11 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedTrueSteps = List(
       ps.DisposeValues(Set(restArgTemp)),
-      ps.UnboxExactInteger(internalUnboxResult, outerValue),
+      ps.UnboxInteger(internalUnboxResult, outerValue),
       ps.DisposeValues(Set(outerValue)),
-      ps.BoxExactInteger(internalReboxResult, internalUnboxResult),
+      ps.BoxInteger(internalReboxResult, internalUnboxResult),
       ps.DisposeValues(Set(internalUnboxResult)),
-      ps.UnboxExactInteger(trueResult, internalReboxResult),
+      ps.UnboxInteger(trueResult, internalReboxResult),
       ps.DisposeValues(Set(internalReboxResult))
     )
 
@@ -235,7 +235,7 @@ class DisposeValuesSuite extends FunSuite {
 
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp, fixedArgTemp)),
-      ps.CreateExactIntegerCell(outerValue, 50),
+      ps.CreateIntegerCell(outerValue, 50),
       ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
       ps.DisposeValues(Set(condResult))
     )

@@ -58,7 +58,7 @@
 (define-test "(number->string) in radix 3 is an error" (expect-error invalid-argument-error?
   (number->string 17 3)))
 
-(define-test "(number->string) with non-decimal inexact is an error" (expect-error invalid-argument-error?
+(define-test "(number->string) with non-decimal flonum is an error" (expect-error invalid-argument-error?
   (number->string 17.0 16)))
 
 (define-test "(string->number)" (expect-success

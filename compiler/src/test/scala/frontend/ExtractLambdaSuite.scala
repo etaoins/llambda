@@ -184,7 +184,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     intercept[BadSpecialFormException] {
       exprFor(
         """(: string-to-symbol (All (A) A <symbol>))
-           (define (string-to-symbol [x : <exact-integer>]) x)"""
+           (define (string-to-symbol [x : <integer>]) x)"""
       )(scope)
     }
   }
@@ -492,16 +492,16 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         assert(body === et.VarRef(restArg))
     }
 
-    inside(exprFor("(lambda ([x : <exact-integer>] y z : <symbol> *) x y z)")(nfiScope)) {
+    inside(exprFor("(lambda ([x : <integer>] y z : <symbol> *) x y z)")(nfiScope)) {
       case et.Lambda(polyType, List(argX, argY), Nil, Some(restArg), body, _) =>
         assert(polyType === vt.ProcedureType(
-          mandatoryArgTypes=List(vt.ExactIntegerType, vt.AnySchemeType),
+          mandatoryArgTypes=List(vt.IntegerType, vt.AnySchemeType),
           optionalArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.SymbolType),
           returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         ).toPolymorphic)
 
-        assert(argX.schemeType === vt.ExactIntegerType)
+        assert(argX.schemeType === vt.IntegerType)
         assert(argY.schemeType === vt.AnySchemeType)
         assert(restArg.schemeType === vt.UniformProperListType(vt.SymbolType))
 

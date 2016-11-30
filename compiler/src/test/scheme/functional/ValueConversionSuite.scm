@@ -26,33 +26,33 @@
   ; This assumes (boolean=?) takes two native booleans
   (boolean=? #t (typeless-cell '()))))
 
-(define-test "exact int can be unboxed as integer" (expect #(#t #t #t)
-  ; This assumes (make-vector) takes an native exact integer
+(define-test "integer can be unboxed as native integer" (expect #(#t #t #t)
+  ; This assumes (make-vector) takes an native integer
   (make-vector (typeless-cell 3) #t)))
 
-(define-test "inexact rational cannot be unboxed as integer" (expect-error type-error?
-  ; This assumes (make-vector) takes an native exact integer
+(define-test "flonum cannot be unboxed as native integer" (expect-error type-error?
+  ; This assumes (make-vector) takes an native integer
   (make-vector (typeless-cell 3.0) #t)))
 
-(define-test "inexact rational can be unboxed as double" (expect 1.0
+(define-test "flonum can be unboxed as double" (expect 1.0
   (import (llambda nfi))
 
   (define fabs (native-function system-library "fabs" (-> <native-double> <native-double>)))
   (fabs (typeless-cell -1.0))))
 
-(define-test "inexact rational can be unboxed as float" (expect 10.0
+(define-test "flonum can be unboxed as float" (expect 10.0
   (import (llambda nfi))
 
   (define fabsf (native-function system-library "fabsf" (-> <native-float> <native-float>)))
   (fabsf (typeless-cell -10.0))))
 
-(define-test "exact integer cannot be unboxed as double" (expect-error type-error?
+(define-test "integer cannot be unboxed as double" (expect-error type-error?
   (import (llambda nfi))
 
   (define fabs (native-function system-library "fabs" (-> <native-double> <native-double>)))
   (fabs (typeless-cell 0))))
 
-(define-test "exact integer cannot be unboxed as float" (expect-error type-error?
+(define-test "integer cannot be unboxed as float" (expect-error type-error?
   (import (llambda nfi))
 
   (define fabsf (native-function system-library "fabsf" (-> <native-float> <native-float>)))
@@ -62,18 +62,18 @@
   (define native-abs (native-function system-library "abs" (-> <native-int32> <native-int32>)))
   (vector-ref #(a b c) (native-abs -1))))
 
-(define-test "native i64 cannot be boxed as an inexact rational" (expect-error type-error?
+(define-test "native i64 cannot be boxed as an flonum" (expect-error type-error?
   (import (llambda nfi))
 
-  (define inexact->inexact (world-function system-library "llbase_inexact" (-> <flonum> <native-double>)))
+  (define flonum->double (world-function system-library "llbase_test" (-> <flonum> <native-double>)))
   ; This assumes (integer) returns an native i64
-  (inexact->inexact (integer -53))))
+  (flonum->double (integer -53))))
 
-(define-test "constant exact integer cannot be boxed as an inexact rational" (expect-error type-error?
+(define-test "constant integer cannot be boxed as an flonum" (expect-error type-error?
   (import (llambda nfi))
 
-  (define inexact->inexact (world-function system-library "llbase_inexact" (-> <flonum> <native-double>)))
-  (inexact->inexact -53)))
+  (define flonum->double (world-function system-library "llbase_test" (-> <flonum> <native-double>)))
+  (flonum->double -53)))
 
 (define-test "'3' can be unboxed as a character" (expect 3
   (import (scheme char))
@@ -93,7 +93,7 @@
   ; Thie assumes (boolean=? takes two bools)
   (boolean=? (not #t) (not #f))))
 
-(define-test "exact integer can be passed to a procedure as float" (expect-error type-error?
+(define-test "integer can be passed to a procedure as float" (expect-error type-error?
   (import (llambda nfi))
 
   ; Nothing in the stdlib takes float

@@ -51,7 +51,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       BoundType(vt.UnionType(Set(vt.PortType, vt.StringType)))
     )
 
-    // Single type unions should degrade to that exact typer
+    // Single type unions should degrade to that exact type
     bodyFor("(define-type <single-type-union> (U <string>))")(scope)
     assert(scope("<single-type-union>") === BoundType(vt.StringType))
     
@@ -60,7 +60,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     bodyFor("(define-type <union-of-union> (U <list-element> <empty-list> <number>))")(scope)
     assert(scope("<union-of-union>") ===
       BoundType(vt.UnionType(Set(
-        vt.ExactIntegerType,
+        vt.IntegerType,
         vt.FlonumType,
         vt.EmptyListType,
         vt.AnyPairType

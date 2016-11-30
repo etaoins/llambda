@@ -37,7 +37,7 @@ object AssertIntInRange {
       val errorMessage = RuntimeErrorMessage(
         category=ErrorCategory.Type,
         name=s"intTooSmallFor${toType}",
-        text=s"Exact integer value too small to be represented by native integer type ${toType}"
+        text=s"Integer value too small to be represented by native integer type ${toType}"
       )
 
       plan.steps += ps.AssertPredicate(withinLowerRangeTemp, errorMessage, evidenceOpt)
@@ -59,7 +59,7 @@ object AssertIntInRange {
       val errorMessage = RuntimeErrorMessage(
         category=ErrorCategory.Type,
         name=s"intTooLargeFor${toType}",
-        text=s"Exact integer value too large to be represented by native integer type ${toType}"
+        text=s"Integer value too large to be represented by native integer type ${toType}"
       )
 
       plan.steps += ps.AssertPredicate(withinUpperRangeTemp, errorMessage, evidenceOpt)

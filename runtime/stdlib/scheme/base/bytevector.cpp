@@ -1,6 +1,6 @@
 #include "binding/AnyCell.h"
 #include "binding/BytevectorCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/ProperList.h"
 #include "binding/StringCell.h"
 
@@ -53,7 +53,7 @@ void llbase_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::int
 	bytevector->setByteAt(index, value);
 }
 
-BytevectorCell *llbase_bytevector(World &world, RestValues<ExactIntegerCell> *argList)
+BytevectorCell *llbase_bytevector(World &world, RestValues<IntegerCell> *argList)
 {
 	auto length = argList->size();
 	SharedByteArray *byteArray = SharedByteArray::createInstance(length);

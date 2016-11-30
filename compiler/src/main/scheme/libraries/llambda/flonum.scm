@@ -5,7 +5,7 @@
 
   (export infinite? finite? nan? cos sin tan asin acos atan sqrt exp log)
 
-  ; inexact library
+  ; flonum library
   (begin
     (define-native-library llflonum (static-library "ll_llambda_flonum"))
 

@@ -27,7 +27,7 @@ R7RS defines a number of additional libraries that implementations may provide. 
 | ``(scheme cxr)``             | Compositions of ``(car)`` and ``(cdr)``             | Complete
 | ``(scheme eval)``            | Support for runtime evaluation                      | None
 | ``(scheme file)``            | Support for accessing files                         | Complete
-| ``(scheme inexact)``         | Procedures for dealing with inexact numbers         | Complete
+| ``(scheme inexact)``         | Procedures for dealing with inexact numbers         | None
 | ``(scheme lazy)``            | Support for lazy evaluation                         | Complete
 | ``(scheme load)``            | Support for loading Scheme source code              | None
 | ``(scheme process-context)`` | Support for accessing a program's calling context   | Complete

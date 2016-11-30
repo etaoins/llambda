@@ -13,7 +13,7 @@ object BytevectorProcPlanner extends ReportProcPlanner {
       args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("bytevector-length", List((_, iv.ConstantBytevectorValue(elements)))) =>
-      Some(iv.ConstantExactIntegerValue(elements.length))
+      Some(iv.ConstantIntegerValue(elements.length))
 
     case ("bytevector-length", List((located, bytevectorValue))) =>
       val bytevectorTemp = plan.withContextLocation(located) {

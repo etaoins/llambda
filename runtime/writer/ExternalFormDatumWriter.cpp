@@ -8,7 +8,7 @@
 #include "binding/AnyCell.h"
 #include "binding/UnitCell.h"
 #include "binding/BooleanCell.h"
-#include "binding/ExactIntegerCell.h"
+#include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
@@ -188,9 +188,9 @@ void ExternalFormDatumWriter::render(const AnyCell *datum, int defaultRadix)
 	{
 		renderBoolean(value);
 	}
-	else if (auto value = cell_cast<ExactIntegerCell>(datum))
+	else if (auto value = cell_cast<IntegerCell>(datum))
 	{
-		renderExactInteger(value, defaultRadix);
+		renderInteger(value, defaultRadix);
 	}
 	else if (auto value = cell_cast<FlonumCell>(datum))
 	{
@@ -276,7 +276,7 @@ void ExternalFormDatumWriter::renderBoolean(const BooleanCell *value)
 	}
 }
 
-void ExternalFormDatumWriter::renderExactInteger(const ExactIntegerCell *value, int defaultRadix)
+void ExternalFormDatumWriter::renderInteger(const IntegerCell *value, int defaultRadix)
 {
 	// Non-decimal bases don't work with negative numbers
 	const std::int64_t signedNumber = value->value();
@@ -376,7 +376,7 @@ void ExternalFormDatumWriter::renderFlonum(const FlonumCell *value)
 		double unused;
 		if (std::modf(number, &unused) == 0.0)
 		{
-			// Add on ".0" to indicate inexactness
+			// Add on ".0" to indicate a flonum
 			m_outStream << ".0";
 		}
 	}

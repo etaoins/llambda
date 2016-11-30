@@ -28,16 +28,16 @@ class ProperListTypeSuite extends SchemeTypeSuite {
   }
 
   test("proper list type satisfies more general proper list") {
-    assert(SatisfiesType(numericList, exactIntList) === Some(true))
+    assert(SatisfiesType(numericList, integerList) === Some(true))
   }
 
   test("proper list type may satisfy more specific proper list") {
-    assert(SatisfiesType(exactIntList, numericList) === None)
+    assert(SatisfiesType(integerList, numericList) === None)
   }
 
   test("proper list may satisfy disjoint proper list") {
     // This is because two "typed" empty lists will satisfy each other
-    assert(SatisfiesType(stringList, exactIntList) === None)
+    assert(SatisfiesType(stringList, integerList) === None)
   }
 
   test("empty list definitely satisfies proper list") {
@@ -62,23 +62,23 @@ class ProperListTypeSuite extends SchemeTypeSuite {
   }
 
   test("proper list type definitely doesn't satisfy non-list element") {
-    assert(SatisfiesType(ExactIntegerType, numericList) === Some(false))
+    assert(SatisfiesType(IntegerType, numericList) === Some(false))
   }
 
   test("non-list element doesn't satisfy a proper list") {
-    assert(SatisfiesType(numericList, ExactIntegerType) === Some(false))
+    assert(SatisfiesType(numericList, IntegerType) === Some(false))
   }
 
   test("proper list type minus a compatible list is the empty union") {
-    assert((exactIntList - numericList) == EmptySchemeType)
+    assert((integerList - numericList) == EmptySchemeType)
   }
 
   test("proper list type minus the empty type is itself") {
-    assert((exactIntList - EmptySchemeType) == exactIntList)
+    assert((integerList - EmptySchemeType) == integerList)
   }
 
   test("proper list type minus an incompatible list is a pair with a proper list cdr") {
-    assert((exactIntList - stringList) == PairType(ExactIntegerType, exactIntList))
+    assert((integerList - stringList) == PairType(IntegerType, integerList))
   }
 
   test("proper list type minus the empty list type is its pair type") {
@@ -107,15 +107,15 @@ class ProperListTypeSuite extends SchemeTypeSuite {
   }
 
   test("proper list type minus an unrelated type is itself") {
-    assert((exactIntList - PortType) == exactIntList)
+    assert((integerList - PortType) == integerList)
   }
 
   test("proper list type intersected with a compatible list is the most specific list") {
-    assertIntersection(exactIntList, numericList, exactIntList)
+    assertIntersection(integerList, numericList, integerList)
   }
 
   test("proper list type intersected with an incompatible list is an empty list") {
-    assertIntersection(exactIntList, stringList, EmptyListType)
+    assertIntersection(integerList, stringList, EmptyListType)
   }
 
   test("proper list type intersected with the empty list is an empty list") {
