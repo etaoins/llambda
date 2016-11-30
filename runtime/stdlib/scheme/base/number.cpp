@@ -133,7 +133,7 @@ namespace
 extern "C"
 {
 
-std::int64_t llbase_exact(World &world, NumberCell *numeric)
+std::int64_t llbase_integer(World &world, NumberCell *numeric)
 {
 	if (auto exactInt = cell_cast<ExactIntegerCell>(numeric))
 	{
@@ -152,7 +152,7 @@ std::int64_t llbase_exact(World &world, NumberCell *numeric)
 	return static_cast<std::int64_t>(flonum->value());
 }
 
-double llbase_inexact(NumberCell *numeric)
+double llbase_flonum(NumberCell *numeric)
 {
 	if (auto flonum = cell_cast<FlonumCell>(numeric))
 	{

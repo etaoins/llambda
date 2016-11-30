@@ -10,7 +10,7 @@ Scheme defines an elaborate [numerical tower](http://en.wikipedia.org/wiki/Numer
 
 ``<flonum>`` is an IEEE 64-bit double. This is the same representation JavaScript uses for its numbers with the same limitations on range and precision. In Scheme terms they're considered inexact numbers and can be introduced with constants such as ``4.5`` or ``9/2``. The special numbers ``+nan.0`` (Not A Number) ``+inf.0`` (positive infinity) and ``-inf.0`` (negative infinity) also have the type of ``<flonum>``. Division by a `<flonum>`` zero is permitted and results in an infinity.
 
-Any arithmetic operation on mixed ``<exact-integer>`` and ``<flonum>`` operands will implicitly convert all of the operands to ``<flonum>`` and produce a ``<flonum>`` result. An ``<exact-integer>`` can also be explicitly converted in to a ``<flonum>`` using the ``(inexact)`` procedure. This can be useful for avoiding overflow when performing arithmetic on large integers at the expense of precision.
+Any arithmetic operation on mixed ``<exact-integer>`` and ``<flonum>`` operands will implicitly convert all of the operands to ``<flonum>`` and produce a ``<flonum>`` result. An ``<exact-integer>`` can also be explicitly converted in to a ``<flonum>`` using the ``(flonum)`` procedure. This can be useful for avoiding overflow when performing arithmetic on large integers at the expense of precision.
 
 Performance
 -----------

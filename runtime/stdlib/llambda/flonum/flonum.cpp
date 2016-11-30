@@ -5,7 +5,7 @@ using namespace lliby;
 extern "C"
 {
 
-bool llinexact_is_finite(NumberCell *value)
+bool llflonum_is_finite(NumberCell *value)
 {
 	if (auto flonum = cell_cast<FlonumCell>(value))
 	{
@@ -13,12 +13,12 @@ bool llinexact_is_finite(NumberCell *value)
 	}
 	else
 	{
-		// Exact integers must be finite
+		// Integers must be finite
 		return true;
 	}
 }
 
-bool llinexact_is_infinite(NumberCell *value)
+bool llflonum_is_infinite(NumberCell *value)
 {
 	if (auto flonum = cell_cast<FlonumCell>(value))
 	{
@@ -26,7 +26,7 @@ bool llinexact_is_infinite(NumberCell *value)
 	}
 	else
 	{
-		// Exact integers cannot be infinite
+		// Integers cannot be infinite
 		return false;
 	}
 }

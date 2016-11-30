@@ -9,7 +9,7 @@
 
     (: microseconds (-> <number> <duration>))
     (define (microseconds x)
-      (exact (round x)))
+      (integer (round x)))
 
     (: milliseconds (-> <number> <duration>))
     (define (milliseconds x)

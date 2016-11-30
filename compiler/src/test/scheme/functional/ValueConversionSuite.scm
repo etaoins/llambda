@@ -59,7 +59,6 @@
   (fabsf (typeless-cell -10))))
 
 (define-test "native i64 can be passed as an native i32" (expect b
-  ; This assumes (exact) returns an native i64
   (define native-abs (native-function system-library "abs" (-> <native-int32> <native-int32>)))
   (vector-ref #(a b c) (native-abs -1))))
 
@@ -67,14 +66,13 @@
   (import (llambda nfi))
 
   (define inexact->inexact (world-function system-library "llbase_inexact" (-> <flonum> <native-double>)))
-  ; This assumes (exact) returns an native i64
-  (inexact->inexact (exact -53))))
+  ; This assumes (integer) returns an native i64
+  (inexact->inexact (integer -53))))
 
 (define-test "constant exact integer cannot be boxed as an inexact rational" (expect-error type-error?
   (import (llambda nfi))
 
   (define inexact->inexact (world-function system-library "llbase_inexact" (-> <flonum> <native-double>)))
-  ; This assumes (exact) returns an native i64
   (inexact->inexact -53)))
 
 (define-test "'3' can be unboxed as a character" (expect 3
@@ -83,8 +81,8 @@
   (digit-value (typeless-cell #\3))))
 
 (define-test "native int 0 converts to unboxed truthy true" (expect #f
-  ; This assumes (exact) returns an native integer and (not) takes a truthy
-  (not (exact 0))))
+  ; This assumes (integer) returns an native integer and (not) takes a truthy
+  (not (integer 0))))
 
 ; This seems stupid but it was actually broken at one point
 (define-test "native boolean false can be passed to a procedure as truthy" (expect #t

@@ -57,7 +57,7 @@ case class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(
       constantTemp
 
     case fpType : vt.FpType =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to floating point native type ${vt.NameForType(nativeType)}. Consider using (inexact) to explicitly convert the value.")
+      impossibleConversion(s"Cannot convert ${typeDescription} to floating point native type ${vt.NameForType(nativeType)}. Consider using (flonum) to explicitly convert the value.")
 
     case _ =>
       impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(nativeType)}")
@@ -78,7 +78,7 @@ case class ConstantFlonumValue(value : Double) extends TrivialConstantValue(ct.F
       constantTemp
     
     case intType : vt.IntType =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to integer native type ${vt.NameForType(nativeType)}. Consider using (exact) to explicitly convert the value.")
+      impossibleConversion(s"Cannot convert ${typeDescription} to integer native type ${vt.NameForType(nativeType)}. Consider using (integer) to explicitly convert the value.")
 
     case _ => 
       impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${vt.NameForType(nativeType)}")

@@ -537,11 +537,11 @@ std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<ExactIntegerC
 	return (result < 0) ? -result : result;
 }
 
-TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64_t val)
+TypedPairCell<ExactIntegerCell, ExactIntegerCell>* llbase_integer_sqrt(World &world, std::int64_t val)
 {
 	if (val < 0)
 	{
-		signalError(world, ErrorCategory::Range, "Attempted (exact-integer-sqrt) with negative value");
+		signalError(world, ErrorCategory::Range, "Attempted (integer-sqrt) with negative value");
 	}
 
 	// This depends on the integral sqrt in C++11

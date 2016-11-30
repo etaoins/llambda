@@ -26,18 +26,18 @@
   (assert-false (flonum? 32))
   (assert-false (flonum? 'notanumber))))
 
-(define-test "(exact)" (expect-static-success
-  (assert-equal -32 (exact -32.0))
-  (assert-equal 64 (exact 64))))
+(define-test "(integer)" (expect-static-success
+  (assert-equal -32 (integer -32.0))
+  (assert-equal 64 (integer 64))))
 
-(define-test "(exact 112.5) fails" (expect-error invalid-argument-error?
-  (exact 112.5)))
+(define-test "(integer 112.5) fails" (expect-error invalid-argument-error?
+  (integer 112.5)))
 
-(define-test "(inexact)" (expect-static-success
-  (assert-equal 567.0 (inexact 567))
-  (assert-equal -3289.5 (inexact -3289.5))
+(define-test "(flonum)" (expect-static-success
+  (assert-equal 567.0 (flonum 567))
+  (assert-equal -3289.5 (flonum -3289.5))
   ; This is the closest float to the passed value
-  (assert-equal 9007199254740992.0 (inexact 9007199254740993))))
+  (assert-equal 9007199254740992.0 (flonum 9007199254740993))))
 
 (define-test "static (=)" (expect-static-success
   (assert-true  (= 4.0 4))

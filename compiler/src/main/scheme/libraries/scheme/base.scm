@@ -277,8 +277,8 @@
     (define-r7rs (round n)
       (if (integer? n) n (native-round n)))
 
-    (define-r7rs exact (world-function llbase "llbase_exact" (-> <number> <native-int64>)))
-    (define-r7rs inexact (native-function llbase "llbase_inexact" (-> <number> <native-double>)))
+    (define-r7rs integer (world-function llbase "llbase_integer" (-> <number> <native-int64>)))
+    (define-r7rs flonum (native-function llbase "llbase_flonum" (-> <number> <native-double>)))
 
     (define-r7rs + (world-function llbase "llbase_add" (All ([N : <number>]) N * N)))
     (define-r7rs - (world-function llbase "llbase_sub" (All ([N : <number>]) N N * N)))
@@ -337,7 +337,7 @@
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-lcm rest))))
 
-    (define-r7rs exact-integer-sqrt (world-function llbase "llbase_exact_integer_sqrt" (-> <native-int64> (Pairof <exact-integer> <exact-integer>))))
+    (define-r7rs integer-sqrt (world-function llbase "llbase_integer_sqrt" (-> <native-int64> (Pairof <exact-integer> <exact-integer>))))
 
     (define native-number->string (world-function llbase "llbase_number_to_string" (-> <number> <native-uint8> <string>)))
     (define-r7rs (number->string [num : <number>] [radix : <exact-integer> 10])

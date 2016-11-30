@@ -81,13 +81,16 @@ add_library(ll_llambda_hashmap
 	stdlib/llambda/hash-map/hash-map.cpp
 )
 
-
 add_library(ll_llambda_random
 	stdlib/llambda/random/random.cpp
 )
 
 add_library(ll_llambda_time
 	stdlib/llambda/time/time.cpp
+)
+
+add_library(ll_llambda_flonum
+	stdlib/llambda/flonum/flonum.cpp
 )
 
 add_library(ll_scheme_base
@@ -112,10 +115,6 @@ add_library(ll_scheme_base
 add_library(ll_scheme_char
 	stdlib/scheme/char/char.cpp
 	ucd/ucd.cpp
-)
-
-add_library(ll_scheme_inexact
-	stdlib/scheme/inexact/inexact.cpp
 )
 
 add_library(ll_scheme_file

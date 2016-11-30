@@ -15,7 +15,7 @@
 
 ; Taken from http://rosettacode.org/wiki/Sieve_of_Eratosthenes#Scheme
 (define-test "simple sieve of Eratosthenes" (expect (2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
-  (import (scheme inexact))
+  (import (llambda flonum))
 
   (define (iota start stop stride)
     (if (> start stop)
@@ -40,7 +40,7 @@
   (primes 100)))
 
 (define-test "wheel-of-2 sieve of Eratosthenes" (expect (2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
-  (import (scheme inexact))
+  (import (llambda flonum))
 
   (define (iota start stop stride)
     (if (> start stop)
@@ -66,7 +66,7 @@
 
 ; Taken from http://rosettacode.org/wiki/Sieve_of_Eratosthenes#Scheme
 (define-test "vector sieve of Eratosthenes" (expect (2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
-  (import (scheme inexact))
+  (import (llambda flonum))
 
   ; initialize v to vector of sequential integers
   (define (initialize! v)
@@ -225,7 +225,7 @@
                       b
                       (+ (* p p) (* q q))
                       (+ (* q q) (* 2 p q))
-                      (exact (/ count 2))))
+                      (integer (/ count 2))))
             (else
               (fib-aux (+ (* b q) (* a q) (* a p))
                        (+ (* b p) (* a q))

@@ -433,31 +433,31 @@
   (assert-equal 288 (lcm 32 -36))
   (assert-equal 576 (lcm 32 -36 192))))
 
-(define-test "(exact-integer-sqrt)" (expect-success
-  (let* ((result (exact-integer-sqrt 0))
+(define-test "(integer-sqrt)" (expect-success
+  (let* ((result (integer-sqrt 0))
          (root (car result))
          (rem (cdr result)))
     (assert-equal 0 root)
     (assert-equal 0 rem))
 
-  (let* ((result (exact-integer-sqrt 4))
+  (let* ((result (integer-sqrt 4))
          (root (car result))
          (rem (cdr result)))
     (assert-equal 2 root)
     (assert-equal 0 rem))
 
-  (let* ((result (exact-integer-sqrt 5))
+  (let* ((result (integer-sqrt 5))
          (root (car result))
          (rem (cdr result)))
     (assert-equal 2 root)
     (assert-equal 1 rem))
 
   ; Ensure large integer values work correctly - converting to double won't work here
-  (let* ((result (exact-integer-sqrt 4611686018427387911))
+  (let* ((result (integer-sqrt 4611686018427387911))
          (root (car result))
          (rem (cdr result)))
     (assert-equal 2147483648 root)
     (assert-equal 7 rem))))
 
-(define-test "(exact-integer-sqrt) with negative values fails" (expect-error range-error?
-  (exact-integer-sqrt -1)))
+(define-test "(integer-sqrt) with negative values fails" (expect-error range-error?
+  (integer-sqrt -1)))

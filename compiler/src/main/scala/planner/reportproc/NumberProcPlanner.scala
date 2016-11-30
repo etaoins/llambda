@@ -21,7 +21,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   private case class DynamicCompare(nativePred : ps.TempValue, inexact : Boolean) extends CompareResult
   private case object UnplannableCompare extends CompareResult
 
-  private def exactValue(
+  private def integerValue(
       value : iv.IntermediateValue
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
       value match  {
@@ -45,7 +45,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       }
   }
 
-  private def inexactValue(
+  private def flonumValue(
       value : iv.IntermediateValue
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
       value match  {
@@ -181,7 +181,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       value
     }
     else {
-      inexactValue(value).get
+      flonumValue(value).get
     }
   }
 
@@ -277,11 +277,11 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("min", args) if args.length > 1 =>
       selectArgList(ps.CompareCond.LessThan, _ < _, _ < _, args.map(_._2))
 
-    case ("exact", List(singleArg)) =>
-      exactValue(singleArg._2)
+    case ("integer", List(singleArg)) =>
+      integerValue(singleArg._2)
 
-    case ("inexact", List(singleArg)) =>
-      inexactValue(singleArg._2)
+    case ("flonum", List(singleArg)) =>
+      flonumValue(singleArg._2)
 
     case _ =>
       None
