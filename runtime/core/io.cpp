@@ -13,19 +13,19 @@ using namespace lliby;
 extern "C"
 {
 
-PortCell *llcore_stdout_port(World &world)
+PortCell *llcore_stdout_port()
 {
 	static PortCell constantStdout(new StandardOutputPort(std::cout, STDOUT_FILENO), GarbageState::GlobalConstant);
 	return &constantStdout;
 }
 
-PortCell *llcore_stderr_port(World &world)
+PortCell *llcore_stderr_port()
 {
 	static PortCell constantStderr(new StandardOutputPort(std::cerr, STDERR_FILENO), GarbageState::GlobalConstant);
 	return &constantStderr;
 }
 
-PortCell *llcore_stdin_port(World &world)
+PortCell *llcore_stdin_port()
 {
 	static PortCell constantStdin(new StandardInputPort(std::cin, STDIN_FILENO), GarbageState::GlobalConstant);
 	return &constantStdin;

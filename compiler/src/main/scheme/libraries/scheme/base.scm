@@ -532,9 +532,9 @@
     (define-r7rs open-input-bytevector (world-function llbase "llbase_open_input_bytevector" (-> <bytevector> <port>)))
     (define-r7rs call-with-port (world-function llbase "llbase_call_with_port" (-> <port> (-> <port> <any>) <any>)))
 
-    (define-r7rs current-input-port (make-parameter ((world-function system-library "llcore_stdin_port" (-> <port>)))))
-    (define-r7rs current-output-port (make-parameter ((world-function system-library "llcore_stdout_port" (-> <port>)))))
-    (define-r7rs current-error-port (make-parameter ((world-function system-library "llcore_stderr_port" (-> <port>)))))
+    (define-r7rs current-input-port (make-parameter ((native-function system-library "llcore_stdin_port" (-> <port>)))))
+    (define-r7rs current-output-port (make-parameter ((native-function system-library "llcore_stdout_port" (-> <port>)))))
+    (define-r7rs current-error-port (make-parameter ((native-function system-library "llcore_stderr_port" (-> <port>)))))
 
     (define-r7rs eof-object? (make-predicate <eof-object>))
     (define-r7rs eof-object (native-function llbase "llbase_eof_object" (-> <eof-object>)))
