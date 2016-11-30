@@ -5,7 +5,6 @@
 #include "binding/ProcedureCell.h"
 #include "binding/TypedProcedureCell.h"
 
-#include "dynamic/ConverterProcedureCell.h"
 #include "alloc/cellref.h"
 
 #include <unordered_map>

@@ -215,18 +215,10 @@ private[planner] object PlanExpr {
           val parameterIntermediate = parameterResult.value
           val parameterTemp = parameterIntermediate.toTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), convertProcType=false)
 
-          val mayHaveConverterProc = parameterIntermediate match {
-            case knownParamProc : iv.KnownParameterProc =>
-              knownParamProc.hasConverter
-
-            case _ =>
-              true
-          }
-
           val valueIntermediate = valueResult.value
           val valueTemp = valueIntermediate.toTempValue(vt.AnySchemeType)
 
-          parameterValueTemps += ps.ParameterizedValue(parameterTemp, valueTemp, mayHaveConverterProc)
+          parameterValueTemps += ps.ParameterizedValue(parameterTemp, valueTemp)
 
           valueResult.state
         }

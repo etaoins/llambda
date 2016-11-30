@@ -42,10 +42,11 @@ private[analyser] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
       // Internal definitions are pure as long as all the bound values and body expressions are pure
       internalDefine.subexprs.exists(ExprHasSideEffects)
 
-    case _ : et.Parameterize =>
-      // Parameterize can call converter procedures implicitly
-      // For that reason it's very difficult to determine if they're pure
-      true
+    case et.Parameterize(parameterValues, bodyExpr) =>
+      ExprHasSideEffects(bodyExpr) ||
+        parameterValues.exists({ case (parameterExpr, valueExpr) =>
+          ExprHasSideEffects(parameterExpr) || ExprHasSideEffects(valueExpr)
+        })
 
     case _ : et.Cast =>
       // Cast can cause runtime errors

@@ -96,11 +96,10 @@ object RuntimeFunctions {
     name="llcore_make_parameter",
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
-      Argument(PointerType(ct.AnyCell.irType)),
       Argument(PointerType(ct.AnyCell.irType))
     )
   )
-  
+
   val isEqvSymbol = "llcore_is_eqv"
   val isEqualSymbol = "llcore_is_equal"
   
@@ -135,7 +134,7 @@ object RuntimeFunctions {
     returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
     attributes=Set()
   )
-  
+
   val valueForParameter = IrFunctionDecl(
     result=Result(PointerType(ct.AnyCell.irType)),
     name="llcore_value_for_parameter",

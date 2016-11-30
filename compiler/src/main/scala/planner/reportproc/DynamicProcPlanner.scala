@@ -16,28 +16,9 @@ object DynamicProcPlanner extends ReportProcPlanner {
       val resultTemp = ps.Temp(vt.TopProcedureType)
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
 
-      plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp, None)
+      plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp)
 
-      Some(new iv.KnownParameterProc(resultTemp, initialValue._2, hasConverter=false, initialValueInScope=true))
-
-    case ("make-parameter", List(initialValue, converterProc)) =>
-      val resultTemp = ps.Temp(vt.TopProcedureType)
-      val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
-
-      val converterTemp = plan.withContextLocation(converterProc._1) {
-        val converterProcType = vt.ProcedureType(
-          mandatoryArgTypes=List(vt.AnySchemeType),
-          optionalArgTypes=Nil,
-          restArgMemberTypeOpt=None,
-          returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
-        )
-
-        converterProc._2.toTempValue(converterProcType)
-      }
-
-      plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp, Some(converterTemp))
-
-      Some(new iv.KnownParameterProc(resultTemp, initialValue._2, hasConverter=true, initialValueInScope=true))
+      Some(new iv.KnownParameterProc(resultTemp, initialValue._2, initialValueInScope=true))
 
     case _ =>
       None

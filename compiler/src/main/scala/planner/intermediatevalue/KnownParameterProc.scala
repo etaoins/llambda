@@ -15,14 +15,12 @@ import llambda.compiler.codegen
   * @param  selfTemp             Parameter procedure cell
   * @param  initialValue         Initial value of the parameter. This is used for optimisation if the program does not
   *                              use (parameterize)
-  * @param  hasConverter         Indicates if this parameter procedure was created with a converter procedure
   * @param  initialValueInScope  Indicates if initialValue is still is scope. This can be used to avoid reloading the
   *                              value from the parameter procedure.
   */
 class KnownParameterProc(
     selfTemp : ps.TempValue,
     initialValue : IntermediateValue,
-    val hasConverter : Boolean,
     initialValueInScope : Boolean = false
 ) extends KnownProc(
     codegen.RuntimeFunctions.valueForParameterSignature.toPolymorphic,
@@ -34,10 +32,10 @@ class KnownParameterProc(
     codegen.RuntimeFunctions.valueForParameter.name
 
   def withReportName(newReportName : String) : KnownParameterProc =
-    new KnownParameterProc(selfTemp, initialValue, hasConverter, initialValueInScope)
+    new KnownParameterProc(selfTemp, initialValue, initialValueInScope)
 
   def withSelfTemp(selfTemp : ps.TempValue) =
-    new KnownParameterProc(selfTemp, initialValue, hasConverter, initialValueInScope=false)
+    new KnownParameterProc(selfTemp, initialValue, initialValueInScope=false)
 
   override def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
     BoxedValue(ct.ProcedureCell, selfTemp)
@@ -45,7 +43,7 @@ class KnownParameterProc(
   override def attemptInlineApplication(state : PlannerState)(
       args : List[(ContextLocated, IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[PlanResult] = {
-    val constantParameters = !plan.config.analysis.parameterized && plan.config.optimise && !hasConverter
+    val constantParameters = !plan.config.analysis.parameterized && plan.config.optimise
 
     args match {
       case Nil =>

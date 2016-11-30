@@ -36,7 +36,6 @@ namespace actor
 {
 
 using dynamic::ParameterProcedureCell;
-using dynamic::ConverterProcedureCell;
 using dynamic::State;
 
 namespace
@@ -68,15 +67,8 @@ namespace
 		// This is a bit tricky - give the cloned parameter procedure t
 		AnyCell *initialValue = cachedClone(heap, context.captureState->valueForParameter(paramProcCell), context);
 
-		ConverterProcedureCell *converterProc = nullptr;
-
-		if (paramProcCell->converterProcedure() != nullptr)
-		{
-			converterProc = static_cast<ConverterProcedureCell*>(cachedClone(heap, paramProcCell->converterProcedure(), context));
-		}
-
 		auto placement = heap.allocate();
-		return new (placement) ParameterProcedureCell(initialValue, converterProc);
+		return new (placement) ParameterProcedureCell(initialValue);
 	}
 
 	AnyCell *cloneRecordLikeCell(alloc::Heap &heap, RecordLikeCell *recordLikeCell, Context &context)

@@ -103,12 +103,12 @@ object CostForPlanSteps {
       // These require a test + a possible GC barrier if the test fails
       (gcBarrierCost / 2) + trivialInstrCost
 
-    case _ : ps.LoadValueForParameterProc =>
-      // This is a function call
+    case _ : ps.LoadValueForParameterProc | _ : ps.PushDynamicState | _ : ps.PopDynamicState =>
+      // These are a function call
       functionCallCost
 
-    case _ : ps.PushDynamicState | _ : ps.PopDynamicState | _ : ps.CreateParameterProc =>
-      // These are allocating function calls
+    case _ : ps.CreateParameterProc =>
+      // This is an allocating function call
       functionCallCost + gcBarrierCost
 
     case invoke : ps.InvokeLike =>

@@ -126,25 +126,25 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.PushDynamicState(Nil),
+      ps.InitVector(boxedResult, Vector()),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
     val testFunction = functionForSteps(testSteps)
-    
+
     val expectedSteps = List(
       ps.AllocateCells(2),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.PushDynamicState(Nil),
+      ps.InitVector(boxedResult, Vector()),
       ps.AllocateCells(1),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
     assert(PlanCellAllocations(testFunction).steps === expectedSteps)
   }
-  
+
   test("cell allocations are not affected by empty branch") {
     val nativeResult = ps.Temp(vt.Int64)
     val boxedResult = ps.Temp(vt.ExactIntegerType)

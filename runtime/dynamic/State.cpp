@@ -38,16 +38,6 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 
 void State::setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value)
 {
-	ConverterProcedureCell *converterProcRaw = param->converterProcedure();
-
-	if (converterProcRaw)
-	{
-		alloc::StrongRoot<ParameterProcedureCell> paramRoot(world, &param);
-		alloc::StrongRef<ConverterProcedureCell> converterProc(world, converterProcRaw);
-
-		value = converterProc->apply(world, value);
-	}
-
 	m_selfValues[param] = value;
 }
 
@@ -58,7 +48,7 @@ State* State::activeState(World &world)
 
 void State::pushActiveState(World &world)
 {
-	// Create a state and associated it with the dynamic state
+	// Create a state and associate it with the dynamic state
 	world.setActiveState(new State(world.activeState()));
 }
 

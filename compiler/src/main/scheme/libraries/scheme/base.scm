@@ -511,12 +511,7 @@
     (define-r7rs string-map (world-function llbase "llbase_string_map" (-> (-> <char> <char> * <char>) <string> <string> * <string>)))
     (define-r7rs string-for-each (world-function llbase "llbase_string_for_each" (-> (-> <char> <char> * <unit>) <string> <string> * <unit>)))
 
-    (define native-make-parameter (world-function system-library "llcore_make_parameter" (-> <any> (U (-> <any> <any>) <unit>) <procedure>)))
-    (define-r7rs make-parameter (case-lambda
-      (([init : <any>])
-       (native-make-parameter init #!unit))
-      (([init : <any>] [converter : (-> <any> <any>)])
-       (native-make-parameter init converter))))
+    (define-r7rs make-parameter (world-function system-library "llcore_make_parameter" (-> <any> <procedure>)))
 
     ; Port support
     (define-r7rs port? (make-predicate <port>))

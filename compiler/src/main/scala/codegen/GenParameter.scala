@@ -31,48 +31,23 @@ object GenParameter {
     declareSupportFunctions(state)
 
     val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
+    val block = state.currentBlock
 
-    // States are wrapped in cells to suppoort GC - this means we need to insert a GC barrier here
-    val (postPushState, _) = GenGcBarrier(state) {
-      val block = state.currentBlock
+    // Push the new environment
+    block.callDecl(None)(dynamicenvPushDecl, List(worldPtrIr))
 
-      // Push the new environment
-      block.callDecl(None)(dynamicenvPushDecl, List(worldPtrIr))
-
-      (block, Unit)
-    }
-    
     // Set each value
-    // This may invoke a converter procedure so we need a GC barrier
-    step.parameterValues.foldLeft(postPushState) { case (state, paramValue) =>
+    for(paramValue <- step.parameterValues) {
       // Pull out our values
-      val parameterIr = state.liveTemps(paramValue.parameterProc) 
-      val valueIr = state.liveTemps(paramValue.newValue) 
+      val parameterIr = state.liveTemps(paramValue.parameterProc)
+      val valueIr = state.liveTemps(paramValue.newValue)
 
-      if (paramValue.mayHaveConverterProc) {
-        // We need a GC barrier here for safety
-        GenGcBarrier(state) {
-          val entryBlock = state.currentBlock
-          val successBlock = entryBlock.function.startChildBlock("setValueSuccess")
-
-          entryBlock.invokeDecl(None)(
-            decl=dynamicenvSetValueDecl,
-            arguments=List(worldPtrIr, parameterIr, valueIr),
-            normalBlock=successBlock,
-            exceptionBlock=state.gcCleanUpBlockOpt.get
-          )
-
-          (successBlock, Unit)
-        }._1
-      }
-      else {
-        val block = state.currentBlock
-        block.callDecl(None)(dynamicenvSetValueDecl, List(worldPtrIr, parameterIr, valueIr))
-        state
-      }
+      block.callDecl(None)(dynamicenvSetValueDecl, List(worldPtrIr, parameterIr, valueIr))
     }
+
+    state
   }
-  
+
   def genPopDynamicState(state : GenerationState)(step : ps.PopDynamicState) : GenerationState = {
     declareSupportFunctions(state)
 
@@ -82,29 +57,22 @@ object GenParameter {
 
     state
   }
-      
+
   def genCreateParameterProc(state : GenerationState)(
       worldPtrIr : IrValue,
-      initialValueIr : IrValue,
-      converterProcOpt : Option[IrValue]
+      initialValueIr : IrValue
   ) : (GenerationState, IrValue) = {
     val entryBlock = state.currentBlock
 
     declareSupportFunctions(state)
 
-    // #!unit means "use identity function"
-    val converterProcUncast = converterProcOpt.getOrElse(GlobalDefines.unitIrValue)
-
-    // Cast to any*
-    val converterProcCast = ct.AnyCell.genPointerBitcast(entryBlock)(converterProcUncast)
-
     // This will allocate
     GenGcBarrier(state) {
-      val successBlock = state.currentBlock.function.startChildBlock("makeParameterSuccess") 
+      val successBlock = state.currentBlock.function.startChildBlock("makeParameterSuccess")
 
       val resultIr = entryBlock.invokeDecl(Some("parameterProc"))(
         decl=makeParameterDecl,
-        arguments=List(worldPtrIr, initialValueIr, converterProcCast),
+        arguments=List(worldPtrIr, initialValueIr),
         normalBlock=successBlock,
         exceptionBlock=state.gcCleanUpBlockOpt.get
       )

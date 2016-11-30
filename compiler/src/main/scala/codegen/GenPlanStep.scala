@@ -436,18 +436,16 @@ object GenPlanStep {
     case popDynamic : ps.PopDynamicState =>
       GenParameter.genPopDynamicState(state)(popDynamic)
 
-    case ps.CreateParameterProc(resultTemp, initialValueTemp, converterProcTempOpt, inputToDispose) =>
+    case ps.CreateParameterProc(resultTemp, initialValueTemp, inputToDispose) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val initialValueIr = state.liveTemps(initialValueTemp)
-      val converterProcOptIr = converterProcTempOpt.map(state.liveTemps)
 
       val disposedState = state.withDisposedValues(inputToDispose)
 
       val (postProcState, resultIr) = GenParameter.genCreateParameterProc(disposedState)(
         worldPtrIr,
-        initialValueIr,
-        converterProcOptIr
-      ) 
+        initialValueIr
+      )
 
       postProcState.withTempValue(resultTemp -> resultIr)
 

@@ -34,33 +34,18 @@ namespace
 	}
 }
 
-ParameterProcedureCell::ParameterProcedureCell(AnyCell *initialValue, ConverterProcedureCell *converterProcedure) :
-	TopProcedureCell(registeredClassId, false, allocateRecordData(sizeof(ParameterProcedureClosure)), &procedureBody)
+ParameterProcedureCell::ParameterProcedureCell(AnyCell *initialValue) :
+	TopProcedureCell(registeredClassId, true, initialValue, &procedureBody)
 {
-	auto closure = static_cast<ParameterProcedureClosure*>(recordData());
-
-	closure->initialValue = initialValue;
-
-	if (converterProcedure == nullptr)
-	{
-		// No converter
-		closure->converter = EmptyListCell::instance();
-	}
-	else
-	{
-		closure->converter = converterProcedure;
-	}
 }
 
-ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ConverterProcedureCell *converterProcedureRaw)
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw)
 {
-	// Root these across the allocation of the actual procedure cell
+	// Root this across the allocation of the actual procedure cell
 	alloc::AnyRef initialValue(world, initialValueRaw);
-	alloc::StrongRef<ConverterProcedureCell> converterProcedure(world, converterProcedureRaw);
 
 	void *placement = alloc::allocateCells(world);
-
-	return new (placement) ParameterProcedureCell(initialValue, converterProcedure);
+	return new (placement) ParameterProcedureCell(initialValue);
 }
 
 bool ParameterProcedureCell::isInstance(const ProcedureCell *proc)
@@ -71,12 +56,9 @@ bool ParameterProcedureCell::isInstance(const ProcedureCell *proc)
 void ParameterProcedureCell::registerRecordClass()
 {
 	// Register our closure type so our garbage collector knows what to do
-	std::vector<size_t> offsets = {
-		offsetof(ParameterProcedureClosure, initialValue),
-		offsetof(ParameterProcedureClosure, converter)
-	};
+	std::vector<size_t> offsets = { 0 };
 
-	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(ParameterProcedureClosure), offsets);
+	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(void *), offsets);
 }
 
 }
