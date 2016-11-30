@@ -16,29 +16,15 @@
   (assert-false (rational? '()))))
 
 (define-test "(integer?)" (expect-static-success
-  (assert-true  (integer? 4))
-  (assert-true  (integer? -5.0))
-  (assert-false (integer? -5.5))
-  (assert-false (integer? +nan.0))
-  (assert-false (integer? '()))))
+  (assert-false (integer? 3.0))
+  (assert-true  (integer? 3.))
+  (assert-false (integer? 'notanumber))))
 
-(define-test "(exact?)" (expect-static-success
-  (assert-false (exact? 3.0))
-  (assert-true  (exact? 3.))))
-
-(define-test "exact? fails with non-numbers" (expect-error type-error?
-  (exact? 'notanumber)))
-
-(define-test "(inexact?)" (expect-static-success
-  (assert-true  (inexact? 3.0))
-  (assert-false (inexact? 3.))))
-
-(define-test "(inexact?) fails with non-numbers" (expect-error type-error?
-  (inexact? 'notanumber)))
-
-(define-test "(exact-integer?)" (expect-static-success
-  (assert-true (exact-integer? 32))
-  (assert-false (exact-integer? 32.0))))
+(define-test "(flonum?)" (expect-static-success
+  (assert-true  (flonum? 3.0))
+  (assert-false (flonum? 3.))
+  (assert-false (flonum? 32))
+  (assert-false (flonum? 'notanumber))))
 
 (define-test "(exact)" (expect-static-success
   (assert-equal -32 (exact -32.0))

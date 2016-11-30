@@ -150,10 +150,10 @@
   (double-binary-op plus 4)))
 
 (define-test "applying datum cells with too many arguments fails" (expect-error arity-error?
-  ((typeless-cell exact?) 80 20)))
+  ((typeless-cell integer?) 80 20)))
 
 (define-test "applying datum cells with insufficient arguments fails" (expect-error arity-error?
-  ((typeless-cell exact?))))
+  ((typeless-cell flonum?))))
 
 (define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-error type-error?
   ; + and - have different signatures

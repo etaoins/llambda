@@ -38,8 +38,7 @@ object ReportProcPlanner {
   // These planners enhance type information avaliable to the compiler in addition to optimising
   val typingPlanners = List[ReportProcPlanner](
     ApplyProcPlanner,
-    EquivalenceProcPlanner,
-    NumberPredicateProcPlanner
+    EquivalenceProcPlanner
   )
 
   // These planners primarily exist for optimisation

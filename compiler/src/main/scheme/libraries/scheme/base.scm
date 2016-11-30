@@ -236,18 +236,10 @@
     (define-r7rs apply (world-function llbase "llbase_apply" (-> <procedure> <any> * <any>)))
 
     (define-r7rs number? (make-predicate <number>))
+    (define-r7rs flonum? (make-predicate <flonum>))
+    (define-r7rs integer? (make-predicate <exact-integer>))
 
     (define-r7rs rational? (native-function llbase "llbase_is_rational" (-> <any> <native-bool>)))
-
-    ; These aren't quite normal predicates as they only take numbers
-    (define-r7rs (inexact? [val : <number>])
-      ((make-predicate <flonum>) val))
-
-    (define-r7rs (exact? [val : <number>])
-      ((make-predicate <exact-integer>) val))
-
-    (define-r7rs exact-integer? exact?)
-
 
     (define-r7rs = (native-function llbase "llbase_numeric_equal" (-> <number> <number> <number> * <native-bool>)))
     (define-r7rs < (native-function llbase "llbase_numeric_lt" (-> <number> <number> <number> * <native-bool>)))
@@ -257,43 +249,33 @@
 
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
     (define-r7rs (zero? [n : <number>])
-      (if (exact-integer? n) (= n 0) (= n 0.0)))
+      (if (integer? n) (= n 0) (= n 0.0)))
 
     (define-r7rs (positive? [n : <number>])
-      (if (exact-integer? n) (> n 0) (> n 0.0)))
+      (if (integer? n) (> n 0) (> n 0.0)))
 
     (define-r7rs (negative? [n : <number>])
-      (if (exact-integer? n) (< n 0) (< n 0.0)))
+      (if (integer? n) (< n 0) (< n 0.0)))
 
     (define native-floor (native-function system-library "floor" (-> <native-double> <native-double>)))
     (: floor (All ([N : <number>]) (-> N N)))
     (define-r7rs (floor n)
-      (if (exact-integer? n) n (native-floor n)))
+      (if (integer? n) n (native-floor n)))
 
     (define native-ceil (native-function system-library "ceil" (-> <native-double> <native-double>)))
     (: ceiling (All ([N : <number>]) (-> N N)))
     (define-r7rs (ceiling n)
-      (if (exact-integer? n) n (native-ceil n)))
+      (if (integer? n) n (native-ceil n)))
 
     (define native-trunc (native-function system-library "trunc" (-> <native-double> <native-double>)))
     (: truncate (All ([N : <number>]) (-> N N)))
     (define-r7rs (truncate n)
-      (if (exact-integer? n) n (native-trunc n)))
+      (if (integer? n) n (native-trunc n)))
 
     (define native-round (native-function system-library "round" (-> <native-double> <native-double>)))
     (: round (All ([N : <number>]) (-> N N)))
     (define-r7rs (round n)
-      (if (exact-integer? n) n (native-round n)))
-
-    (define-r7rs (integer? x)
-      (if (number? x)
-        (if (exact-integer? x)
-          ; All exact integers are integers
-          #t
-          ; Some flonums are integers
-          (= x (floor x)))
-        ; Not numeric
-        #f))
+      (if (integer? n) n (native-round n)))
 
     (define-r7rs exact (world-function llbase "llbase_exact" (-> <number> <native-int64>)))
     (define-r7rs inexact (native-function llbase "llbase_inexact" (-> <number> <native-double>)))
@@ -313,7 +295,7 @@
     (define-r7rs (abs num)
       ; Do a top-level type check to make the compiler generate a specialised version of each branch. The test itself is
       ; semantically a no-op
-      (if (exact-integer? num)
+      (if (integer? num)
         (if (< num 0)
           (- num)
           num)

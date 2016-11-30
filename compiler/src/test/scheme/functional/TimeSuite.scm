@@ -2,7 +2,7 @@
   (import (scheme time))
   (define cur-second (current-second))
 
-  (assert-true (inexact? cur-second))
+  (assert-true (flonum? cur-second))
 
   ; Make sure the returned time is in the 21st century
   (assert-true (> cur-second 946684800))
@@ -12,7 +12,7 @@
   (import (llambda time))
   (define cur-time (current-unix-time))
 
-  (assert-true (inexact? cur-time))
+  (assert-true (flonum? cur-time))
 
   ; Make sure the returned time is in the 21st century
   (assert-true (> cur-time 946684800))
@@ -25,10 +25,10 @@
   (define cur-jiffy (current-jiffy))
   (define jps (jiffies-per-second))
 
-  (assert-true (exact? cur-jiffy))
+  (assert-true (integer? cur-jiffy))
   (assert-true (>= cur-jiffy 0))
 
-  (assert-true (exact? jps))
+  (assert-true (integer? jps))
   (assert-true (> jps 0))))
 
 (define-test "simple (current-jiffy) benchmarking" (expect-success
