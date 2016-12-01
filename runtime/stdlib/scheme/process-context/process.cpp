@@ -14,41 +14,11 @@
 
 using namespace lliby;
 
-namespace
-{
-	int cellToStatusCode(AnyCell *datum)
-	{
-		if (datum == BooleanCell::trueInstance())
-		{
-			// #t is success
-			return 0;
-		}
-		else if (datum == BooleanCell::falseInstance())
-		{
-			// #f is failure
-			return -1;
-		}
-		else if (auto integer = cell_cast<IntegerCell>(datum))
-		{
-			// Return the integer
-			return integer->value();
-		}
-
-		// XXX: Should we warn here?
-		return 0;
-	}
-}
-
 extern "C"
 {
 
 // This isn't in a standard header file
 extern char **environ;
-
-void llprocesscontext_exit(World &world, AnyCell *exitValue)
-{
-	exit(cellToStatusCode(exitValue));
-}
 
 AnyCell *llprocesscontext_get_environment_variable(World &world, StringCell *name)
 {

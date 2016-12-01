@@ -161,41 +161,36 @@ object GenPlanStep {
 
       val preBarrierState = state.withDisposedValues(inputToDispose)
 
+      if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
+        // This can't return - unroot all of our values and terminate the function
+        return state.terminateFunction(() => {
+          preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
+          preBarrierState.currentBlock.unreachable
+        })
+      }
+
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
-        if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
-          // This can't return - unroot all of our values and terminate the function
-          return state.terminateFunction(() => {
-            preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
-            preBarrierState.currentBlock.unreachable
-          })
-        }
-        else {
-          // We need a GC barrier
-          GenGcBarrier(preBarrierState) {
-            val invokeBlock = preBarrierState.currentBlock
-            val successBlock = invokeBlock.function.startChildBlock("invokeSuccess") 
+        // We need a GC barrier
+        GenGcBarrier(preBarrierState) {
+          val invokeBlock = preBarrierState.currentBlock
+          val successBlock = invokeBlock.function.startChildBlock("invokeSuccess") 
 
-            val irValue = invokeBlock.invoke(Some("invokeRet"))(
-              signature=irSignature,
-              functionPtr=irFuncPtr,
-              arguments=irArguments,
-              normalBlock=successBlock,
-              exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get,
-              metadata=metadata
-            )
+          val irValue = invokeBlock.invoke(Some("invokeRet"))(
+            signature=irSignature,
+            functionPtr=irFuncPtr,
+            arguments=irArguments,
+            normalBlock=successBlock,
+            exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get,
+            metadata=metadata
+          )
 
-            (successBlock, irValue)
-          }
+          (successBlock, irValue)
         }
       }
       else {
         // This call can't allocate or throw exceptions - skip the barrier and invoke
         val block = preBarrierState.currentBlock
         val irValue = block.call(Some("ret"))(irSignature, irFuncPtr, irArguments, metadata=metadata)
-
-        if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
-          block.unreachable
-        }
 
         (preBarrierState, irValue)
       }
