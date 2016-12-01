@@ -5,7 +5,7 @@ object ReportProcHasSideEffects {
   // Be *very* careful here - the procedure cannot throw an exception if passed the indicated number of arguments
   // This precludes any functions that have typed parameters
   def apply(reportProcName : String, arity : Int) : Boolean = (reportProcName, arity) match {
-    case ("eq?", 1) | ("eqv?", 1) | ("equals?", 1) =>
+    case ("eq?", 2) | ("eqv?", 2) | ("equals?", 2) =>
       false
 
     case ("number?", 1) | ("integer?", 1) | ("real?", 1) | ("rational?", 1) => 
