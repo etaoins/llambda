@@ -86,10 +86,9 @@ namespace
 	}
 
 	template<class IntegerCompare, class FlonumCompare>
-	NumberCell *selectNumericValue(World &world, NumberCell *initialNumber, RestValues<NumberCell> *argHead, IntegerCompare integerCompare, FlonumCompare flonumCompare)
+	NumberCell *selectNumericValue(NumberCell *initialNumber, RestValues<NumberCell> *argHead, IntegerCompare integerCompare, FlonumCompare flonumCompare)
 	{
 		NumberCell *selectedNumber = initialNumber;
-		bool resultIsFlonum = true;
 
 		for(auto otherNumber : *argHead)
 		{
@@ -107,10 +106,6 @@ namespace
 			}
 			else
 			{
-				// We have to compare these as doubles - even if we don't select the flonum value the entire result
-				// becomes flonum
-				resultIsFlonum = false;
-
 				if (flonumCompare(otherNumber->toDouble(), selectedNumber->toDouble()))
 				{
 					selectedNumber = otherNumber;
@@ -118,15 +113,7 @@ namespace
 			}
 		}
 
-		if (!resultIsFlonum && IntegerCell::isInstance(selectedNumber))
-		{
-			// We have to allocate a new cell to convert this number to flonum
-			return FlonumCell::fromValue(world, selectedNumber->toDouble());
-		}
-		else
-		{
-			return selectedNumber;
-		}
+		return selectedNumber;
 	}
 }
 
@@ -220,16 +207,16 @@ bool llbase_numeric_gte(NumberCell *value1, NumberCell *value2, RestValues<Numbe
 			[] (double value1, double value2) { return value1 >= value2; });
 }
 
-NumberCell *llbase_max(World &world, NumberCell *currentMaxNumber, RestValues<NumberCell> *argHead)
+NumberCell *llbase_max(NumberCell *currentMaxNumber, RestValues<NumberCell> *argHead)
 {
-	return selectNumericValue(world, currentMaxNumber, argHead,
+	return selectNumericValue(currentMaxNumber, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 > value2; },
 			[] (double value1, double value2) { return value1 > value2; });
 }
 
-NumberCell *llbase_min(World &world, NumberCell *currentMaxNumber, RestValues<NumberCell> *argHead)
+NumberCell *llbase_min(NumberCell *currentMaxNumber, RestValues<NumberCell> *argHead)
 {
-	return selectNumericValue(world, currentMaxNumber, argHead,
+	return selectNumericValue(currentMaxNumber, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 < value2; },
 			[] (double value1, double value2) { return value1 < value2; });
 }

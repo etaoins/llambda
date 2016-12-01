@@ -322,8 +322,8 @@
     (define-stdlib (even? [val : <integer>])
                  (= (truncate-remainder val 2) 0))
 
-    (define-stdlib max (world-function llbase "llbase_max" (All ([N : <number>]) N N * N)))
-    (define-stdlib min (world-function llbase "llbase_min" (All ([N : <number>]) N N * N)))
+    (define-stdlib max (native-function llbase "llbase_max" (All ([N : <number>]) N N * N)))
+    (define-stdlib min (native-function llbase "llbase_min" (All ([N : <number>]) N N * N)))
 
     (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <integer> * <native-int64>)))
     (define-stdlib gcd (case-lambda

@@ -12,13 +12,13 @@ object NumberProcPlanner extends StdlibProcPlanner {
   private type IntegerCompartor = (Long, Long) => Boolean
 
   private type DoubleCompartor = (Double, Double) => Boolean
-  
+
   private type StaticIntegerOp = (Long, Long) => Long
   private type StaticDoubleOp = (Double, Double) => Double
 
   private sealed abstract class CompareResult
-  private case class StaticCompare(result : Boolean, flonum : Boolean) extends CompareResult
-  private case class DynamicCompare(nativePred : ps.TempValue, flonum : Boolean) extends CompareResult
+  private case class StaticCompare(result : Boolean) extends CompareResult
+  private case class DynamicCompare(nativePred : ps.TempValue) extends CompareResult
   private case object UnplannableCompare extends CompareResult
 
   private def integerValue(
@@ -80,11 +80,11 @@ object NumberProcPlanner extends StdlibProcPlanner {
     (val1, val2) match {
       case (iv.ConstantIntegerValue(constIntegerVal1), iv.ConstantIntegerValue(constIntegerVal2)) =>
         val compareResult = staticIntCalc(constIntegerVal1, constIntegerVal2)
-        StaticCompare(compareResult, flonum=false)
+        StaticCompare(compareResult)
 
       case (constNum1 : iv.ConstantNumberValue, constNum2 : iv.ConstantNumberValue) =>
         val compareResult = staticFlonumCalc(constNum1.doubleValue, constNum2.doubleValue)
-        StaticCompare(compareResult, flonum=true)
+        StaticCompare(compareResult)
 
       case (integer1, integer2) if integer1.hasDefiniteType(vt.IntegerType) && integer2.hasDefiniteType(vt.IntegerType) =>
         val val1Temp = integer1.toTempValue(vt.Int64)
@@ -102,7 +102,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
         // Do a direct integer compare
         plan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
 
-        DynamicCompare(predicateTemp, flonum=false)
+        DynamicCompare(predicateTemp)
 
       case (flonum1, flonum2) if flonum1.hasDefiniteType(vt.FlonumType) && flonum2.hasDefiniteType(vt.FlonumType) =>
         val val1Temp = flonum1.toTempValue(vt.Double)
@@ -113,7 +113,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
         // Do a direct float compare
         plan.steps += ps.FloatCompare(predicateTemp, compareCond, val1Temp, val2Temp)
 
-        DynamicCompare(predicateTemp, flonum=true)
+        DynamicCompare(predicateTemp)
 
       case _ =>
         UnplannableCompare
@@ -140,15 +140,15 @@ object NumberProcPlanner extends StdlibProcPlanner {
         // We can't compare this at compile time
         return None
 
-      case StaticCompare(false, _) =>
+      case StaticCompare(false) =>
         // This is false - the whole expression must be false!
         return Some(iv.ConstantBooleanValue(false))
 
-      case StaticCompare(true, _) =>
+      case StaticCompare(true) =>
         // We don't need to include constant true values
         None
 
-      case DynamicCompare(nativePred, _) =>
+      case DynamicCompare(nativePred) =>
         Some(nativePred)
     } : List[ps.TempValue]
 
@@ -171,18 +171,6 @@ object NumberProcPlanner extends StdlibProcPlanner {
     }
 
     Some(new iv.NativePredicateValue(resultPred))
-  }
-
-  private def selectValue(
-      value : iv.IntermediateValue,
-      forceFlonum : Boolean
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
-    if (!forceFlonum) {
-      value
-    }
-    else {
-      flonumValue(value).get
-    }
   }
 
   private def phiTypeForSelect(leftValue : iv.IntermediateValue, rightValue : iv.IntermediateValue) : vt.ValueType = {
@@ -214,28 +202,24 @@ object NumberProcPlanner extends StdlibProcPlanner {
           // We can't compare this at compile time
           return None
 
-        case StaticCompare(true, flonumCompare) =>
+        case StaticCompare(true) =>
           // Statically select the left value
-          selectValue(left, forceFlonum=flonumCompare)
+          left
 
-        case StaticCompare(false, flonumCompare) =>
+        case StaticCompare(false) =>
           // Statically select the right value
-          selectValue(right, forceFlonum=flonumCompare)
+          right
 
-        case DynamicCompare(nativePred, flonumCompare) =>
-          // Create our branches and select our values (which may cause them to become flonjm)
+        case DynamicCompare(nativePred) =>
           val truePlan = comparePlan.forkPlan()
-          val selectedLeft = selectValue(left, forceFlonum=flonumCompare)(truePlan)
-
           val falsePlan = comparePlan.forkPlan()
-          val selectedRight = selectValue(right, forceFlonum=flonumCompare)(falsePlan)
 
           // Phi the results together
-          val resultType = phiTypeForSelect(selectedLeft, selectedRight)
+          val resultType = phiTypeForSelect(left, right)
           val resultTemp = ps.Temp(resultType)
 
-          val trueResult = selectedLeft.toTempValue(resultType)(truePlan)
-          val falseResult = selectedRight.toTempValue(resultType)(falsePlan)
+          val trueResult = left.toTempValue(resultType)(truePlan)
+          val falseResult = right.toTempValue(resultType)(falsePlan)
 
           val valuePhi = ps.ValuePhi(resultTemp, trueResult, falseResult)
           comparePlan.steps += ps.CondBranch(nativePred, truePlan.steps.toList, falsePlan.steps.toList, List(valuePhi))
