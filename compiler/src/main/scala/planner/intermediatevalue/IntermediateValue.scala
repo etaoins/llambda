@@ -251,7 +251,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
       case _ =>
         val castTemp = toTempValue(targetType, errorMessageOpt)
-        TempValueToIntermediate(targetType, castTemp)(plan.config)
+        TempValueToIntermediate(targetType, castTemp)
     }
   }
 
@@ -291,7 +291,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * include things like procedure signature, value ranges, etc.
     */
   def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
-    TempValueToIntermediate(valueType, varTemp)(planConfig)
+    TempValueToIntermediate(valueType, varTemp)
   }
 
   /** Returns an applicable value for the given argument types

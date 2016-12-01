@@ -9,7 +9,7 @@ import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.valuetype.Implicits._
 
 object TempValueToIntermediate {
-  def apply(valueType : vt.ValueType, tempValue : ps.TempValue)(planConfig : PlanConfig) : iv.IntermediateValue = valueType match {
+  def apply(valueType : vt.ValueType, tempValue : ps.TempValue) : iv.IntermediateValue = valueType match {
     case vt.Predicate =>
       new iv.NativePredicateValue(tempValue)
 

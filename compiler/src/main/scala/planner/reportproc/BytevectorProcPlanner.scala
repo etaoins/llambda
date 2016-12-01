@@ -23,7 +23,7 @@ object BytevectorProcPlanner extends ReportProcPlanner {
       val resultTemp = ps.Temp(vt.Int64)
       plan.steps += ps.LoadBytevectorLength(resultTemp, bytevectorTemp)
 
-      Some(TempValueToIntermediate(vt.Int64, resultTemp)(plan.config))
+      Some(TempValueToIntermediate(vt.Int64, resultTemp))
 
     case _ =>
       None

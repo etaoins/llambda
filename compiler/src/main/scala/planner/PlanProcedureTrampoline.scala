@@ -47,7 +47,7 @@ private[planner] object PlanProcedureTrampoline {
 
     val (mandatoryArgTemps, mandatoryArgValues) = inSignature.mandatoryArgTypes.map({ mandatoryArgType =>
       val mandatoryArgTemp = ps.Temp(mandatoryArgType)
-      val mandatoryArgValue = TempValueToIntermediate(mandatoryArgType, mandatoryArgTemp)(plan.config)
+      val mandatoryArgValue = TempValueToIntermediate(mandatoryArgType, mandatoryArgTemp)
 
       (mandatoryArgTemp, mandatoryArgValue)
     }).unzip

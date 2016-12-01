@@ -241,7 +241,7 @@ object PlanLambdaPolymorph {
 
     val postMandatoryState = mandatoryArgs.foldLeft(postClosureState) {
       case (state, MandatoryArgument(storageLoc, tempValue, valueType)) =>
-        val value = TempValueToIntermediate(valueType, tempValue)(procPlan.config)
+        val value = TempValueToIntermediate(valueType, tempValue)
         state.withValue(storageLoc -> initLocationValue(storageLoc, value)(procPlan))
     }
 

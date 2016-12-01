@@ -240,7 +240,7 @@ object NumberProcPlanner extends ReportProcPlanner {
           val valuePhi = ps.ValuePhi(resultTemp, trueResult, falseResult)
           comparePlan.steps += ps.CondBranch(nativePred, truePlan.steps.toList, falsePlan.steps.toList, List(valuePhi))
 
-          TempValueToIntermediate(resultType, resultTemp)(comparePlan.config)
+          TempValueToIntermediate(resultType, resultTemp)
       }
     }
 

@@ -87,7 +87,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
       val resultTemp = ps.Temp(vt.Int64)
       plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
-      Some(TempValueToIntermediate(vt.Int64, resultTemp)(plan.config))
+      Some(TempValueToIntermediate(vt.Int64, resultTemp))
 
     case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantIntegerValue(index)))) =>
       assertIndexValid("(vector-ref)", elements.size, index)
@@ -111,7 +111,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
       plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, elementsTemp, indexTemp)
 
-      Some(TempValueToIntermediate(vt.AnySchemeType, resultTemp)(plan.config))
+      Some(TempValueToIntermediate(vt.AnySchemeType, resultTemp))
 
     case ("vector-set!", List(
         (_, vectorCellValue : iv.KnownVectorCellValue),

@@ -76,7 +76,7 @@ private[planner] object PlanExpr {
             val resultTemp = ps.Temp(mutableType.innerType)
             plan.steps += ps.LoadRecordDataField(resultTemp, recordDataTemp, mutableType, mutableType.recordField)
 
-            val resultValue = TempValueToIntermediate(mutableType.innerType, resultTemp)(plan.config)
+            val resultValue = TempValueToIntermediate(mutableType.innerType, resultTemp)
 
             PlanResult(
               state=initialState,

@@ -60,7 +60,7 @@ object PlanInvokeApply {
             iv.UnreachableValue
 
           case vt.ReturnType.Reachable(valueType) =>
-            TempValueToIntermediate(valueType, resultTemp)(plan.config)
+            TempValueToIntermediate(valueType, resultTemp)
         }
     }
   }

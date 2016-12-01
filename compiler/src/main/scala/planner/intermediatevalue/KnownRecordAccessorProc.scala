@@ -72,7 +72,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
 
         plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field)
 
-        val resultValue = TempValueToIntermediate(fieldType, fieldValueTemp)(plan.config)
+        val resultValue = TempValueToIntermediate(fieldType, fieldValueTemp)
 
         Some(PlanResult(
           state=state,

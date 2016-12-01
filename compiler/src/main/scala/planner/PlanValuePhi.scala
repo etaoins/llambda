@@ -28,7 +28,7 @@ object PlanValuePhi {
         val leftTempValue = leftUnboxed.toTempValue(commonType)(leftPlan)
         val rightTempValue = rightUnboxed.toTempValue(commonType)(rightPlan)
 
-        val resultValue = TempValueToIntermediate(commonType, phiResultTemp)(leftPlan.config)
+        val resultValue = TempValueToIntermediate(commonType, phiResultTemp)
 
         // Our types exactly match - no conversion needed!
         Result(
