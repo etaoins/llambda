@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
@@ -12,7 +12,7 @@ import llambda.compiler.codegen.RuntimeFunctions
 
 import llambda.compiler.valuetype.Implicits._
 
-object EquivalenceProcPlanner extends ReportProcPlanner {
+object EquivalenceProcPlanner extends StdlibProcPlanner {
   private def allSubtypes(rootType : ct.CellType) : Set[ct.CellType] =
     rootType.directSubtypes ++ rootType.directSubtypes.flatMap(allSubtypes)
 

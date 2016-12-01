@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, ErrorCategory, RuntimeErrorMessage}
+import llambda.compiler.{et, StorageLocation, StdlibProcedure, ContextLocated, ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}

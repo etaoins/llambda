@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-object ArithmeticProcPlanner extends ReportProcPlanner {
+object ArithmeticProcPlanner extends StdlibProcPlanner {
   private type UncheckedInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
   private type CheckedInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue, RuntimeErrorMessage) => ps.Step
   private type StaticIntegerOp = (BigInt, BigInt) => BigInt

@@ -21,8 +21,8 @@ case class KnownCaseLambdaClause(
   * @param selfTempOpt     For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                        point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                        if this value is explicitly converted to a ct.ProcedureCell
-  * @param reportNameOpt   Name of this procedure in R7RS. This is used as a tag to implement certain optimisations
-  *                        elsewhere in the planner. It is not directly used by this class
+  * @param stdlibNameOpt   Name of this procedure in the stdlib. This is used as a tag to implement certain
+  *                        optimisations elsewhere in the planner. It is not directly used by this class.
   * @param clausesInScope  Indicates if the original clause knownProc values are still within scope. This is used as an
   *                        optimisation to avoid having to load them from the (case-lambda)'s closure
   */
@@ -32,18 +32,18 @@ class KnownCaseLambdaProc(
     clauses : List[KnownCaseLambdaClause],
     plannedSymbol : String,
     selfTempOpt : Option[ps.TempValue],
-    reportNameOpt : Option[String] = None,
+    stdlibNameOpt : Option[String] = None,
     clausesInScope : Boolean = false
-) extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) {
+) extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) {
   override val typeDescription = "case procedure"
 
   override val schemeType = vt.CaseProcedureType(
     clauses.map(_.knownProc.schemeType)
   )
 
-  override def withReportName(newReportName : String) : KnownUserProc = {
+  override def withStdlibName(newStdlibName : String) : KnownUserProc = {
     val mappedClauses = clauses.map { clause =>
-      clause.copy(knownProc=clause.knownProc.withReportName(newReportName))
+      clause.copy(knownProc=clause.knownProc.withStdlibName(newStdlibName))
     }
 
     new KnownCaseLambdaProc(
@@ -52,7 +52,7 @@ class KnownCaseLambdaProc(
       clauses=mappedClauses,
       plannedSymbol=plannedSymbol,
       selfTempOpt=selfTempOpt,
-      reportNameOpt=Some(newReportName),
+      stdlibNameOpt=Some(newStdlibName),
       clausesInScope=clausesInScope
     )
   }
@@ -64,7 +64,7 @@ class KnownCaseLambdaProc(
       clauses=clauses,
       plannedSymbol=plannedSymbol,
       selfTempOpt=Some(selfTemp),
-      reportNameOpt=reportNameOpt,
+      stdlibNameOpt=stdlibNameOpt,
       clausesInScope=false // Our clause values are no longer in scope
     )
 

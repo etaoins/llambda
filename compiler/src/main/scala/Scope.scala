@@ -39,17 +39,17 @@ class BoundRecordConstructor(
   override val forceImmutable = true
 }
 
-// These are procedure with the semantics of the same procedure defined in R7RS
-// This allows the compiler to optimise them based on their documented semantics
-class ReportProcedure(
-    val reportName : String,
+// These are procedure with the semantics of the same procedure defined in our standard library
+// This allows the compiler to optimise them based on their known semantics
+class StdlibProcedure(
+    val stdlibName : String,
     schemeType : vt.SchemeType = vt.AnySchemeType
-) extends StorageLocation(reportName, schemeType) {
-  override def toString = "&" + reportName
+) extends StorageLocation(stdlibName, schemeType) {
+  override def toString = "&" + stdlibName
 
-  // R7RS doesn't allow mutating imported definition and (define-report-procedure) should only be used as library
-  // exports. This prevents us from treating a variable initialised as a report procedure and rebound to another value
-  // as a report procedure with the original reportName
+  // R7RS doesn't allow mutating imported definition and (define-stdlib-procedure) should only be used as library
+  // exports. This prevents us from treating a variable initialised as a stdlib procedure and rebound to another value
+  // as a stdlib procedure with the original stdlibName
   override val forceImmutable = true
 }
 

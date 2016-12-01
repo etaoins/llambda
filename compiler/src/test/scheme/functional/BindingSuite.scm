@@ -83,9 +83,9 @@
                       (if test
                       (begin stmt1
                            stmt2 ...))))))
-  ; This is also a s)eaky hygiene test from R7RS
+  ; This is also a sneaky hygiene test from R7RS
   ; "if" is just a normal variable in the below code
-  ; Overriding it must not interfere with the original report "if" in the macro above once its expanded
+  ; Overriding it must not interfere with the original stdlib "if" in the macro above once its expanded
   (let ((if #t))
     (given-that if (set! if 'now))
     if)))

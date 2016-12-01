@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.et
@@ -9,7 +9,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-object ApplyProcPlanner extends ReportProcPlanner {
+object ApplyProcPlanner extends StdlibProcPlanner {
   override def planFromExprs(initialState : PlannerState)(
       reportName : String,
       args : List[et.Expr]

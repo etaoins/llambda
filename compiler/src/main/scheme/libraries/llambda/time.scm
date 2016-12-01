@@ -1,6 +1,6 @@
 (define-library (llambda time)
   (import (llambda nfi))
-  (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
+  (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
   (import (scheme time))
 
   (include-library-declarations "../../interfaces/scheme/time.scm")

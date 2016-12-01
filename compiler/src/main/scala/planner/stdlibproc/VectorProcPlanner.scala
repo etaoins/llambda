@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
@@ -11,7 +11,7 @@ import llambda.compiler.{celltype => ct}
 
 import llambda.compiler.valuetype.Implicits._
 
-object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers {
+object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers {
   private def makeFilledVector(state : PlannerState)(
       length : (ContextLocated, iv.IntermediateValue),
       fillValue : iv.IntermediateValue

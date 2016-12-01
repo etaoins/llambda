@@ -55,8 +55,8 @@ trait ExprHelpers extends FunSuite with OptionValues {
 
   def assertExprLocated(expr : et.Expr) {
     expr match {
-      case et.TopLevelDefine(et.Binding(reportProc : ReportProcedure, _))
-          if reportProc.reportName == "features" =>
+      case et.TopLevelDefine(et.Binding(stdlibProc : StdlibProcedure, _))
+          if stdlibProc.stdlibName == "features" =>
         // This is an artificial procedure - don't check subexpressions
         return
 

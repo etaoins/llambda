@@ -31,7 +31,7 @@ class KnownParameterProc(
   def nativeSymbol(implicit plan : PlanWriter) =
     codegen.RuntimeFunctions.valueForParameter.name
 
-  def withReportName(newReportName : String) : KnownParameterProc =
+  def withStdlibName(newStdlibName : String) : KnownParameterProc =
     new KnownParameterProc(selfTemp, initialValue, initialValueInScope)
 
   def withSelfTemp(selfTemp : ps.TempValue) =

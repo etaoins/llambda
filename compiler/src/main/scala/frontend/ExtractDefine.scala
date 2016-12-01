@@ -12,7 +12,7 @@ import llambda.compiler.frontend.syntax.ParseSyntaxDefine
   * @param  definedSymbol          Symbol being defined
   * @param  providedTypeOpt        Optional type annotation for the defined variable
   * @param  storageLocConstructor  Closure constructing the storage location for the variable. This is used to implement
-  *                                (define-report-procedure) which constructs specially annotated storage locations
+  *                                (define-stdlib-procedure) which constructs specially annotated storage locations
   */
 case class ValueTarget(
     definedSymbol : sst.ScopedSymbol,
@@ -136,11 +136,11 @@ object ExtractDefine {
         bindValue(constructorName, typeConstructor)
         Nil
 
-      case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
+      case (Primitives.DefineStdlibProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
         val valueTarget = ValueTarget(
           definedSymbol=symbol,
           providedTypeOpt=None,
-          storageLocConstructor=(new ReportProcedure(_, _))
+          storageLocConstructor=(new StdlibProcedure(_, _))
         )
 
         List(ExtractedVarDefine(valueTarget, expr=() => {
@@ -148,11 +148,11 @@ object ExtractDefine {
           }
         ))
 
-      case (Primitives.DefineReportProcedure, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
+      case (Primitives.DefineStdlibProcedure, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
         val valueTarget = ValueTarget(
           definedSymbol=symbol,
           providedTypeOpt=None,
-          storageLocConstructor=(new ReportProcedure(_, _))
+          storageLocConstructor=(new StdlibProcedure(_, _))
         )
 
         List(ExtractedVarDefine(

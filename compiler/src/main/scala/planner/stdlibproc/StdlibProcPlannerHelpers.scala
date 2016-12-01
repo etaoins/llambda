@@ -1,11 +1,11 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import io.llambda.compiler.RangeException
 import io.llambda.compiler.planner._
 import io.llambda.compiler.{valuetype => vt}
 
-trait ReportProcPlannerHelpers {
+trait StdlibProcPlannerHelpers {
   /** Asserts that an index is within an object of the passed length
     *
     * If this fails a RangeException will be thrown; the function will return normally otherwise. This will throw

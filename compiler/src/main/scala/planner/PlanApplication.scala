@@ -1,10 +1,10 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{et, ContextLocated, ReportProcedure}
+import llambda.compiler.{et, ContextLocated, StdlibProcedure}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.planner.reportproc.ReportProcPlanner
+import llambda.compiler.planner.stdlibproc.StdlibProcPlanner
 import llambda.compiler.ArityException
 import llambda.compiler.codegen.CostForPlanSteps
 
@@ -13,15 +13,15 @@ private[planner] object PlanApplication {
       procExpr : et.Expr,
       argExprs : List[et.Expr]
   )(implicit plan : PlanWriter) : PlanResult = {
-    // Are we applying a report procedure?
+    // Are we applying a stdlib procedure?
     procExpr match {
-      case et.VarRef(reportProc : ReportProcedure) =>
-        val reportName = reportProc.reportName
-        val reportProcPlanners = ReportProcPlanner.activePlanners
+      case et.VarRef(stdlibProc : StdlibProcedure) =>
+        val stdlibName = stdlibProc.stdlibName
+        val stdlibProcPlanners = StdlibProcPlanner.activePlanners
 
-        // Can this report procedure be planned without fully evaluating the argument expressions?
-        for(reportProcPlanner <- reportProcPlanners;
-            planResult <- reportProcPlanner.planFromExprs(state)(reportName, argExprs)) {
+        // Can this stdlib procedure be planned without fully evaluating the argument expressions?
+        for(stdlibProcPlanner <- stdlibProcPlanners;
+            planResult <- stdlibProcPlanner.planFromExprs(state)(stdlibName, argExprs)) {
           return planResult
         }
 
@@ -116,7 +116,7 @@ private[planner] object PlanApplication {
     procValue match {
       case knownProc : iv.KnownProc =>
         for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(args)) {
-          // ReportProcPlanners rarely contrain the types of their arguments. Handle this for them.
+          // StdlibProcPlanners rarely constrain the types of their arguments. Handle this for them.
           return inlineResult.copy(
             state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
           )

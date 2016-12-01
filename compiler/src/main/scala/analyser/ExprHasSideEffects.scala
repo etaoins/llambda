@@ -15,9 +15,9 @@ private[analyser] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
       // Procedure definitions themselves are always pure
       false
 
-    case et.Apply(et.VarRef(reportProc : ReportProcedure), args) =>
+    case et.Apply(et.VarRef(stdlibProc : StdlibProcedure), args) =>
       args.exists(ExprHasSideEffects) ||
-        ReportProcHasSideEffects(reportProc.reportName, args.length)
+        StdlibProcHasSideEffects(stdlibProc.stdlibName, args.length)
 
     case et.Apply(lambdaExpr : et.Lambda, args) =>
       args.exists(ExprHasSideEffects) ||

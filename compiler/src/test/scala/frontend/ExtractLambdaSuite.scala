@@ -732,15 +732,15 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
   }
 
-  test("(define-report-procedure) lambda shorthand") {
+  test("(define-stdlib-procedure) lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    val expr = exprFor("(define-report-procedure (return-false [some : <boolean>] rest : <string> *) #f)")(scope)
+    val expr = exprFor("(define-stdlib-procedure (return-false [some : <boolean>] rest : <string> *) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(procLoc) {
-      case rp : ReportProcedure =>
-        assert(rp.reportName === "return-false")
+      case sp : StdlibProcedure =>
+        assert(sp.stdlibName === "return-false")
     }
 
     inside(expr) {

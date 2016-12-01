@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-object NumberProcPlanner extends ReportProcPlanner {
+object NumberProcPlanner extends StdlibProcPlanner {
   private type IntegerCompartor = (Long, Long) => Boolean
 
   private type DoubleCompartor = (Double, Double) => Boolean

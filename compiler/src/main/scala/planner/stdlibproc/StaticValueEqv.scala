@@ -1,10 +1,10 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
-private[reportproc] object StaticValueEqv { 
+private[stdlibproc] object StaticValueEqv {
   private def elementsAreEqual(elems1 : Seq[iv.IntermediateValue], elems2 : Seq[iv.IntermediateValue]) : Option[Boolean] = {
     if (elems1.length != elems2.length) {
       // Nope

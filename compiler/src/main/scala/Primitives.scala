@@ -29,7 +29,7 @@ object Primitives {
   object DefineSyntax extends PrimitiveDefineExpr
   object DefineRecordType extends PrimitiveDefineExpr
   object DefineType extends PrimitiveDefineExpr
-  object DefineReportProcedure extends PrimitiveDefineExpr
+  object DefineStdlibProcedure extends PrimitiveDefineExpr
   object DefineNativeLibrary extends PrimitiveDefineExpr
   object AnnotateStorageLocType extends PrimitiveDefineExpr
 
@@ -69,7 +69,7 @@ object Primitives {
       "define-syntax" -> DefineSyntax,
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
-      "define-report-procedure" -> DefineReportProcedure,
+      "define-stdlib-procedure" -> DefineStdlibProcedure,
       "cast" -> Cast,
       "ann" -> AnnotateExprType,
       ":" -> AnnotateStorageLocType,

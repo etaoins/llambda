@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
@@ -11,7 +11,7 @@ import llambda.compiler.planner._
 
 import scala.annotation.tailrec
 
-object ListProcPlanner extends ReportProcPlanner {
+object ListProcPlanner extends StdlibProcPlanner {
   private def staticMemberSearch(
       compareFunc : StaticValueEqv.EqvFunction,
       needleValue : iv.IntermediateValue,

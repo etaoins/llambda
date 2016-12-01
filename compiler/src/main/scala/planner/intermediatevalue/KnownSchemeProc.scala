@@ -15,8 +15,8 @@ class KnownSchemeProc(
     selfTempOpt : Option[ps.TempValue],
     val manifest : LambdaManifest,
     isPrimaryPolymorph : Boolean,
-    reportNameOpt : Option[String] = None)
-extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) {
+    stdlibNameOpt : Option[String] = None)
+extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) {
   // Override this to ensure we have vt.ProcedureType
   // This is required for KnownCaseLambdaProc to collect its type from its clauses
   override val schemeType : vt.ProcedureType = polySignature.toSchemeProcedureType
@@ -24,14 +24,14 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
   override def locationOpt : Option[ContextLocated] =
     Some(manifest.lambdaExpr)
 
-  override def withReportName(newReportName : String) : KnownSchemeProc = {
+  override def withStdlibName(newStdlibName : String) : KnownSchemeProc = {
     new KnownSchemeProc(
       polySignature,
       plannedSymbol,
       selfTempOpt,
       manifest,
       isPrimaryPolymorph,
-      Some(newReportName)
+      Some(newStdlibName)
     )
   }
 
@@ -42,7 +42,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
       Some(selfTemp),
       manifest,
       isPrimaryPolymorph,
-      reportNameOpt
+      stdlibNameOpt
     )
 
   private def createPolymorph(resolvedType : vt.ProcedureType)(implicit plan : PlanWriter) : KnownSchemeProc = {
@@ -79,7 +79,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
       polymorphSelfTempOpt,
       manifest,
       isPrimaryPolymorph=false,
-      reportNameOpt=reportNameOpt
+      stdlibNameOpt=stdlibNameOpt
     )
   }
 

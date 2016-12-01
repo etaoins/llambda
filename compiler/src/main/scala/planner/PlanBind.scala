@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated}
+import llambda.compiler.{et, StorageLocation, StdlibProcedure, ContextLocated}
 import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
@@ -136,18 +136,18 @@ private[planner] object PlanBind {
         }
         else {
           // Send a hint about our name
-          val reportNamedValue = (initialIntermediate, storageLoc) match {
-            case (userProc : iv.KnownUserProc, reportProc : ReportProcedure) =>
-              // Annotate with our report name so we can optimise when we try to apply this
+          val stdlibNamedValue = (initialIntermediate, storageLoc) match {
+            case (userProc : iv.KnownUserProc, stdlibProc : StdlibProcedure) =>
+              // Annotate with our stdlib name so we can optimise when we try to apply this
               // Note this is agnostic to if the implementation is a native function versus a Scheme procedure
-              userProc.withReportName(reportProc.reportName)
+              userProc.withStdlibName(stdlibProc.stdlibName)
 
             case (otherValue, _) =>
               otherValue
           }
 
           // No planning, just remember this intermediate value
-          state.withValue(storageLoc -> ImmutableValue(reportNamedValue))
+          state.withValue(storageLoc -> ImmutableValue(stdlibNamedValue))
         }
       }
     }

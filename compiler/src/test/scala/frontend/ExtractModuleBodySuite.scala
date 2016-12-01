@@ -436,15 +436,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
 
-  test("define report procedure") {
+  test("define stdlib procedure") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = exprFor("(define-report-procedure list (lambda () #f))")(scope)
+    val expr = exprFor("(define-stdlib-procedure list (lambda () #f))")(scope)
     val listBinding = scope.get("list").value
 
     inside(listBinding) {
-      case rp : ReportProcedure =>
-        assert(rp.reportName === "list")
+      case sp : StdlibProcedure =>
+        assert(sp.stdlibName === "list")
     }
 
     inside(expr) {
@@ -452,7 +452,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(loc === listBinding)
     }
 
-    // (define-report-procedure) bindings should be immutable
+    // (define-stdlib-procedure) bindings should be immutable
     intercept[BadSpecialFormException] {
       bodyFor("(set! list 4)")(scope)
     }
@@ -600,9 +600,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       exprFor("""(cond-expand)""") 
     }
   }
-  
+
   test("cond-expand with one true clause") {
-    // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
     assert(bodyFor("""(cond-expand ((library (scheme base)) 1 2 3))""")(primitiveScope) ===
       List(
         et.Literal(ast.IntegerLiteral(1)),
@@ -618,7 +617,6 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("cond-expand with one false with else") {
-    // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
     assert(bodyFor("""(cond-expand ((not llambda) 1 2 3) (else 4 5 6))""")(primitiveScope) ===
       List(
         et.Literal(ast.IntegerLiteral(4)),

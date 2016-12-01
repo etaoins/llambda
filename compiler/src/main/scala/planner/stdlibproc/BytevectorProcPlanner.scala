@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
@@ -7,7 +7,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-object BytevectorProcPlanner extends ReportProcPlanner {
+object BytevectorProcPlanner extends StdlibProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       args : List[(ContextLocated, iv.IntermediateValue)]

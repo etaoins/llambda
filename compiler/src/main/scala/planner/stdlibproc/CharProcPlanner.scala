@@ -1,4 +1,4 @@
-package io.llambda.compiler.planner.reportproc
+package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
@@ -9,7 +9,7 @@ import llambda.compiler.planner._
 import llambda.compiler.ast
 import llambda.compiler.RangeException
 
-object CharProcPlanner extends ReportProcPlanner {
+object CharProcPlanner extends StdlibProcPlanner {
   private type CharComparator = (Int, Int) => Boolean
 
   private def compareArgList(
