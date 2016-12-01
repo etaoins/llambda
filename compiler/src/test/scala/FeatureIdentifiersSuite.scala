@@ -6,9 +6,6 @@ import org.scalatest.FunSuite
 class FeatureIdentifiersSuite  extends FunSuite {
   test("posix64be features") {
     val expectedFeatures = Set(
-      "exact-closed",
-      "ieee-float",
-      "full-unicode",
       "posix",
       "lp64",
       "big-endian"
@@ -19,9 +16,6 @@ class FeatureIdentifiersSuite  extends FunSuite {
 
   test("win64 features") {
     val expectedFeatures = Set(
-      "exact-closed",
-      "ieee-float",
-      "full-unicode",
       "windows",
       "llp64",
       "little-endian"
@@ -32,9 +26,6 @@ class FeatureIdentifiersSuite  extends FunSuite {
 
   test("posix64le features with extras") {
     val expectedFeatures = Set(
-      "exact-closed",
-      "ieee-float",
-      "full-unicode",
       "posix",
       "lp64",
       "big-endian",
