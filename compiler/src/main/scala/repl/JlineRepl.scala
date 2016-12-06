@@ -4,7 +4,7 @@ import io.llambda
 import io.llambda.compiler._
 
 import java.io.File
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import jline.console.{ConsoleReader, history, completer}
 import annotation.tailrec
 
@@ -32,7 +32,7 @@ private class ScopeCompleter(scope : Scope) extends completer.Completer {
 
   def complete(buffer : String, cursor : Int, candidates : java.util.List[CharSequence]) : Int = {
     if (buffer == null) {
-      candidates.addAll(scope.bindings.keys)
+      candidates.addAll(scope.bindings.keys.toList.asJava)
       0
     }
     else {
@@ -51,7 +51,7 @@ private class ScopeCompleter(scope : Scope) extends completer.Completer {
           other.sorted
       }
 
-      candidates.addAll(completions)
+      candidates.addAll(completions.asJava)
       identStart
     }
   }
@@ -83,7 +83,7 @@ class JlineRepl(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
   reader.setExpandEvents(false)
 
   private def setCompleter(newCompleter : completer.Completer) : Unit = {
-    for(completer <- reader.getCompleters.toList) {
+    for(completer <- reader.getCompleters.asScala) {
       reader.removeCompleter(completer)
     }
 
