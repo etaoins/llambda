@@ -21,7 +21,7 @@ class PlanWriter(
     val polymorphInstances : mutable.Map[(LambdaManifest, vt.ProcedureType), String],
     val requiredNativeLibraries : mutable.HashSet[NativeLibrary]
 ) {
-  private val contextLocStack = new mutable.Stack[ContextLocated] 
+  private var contextLocStack: List[ContextLocated] = Nil
 
   private var planSealed = false
 
@@ -60,14 +60,14 @@ class PlanWriter(
     *
     * This will implicitly locate any plan steps added while the block is being executed
     */
-  def withContextLocation[T](contextLocated : ContextLocated)(block : => T) : T = {
-    contextLocStack.push(contextLocated)
+  def withContextLocation[T](contextLoc : ContextLocated)(block : => T) : T = {
+    contextLocStack = contextLoc :: contextLocStack
 
     try {
       block
     }
     finally {
-      contextLocStack.pop
+      contextLocStack = contextLocStack.tail
     }
   }
 
@@ -128,7 +128,7 @@ class PlanWriter(
       requiredNativeLibraries
     )
 
-    forkedPlan.contextLocStack.pushAll(this.contextLocStack.headOption)
+    forkedPlan.contextLocStack = contextLocStack.take(1)
 
     forkedPlan
   }
