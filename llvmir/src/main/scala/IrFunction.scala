@@ -125,10 +125,10 @@ class IrFunctionBuilder(
   val nameSource = new LocalNameSource
 
   private val childBlocks = new collection.mutable.ListBuffer[IrChildBlockBuilder]
-  private val metadataStack = new collection.mutable.Stack[Map[String, Metadata ]]
+  private var metadataStack : List[Map[String, Metadata]] = Nil
 
   private[llvmir] def activeMetadata : Map[String, Metadata] = {
-    metadataStack.toList.reverse.foldLeft(Map[String, Metadata]()) { (prevMetadata, newMetadata) =>
+    metadataStack.reverse.foldLeft(Map[String, Metadata]()) { (prevMetadata, newMetadata) =>
       prevMetadata ++ newMetadata
     }
   }
@@ -174,13 +174,13 @@ class IrFunctionBuilder(
     * the duration of the block and restored once the block completes 
     */
   def withMetadata[T](metadata : Map[String, Metadata])(block : => T) : T = {
-    metadataStack.push(metadata)
+    metadataStack = metadata :: metadataStack
 
     try {
       block
     }
     finally {
-      metadataStack.pop()
+      metadataStack = metadataStack.tail
     }
   }
 }
