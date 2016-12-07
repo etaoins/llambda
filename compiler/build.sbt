@@ -4,17 +4,17 @@ version := "0.0.1"
 
 organization := "io.llambda"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
-libraryDependencies += "jline" % "jline" % "2.12.1"
+libraryDependencies += "jline" % "jline" % "2.14.2"
 
-libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.0"
+libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.3"
 
 val schemeSourceDir = new File("compiler/src/main/scheme")
 

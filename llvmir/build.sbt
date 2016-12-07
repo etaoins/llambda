@@ -4,8 +4,8 @@ version := "0.0.1"
 
 organization := "io.llambda"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
