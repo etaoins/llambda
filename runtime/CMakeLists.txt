@@ -129,10 +129,6 @@ add_library(ll_scheme_read
 	stdlib/scheme/read/read.cpp
 )
 
-add_library(ll_scheme_time
-	stdlib/scheme/time/time.cpp
-)
-
 add_library(ll_scheme_write
 	stdlib/scheme/write/write.cpp
 )

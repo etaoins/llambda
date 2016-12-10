@@ -53,7 +53,7 @@ class EvaluatorSuite extends FunSuite {
   test("(define) memoizes Scheme data") {
     val eval = testEvaluator()
 
-    assert(eval(datum"""(import (scheme time))""") === "loaded")
+    assert(eval(datum"""(import (llambda time))""") === "loaded")
 
     eval(datum"""(define captured-time (current-jiffy))""")
 
@@ -84,7 +84,7 @@ class EvaluatorSuite extends FunSuite {
   test("simple (set!)") {
     val eval = testEvaluator()
 
-    assert(eval(datum"""(import (scheme time))""") === "loaded")
+    assert(eval(datum"""(import (llambda time))""") === "loaded")
 
     // Define (captured-time) to one value
     eval(datum"""(define captured-time (current-jiffy))""")
