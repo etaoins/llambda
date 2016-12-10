@@ -8,6 +8,5 @@ case class GenGlobals(
   plannedSymbols : Set[String],
   generatedTypes : Map[vt.RecordLikeType, GeneratedType],
   constantGenerator : ConstantGenerator,
-  debugInfoGeneratorOpt : Option[DebugInfoGenerator],
   targetPlatform : platform.TargetPlatform
 )

@@ -11,7 +11,6 @@ object CompilerApp extends App {
     emitLlvm : Boolean = false,
     optimiseLevel : Int = 2,
     extraFeatureIdents : Set[String] = Set(),
-    genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
     dumpPlan : Boolean = false,
     traceMacroExpansion : Boolean = false,
@@ -68,14 +67,6 @@ object CompilerApp extends App {
     opt[String]("with-feature-ident") unbounded() action { (featureIdent, c) =>
       c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)
     } text("additional feature identifier to provide for (cond-expand)")
-
-    /* This is broken on LLVM 3.6 which requires debug info version 2. It looks like LLVM 3.7 reworks debug info yet
-       again. Leave this disabled for the LLVM 3.6 cycle.
-
-    opt[Unit]('g', "generate-debug-info") action { (_, c) =>
-      c.copy(genDebugInfo=true)
-    } text("generate debugging information")
-    */
 
     opt[Unit]("dump-plan") action { (_, c) =>
       c.copy(dumpPlan=true)
@@ -158,7 +149,6 @@ object CompilerApp extends App {
           emitLlvm=config.emitLlvm,
           optimiseLevel=config.optimiseLevel,
           extraFeatureIdents=config.extraFeatureIdents,
-          genDebugInfo=config.genDebugInfo,
           dumpPlan=config.dumpPlan,
           traceMacroExpansion=config.traceMacroExpansion
         )

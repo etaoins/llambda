@@ -33,23 +33,8 @@ object GenPlanStep {
     case ps.CompareCond.LessThan => FComparisonCond.OrderedLessThan
     case ps.CompareCond.LessThanEqual => FComparisonCond.OrderedLessThanEqual
   }
-  
-  def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = {
-    genGlobals.debugInfoGeneratorOpt match {
-      case Some(debugInfoGenerator) =>
-        // Add our line numbering debug info if possible
-        val debugMetadata = debugInfoGenerator.metadataForContextLocated(step)
 
-        state.currentBlock.function.withMetadata(debugMetadata) {
-          genStep(state, genGlobals)(step)
-        }
-
-      case None =>
-        genStep(state, genGlobals)(step)
-    }
-  }
-
-  private def genStep(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = step match {
+  def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation won't be fully initialized
