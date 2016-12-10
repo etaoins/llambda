@@ -82,8 +82,11 @@
   (assert-equal '() (append '() '() '()))
   (assert-equal 'a (append '() 'a))))
 
-(define-test "(append) with non-terminal non-list fails" (expect-error type-error?
+(define-test "(append) with non-terminal datum fails" (expect-error type-error?
   (append '(1 2) 3 '(4 5))))
+
+(define-test "(append) with non-terminal improper list fails" (expect-error type-error?
+  (append '(1 2) '(3 . 4) '(5 6))))
 
 (define-test "(memv)" (expect-static-success
   (assert-equal '(a b c) (memv 'a '(a b c)))
