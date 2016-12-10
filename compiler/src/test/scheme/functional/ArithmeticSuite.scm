@@ -349,7 +349,9 @@
 
 (define-test "static rounding procedures" (expect-static-success
   (assert-equal -5.0 (floor -4.3))
+  (assert-equal -4   (floor -4))
   (assert-equal -4.0 (ceiling -4.3))
+  (assert-equal -4   (ceiling -4))
   (assert-equal -4   (truncate -4))
   (assert-equal -4.0 (round -4.3))
   (assert-equal 3.0  (floor 3.5))
