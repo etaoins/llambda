@@ -29,12 +29,6 @@ object RecordTemp {
     new TempValue(true)
 }
 
-object ClosureTemp {
-  def apply() =
-    // Closures are always GC managed
-    new TempValue(true)
-}
-
 object RecordLikeDataTemp {
   def apply() =
     new TempValue(false)
