@@ -7,7 +7,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
 
     assertInstr(block, "ret i16 45")
   }
-  
+
   test("ret without value") {
     val block = createTestBlock()
     block.retVoid()
@@ -47,14 +47,14 @@ class TerminatorInstrsSuite extends IrTestSuite {
   test("empty switch") {
     val block = createTestBlock()
 
-    val testValue = IntegerConstant(IntegerType(32), 0) 
+    val testValue = IntegerConstant(IntegerType(32), 0)
     val defaultBlock = createTestBlock("default")
 
     block.switch(testValue, defaultBlock)
 
     assertInstr(block, "switch i32 0, label %default [  ]")
   }
-  
+
   test("switch with non-integer types fails") {
     val block = createTestBlock()
 
@@ -65,11 +65,11 @@ class TerminatorInstrsSuite extends IrTestSuite {
       block.switch(testValue, defaultBlock)
     }
   }
-  
+
   test("switch with one target") {
     val block = createTestBlock()
 
-    val testValue = IntegerConstant(IntegerType(32), 0) 
+    val testValue = IntegerConstant(IntegerType(32), 0)
     val defaultBlock = createTestBlock("default")
     val blockOne = createTestBlock("blockOne")
 
@@ -79,11 +79,11 @@ class TerminatorInstrsSuite extends IrTestSuite {
 
     assertInstr(block, "switch i32 0, label %default [ i32 5, label %blockOne ]")
   }
-  
+
   test("switch with two targets") {
     val block = createTestBlock()
 
-    val testValue = IntegerConstant(IntegerType(16), 0) 
+    val testValue = IntegerConstant(IntegerType(16), 0)
     val defaultBlock = createTestBlock("default")
     val blockOne = createTestBlock("blockOne")
     val blockTwo = createTestBlock("blockTwo")
@@ -95,11 +95,11 @@ class TerminatorInstrsSuite extends IrTestSuite {
 
     assertInstr(block, "switch i16 0, label %default [ i16 1, label %blockOne  i16 2, label %blockTwo ]")
   }
-  
+
   test("switch with duplicate comparison constant fails") {
     val block = createTestBlock()
 
-    val testValue = IntegerConstant(IntegerType(16), 0) 
+    val testValue = IntegerConstant(IntegerType(16), 0)
     val defaultBlock = createTestBlock("default")
     val blockOne = createTestBlock("blockOne")
     val blockTwo = createTestBlock("blockTwo")
@@ -111,7 +111,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
       )
     }
   }
-  
+
   test("trivial invoke") {
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
@@ -134,7 +134,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
     assert(resultVar === None)
     assertInstr(block, "invoke void @doNothing() to label %success unwind label %exception")
   }
-  
+
   test("invoke returning value") {
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List()
@@ -142,7 +142,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
       result=declResult,
       name="returnSomething",
       arguments=declArgs)
-    
+
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
 
@@ -163,7 +163,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
     assert(resultVar.isDefined)
     assertInstr(block, "%ret1 = invoke zeroext i8 @returnSomething() to label %success unwind label %exception, !range !{i8 0, i8 2}")
   }
-  
+
   test("invoke discarding value") {
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List()
@@ -171,7 +171,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
       result=declResult,
       name="returnSomething",
       arguments=declArgs)
-    
+
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
 
@@ -186,7 +186,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
     assert(resultVar === None)
     assertInstr(block, "invoke zeroext i8 @returnSomething() to label %success unwind label %exception")
   }
-  
+
   test("fastcc invoke") {
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
@@ -218,17 +218,17 @@ class TerminatorInstrsSuite extends IrTestSuite {
       result=declResult,
       name="notEnoughArgs",
       arguments=declArgs)
-    
+
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
-    
+
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
       block.invokeDecl(None)(decl=decl, arguments=List(), normalBlock, exceptionBlock)
     }
   }
-  
+
   test("invoke with insufficent varargs") {
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)))
@@ -237,10 +237,10 @@ class TerminatorInstrsSuite extends IrTestSuite {
       name="notEnoughArgs",
       arguments=declArgs,
       hasVararg=true)
-    
+
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
-    
+
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
@@ -255,10 +255,10 @@ class TerminatorInstrsSuite extends IrTestSuite {
       result=declResult,
       name="mismatchedArgs",
       arguments=declArgs)
-    
+
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
-    
+
     val block = createTestBlock()
     val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
@@ -271,9 +271,10 @@ class TerminatorInstrsSuite extends IrTestSuite {
       )
     }
   }
-  
+
   test("christmas tree invoke") {
-    val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
+    // NoCapture should be filtered out
+    val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt, IrFunction.NoCapture))
     val declArgs = List(
       IrFunction.Argument(FloatType, Set(IrFunction.NoCapture, IrFunction.NoAlias)),
       IrFunction.Argument(PointerType(DoubleType), Set())
@@ -285,10 +286,10 @@ class TerminatorInstrsSuite extends IrTestSuite {
       attributes=Set(IrFunction.NoUnwind, IrFunction.NoReturn),
       callingConv=CallingConv.ColdCC
     )
-    
+
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
-    
+
     val block = createTestBlock()
     val resultVar = block.invokeDecl(Some("ret"))(
       decl=decl,
