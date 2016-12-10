@@ -33,11 +33,17 @@
 (define-test "(integer 112.5) fails" (expect-error invalid-argument-error?
   (integer 112.5)))
 
-(define-test "(flonum)" (expect-static-success
+(define-test "static (flonum)" (expect-static-success
   (assert-equal 567.0 (flonum 567))
   (assert-equal -3289.5 (flonum -3289.5))
   ; This is the closest float to the passed value
   (assert-equal 9007199254740992.0 (flonum 9007199254740993))))
+
+(define-test "dynamic (flonum)" (expect-success
+  (assert-equal 567.0 (flonum (typed-dynamic 567 <integer>)))
+  (assert-equal -3289.5 (flonum (typed-dynamic -3289.5 <flonum>)))
+  ; This is the closest float to the passed value
+  (assert-equal 9007199254740992.0 (flonum (typed-dynamic 9007199254740993 <integer>)))))
 
 (define-test "static (=)" (expect-static-success
   (assert-true  (= 4.0 4))

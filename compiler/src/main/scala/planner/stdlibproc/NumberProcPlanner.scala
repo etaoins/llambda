@@ -58,7 +58,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
           Some(iv.ConstantFlonumValue(constIntegerVal.toDouble))
 
         case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
-          val intTemp = knownInt.toTempValue(vt.IntegerType)
+          val intTemp = knownInt.toTempValue(vt.Int64)
           val doubleTemp = ps.Temp(vt.Double)
 
           plan.steps += ps.ConvertNativeIntegerToFloat(doubleTemp, intTemp, true, vt.Double)
