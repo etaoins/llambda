@@ -2,7 +2,7 @@
   (assert-true  (char? #\3))
   (assert-false (char? 3))))
 
-(define-test "digit-value" (expect-success
+(define-test "(digit-value)" (expect-success
   (import (scheme char))
 
   (assert-equal 3 (digit-value #\3))
@@ -172,7 +172,7 @@
   (assert-true  (char<=? #\b #\b #\b))
   (assert-false (char<=? #\c #\b #\a))))
 
-(define-test "(char>=?)" (expect-static-success
+(define-test "static (char>=?)" (expect-static-success
   (assert-false (char>=? #\a #\b))
   (assert-true  (char>=? #\a #\a))
   (assert-true  (char>=? #\a #\A))
@@ -181,6 +181,16 @@
   (assert-false (char>=? #\a #\b #\c))
   (assert-true  (char>=? #\b #\b #\b))
   (assert-true  (char>=? #\c #\b #\a))))
+
+(define-test "dynamic (char>=?)" (expect-success
+  (assert-false (char>=? (typed-dynamic #\a <char>) (typed-dynamic #\b <char>)))
+  (assert-true  (char>=? (typed-dynamic #\a <char>) (typed-dynamic #\a <char>)))
+  (assert-true  (char>=? (typed-dynamic #\a <char>) (typed-dynamic #\A <char>)))
+  (assert-true  (char>=? (typed-dynamic #\b <char>) (typed-dynamic #\a <char>)))
+
+  (assert-false (char>=? (typed-dynamic #\a <char>) (typed-dynamic #\b <char>) (typed-dynamic #\c <char>)))
+  (assert-true  (char>=? (typed-dynamic #\b <char>) (typed-dynamic #\b <char>) (typed-dynamic #\b <char>)))
+  (assert-true  (char>=? (typed-dynamic #\c <char>) (typed-dynamic #\b <char>) (typed-dynamic #\a <char>)))))
 
 (define-test "(char-ci=?)" (expect-success
   (import (scheme char))
