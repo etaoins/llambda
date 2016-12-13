@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.debug
 
 case class FrontendContext(
-    config : FrontendConfig,
-    libraryLoader : LibraryLoader,
-    debugContext : debug.SourceContext
+    config: FrontendConfig,
+    libraryLoader: LibraryLoader,
+    debugContext: debug.SourceContext
 )

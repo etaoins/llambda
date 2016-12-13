@@ -7,16 +7,16 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.ast
 
 object GenUnboxing {
-  def apply(state : GenerationState)(unboxStep : ps.UnboxValue, boxedValue : IrValue) : IrValue = unboxStep match {
-    case _ : ps.UnboxInteger =>
+  def apply(state: GenerationState)(unboxStep: ps.UnboxValue, boxedValue: IrValue): IrValue = unboxStep match {
+    case _: ps.UnboxInteger =>
       val block = state.currentBlock
       ct.IntegerCell.genLoadFromValue(block)(boxedValue)
 
-    case _ : ps.UnboxFlonum =>
+    case _: ps.UnboxFlonum =>
       val block = state.currentBlock
       ct.FlonumCell.genLoadFromValue(block)(boxedValue)
 
-    case _ : ps.UnboxChar =>
+    case _: ps.UnboxChar =>
       val block = state.currentBlock
 
       val int32Type = IntegerType(32)

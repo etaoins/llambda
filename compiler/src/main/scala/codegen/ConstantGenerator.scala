@@ -13,14 +13,14 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
-class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) {
-  /* Caches of constants indexed by their value 
+class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
+  /* Caches of constants indexed by their value
    *
    * This is ensure proper Scheme semantics are enforced with the lazily value instantiation the planner does. For
    * example, the following code:
    * (define x '(1 2 3))
    * (eqv? x x)
-   * 
+   *
    * Will actually plan the list for 'x' once for each argument. This breaks the Scheme semantics as (eqv?) would
    * return false there
    */
@@ -38,7 +38,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
   // Maximum value of a 32bit unsigned integer
   private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
 
-  def defineConstantData(module : IrModuleBuilder)(name : String, initializer : IrConstant) : GlobalVariable = {
+  def defineConstantData(module: IrModuleBuilder)(name: String, initializer: IrConstant): GlobalVariable = {
     val constantDataDef = IrGlobalVariableDef(
       name=name,
       initializer=initializer,
@@ -57,17 +57,17 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
   private val FNV1APrime = 0x1000193
   private val FNV1AOffsetBasis = -0x7EE3623B // 0x811C9DC5 as signed 32bit
 
-  private def sharedShortHash(bytes : Seq[Short]) : Int = {
+  private def sharedShortHash(bytes: Seq[Short]): Int = {
     val hash = bytes.foldLeft(FNV1AOffsetBasis) { (hash, byte) => (hash ^ (byte & 0xff)) * FNV1APrime }
     if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
   }
 
-  private def sharedByteHash(bytes : Seq[Byte]) : Int = {
+  private def sharedByteHash(bytes: Seq[Byte]): Int = {
     val hash = bytes.foldLeft(FNV1AOffsetBasis) { (hash, byte) => (hash ^ (byte & 0xff)) * FNV1APrime }
     if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
   }
 
-  private def genHeapUtf8Constant(module : IrModuleBuilder)(baseName : String, utf8Data : Array[Byte]) : IrConstant = {
+  private def genHeapUtf8Constant(module: IrModuleBuilder)(baseName: String, utf8Data: Array[Byte]): IrConstant = {
     val innerConstantName = baseName + ".strByteArray"
     val innerConstantInitializer = StructureConstant(List(
       IntegerConstant(IntegerType(32), sharedConstantRefCount),
@@ -78,8 +78,8 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     val innerConstant = defineConstantData(module)(innerConstantName, innerConstantInitializer)
     BitcastToConstant(innerConstant, PointerType(UserDefinedType("sharedByteArray")))
   }
-  
-  private def genInlineUtf8Constant(module : IrModuleBuilder)(utf8Data : Array[Byte], constantLength : Int) : IrConstant = {
+
+  private def genInlineUtf8Constant(module: IrModuleBuilder)(utf8Data: Array[Byte], constantLength: Int): IrConstant = {
     val padByteCount = constantLength - utf8Data.length
 
     // Pad this string with 0xff
@@ -90,14 +90,14 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     StringConstant(terminatedUtf8Data)
   }
 
-  private def charLengthForString(stringValue : String) : Int = {
+  private def charLengthForString(stringValue: String): Int = {
     // Java is internally based on UTF-16. For Unicode code points outside the BMP it uses surrogate pairs which count
     // as two Java "characters"
     // Llambda is native UTF-8 and considers a code point the same as a character
     stringValue.codePointCount(0, stringValue.length)
   }
 
-  private def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
+  private def genBytevectorCell(module: IrModuleBuilder)(elements: Seq[Short]): IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeBytevector")
 
@@ -120,14 +120,14 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
     defineConstantData(module)(bytevectorCellName, bytevectorCell)
   }
-  
-  private def genVectorCell(module : IrModuleBuilder)(irElements : Seq[IrConstant]) : IrConstant = {
+
+  private def genVectorCell(module: IrModuleBuilder)(irElements: Seq[IrConstant]): IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeVector")
 
     val elementsName = baseName + ".elements"
     val elementsInitializer = ArrayConstant(PointerType(ct.AnyCell.irType), irElements.toList)
-    
+
     val elementsDef = defineConstantData(module)(elementsName, elementsInitializer)
 
     val vectorCellName = baseName + ".cell"
@@ -139,10 +139,10 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     defineConstantData(module)(vectorCellName, vectorCell)
   }
 
-  private def genRecordLikeData(module : IrModuleBuilder, genGlobals : GenGlobals)(
-      recordLikeType : vt.RecordLikeType,
-      fieldTemps : Map[vt.RecordField, IrConstant]
-  ) : StructureConstant = {
+  private def genRecordLikeData(module: IrModuleBuilder, genGlobals: GenGlobals)(
+      recordLikeType: vt.RecordLikeType,
+      fieldTemps: Map[vt.RecordField, IrConstant]
+  ): StructureConstant = {
     val generatedType = genGlobals.generatedTypes(recordLikeType)
 
     // Generate our parent type
@@ -164,11 +164,11 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     StructureConstant(parentDataOpt.toList ++ fieldData, userDefinedType=Some(generatedType.irType))
   }
 
-  private def genRecordCell(module : IrModuleBuilder, genGlobals : GenGlobals)(
-      recordType : vt.RecordType,
-      fieldTemps : Map[vt.RecordField, IrConstant],
-      isUndefined : Boolean
-  ) : IrConstant = {
+  private def genRecordCell(module: IrModuleBuilder, genGlobals: GenGlobals)(
+      recordType: vt.RecordType,
+      fieldTemps: Map[vt.RecordField, IrConstant],
+      isUndefined: Boolean
+  ): IrConstant = {
     val generatedType = genGlobals.generatedTypes(recordType)
 
     val baseName = module.nameSource.allocate("schemeRecord")
@@ -226,12 +226,12 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     }
   }
 
-  private def genEmptyClosure(module : IrModuleBuilder)(entryPoint : IrConstant) : IrConstant = {
+  private def genEmptyClosure(module: IrModuleBuilder)(entryPoint: IrConstant): IrConstant = {
     val procCellName = module.nameSource.allocate("schemeProcedure")
 
     // Find the class ID for the empty closure type
     val generatedType = generatedTypes(vt.EmptyClosureType)
-      
+
     val procCell = ct.ProcedureCell.createConstant(
       entryPoint=entryPoint,
       recordClassId=generatedType.classId,
@@ -246,7 +246,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     defineConstantData(module)(procCellName, procCell)
   }
 
-  private def genStringCell(module : IrModuleBuilder)(value : String) : IrConstant = {
+  private def genStringCell(module: IrModuleBuilder)(value: String): IrConstant = {
     val baseName = module.nameSource.allocate("schemeString")
     val stringCellName = baseName + ".cell"
 
@@ -282,7 +282,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     )
   }
 
-  private def genSymbolCell(module : IrModuleBuilder)(value : String) : IrConstant = {
+  private def genSymbolCell(module: IrModuleBuilder)(value: String): IrConstant = {
     val baseName = module.nameSource.allocate("schemeSymbol")
     val symbolCellName = baseName + ".cell"
 
@@ -318,7 +318,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     )
   }
 
-  def apply(state : GenerationState, genGlobals : GenGlobals)(createStep : ps.CreateConstant) : IrConstant = {
+  def apply(state: GenerationState, genGlobals: GenGlobals)(createStep: ps.CreateConstant): IrConstant = {
     val module = state.currentBlock.function.module
 
     createStep match {
@@ -362,7 +362,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
       case ps.CreateBooleanCell(_, false) =>
         GlobalDefines.falseIrValue
-      
+
       case ps.CreateCharCell(_, value) =>
         characterCache.getOrElseUpdate(value, {
           val charCellName = module.nameSource.allocate("schemeChar")
@@ -373,16 +373,16 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
           defineConstantData(module)(charCellName, charCell)
         })
-      
+
       case ps.CreateBytevectorCell(_, elements) =>
         bytevectorCache.getOrElseUpdate(elements, {
           genBytevectorCell(module)(elements)
         })
-      
+
       case ps.CreateVectorCell(_, elementTemps) =>
         val elementIrs = elementTemps.map { elementTemp =>
           state.liveTemps(elementTemp) match {
-            case constant : IrConstant => constant
+            case constant: IrConstant => constant
             case other =>
               throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
           }
@@ -395,7 +395,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
       case ps.CreateRecordCell(_, recordType, fieldTemps, isUndefined) =>
         val fieldIrs = fieldTemps.map { case (field, fieldTemp) =>
           state.liveTemps(fieldTemp) match {
-            case constant : IrConstant =>
+            case constant: IrConstant =>
               field -> constant
 
             case other =>
@@ -411,13 +411,13 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
       case ps.CreatePairCell(_, carTemp, cdrTemp, listLengthOpt) =>
         val carIrConstant = state.liveTemps(carTemp) match {
-          case constant : IrConstant => constant
+          case constant: IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
         }
 
         val cdrIrConstant = state.liveTemps(cdrTemp) match {
-          case constant : IrConstant => constant
+          case constant: IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
         }
@@ -445,18 +445,18 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
       case ps.CreateEmptyClosure(_, entryPointTemp) =>
         val entryPointConstant = state.liveTemps(entryPointTemp) match {
-          case constant : IrConstant => constant
+          case constant: IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")
         }
-          
+
         // Cast to an untyped entry point
         val castEntryPoint = BitcastToConstant(entryPointConstant, ct.ProcedureCell.entryPointIrType)
         genEmptyClosure(module)(castEntryPoint)
 
       case ps.CreateNativeInteger(_, value, bits) =>
         IntegerConstant(IntegerType(bits), value)
-      
+
       case ps.CreateNativeFloat(_, value, fpType) if fpType == vt.Double =>
         DoubleConstant(value)
 

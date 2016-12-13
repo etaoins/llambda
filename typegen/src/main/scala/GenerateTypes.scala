@@ -16,9 +16,9 @@ object GenerateTypes {
     writer.compiler.WriteLlvmCellTypes,
     writer.compiler.WriteScalaCellTypes,
     writer.compiler.WriteScalaValueTypes
-  ) : List[writer.OutputWriter]
+  ): List[writer.OutputWriter]
 
-  def apply(celldefFile : File, outputDir : File) {
+  def apply(celldefFile: File, outputDir: File) {
     // Load and parse the file
     val definitions = DefinitionParser.parseFile(celldefFile)
 
@@ -30,10 +30,10 @@ object GenerateTypes {
 
     // Extract our cell classes
     val processedTypes = ProcessCellClasses(fieldTypes)(definitions)
-    
+
     // Make sure there are no childless abstract cells
     CheckChildlessAbstractCellClasses(processedTypes)
-    
+
     // Make sure our type tag field is sane
     CheckTypeTagField(processedTypes.rootCellClass)
 

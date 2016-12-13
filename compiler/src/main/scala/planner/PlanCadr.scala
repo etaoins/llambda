@@ -11,16 +11,16 @@ object PlanCadr {
   private type KnownPairLoader = (iv.KnownPair) => iv.IntermediateValue
   private type TypeRefForPairType = (vt.PairType) => vt.SchemeTypeRef
   private type PlanLoader = (ps.TempValue, ps.TempValue) => ps.Step
-  
+
   private def loadCadr(
-      pairValue : iv.IntermediateValue,
-      emptyListMessageOpt : Option[RuntimeErrorMessage] = None,
-      improperListMessageOpt : Option[RuntimeErrorMessage] = None,
-      knownPairLoader : KnownPairLoader,
-      typeRefForPairType : TypeRefForPairType,
-      planLoader : PlanLoader
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = pairValue match {
-    case knownPair : iv.KnownPair =>
+      pairValue: iv.IntermediateValue,
+      emptyListMessageOpt: Option[RuntimeErrorMessage] = None,
+      improperListMessageOpt: Option[RuntimeErrorMessage] = None,
+      knownPairLoader: KnownPairLoader,
+      typeRefForPairType: TypeRefForPairType,
+      planLoader: PlanLoader
+  )(implicit plan: PlanWriter): iv.IntermediateValue = pairValue match {
+    case knownPair: iv.KnownPair =>
       // We can resolve this at compile time
       knownPairLoader(knownPair)
 
@@ -39,7 +39,7 @@ object PlanCadr {
 
       // Does this pair have a specific pair type?
       val resultType = (listValue.schemeType & vt.AnyPairType) match {
-        case pairType : vt.PairType =>
+        case pairType: vt.PairType =>
           val rawResultType = pairType.unrollChildTypeRef(typeRefForPairType(pairType))
 
           // ValuesToPair will always convert to TopProcedureType
@@ -65,10 +65,10 @@ object PlanCadr {
     *                                 to emptyListMessageOpt
     */
   def loadCar(
-      pairValue : iv.IntermediateValue,
-      emptyListMessageOpt : Option[RuntimeErrorMessage] = None,
-      improperListMessageOpt : Option[RuntimeErrorMessage] = None
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      pairValue: iv.IntermediateValue,
+      emptyListMessageOpt: Option[RuntimeErrorMessage] = None,
+      improperListMessageOpt: Option[RuntimeErrorMessage] = None
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     loadCadr(pairValue, emptyListMessageOpt, improperListMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
   }
 
@@ -81,10 +81,10 @@ object PlanCadr {
     *                                 to emptyListMessageOpt
     */
   def loadCdr(
-      pairValue : iv.IntermediateValue,
-      emptyListMessageOpt : Option[RuntimeErrorMessage] = None,
-      improperListMessageOpt : Option[RuntimeErrorMessage] = None
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      pairValue: iv.IntermediateValue,
+      emptyListMessageOpt: Option[RuntimeErrorMessage] = None,
+      improperListMessageOpt: Option[RuntimeErrorMessage] = None
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     loadCadr(pairValue, emptyListMessageOpt, improperListMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
   }
 }

@@ -19,30 +19,30 @@ import llambda.compiler.codegen
   *                              value from the parameter procedure.
   */
 class KnownParameterProc(
-    selfTemp : ps.TempValue,
-    initialValue : IntermediateValue,
-    initialValueInScope : Boolean = false
+    selfTemp: ps.TempValue,
+    initialValue: IntermediateValue,
+    initialValueInScope: Boolean = false
 ) extends KnownProc(
     codegen.RuntimeFunctions.valueForParameterSignature.toPolymorphic,
     Some(selfTemp)
 ) {
   override val typeDescription = "parameter procedure"
 
-  def nativeSymbol(implicit plan : PlanWriter) =
+  def nativeSymbol(implicit plan: PlanWriter) =
     codegen.RuntimeFunctions.valueForParameter.name
 
-  def withStdlibName(newStdlibName : String) : KnownParameterProc =
+  def withStdlibName(newStdlibName: String): KnownParameterProc =
     new KnownParameterProc(selfTemp, initialValue, initialValueInScope)
 
-  def withSelfTemp(selfTemp : ps.TempValue) =
+  def withSelfTemp(selfTemp: ps.TempValue) =
     new KnownParameterProc(selfTemp, initialValue, initialValueInScope=false)
 
-  override def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
+  override def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =
     BoxedValue(ct.ProcedureCell, selfTemp)
 
-  override def attemptInlineApplication(state : PlannerState)(
-      args : List[(ContextLocated, IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+  override def attemptInlineApplication(state: PlannerState)(
+      args: List[(ContextLocated, IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = {
     val constantParameters = !plan.config.analysis.parameterized && plan.config.optimise
 
     args match {

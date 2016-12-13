@@ -10,7 +10,7 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 import annotation.tailrec
 
 private object FindBodyDefines {
-  case class Result(extractedDefines : List[ExtractedVarDefine], bodyData : List[sst.ScopedDatum])
+  case class Result(extractedDefines: List[ExtractedVarDefine], bodyData: List[sst.ScopedDatum])
 
   /** Splits a body in to definitions and body expressions
     *
@@ -18,12 +18,12 @@ private object FindBodyDefines {
     * defines and the remaining data.
     */
   def apply(
-      data : List[sst.ScopedDatum],
-      definesAcc : List[ExtractedVarDefine] = Nil
-  )(implicit context : FrontendContext) : Result = data match {
-    case (pairDatum @ sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr)) :: restData =>
+      data: List[sst.ScopedDatum],
+      definesAcc: List[ExtractedVarDefine] = Nil
+  )(implicit context: FrontendContext): Result = data match {
+    case (pairDatum @ sst.ScopedPair(appliedSymbol: sst.ScopedSymbol, cdr)) :: restData =>
       (appliedSymbol.resolveOpt, cdr) match {
-        case (Some(syntax : BoundSyntax), _) =>
+        case (Some(syntax: BoundSyntax), _) =>
           // This is a macro - expand it
           val expandedDatum = ExpandMacro(syntax, cdr, pairDatum, trace=context.config.traceMacroExpansion)
           apply(expandedDatum :: restData, definesAcc)
@@ -39,7 +39,7 @@ private object FindBodyDefines {
           val scopedData = includeData.map(sst.ScopedDatum(appliedSymbol.scope, _))
           apply(scopedData ++ restData, definesAcc)
 
-        case (Some(definePrimitive : PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>
+        case (Some(definePrimitive: PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>
           val extractedDefines = ExtractDefine(pairDatum, definePrimitive, operands)
           apply(restData, extractedDefines ++ definesAcc)
 
@@ -67,9 +67,9 @@ private[frontend] object ExtractBodyDefinition {
     * @return Expression representing the body
     */
   def apply(
-      args : List[(sst.ScopedSymbol, BoundValue)],
-      definition : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : et.Expr = {
+      args: List[(sst.ScopedSymbol, BoundValue)],
+      definition: List[sst.ScopedDatum]
+  )(implicit context: FrontendContext): et.Expr = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
       scopes ++ UniqueScopesForDatum(datum)
@@ -94,7 +94,7 @@ private[frontend] object ExtractBodyDefinition {
 
       val binding = collection.mutable.Map(scopeArgs.map { case (symbol, boundValue) =>
         (symbol.name -> boundValue)
-      } : _*) : collection.mutable.Map[String, BoundValue]
+      }: _*): collection.mutable.Map[String, BoundValue]
 
       val innerScope = new Scope(binding, Some(outerScope))
 
@@ -115,7 +115,7 @@ private[frontend] object ExtractBodyDefinition {
         List(
           { () => et.Binding(storageLoc, exprBlock()) }
         )
-    } : List[() => et.Binding]
+    }: List[() => et.Binding]
 
     // Execute the expression blocks now that the scopes are prepared
     val bindings = bindingBlocks.map(_.apply)

@@ -3,13 +3,13 @@ package io.llambda.typegen.writer.runtime
 import io.llambda.typegen._
 
 object WriteTypeid extends writer.OutputWriter {
-  def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
+  def apply(processedTypes: ProcessedTypes): Map[String, String] = {
     // Get information about our type tag
     val typeTagField = processedTypes.rootCellClass.typeTagField
     val typeTagFieldType = typeTagField.fieldType
 
     val typeTagAlias = typeTagFieldType match {
-      case alias : FieldTypeAlias => 
+      case alias: FieldTypeAlias =>
         alias
 
       case _ =>
@@ -21,7 +21,7 @@ object WriteTypeid extends writer.OutputWriter {
     val typeTagSupertype = FieldTypeToCpp(typeTagAlias.aliasedType, None)
 
     val incBuilder = new CppIncludeBuilder("_LLIBY_BINDING_TYPEID_H")
-    
+
     incBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     // Our C++ type names assume this is included

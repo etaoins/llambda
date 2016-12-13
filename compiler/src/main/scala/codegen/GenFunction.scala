@@ -17,7 +17,7 @@ private[codegen] object GenFunction {
     ))
   )
 
-  def apply(module : IrModuleBuilder, genGlobals : GenGlobals)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
+  def apply(module: IrModuleBuilder, genGlobals: GenGlobals)(nativeSymbol: String, plannedFunction: planner.PlannedFunction) {
     val irSignature = ProcedureSignatureToIr(plannedFunction.signature).irSignature
 
     val attributes = if (plannedFunction.signature.hasWorldArg) {
@@ -91,7 +91,7 @@ private[codegen] object GenFunction {
     for(gcSlots <- gcSlotsOpt) {
       gcSlots.finish(finalResult.gcState)
     }
-      
+
     // Define the function
     module.defineFunction(generatedFunction)
   }

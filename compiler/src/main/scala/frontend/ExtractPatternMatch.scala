@@ -24,28 +24,28 @@ object ExtractPatternMatch {
     * @param  libraryName  Name of the library to load the storage location from
     */
   private def expectedVarLoc(
-      locName : String,
-      libraryName : Seq[String]= List("scheme", "base")
-  )(implicit context : FrontendContext) : StorageLocation = {
+      locName: String,
+      libraryName: Seq[String]= List("scheme", "base")
+  )(implicit context: FrontendContext): StorageLocation = {
     val bindings = context.libraryLoader.load(libraryName, NoSourceLocation)(context.config)
 
     bindings(locName) match {
-      case storageLoc : StorageLocation => storageLoc
+      case storageLoc: StorageLocation => storageLoc
       case _ =>
         throw new InternalCompilerErrorException(s"{${locName}) expected to be a variable")
     }
   }
 
   private def parseRecordUnapplication(
-      located : SourceLocated,
-      valueLoc : StorageLocation,
-      unappliedValue : BoundValue,
-      constructor : et.RecordConstructor,
-      constructorArgs : List[sst.ScopedDatum],
-      successExpr : (List[(sst.ScopedSymbol, StorageLocation)]) => et.Expr,
-      failExpr : et.Expr,
-      bindings : List[(sst.ScopedSymbol, StorageLocation)]
-  )(implicit context : FrontendContext) : et.Expr = {
+      located: SourceLocated,
+      valueLoc: StorageLocation,
+      unappliedValue: BoundValue,
+      constructor: et.RecordConstructor,
+      constructorArgs: List[sst.ScopedDatum],
+      successExpr: (List[(sst.ScopedSymbol, StorageLocation)]) => et.Expr,
+      failExpr: et.Expr,
+      bindings: List[(sst.ScopedSymbol, StorageLocation)]
+  )(implicit context: FrontendContext): et.Expr = {
     val recordType = constructor.recordType
     val recordFields = constructor.initializedFields
 
@@ -61,7 +61,7 @@ object ExtractPatternMatch {
         val fieldExpr = et.Apply(fieldAccessor, List(et.VarRef(valueLoc)))
         val fieldLoc = new StorageLocation("<record-match-value>")
 
-        (bindings : List[(sst.ScopedSymbol, StorageLocation)]) =>
+        (bindings: List[(sst.ScopedSymbol, StorageLocation)]) =>
           et.InternalDefine(
             bindings=List(et.Binding(fieldLoc, fieldExpr)),
             body=parsePattern(fieldLoc, patternDatum, successExpr, failExpr, bindings)
@@ -76,19 +76,19 @@ object ExtractPatternMatch {
   }
 
   private def parseUnapplication(
-      located : SourceLocated,
-      valueLoc : StorageLocation,
-      unappliedValue : BoundValue,
-      unappliedArgs : List[sst.ScopedDatum],
-      successExpr : (List[(sst.ScopedSymbol, StorageLocation)]) => et.Expr,
-      failExpr : et.Expr,
-      bindings : List[(sst.ScopedSymbol, StorageLocation)]
-  )(implicit context : FrontendContext) : et.Expr = {
+      located: SourceLocated,
+      valueLoc: StorageLocation,
+      unappliedValue: BoundValue,
+      unappliedArgs: List[sst.ScopedDatum],
+      successExpr: (List[(sst.ScopedSymbol, StorageLocation)]) => et.Expr,
+      failExpr: et.Expr,
+      bindings: List[(sst.ScopedSymbol, StorageLocation)]
+  )(implicit context: FrontendContext): et.Expr = {
     val consProcLoc = expectedVarLoc("cons")
     val vectorProcLoc = expectedVarLoc("vector")
     val listProcLoc = expectedVarLoc("list")
 
-    def deconstructPair(block : (StorageLocation, StorageLocation)  => et.Expr) : et.Expr = {
+    def deconstructPair(block: (StorageLocation, StorageLocation)  => et.Expr): et.Expr = {
       // Determine if the value is a pair
       val pairPredProcLoc = expectedVarLoc("pair?")
       val isPairExpr = et.Apply(et.VarRef(pairPredProcLoc), List(et.VarRef(valueLoc)))
@@ -118,7 +118,7 @@ object ExtractPatternMatch {
     }
 
     (unappliedValue, unappliedArgs) match {
-      case ((recordCons : BoundRecordConstructor), constructorArgs) =>
+      case ((recordCons: BoundRecordConstructor), constructorArgs) =>
         parseRecordUnapplication(
           located=located,
           valueLoc=valueLoc,
@@ -137,8 +137,8 @@ object ExtractPatternMatch {
         et.Cond(isEqualExpr, successExpr(bindings), failExpr)
 
       case (`consProcLoc`, List(carPattern, cdrPattern)) =>
-        deconstructPair((carLoc : StorageLocation, cdrLoc : StorageLocation) => {
-          parsePattern(carLoc, carPattern, (bindings : List[(sst.ScopedSymbol, StorageLocation)]) => {
+        deconstructPair((carLoc: StorageLocation, cdrLoc: StorageLocation) => {
+          parsePattern(carLoc, carPattern, (bindings: List[(sst.ScopedSymbol, StorageLocation)]) => {
             parsePattern(cdrLoc, cdrPattern, successExpr, failExpr, bindings)
           }, failExpr, bindings)
         })
@@ -161,7 +161,7 @@ object ExtractPatternMatch {
             val elementExpr = et.Apply(et.VarRef(vectorRefProcLoc), List(et.VarRef(valueLoc), vectorIndexExpr))
             val elementLoc = new StorageLocation("<vector-match-value>")
 
-            (bindings : List[(sst.ScopedSymbol, StorageLocation)]) =>
+            (bindings: List[(sst.ScopedSymbol, StorageLocation)]) =>
               et.InternalDefine(
                 bindings=List(et.Binding(elementLoc, elementExpr)),
                 body=parsePattern(elementLoc, patternDatum, successExpr, failExpr, bindings)
@@ -189,8 +189,8 @@ object ExtractPatternMatch {
         )
 
       case (`listProcLoc`, nextPatternDatum :: restPatternData) =>
-        deconstructPair((carLoc : StorageLocation, cdrLoc : StorageLocation) => {
-          parsePattern(carLoc, nextPatternDatum, (bindings : List[(sst.ScopedSymbol, StorageLocation)]) => {
+        deconstructPair((carLoc: StorageLocation, cdrLoc: StorageLocation) => {
+          parsePattern(carLoc, nextPatternDatum, (bindings: List[(sst.ScopedSymbol, StorageLocation)]) => {
             parseUnapplication(located, cdrLoc, listProcLoc, restPatternData, successExpr, failExpr, bindings)
           }, failExpr, bindings)
         })
@@ -201,13 +201,13 @@ object ExtractPatternMatch {
   }
 
   private def parsePattern(
-      valueLoc : StorageLocation,
-      patternDatum : sst.ScopedDatum,
-      successExpr : (List[(sst.ScopedSymbol, StorageLocation)]) => et.Expr,
-      failExpr : et.Expr,
-      bindings : List[(sst.ScopedSymbol, StorageLocation)]
-  )(implicit context : FrontendContext) : et.Expr = {
-    def testForEquality(datum : ast.Datum) : et.Expr = {
+      valueLoc: StorageLocation,
+      patternDatum: sst.ScopedDatum,
+      successExpr: (List[(sst.ScopedSymbol, StorageLocation)]) => et.Expr,
+      failExpr: et.Expr,
+      bindings: List[(sst.ScopedSymbol, StorageLocation)]
+  )(implicit context: FrontendContext): et.Expr = {
+    def testForEquality(datum: ast.Datum): et.Expr = {
       val equalLoc = expectedVarLoc("equal?")
       val isEqualExpr = et.Apply(et.VarRef(equalLoc), List(et.VarRef(valueLoc), et.Literal(datum)))
 
@@ -216,9 +216,9 @@ object ExtractPatternMatch {
 
     patternDatum match {
       case sst.ScopedProperList(List(
-        varSymbol : sst.ScopedSymbol,
-        storageLocTypeAnn : sst.ScopedSymbol,
-        expectedTypeDatum : sst.ScopedDatum
+        varSymbol: sst.ScopedSymbol,
+        storageLocTypeAnn: sst.ScopedSymbol,
+        expectedTypeDatum: sst.ScopedDatum
       )) if storageLocTypeAnn.resolveOpt == Some(Primitives.AnnotateStorageLocType) =>
         val expectedType = ExtractType.extractSchemeType(expectedTypeDatum)
         val isTypeExpr = et.Apply(et.TypePredicate(expectedType), List(et.VarRef(valueLoc)))
@@ -229,17 +229,17 @@ object ExtractPatternMatch {
           failExpr
         )
 
-      case sst.ScopedProperList((unappliedSym : sst.ScopedSymbol) :: unappliedArgs) =>
+      case sst.ScopedProperList((unappliedSym: sst.ScopedSymbol) :: unappliedArgs) =>
         val unappliedValue = unappliedSym.resolve
         parseUnapplication(unappliedSym, valueLoc, unappliedValue, unappliedArgs, successExpr, failExpr, bindings)
 
       case sst.NonSymbolLeaf(datum) =>
         testForEquality(datum)
 
-      case scopedVector : sst.ScopedVectorLiteral =>
+      case scopedVector: sst.ScopedVectorLiteral =>
         testForEquality(scopedVector.unscope)
 
-      case symbol : sst.ScopedSymbol =>
+      case symbol: sst.ScopedSymbol =>
         if (symbol.resolveOpt == Some(Primitives.Wildcard)) {
           successExpr(bindings)
         }
@@ -256,7 +256,7 @@ object ExtractPatternMatch {
     *
     * This signals a match-error with the match value as evidence
     */
-  private def matchErrorClause(implicit context : FrontendContext) : et.Lambda = {
+  private def matchErrorClause(implicit context: FrontendContext): et.Lambda = {
     val errorProcLoc = expectedVarLoc("raise-match-error", List("llambda", "error"))
     val evidenceLoc = new StorageLocation("<evidence>")
 
@@ -284,12 +284,12 @@ object ExtractPatternMatch {
     * @param  clauseData  Definition of the match clauses
     */
   def apply(
-      valueExpr : et.Expr,
+      valueExpr: et.Expr,
       clauseData: List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : et.Expr = {
+  )(implicit context: FrontendContext): et.Expr = {
     val firstClauseExpr = clauseData.foldRight(matchErrorClause) {
       case (sst.ScopedProperList(patternDatum :: bodyData), nextClauseExpr) =>
-        val successExpr = (bindings : List[(sst.ScopedSymbol, StorageLocation)]) =>
+        val successExpr = (bindings: List[(sst.ScopedSymbol, StorageLocation)]) =>
           ExtractBodyDefinition(bindings, bodyData)
 
         val innerValLoc = new StorageLocation("<match-value>")

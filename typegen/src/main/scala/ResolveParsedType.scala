@@ -3,13 +3,13 @@ package io.llambda.typegen
 import io.llambda.llvmir
 
 object ResolveParsedType {
-  def apply(fieldTypes : Map[String, FieldType])(parsedType : ParsedType) : FieldType = {
+  def apply(fieldTypes: Map[String, FieldType])(parsedType: ParsedType): FieldType = {
     val recursiveResolve = apply(fieldTypes)_
 
     parsedType match {
       case ParsedPointerType(pointeeType) =>
         PointerFieldType(recursiveResolve(pointeeType))
-      
+
       case ParsedReferenceType(pointeeType) =>
         ReferenceFieldType(recursiveResolve(pointeeType))
 

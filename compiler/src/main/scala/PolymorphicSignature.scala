@@ -5,10 +5,10 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.{polymorphic => pm}
 
 case class PolymorphicSignature(
-    typeVars : Set[pm.TypeVar],
-    template : ProcedureSignature
+    typeVars: Set[pm.TypeVar],
+    template: ProcedureSignature
 ) {
-  private def instantiate(reconciled : pm.ReconcileTypeVars.Result) : ProcedureSignature = {
+  private def instantiate(reconciled: pm.ReconcileTypeVars.Result): ProcedureSignature = {
     template.copy(
       mandatoryArgTypes=template.mandatoryArgTypes.map(pm.InstantiateType(reconciled, _)),
       optionalArgTypes=template.optionalArgTypes.map(pm.InstantiateType(reconciled, _)),
@@ -18,7 +18,7 @@ case class PolymorphicSignature(
   }
 
   /** Returns our signature for the given arguments */
-  def signatureForArgs(located : SourceLocated, args : List[vt.SchemeType]) : ProcedureSignature = {
+  def signatureForArgs(located: SourceLocated, args: List[vt.SchemeType]): ProcedureSignature = {
     if (typeVars.isEmpty) {
       // Skip!
       return template
@@ -58,7 +58,7 @@ case class PolymorphicSignature(
     *
     * For polymorphic native functions this represents the actual signature of the procedure
     */
-  lazy val upperBound : ProcedureSignature = {
+  lazy val upperBound: ProcedureSignature = {
     // Use our upper type bounds for everything
     val reconciled = pm.ReconcileTypeVars(typeVars)
     instantiate(reconciled)

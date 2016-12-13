@@ -6,7 +6,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 object InterpretStep {
-  private def tempToAstDatum(state : InterpreterState)(tempValue : ps.TempValue) : ast.Datum =
+  private def tempToAstDatum(state: InterpreterState)(tempValue: ps.TempValue): ast.Datum =
     state.liveTemps.get(tempValue) match {
       case Some(DatumCell(value, _)) =>
         value
@@ -15,7 +15,7 @@ object InterpretStep {
         throw new UninterpretableException("Unable to reference datum")
     }
 
-  def apply(state : InterpreterState, step : ps.Step) : InterpreterState = step match {
+  def apply(state: InterpreterState, step: ps.Step): InterpreterState = step match {
     case ps.CreateUnitCell(resultTemp) =>
       val datumCell = DatumCell(ast.UnitValue(), ct.UnitCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
@@ -74,7 +74,7 @@ object InterpretStep {
 
     case ps.CastCellToTypeUnchecked(result, value, toType) =>
       val newDatumCell = state.liveTemps.get(value) match {
-        case Some(datumCell : DatumCell) =>
+        case Some(datumCell: DatumCell) =>
           datumCell.copy(cellType=toType)
 
         case _ =>

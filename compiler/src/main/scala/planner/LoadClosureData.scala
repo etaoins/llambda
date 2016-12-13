@@ -14,10 +14,10 @@ private[planner] object LoadClosureData {
     * @return Map of loaded values
     */
   def apply(
-      procTemp : ps.TempValue,
-      manifest : LambdaManifest,
-      onlyVarsOpt : Option[Set[StorageLocation]] = None
-  )(implicit plan : PlanWriter) : Map[StorageLocation, LocationValue] = {
+      procTemp: ps.TempValue,
+      manifest: LambdaManifest,
+      onlyVarsOpt: Option[Set[StorageLocation]] = None
+  )(implicit plan: PlanWriter): Map[StorageLocation, LocationValue] = {
     val wantedVariables = onlyVarsOpt match {
       case Some(onlyVariables) =>
         manifest.capturedVars.filter { capturedVar =>
@@ -44,11 +44,11 @@ private[planner] object LoadClosureData {
 
         // Add it to our state
         capturedVar match {
-          case immutable : CapturedImmutable =>
+          case immutable: CapturedImmutable =>
             val varValue = immutable.parentIntermediate.restoreFromClosure(capturedVar.valueType, varTemp)(plan.config)
             capturedVar.storageLoc -> ImmutableValue(varValue)
 
-          case capturedMutable : CapturedMutable =>
+          case capturedMutable: CapturedMutable =>
             capturedVar.storageLoc -> capturedMutable.parentMutable.copy(mutableTemp=varTemp)
         }
       }).toMap

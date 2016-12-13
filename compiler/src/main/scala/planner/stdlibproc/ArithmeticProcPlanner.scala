@@ -15,9 +15,9 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
   private type StaticDoubleOp = (Double, Double) => Double
 
   private def numberToDoubleTemp(
-      value : iv.IntermediateValue,
-      isFlonum : Boolean
-  )(implicit plan : PlanWriter) : ps.TempValue =
+      value: iv.IntermediateValue,
+      isFlonum: Boolean
+  )(implicit plan: PlanWriter): ps.TempValue =
     if (isFlonum) {
       value.toTempValue(vt.Double)
     }
@@ -33,16 +33,16 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
   case object KnownInt extends KnownOperandType
   case object KnownFlonum extends KnownOperandType
 
-  case class TypedOperand(value : iv.IntermediateValue, knownType : KnownOperandType)
+  case class TypedOperand(value: iv.IntermediateValue, knownType: KnownOperandType)
 
   private def performBinaryMixedOp(
-      intInstr : CheckedInstrBuilder,
-      flonumInstr : UncheckedInstrBuilder,
-      staticIntCalc : StaticIntegerOp,
-      staticFlonumCalc : StaticDoubleOp,
-      operands : List[iv.IntermediateValue],
-      intOverflowMessage : RuntimeErrorMessage
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      intInstr: CheckedInstrBuilder,
+      flonumInstr: UncheckedInstrBuilder,
+      staticIntCalc: StaticIntegerOp,
+      staticFlonumCalc: StaticDoubleOp,
+      operands: List[iv.IntermediateValue],
+      intOverflowMessage: RuntimeErrorMessage
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
     val typedOperands = operands map { operand =>
@@ -63,7 +63,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
       typedArg.knownType == KnownFlonum
     }
 
-    val resultValue = typedOperands.reduceLeft { (op1 : TypedOperand, op2 : TypedOperand) => (op1, op2) match {
+    val resultValue = typedOperands.reduceLeft { (op1: TypedOperand, op2: TypedOperand) => (op1, op2) match {
       case (TypedOperand(iv.ConstantIntegerValue(constantIntVal1), _),
             TypedOperand(iv.ConstantIntegerValue(constantIntVal2), _)) =>
         val intResult = staticIntCalc(BigInt(constantIntVal1), BigInt(constantIntVal2))
@@ -139,11 +139,11 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
   }
 
   private def performNumericDivide(
-      operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      operands: List[iv.IntermediateValue]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+    val resultValue = operands.reduceLeft { (op1: iv.IntermediateValue, op2: iv.IntermediateValue) => (op1, op2) match {
       case (iv.ConstantIntegerValue(Long.MinValue), iv.ConstantIntegerValue(-1)) =>
         // This would cause an integer overflow
         iv.ConstantFlonumValue(Long.MinValue.toDouble / -1.toDouble)
@@ -161,14 +161,14 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
           iv.ConstantFlonumValue(numerInt.toDouble / denomInt.toDouble)
         }
 
-      case (numerNumValue : iv.ConstantNumberValue, iv.ConstantIntegerValue(denomIntVal)) =>
+      case (numerNumValue: iv.ConstantNumberValue, iv.ConstantIntegerValue(denomIntVal)) =>
         if (denomIntVal == 0) {
           throw new DivideByZeroException(plan.activeContextLocated, "Attempted (/) by integer zero")
         }
 
         iv.ConstantFlonumValue(numerNumValue.doubleValue / denomIntVal.toDouble)
 
-      case (numerNumValue : iv.ConstantNumberValue, iv.ConstantFlonumValue(denomFlonumVal)) =>
+      case (numerNumValue: iv.ConstantNumberValue, iv.ConstantFlonumValue(denomFlonumVal)) =>
         iv.ConstantFlonumValue(numerNumValue.doubleValue / denomFlonumVal)
 
       case (dynamicNumer, dynamicDenom) =>
@@ -205,11 +205,11 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
   }
 
   private def performIntegerDivOp(
-      instr : UncheckedInstrBuilder,
-      staticCalc : StaticIntegerOp,
-      numerator : (ContextLocated, iv.IntermediateValue),
-      denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      instr: UncheckedInstrBuilder,
+      staticCalc: StaticIntegerOp,
+      numerator: (ContextLocated, iv.IntermediateValue),
+      denominator: (ContextLocated, iv.IntermediateValue)
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     (numerator, denominator) match {
       case (_, (denomLoc, iv.ConstantIntegerValue(0))) =>
         // Catch divide by zero first
@@ -246,15 +246,15 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
   }
 
   private def performIntegerDivide(
-      numerator : (ContextLocated, iv.IntermediateValue),
-      denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
+      numerator: (ContextLocated, iv.IntermediateValue),
+      denominator: (ContextLocated, iv.IntermediateValue)
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] =
     performIntegerDivOp(ps.IntegerDiv(_, true, _, _), _ / _, numerator, denominator)
 
   private def performIntegerRemainder(
-      numerator : (ContextLocated, iv.IntermediateValue),
-      denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = denominator._2 match {
+      numerator: (ContextLocated, iv.IntermediateValue),
+      denominator: (ContextLocated, iv.IntermediateValue)
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = denominator._2 match {
     case iv.ConstantIntegerValue(1) | iv.ConstantIntegerValue(-1) =>
       // This is both an optimisation and required to avoid overflow when dividing Long.MinValue by -1
       Some(iv.ConstantIntegerValue(0))
@@ -263,10 +263,10 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
       performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
   }
 
-  override def planWithValue(state : PlannerState)(
-    reportName : String,
-    args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+  override def planWithValue(state: PlannerState)(
+    reportName: String,
+    args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
     case ("truncate/", List(numerator, denominator)) =>
       // Handle this here because it produces multiple values
       val inlinePlan = plan.forkPlan()
@@ -394,16 +394,16 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
         if (power >= 0) && (power <= 62) =>
       Some(iv.ConstantIntegerValue(1L << power))
 
-    case ("floor", List((_, constInt : iv.ConstantIntegerValue))) =>
+    case ("floor", List((_, constInt: iv.ConstantIntegerValue))) =>
       Some(constInt)
 
-    case ("ceiling", List((_, constInt : iv.ConstantIntegerValue))) =>
+    case ("ceiling", List((_, constInt: iv.ConstantIntegerValue))) =>
       Some(constInt)
 
-    case ("truncate", List((_, constInt : iv.ConstantIntegerValue))) =>
+    case ("truncate", List((_, constInt: iv.ConstantIntegerValue))) =>
       Some(constInt)
 
-    case ("round", List((_, constInt : iv.ConstantIntegerValue))) =>
+    case ("round", List((_, constInt: iv.ConstantIntegerValue))) =>
       Some(constInt)
 
     case ("floor", List((_, iv.ConstantFlonumValue(value)))) =>

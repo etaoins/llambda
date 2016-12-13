@@ -6,8 +6,8 @@ import llambda.llvmir.IrFunction._
 
 object GenCellAllocation {
   private val cellType = UserDefinedType("cell")
-  
-  def genAllocation(initialState : GenerationState)(worldPtrIr : IrValue, count : Int) : (GenerationState, CellAllocation)  = {
+
+  def genAllocation(initialState: GenerationState)(worldPtrIr: IrValue, count: Int): (GenerationState, CellAllocation)  = {
     val startBlock = initialState.currentBlock
 
     if (count == 0) {
@@ -31,7 +31,7 @@ object GenCellAllocation {
     // Load the pointer to our allocation start
     // This is our allocation unless we run out of memory
     val directAllocValue = WorldValue.genLoadFromAllocNext(startBlock)(worldPtrIr)
-    
+
     // Load the pointer to our allocation end value
     val allocEndValue = WorldValue.genLoadFromAllocEnd(startBlock)(worldPtrIr)
 
@@ -53,7 +53,7 @@ object GenCellAllocation {
     directSuccessBlock.uncondBranch(allocFinishedBlock)
 
     // In the garage collection block first save our GC roots
-    val collectGarbageState = initialState.copy(currentBlock=collectGarbageBlock) 
+    val collectGarbageState = initialState.copy(currentBlock=collectGarbageBlock)
 
     val calcedBarrier = GenGcBarrier.calculateGcBarrier(collectGarbageState)()
     GenGcBarrier.genSaveGcRoots(collectGarbageState)(calcedBarrier)
@@ -62,7 +62,7 @@ object GenCellAllocation {
     val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(allocCellsDecl, List(worldPtrIr, allocCountValue))
 
     // Now restore the GC roots
-    val newIrValues = GenGcBarrier.genRestoreGcRoots(collectGarbageState)(calcedBarrier)  
+    val newIrValues = GenGcBarrier.genRestoreGcRoots(collectGarbageState)(calcedBarrier)
 
     collectGarbageBlock.uncondBranch(allocFinishedBlock)
 
@@ -80,7 +80,7 @@ object GenCellAllocation {
           PhiSource(gcIrValue, collectGarbageBlock)
         )
 
-        (restoreToTemp -> (phiedGcRoot : IrValue))
+        (restoreToTemp -> (phiedGcRoot: IrValue))
     }
 
     val allocation = new CellAllocation(allocResultValue, 0, count)
@@ -92,8 +92,8 @@ object GenCellAllocation {
       gcState=GcState.fromBranches(initialState.gcState, List(calcedBarrier.finalGcState))
     ), allocation)
   }
-  
-  def genDeallocation(state : GenerationState)(worldPtrIr : IrValue) {
+
+  def genDeallocation(state: GenerationState)(worldPtrIr: IrValue) {
     // How many cells were left in the allocation?
     val remainingCells = state.currentAllocation.remainingCells
 
@@ -107,7 +107,7 @@ object GenCellAllocation {
       // Subtract the cells we haven't used
       val allocationDeltaIr = IntegerConstant(IntegerType(64), -remainingCells)
       val newAllocNextValue = block.getelementptr("newAllocNext")(cellType, allocNextValue, List(allocationDeltaIr))
-      
+
       // Store the new next pointer
       WorldValue.genStoreToAllocNext(block)(newAllocNextValue, worldPtrIr)
     }

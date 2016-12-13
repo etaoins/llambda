@@ -59,7 +59,7 @@ namespace
 		else if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
 		{
 			// This was moved; updated the reference
-			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation(); 
+			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation();
 
 			return false;
 		}
@@ -89,7 +89,7 @@ size_t collect(World &world, Heap &newHeap)
 		{
 			// This has already been moved to the new semi-space
 			// Update the reference and stop visiting
-			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation(); 
+			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation();
 			return false;
 		}
 		else

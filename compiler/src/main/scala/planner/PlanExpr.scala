@@ -11,7 +11,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.InternalCompilerErrorException
 
 private[planner] object PlanExpr {
-  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
+  def apply(initialState: PlannerState)(expr: et.Expr, sourceNameHint: Option[String] = None)(implicit plan: PlanWriter): PlanResult = plan.withContextLocation(expr) {
     expr match {
       case et.Begin(exprs) =>
         val initialResult = PlanResult(
@@ -48,10 +48,10 @@ private[planner] object PlanExpr {
           value=apply(bodyState)(bodyExpr).value
         )
 
-      case et.VarRef(storageLoc : StorageLocation) => 
+      case et.VarRef(storageLoc: StorageLocation) =>
         initialState.values(storageLoc) match {
           case ImmutableValue(value) =>
-            // Return the value directly 
+            // Return the value directly
             PlanResult(
               state=initialState,
               value=value
@@ -83,16 +83,16 @@ private[planner] object PlanExpr {
               value=resultValue
             )
         }
-      
+
       case et.MutateVar(storageLoc, valueExpr) =>
         val mutableValue = initialState.values(storageLoc) match {
-          case mutable : MutableValue  =>
+          case mutable: MutableValue  =>
             mutable
 
           case _ =>
             throw new InternalCompilerErrorException(s"Attempted to mutate non-mutable: ${storageLoc}")
         }
-        
+
         val mutableTemp = mutableValue.mutableTemp
         val mutableType = mutableValue.mutableType
 
@@ -122,7 +122,7 @@ private[planner] object PlanExpr {
       case et.Cond(testExpr, trueExpr, falseExpr) =>
         PlanCond(initialState)(testExpr, trueExpr, falseExpr)
 
-      case nativeFunc : et.NativeFunction =>
+      case nativeFunc: et.NativeFunction =>
         plan.requiredNativeLibraries += nativeFunc.library
         val newProcValue = new iv.KnownUserProc(nativeFunc.polySignature, nativeFunc.nativeSymbol, None)
 
@@ -182,7 +182,7 @@ private[planner] object PlanExpr {
           value=castValue
         )
 
-      case lambdaExpr : et.Lambda =>
+      case lambdaExpr: et.Lambda =>
         val procValue = PlanLambda(initialState, plan)(
           lambdaExpr=lambdaExpr,
           sourceNameHint=sourceNameHint,

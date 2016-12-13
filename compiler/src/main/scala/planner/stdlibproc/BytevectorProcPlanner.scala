@@ -8,10 +8,10 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object BytevectorProcPlanner extends StdlibProcPlanner {
-  override def planWithValue(state : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+  override def planWithValue(state: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
     case ("bytevector-length", List((_, iv.ConstantBytevectorValue(elements)))) =>
       Some(iv.ConstantIntegerValue(elements.length))
 

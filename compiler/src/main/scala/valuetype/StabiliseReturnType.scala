@@ -8,9 +8,7 @@ object StabiliseReturnType {
     *
     * This is a simple wrapper around [[StabliseType]] to work on [[ReturnType]] instancds
     */
-  def apply(
-      returnType : ReturnType.ReturnType[SchemeType]
-  ) : ReturnType.ReturnType[SchemeType] = returnType match {
+  def apply(returnType: ReturnType.ReturnType[SchemeType]): ReturnType.ReturnType[SchemeType] = returnType match {
     case ReturnType.Unreachable =>
       ReturnType.Unreachable
 

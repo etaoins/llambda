@@ -1,6 +1,6 @@
 package io.llambda.llvmir
 
-case class TbaaMetadata(identity : String, parentOpt : Option[Metadata] = None, constant : Boolean = false) extends MetadataNode {
+case class TbaaMetadata(identity: String, parentOpt: Option[Metadata] = None, constant: Boolean = false) extends MetadataNode {
   private val identityMetadata = MetadataString.fromUtf8String(identity)
 
   val operandOpts = List(

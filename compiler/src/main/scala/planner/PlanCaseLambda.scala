@@ -18,38 +18,38 @@ private[planner] object PlanCaseLambda {
   )
 
   private case class CapturedProc(
-      outerProcTemp : ps.TempValue,
-      recordField : vt.RecordField
+      outerProcTemp: ps.TempValue,
+      recordField: vt.RecordField
   )
 
   private case class PlannedClause(
-      procValue : iv.KnownSchemeProc,
-      capturedProcOpt : Option[CapturedProc]
+      procValue: iv.KnownSchemeProc,
+      capturedProcOpt: Option[CapturedProc]
   )
 
-  private def listOfAtLeast(length : Int) : vt.SchemeType = {
-    val anyList = vt.UniformProperListType(vt.AnySchemeType) 
+  private def listOfAtLeast(length: Int): vt.SchemeType = {
+    val anyList = vt.UniformProperListType(vt.AnySchemeType)
 
-    (0 until length).foldRight(anyList : vt.SchemeType) {
+    (0 until length).foldRight(anyList: vt.SchemeType) {
       case (_, cdrType) =>
         vt.SpecificPairType(vt.AnySchemeType, cdrType)
     }
   }
 
-  private def listOfExactly(length : Int) : vt.SchemeType = {
-    (0 until length).foldRight(vt.EmptyListType : vt.SchemeType) {
+  private def listOfExactly(length: Int): vt.SchemeType = {
+    (0 until length).foldRight(vt.EmptyListType: vt.SchemeType) {
       case (_, cdrType) =>
         vt.SpecificPairType(vt.AnySchemeType, cdrType)
     }
   }
 
   private def planClauseTests(
-      plannedClauses : List[PlannedClause],
-      innerSelfTempOpt : Option[ps.TempValue],
-      closureType : vt.ClosureType,
-      argListHeadTemp : ps.TempValue,
-      argLengthTemp : ps.TempValue
-  )(implicit entryPlan : PlanWriter) : iv.IntermediateValue = plannedClauses match {
+      plannedClauses: List[PlannedClause],
+      innerSelfTempOpt: Option[ps.TempValue],
+      closureType: vt.ClosureType,
+      argListHeadTemp: ps.TempValue,
+      argLengthTemp: ps.TempValue
+  )(implicit entryPlan: PlanWriter): iv.IntermediateValue = plannedClauses match {
     case Nil =>
       // We were called with no clauses
       // Note that the checkingClause match below will explicitly check for empty clauses before recursing so this will
@@ -80,7 +80,7 @@ private[planner] object PlanCaseLambda {
       }
 
       val matchesPred = ps.Temp(vt.Predicate)
-      entryPlan.steps += ps.IntegerCompare(matchesPred, testingCond, signedOpt, argLengthTemp, testingLengthTemp) 
+      entryPlan.steps += ps.IntegerCompare(matchesPred, testingCond, signedOpt, argLengthTemp, testingLengthTemp)
 
       // Plan for if the clause matches
       val truePlan = entryPlan.forkPlan()
@@ -139,10 +139,10 @@ private[planner] object PlanCaseLambda {
       }
   }
 
-  def apply(parentState : PlannerState, parentPlan : PlanWriter)(
-      clauseExprs : List[et.Lambda],
-      sourceNameHint : Option[String]
-  ) : iv.KnownCaseLambdaProc = {
+  def apply(parentState: PlannerState, parentPlan: PlanWriter)(
+      clauseExprs: List[et.Lambda],
+      sourceNameHint: Option[String]
+  ): iv.KnownCaseLambdaProc = {
     val sourceName = sourceNameHint.getOrElse("anonymous-case-lambda")
     val nativeSymbol = parentPlan.allocSymbol(sourceName)
 
@@ -218,7 +218,7 @@ private[planner] object PlanCaseLambda {
       restArgMemberTypeOpt=Some(vt.AnySchemeType),
       returnType=returnType,
       attributes=Set(ProcedureAttribute.FastCC)
-    ) : ProcedureSignature
+    ): ProcedureSignature
 
     // Store the planend procedures in our closure
     val outerSelfTempOpt = if (closureRequired) {

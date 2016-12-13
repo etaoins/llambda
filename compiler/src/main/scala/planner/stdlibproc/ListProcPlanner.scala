@@ -13,11 +13,11 @@ import scala.annotation.tailrec
 
 object ListProcPlanner extends StdlibProcPlanner {
   private def staticMemberSearch(
-      compareFunc : StaticValueEqv.EqvFunction,
-      needleValue : iv.IntermediateValue,
-      listValue : iv.IntermediateValue
-  ) : Option[iv.IntermediateValue] = listValue match {
-    case knownPair : iv.KnownPair =>
+      compareFunc: StaticValueEqv.EqvFunction,
+      needleValue: iv.IntermediateValue,
+      listValue: iv.IntermediateValue
+  ): Option[iv.IntermediateValue] = listValue match {
+    case knownPair: iv.KnownPair =>
       compareFunc(needleValue, knownPair.car) match {
         case Some(true) =>
           // Found it!
@@ -42,13 +42,13 @@ object ListProcPlanner extends StdlibProcPlanner {
   }
 
   @tailrec
-  private def listTail(listValue : iv.IntermediateValue, index : Int) : iv.IntermediateValue =
+  private def listTail(listValue: iv.IntermediateValue, index: Int): iv.IntermediateValue =
     if (index == 0) {
       listValue
     }
     else {
       listValue match {
-        case knownPair : iv.KnownPair =>
+        case knownPair: iv.KnownPair =>
           listTail(knownPair.cdr, index - 1)
 
         case _ =>
@@ -56,11 +56,11 @@ object ListProcPlanner extends StdlibProcPlanner {
       }
     }
 
-  override def planWithValue(initialState : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
-    case ("length", List((_, knownListElement : iv.KnownListElement))) =>
+  override def planWithValue(initialState: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
+    case ("length", List((_, knownListElement: iv.KnownListElement))) =>
       knownListElement.listLengthOpt map iv.ConstantIntegerValue.apply
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
@@ -77,7 +77,7 @@ object ListProcPlanner extends StdlibProcPlanner {
       }
 
       val headValues = listArgs flatMap {
-        case knownList : iv.KnownListElement => 
+        case knownList: iv.KnownListElement =>
           knownList.toValueListOpt match {
             case Some(valueList) => valueList
             case _ =>
@@ -98,7 +98,7 @@ object ListProcPlanner extends StdlibProcPlanner {
 
     case ("list-tail", List((_, listValue), (_, indexValue))) =>
       (listValue, indexValue) match {
-        case (knownListElement : iv.KnownListElement, iv.ConstantIntegerValue(index)) =>
+        case (knownListElement: iv.KnownListElement, iv.ConstantIntegerValue(index)) =>
           // If listLengthOpt is defined we're a proper list
           knownListElement.listLengthOpt map { listLength =>
             if ((index < 0) || (index > listLength)) {

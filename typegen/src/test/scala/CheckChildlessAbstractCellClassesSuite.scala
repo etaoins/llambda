@@ -3,7 +3,7 @@ package io.llambda.typegen
 import org.scalatest.FunSuite
 
 class CheckChildlessAbstractCellClassesSuite extends FunSuite {
-  def checkString(str : String) : Unit = { 
+  def checkString(str: String) : Unit = {
     val defns = DefinitionParser.parseString(str)
     CheckTopLevelNamespace(defns)
 
@@ -22,7 +22,7 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
       """);
     }
   }
-  
+
   test("root cell with concrete child succeeds") {
     checkString("""
       root cell Datum typetag typeId {
@@ -58,7 +58,7 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
       """);
     }
   }
-  
+
   test("child cell class with concrete child succeeds") {
     checkString("""
       root cell Datum typetag typeId {

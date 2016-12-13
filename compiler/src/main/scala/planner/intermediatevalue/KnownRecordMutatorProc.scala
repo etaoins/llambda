@@ -6,7 +6,7 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc(
+class KnownRecordMutatorProc(recordType: vt.RecordType, field: vt.RecordField) extends KnownArtificialProc(
     ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
@@ -17,14 +17,14 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       attributes=Set()
     ).toPolymorphic
 ) {
-  protected val symbolHint = 
+  protected val symbolHint =
     recordType.sourceName
       .replaceAllLiterally("<", "")
-      .replaceAllLiterally(">", "") + 
+      .replaceAllLiterally(">", "") +
       "-" + field.name +
       "!"
-  
-  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
+
+  def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
     val fieldType = recordType.typeForField(field)
 
     // Set up our arguments
@@ -35,15 +35,15 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       ("recordCell" -> recordCellTemp),
       ("newValue" -> newValueTemp)
     )
-    
+
     val plan = parentPlan.forkPlan()
-    
+
     // Extract the record data
     val recordDataTemp = ps.RecordLikeDataTemp()
-    plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
+    plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
 
     // Store the new value
-    plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp) 
+    plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp)
     plan.steps += ps.Return(None)
 
     PlannedFunction(
@@ -54,20 +54,20 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
     )
   }
 
-  override def attemptInlineApplication(state : PlannerState)(
-      args : List[(ContextLocated, IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+  override def attemptInlineApplication(state: PlannerState)(
+      args: List[(ContextLocated, IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = {
     args match {
       case List((_, recordValue), (_, newValue)) =>
         val recordCellTemp = recordValue.toTempValue(recordType)
 
         val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
+        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
 
         // Read the field
         val fieldType = recordType.typeForField(field)
         val newValueTemp = newValue.toTempValue(fieldType)
-        plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp) 
+        plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp)
 
         Some(PlanResult(
           state=state,

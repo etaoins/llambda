@@ -8,7 +8,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
 class ExtractPatternSuite extends FunSuite with OptionValues with testutil.ExprHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
 
   test("empty pattern match results in an expression") {
     exprFor("(match #t)")

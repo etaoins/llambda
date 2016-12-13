@@ -9,15 +9,15 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._
 
-class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, nextBlock : IrChildBlockBuilder, targetPlatform : TargetPlatform) extends {
+class GcSlotGenerator(entryBlock: IrEntryBlockBuilder)(worldPtrIr: IrValue, nextBlock: IrChildBlockBuilder, targetPlatform: TargetPlatform) extends {
   private val blockTerminators = new mutable.ListBuffer[(IrBlockBuilder, () => Unit)]
   private val module = entryBlock.function.module
 
-  def unrootAllAndTerminate(block : IrBlockBuilder)(terminatingProc : () => Unit) {
+  def unrootAllAndTerminate(block: IrBlockBuilder)(terminatingProc: () => Unit) {
     blockTerminators.append((block, terminatingProc))
   }
 
-  def finish(finalGcState : GcState) {
+  def finish(finalGcState: GcState) {
     // Allocate all the GC slots we need
     val slotCount = finalGcState.nextUnallocatedSlot
 
@@ -112,7 +112,7 @@ object GcSlotGenerator {
   val slotValueType = PointerType(ct.AnyCell.irType)
   val slotPointerType = PointerType(slotValueType)
 
-  def irValueForSlot(slot : Int) = {
+  def irValueForSlot(slot: Int) = {
     val slotName = s"gcSlot${slot}"
 
     // This will be created in the entry block so it will be availble in all child blocks

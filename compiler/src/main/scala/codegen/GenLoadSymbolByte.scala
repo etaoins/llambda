@@ -5,12 +5,12 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenLoadSymbolByte {
-  def apply(block : IrBlockBuilder)(
-      symbolIr : IrValue,
-      offsetIr : IrValue,
-      symbolByteLength : Long,
-      possibleValuesOpt : Option[Set[Byte]]
-  ) : IrValue = {
+  def apply(block: IrBlockBuilder)(
+      symbolIr: IrValue,
+      offsetIr: IrValue,
+      symbolByteLength: Long,
+      possibleValuesOpt: Option[Set[Byte]]
+  ): IrValue = {
     val bytePtr = if (symbolByteLength <= ct.SymbolCellConstants.maximumInlineSymbolBytes) {
       val inlineSymbolIr = ct.InlineSymbolCell.genPointerBitcast(block)(symbolIr)
 

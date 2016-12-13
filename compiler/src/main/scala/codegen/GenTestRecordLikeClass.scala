@@ -5,11 +5,11 @@ import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
 
 object GenTestRecordLikeClass {
-  def apply(block : IrBlockBuilder)(
-      recordCellIr : IrValue,
-      generatedType : GeneratedType,
-      possibleTypesOpt : Option[Set[GeneratedType]] = None
-  ) : IrValue = {
+  def apply(block: IrBlockBuilder)(
+      recordCellIr: IrValue,
+      generatedType: GeneratedType,
+      possibleTypesOpt: Option[Set[GeneratedType]] = None
+  ): IrValue = {
     // Find the cell type of our record cell
     val cellType = generatedType.recordLikeType.cellType
 

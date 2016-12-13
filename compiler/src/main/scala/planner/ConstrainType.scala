@@ -9,42 +9,42 @@ import llambda.compiler.InternalCompilerErrorException
 object ConstrainType {
   /** Represents a type constraint that can be applied to an intermediate value */
   sealed abstract class TypeConstraint {
-    def applyToSubject(subjectType : vt.SchemeType) : vt.SchemeType 
+    def applyToSubject(subjectType: vt.SchemeType): vt.SchemeType
 
     /** Returns if this constraint is definitely a no-op
       *
       * This is for optimisation purposes only; it's legal to always return false here
       */
-    def definiteNoop : Boolean
+    def definiteNoop: Boolean
   }
 
   /** Intersects the subject value's type with the given type */
-  case class IntersectType(withType : vt.SchemeType) extends TypeConstraint {
-    def applyToSubject(subjectType : vt.SchemeType) = 
+  case class IntersectType(withType: vt.SchemeType) extends TypeConstraint {
+    def applyToSubject(subjectType: vt.SchemeType) =
       subjectType & withType
 
-    def definiteNoop : Boolean =
+    def definiteNoop: Boolean =
       withType eq vt.AnySchemeType
   }
 
   /** Subtracts the given type from the subject value's type */
-  case class SubtractType(withType : vt.SchemeType) extends TypeConstraint {
-    def applyToSubject(subjectType : vt.SchemeType) = 
+  case class SubtractType(withType: vt.SchemeType) extends TypeConstraint {
+    def applyToSubject(subjectType: vt.SchemeType) =
       subjectType - withType
-    
-    def definiteNoop : Boolean =
+
+    def definiteNoop: Boolean =
       withType == vt.EmptySchemeType
   }
-  
-  /** Preserves the value's exisiting type 
+
+  /** Preserves the value's exisiting type
     *
     * This is useful as a no-op placeholder for either trueConstraint or falseConstraint in addCondAction
     */
  case object PreserveType extends TypeConstraint {
-    def applyToSubject(subjectType : vt.SchemeType) = 
+    def applyToSubject(subjectType: vt.SchemeType) =
       subjectType
 
-    def definiteNoop : Boolean =
+    def definiteNoop: Boolean =
       true
   }
 
@@ -55,13 +55,13 @@ object ConstrainType {
     * @param  falseCosntraint  Type constraint to apply if the condition value is definitely true-y
     */
   case class CondAction(
-      subjectValue : iv.IntermediateValue,
-      trueConstraint : TypeConstraint,
-      falseConstraint : TypeConstraint 
+      subjectValue: iv.IntermediateValue,
+      trueConstraint: TypeConstraint,
+      falseConstraint: TypeConstraint
   )
 
   case class State(
-      condActions : Map[iv.IntermediateValue, List[CondAction]] = Map()
+      condActions: Map[iv.IntermediateValue, List[CondAction]] = Map()
   )
 
   /** Registers a conditional type with the type constraint system
@@ -74,18 +74,18 @@ object ConstrainType {
     * its type constrained to a definite truthiness.
     *
     * @param  conditionValue   Condition to trigger type constraints on
-    * @param  condAction       Action to perform once conditionValue has its type constrained to definite truthiness 
+    * @param  condAction       Action to perform once conditionValue has its type constrained to definite truthiness
     */
-  def addCondAction(state : PlannerState)(
-      conditionValue : iv.IntermediateValue,
-      condAction : CondAction
-  ) : PlannerState = {
+  def addCondAction(state: PlannerState)(
+      conditionValue: iv.IntermediateValue,
+      condAction: CondAction
+  ): PlannerState = {
     val oldConstraintState = state.typeConstraintState
 
     // Add this action on to the list of actions for the condition value
     val existingActions = oldConstraintState.condActions.getOrElse(conditionValue, Nil)
     val updatedActions = oldConstraintState.condActions + (conditionValue -> (condAction :: existingActions))
-    
+
     val newConstraintState = state.typeConstraintState.copy(
       condActions=updatedActions
     )
@@ -93,13 +93,13 @@ object ConstrainType {
     state.copy(typeConstraintState=newConstraintState)
   }
 
-  def condActionsForConditionValue(state : PlannerState)(conditionValue : iv.IntermediateValue) : List[CondAction] =
+  def condActionsForConditionValue(state: PlannerState)(conditionValue: iv.IntermediateValue): List[CondAction] =
     state.typeConstraintState.condActions.getOrElse(conditionValue, Nil)
 
-  private def triggerCondActions(state : PlannerState)(
-      value : iv.IntermediateValue,
-      newType : vt.SchemeType
-  )(planConfig : PlanConfig) : PlannerState = {
+  private def triggerCondActions(state: PlannerState)(
+      value: iv.IntermediateValue,
+      newType: vt.SchemeType
+  )(planConfig: PlanConfig): PlannerState = {
     state.typeConstraintState.condActions.get(value) match {
       case Some(condActionList) =>
         vt.SatisfiesType(vt.LiteralBooleanType(false), newType) match {
@@ -121,7 +121,7 @@ object ConstrainType {
               }
             }
 
-          case _ => 
+          case _ =>
             state
         }
 
@@ -135,10 +135,10 @@ object ConstrainType {
     * This will modify any storage locations pointed to the passed intermediate value to point to a duplicate
     * intermediate value with the appropriate type
     */
-  def apply(state : PlannerState)(
-      value : iv.IntermediateValue,
-      constraint : TypeConstraint
-  )(planConfig : PlanConfig) : PlannerState = {
+  def apply(state: PlannerState)(
+      value: iv.IntermediateValue,
+      constraint: TypeConstraint
+  )(planConfig: PlanConfig): PlannerState = {
     // We do some O(n) operations below so abort early for noop constraints
     if (constraint.definiteNoop) {
       return state
@@ -154,12 +154,12 @@ object ConstrainType {
     // Create a new intermediate value with the constrained type
     val constrainedValue = value.withSchemeType(stableNewType)
 
-    def valueMapper(inputValue : iv.IntermediateValue) =
+    def valueMapper(inputValue: iv.IntermediateValue) =
       if (inputValue eq value) constrainedValue else inputValue
 
     // Modify our state to point to the new value
     // XXX: This is O(n) with the number of live storage locations or conditional types
-    val newValues = state.values.mapValues { 
+    val newValues = state.values.mapValues {
       case ImmutableValue(`value`) =>
         ImmutableValue(constrainedValue)
 

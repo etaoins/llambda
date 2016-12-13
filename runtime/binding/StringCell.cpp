@@ -124,7 +124,7 @@ StringCell* StringCell::fromFill(World &world, CharLengthType length, UnicodeCha
 
 	return newString;
 }
-	
+
 StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &strings)
 {
 	if (strings.size() == 1)
@@ -132,7 +132,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 		// This allows implicit data sharing while the below always allocates
 		return strings.front()->copy(world);
 	}
-	
+
 	std::uint64_t totalByteLength = 0;
 	CharLengthType totalCharLength = 0;
 
@@ -328,7 +328,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 
 	const unsigned int requiredBytes = patternBytes * count;
 	const unsigned int replacedBytes = range.byteCount();
-	
+
 	// If we have exclusive access to our data and we're not resizing the string we can use the fast path
 	if ((dataIsInline() || static_cast<HeapStringCell*>(this)->heapByteArray()->isExclusive()) &&
 	    (requiredBytes == replacedBytes))
@@ -430,7 +430,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 		// We need to do this now because if the pattern bytes are longer than the byte we're replacing then we might
 		// overwrite the beginning of the unchanged chunk
 		memmove(destString + initialBytes + requiredBytes, range.startPointer + replacedBytes, finalBytes);
-		
+
 		std::uint8_t* copyDest = destString + initialBytes;
 
 		while(count--)
@@ -458,7 +458,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 			oldByteArray->unref();
 		}
 	}
-	
+
 	return true;
 }
 
@@ -536,7 +536,7 @@ StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType 
 
 	// Create the new string
 	auto newString = StringCell::createUninitialized(world, newByteLength, range.charCount);
-	
+
 	if (thisRef->dataIsInline() && (oldThis != thisRef.data()))
 	{
 		// The allocator ran and moved us along with our inline data

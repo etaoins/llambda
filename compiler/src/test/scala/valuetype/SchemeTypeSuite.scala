@@ -28,11 +28,11 @@ trait SchemeTypeSuite extends FunSuite {
       PairType(FlonumType,
         EmptyListType)))
 
-  protected def nonEmptyProperList(memberType : SchemeType) : SchemeType = 
+  protected def nonEmptyProperList(memberType: SchemeType): SchemeType =
     PairType(memberType, UniformProperListType(memberType))
 
-  protected def assertIntersection(type1 : SchemeType, type2 : SchemeType, resultType : SchemeType) {
-    assert((type1 & type2) === resultType) 
-    assert((type2 & type1) === resultType) 
+  protected def assertIntersection(type1: SchemeType, type2: SchemeType, resultType: SchemeType) {
+    assert((type1 & type2) === resultType)
+    assert((type2 & type1) === resultType)
   }
 }

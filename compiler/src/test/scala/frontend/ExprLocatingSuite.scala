@@ -6,15 +6,15 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
-  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
-  
+  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
+
   val plusLoc = new StorageLocation("+")
   implicit val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
   test("variable references are located") {
     assertExprLocated(exprFor("+"))
   }
-  
+
   test("applications are located") {
     assertExprLocated(exprFor("(+ 1 2)"))
   }
@@ -32,13 +32,13 @@ class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
       includePath=testutil.NonTrivialProgram.includePath,
       featureIdentifiers=Set()
     )
-    
+
     val compileConfig = CompileConfig(
       includePath=includePath,
       optimiseLevel=0,
       targetPlatform=platform.Posix64LE
     )
-  
+
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
     val expressions = frontend.ExtractProgram(testutil.NonTrivialProgram.data)(loader, frontendConfig)
 

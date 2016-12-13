@@ -11,7 +11,7 @@ import llambda.compiler.planner.{step => ps}
   * procedures to use bounded space as required by Scheme.
   */
 object FindTailCalls extends FunctionConniver {
-  private def replaceTailStep(tailStep : ps.Step, retValueOpt : Option[ps.TempValue]) : (ps.Step, Boolean) = tailStep match {
+  private def replaceTailStep(tailStep: ps.Step, retValueOpt: Option[ps.TempValue]): (ps.Step, Boolean) = tailStep match {
     case ps.Invoke(`retValueOpt`, signature, entryPoint, arguments, _, _)  =>
       // This is a tail call - replace the ps.Invoke with an equivalent ps.TailCall
       val replacedStep = ps.TailCall(signature, entryPoint, arguments)
@@ -32,11 +32,11 @@ object FindTailCalls extends FunctionConniver {
       // We might still need the return if one of the branches wasn't converted to a tail call
       (replacedStep, false)
 
-    case other => 
+    case other =>
       (other, false)
   }
 
-  private def replaceBranchTailCalls(reverseSteps : List[ps.Step], branchResult : ps.TempValue) : List[ps.Step] =
+  private def replaceBranchTailCalls(reverseSteps: List[ps.Step], branchResult: ps.TempValue): List[ps.Step] =
     reverseSteps match {
       case tailStep :: reverseTail =>
         val (replacedStep, _) = replaceTailStep(tailStep, Some(branchResult))
@@ -46,7 +46,7 @@ object FindTailCalls extends FunctionConniver {
         Nil
     }
 
-  private def replaceTailCalls(reverseSteps : List[ps.Step], acc : List[ps.Step]) : List[ps.Step] =
+  private def replaceTailCalls(reverseSteps: List[ps.Step], acc: List[ps.Step]): List[ps.Step] =
     reverseSteps match {
       case (retStep @ ps.Return(retValueOpt)) :: tailStep :: reverseTail =>
         // Attempt to replace the step
@@ -68,10 +68,10 @@ object FindTailCalls extends FunctionConniver {
         acc
     }
 
-  protected[conniver] def conniveSteps(steps : List[ps.Step]) : List[ps.Step] =
+  protected[conniver] def conniveSteps(steps: List[ps.Step]): List[ps.Step] =
     replaceTailCalls(steps.reverse, Nil)
 
-  protected def conniveFunction(function : PlannedFunction) : PlannedFunction = {
+  protected def conniveFunction(function: PlannedFunction): PlannedFunction = {
     function.copy(
       steps=conniveSteps(function.steps)
     )

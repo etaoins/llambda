@@ -11,7 +11,7 @@ trait StdlibProcPlannerHelpers {
     * If this fails a RangeException will be thrown; the function will return normally otherwise. This will throw
     * errors consistent with runtime/util/rangeAssertions.h
     */
-  protected def assertIndexValid(procName : String, length : Long, index : Long)(implicit plan : PlanWriter) : Unit =
+  protected def assertIndexValid(procName: String, length: Long, index: Long)(implicit plan: PlanWriter): Unit =
     if (index >= length) {
       throw new RangeException(
         plan.activeContextLocated,
@@ -30,11 +30,11 @@ trait StdlibProcPlannerHelpers {
     * If this fails a RangeException will be thrown; the function will return normally otherwise.
     */
   protected def assertLengthValid(
-      procName : String,
-      lengthName : String,
-      maxLength : Long,
-      length : Long
-  )(implicit plan : PlanWriter) : Unit =
+      procName: String,
+      lengthName: String,
+      maxLength: Long,
+      length: Long
+  )(implicit plan: PlanWriter): Unit =
     if (length > maxLength) {
       throw new RangeException(
         plan.activeContextLocated,

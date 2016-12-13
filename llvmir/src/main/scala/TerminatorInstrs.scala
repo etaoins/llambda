@@ -1,7 +1,7 @@
 package io.llambda.llvmir
- 
+
 private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
-  def ret(value : IrValue) {
+  def ret(value: IrValue) {
     addInstruction(s"ret ${value.toIrWithType}")
     terminateBlock()
   }
@@ -11,7 +11,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     terminateBlock()
   }
 
-  def condBranch(cond : IrValue, trueBlock : IrBranchTarget, falseBlock : IrBranchTarget) {
+  def condBranch(cond: IrValue, trueBlock: IrBranchTarget, falseBlock: IrBranchTarget) {
     if (cond.irType != IntegerType(1)) {
       throw new InconsistentIrException("Attempted to branch using non-i1")
     }
@@ -20,7 +20,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     terminateBlock()
   }
 
-  def uncondBranch(block : IrBranchTarget) {
+  def uncondBranch(block: IrBranchTarget) {
     addInstruction(s"br label %${block.label}")
     terminateBlock()
   }
@@ -30,9 +30,9 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     terminateBlock()
   }
 
-  def switch(testValue : IrValue, defaultBlock : IrBranchTarget, entries : (Long, IrBranchTarget)*) {
+  def switch(testValue: IrValue, defaultBlock: IrBranchTarget, entries: (Long, IrBranchTarget)*) {
     val testValueType = testValue.irType match {
-      case integerType : IntegerType =>
+      case integerType: IntegerType =>
         integerType
 
       case _ =>
@@ -57,30 +57,30 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     addInstruction(s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]")
     terminateBlock()
   }
-  
-  def invokeDecl(resultDestOpt : Option[ResultDestination])(
-      decl : IrFunctionDeclLike,
-      arguments : Seq[IrValue],
-      normalBlock : IrBranchTarget,
-      exceptionBlock : IrBranchTarget,
-      metadata : Map[String, Metadata] = Map()
-  ) : Option[LocalVariable] = {
+
+  def invokeDecl(resultDestOpt: Option[ResultDestination])(
+      decl: IrFunctionDeclLike,
+      arguments: Seq[IrValue],
+      normalBlock: IrBranchTarget,
+      exceptionBlock: IrBranchTarget,
+      metadata: Map[String, Metadata] = Map()
+  ): Option[LocalVariable] = {
     invoke(resultDestOpt)(decl, decl.irValue, arguments, normalBlock, exceptionBlock, metadata)
   }
 
-  def invoke(resultDestOpt : Option[ResultDestination])(
-      signature : IrSignatureLike,
-      functionPtr : IrValue,
-      arguments : Seq[IrValue],
-      normalBlock : IrBranchTarget,
-      exceptionBlock : IrBranchTarget,
-      metadata : Map[String, Metadata] = Map()
-  ) : Option[LocalVariable] = {
+  def invoke(resultDestOpt: Option[ResultDestination])(
+      signature: IrSignatureLike,
+      functionPtr: IrValue,
+      arguments: Seq[IrValue],
+      normalBlock: IrBranchTarget,
+      exceptionBlock: IrBranchTarget,
+      metadata: Map[String, Metadata] = Map()
+  ): Option[LocalVariable] = {
     // We only return a result for non-void result types if they specify a result name
     val resultVarOpt = signature.result.irType match {
       case VoidType =>
         None
-      case otherType : FirstClassType =>
+      case otherType: FirstClassType =>
         resultDestOpt.map(_.asLocalVariable(nameSource, otherType))
     }
 
@@ -103,7 +103,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     resultVarOpt
   }
 
-  def resume(resumeValue : IrValue) {
+  def resume(resumeValue: IrValue) {
     addInstruction(s"resume ${resumeValue.toIrWithType}")
     terminateBlock()
   }

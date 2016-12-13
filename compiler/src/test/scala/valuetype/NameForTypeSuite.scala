@@ -7,7 +7,7 @@ import llambda.compiler.{celltype => ct}
 import Implicits._
 
 class NameForTypeSuite extends FunSuite {
-  private def binaryTreeType(memberType : SchemeType) : SchemeType =
+  private def binaryTreeType(memberType: SchemeType): SchemeType =
     SchemeType.fromTypeUnion(List(
       memberType,
       SpecificPairType(
@@ -23,27 +23,27 @@ class NameForTypeSuite extends FunSuite {
   test("<native-int32>") {
     assert(NameForType(Int32) === "<native-int32>")
   }
-  
+
   test("<native-uint8>") {
     assert(NameForType(UInt8) === "<native-uint8>")
   }
-  
+
   test("<native-float>") {
     assert(NameForType(Float) === "<native-float>")
   }
-  
+
   test("<native-double>") {
     assert(NameForType(Double) === "<native-double>")
   }
-  
+
   test("<native-unicode-char>") {
     assert(NameForType(UnicodeChar) === "<native-unicode-char>")
   }
-  
+
   test("<boolean>") {
     assert(NameForType(BooleanType) === "<boolean>")
   }
-  
+
   test("<number>") {
     assert(NameForType(NumberType) === "<number>")
   }
@@ -57,16 +57,16 @@ class NameForTypeSuite extends FunSuite {
     val pairType = PairType(IntegerType, FlonumType)
     assert(NameForType(pairType) === "(Pairof <integer> <flonum>)")
   }
-  
+
   test("<pair>") {
     val pairType = PairType(AnySchemeType, AnySchemeType)
     assert(NameForType(pairType) === "<pair>")
   }
-  
+
   test("(Listof <symbol>)") {
     assert(NameForType(UniformProperListType(SymbolType)) === "(Listof <symbol>)")
   }
-  
+
   test("(Listof (Listof <symbol>))") {
     assert(NameForType(
       UniformProperListType(
@@ -76,7 +76,7 @@ class NameForTypeSuite extends FunSuite {
       )
     ) === "(Listof (Listof <symbol>))")
   }
-  
+
   test("(Listof <any>)") {
     val pairType = PairType(AnySchemeType, AnySchemeType)
     assert(NameForType(UniformProperListType(AnySchemeType)) === "(Listof <any>)")
@@ -98,7 +98,7 @@ class NameForTypeSuite extends FunSuite {
   test("single type union") {
     assert(NameForType(UnionType(Set(PortType))) === "<port>")
   }
-  
+
   test("multiple type union") {
     val memberTypes = Set[NonUnionSchemeType](TopProcedureType, EmptyListType, UnitType)
     assert(NameForType(UnionType(memberTypes)) === "(U (-> <any> * <any>) <empty-list> <unit>)")

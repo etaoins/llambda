@@ -7,7 +7,7 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 class ExtractExternalRecordTypeSuite extends FunSuite with Inside with testutil.ExprHelpers {
-  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
 
   test("external record type without name or predicate") {
@@ -32,7 +32,7 @@ class ExtractExternalRecordTypeSuite extends FunSuite with Inside with testutil.
 
 
     inside(scope("<e-r-t>")) {
-      case BoundType(predType : vt.ExternalRecordType) =>
+      case BoundType(predType: vt.ExternalRecordType) =>
         assert(predType.sourceNameOpt === Some("<e-r-t>"))
         assert(predType.predicateOpt === Some(vt.ExternalRecordTypePredicate(
           library=NativeSystemLibrary,

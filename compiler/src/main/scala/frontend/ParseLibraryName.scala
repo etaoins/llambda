@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 
 private[frontend] object ParseLibraryName {
-  def apply(datum : ast.Datum) : List[String] = datum match {
+  def apply(datum: ast.Datum): List[String] = datum match {
     case ast.ProperList(firstComponent :: restComponent) =>
       (firstComponent :: restComponent) map {
         case ast.Symbol(str) => str

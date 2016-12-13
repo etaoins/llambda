@@ -6,9 +6,9 @@ import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
 object GenIntegerConversion {
-  def apply(block : IrBlockBuilder)(fromValue : IrValue, toBits : Int, signed : Boolean) : IrValue = {
+  def apply(block: IrBlockBuilder)(fromValue: IrValue, toBits: Int, signed: Boolean): IrValue = {
     val currentType = fromValue.irType match {
-      case intType : IntegerType => intType
+      case intType: IntegerType => intType
       case _ =>
         throw new InternalCompilerErrorException("Attempted to integer convert non-integer")
     }

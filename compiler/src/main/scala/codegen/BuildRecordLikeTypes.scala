@@ -26,37 +26,37 @@ object TypeDataStorage extends Enumeration {
   * @param  storageType        Storage type of the record data
   */
 case class GeneratedType(
-    recordLikeType : vt.RecordLikeType,
-    irType : UserDefinedType,
-    classId : Long,
-    lastChildClassId : Long,
-    fieldToTbaaNode : Map[vt.RecordField, Metadata],
-    fieldToGepIndices : Map[vt.RecordField, List[Int]],
-    storageType : TypeDataStorage.Value
+    recordLikeType: vt.RecordLikeType,
+    irType: UserDefinedType,
+    classId: Long,
+    lastChildClassId: Long,
+    fieldToTbaaNode: Map[vt.RecordField, Metadata],
+    fieldToGepIndices: Map[vt.RecordField, List[Int]],
+    storageType: TypeDataStorage.Value
 )
 
 object BuildRecordLikeTypes {
   private case class BuildConfig(
-      module : IrModuleBuilder,
-      childTypesByParent : Map[vt.RecordLikeType, List[vt.RecordLikeType]],
-      targetPlatform : TargetPlatform
+      module: IrModuleBuilder,
+      childTypesByParent: Map[vt.RecordLikeType, List[vt.RecordLikeType]],
+      targetPlatform: TargetPlatform
   )
 
   private case class IntermediateResult(
-      nextClassId : Long = 0,
-      generatedTypes : Map[vt.RecordLikeType, GeneratedType] = Map()
+      nextClassId: Long = 0,
+      generatedTypes: Map[vt.RecordLikeType, GeneratedType] = Map()
   )
 
-  private def typeAndAllParents(recordLikeType : vt.RecordLikeType) : List[vt.RecordLikeType] = {
+  private def typeAndAllParents(recordLikeType: vt.RecordLikeType): List[vt.RecordLikeType] = {
     recordLikeType :: recordLikeType.parentRecordOpt.map(typeAndAllParents).getOrElse(Nil)
   }
 
-  private def findAllRecordTypes(steps : Iterable[ps.Step]) : List[vt.RecordLikeType] = {
+  private def findAllRecordTypes(steps: Iterable[ps.Step]): List[vt.RecordLikeType] = {
     (steps.flatMap {
-      case recordStep : ps.RecordLikeStep =>
+      case recordStep: ps.RecordLikeStep =>
         typeAndAllParents(recordStep.recordLikeType)
 
-      case nestingStep : ps.NestingStep =>
+      case nestingStep: ps.NestingStep =>
         nestingStep.innerBranches.flatMap({ case (steps, _) =>
           findAllRecordTypes(steps).toSeq
         })
@@ -67,10 +67,10 @@ object BuildRecordLikeTypes {
   }
 
   private def generateType(
-      nextClassId : Long,
-      parentGeneratedTypeOpt : Option[GeneratedType],
-      recordLikeType : vt.RecordLikeType
-  )(implicit config : BuildConfig) : IntermediateResult = {
+      nextClassId: Long,
+      parentGeneratedTypeOpt: Option[GeneratedType],
+      recordLikeType: vt.RecordLikeType
+  )(implicit config: BuildConfig): IntermediateResult = {
     val module = config.module
 
     val childTypes = config.childTypesByParent.get(recordLikeType).getOrElse(Nil)
@@ -91,10 +91,10 @@ object BuildRecordLikeTypes {
     }
     else {
       val inlineDataSize = (recordLikeType match {
-        case _ : vt.RecordType =>
+        case _: vt.RecordType =>
           // Records have two pointer sized fields for inline data storage
           2
-        case _ : vt.ClosureType =>
+        case _: vt.ClosureType =>
           // Procedures have one pointer for inline storage. The second pointer points to the procedure's entry point
           1
       }) * (config.targetPlatform.pointerBits / 8)
@@ -200,7 +200,7 @@ object BuildRecordLikeTypes {
     )
   }
 
-  private def emitTypeMaps(module : IrModuleBuilder, generatedTypes : Map[vt.RecordLikeType, GeneratedType]) {
+  private def emitTypeMaps(module: IrModuleBuilder, generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     val offsetIrType = IntegerType(32)
 
     // Output the type maps for each generated type
@@ -249,7 +249,7 @@ object BuildRecordLikeTypes {
       module.defineGlobalVariable(typeMapDef)
 
       ElementPointerConstant(offsetIrType, typeMapDef.variable, List(0, 0))
-    } : List[IrConstant]
+    }: List[IrConstant]
 
     val classMapConstant = ArrayConstant(PointerType(offsetIrType), classMapEntries)
 
@@ -266,10 +266,10 @@ object BuildRecordLikeTypes {
   }
 
   def apply(
-      module : IrModuleBuilder,
-      functions : Map[String, planner.PlannedFunction],
-      targetPlatform : TargetPlatform
-  ) : Map[vt.RecordLikeType, GeneratedType] = {
+      module: IrModuleBuilder,
+      functions: Map[String, planner.PlannedFunction],
+      targetPlatform: TargetPlatform
+  ): Map[vt.RecordLikeType, GeneratedType] = {
     // Make sure EmptyClosureType is always type ID 0 as the runtime uses this to implement (eqv?) for non-capturing
     // procedures
     val allTypes = (vt.EmptyClosureType :: findAllRecordTypes(functions.flatMap(_._2.steps))).distinct

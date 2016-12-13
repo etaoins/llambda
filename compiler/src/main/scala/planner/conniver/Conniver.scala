@@ -15,8 +15,8 @@ abstract class Conniver extends Function1[Map[String, PlannedFunction], Map[Stri
   * This is a helper class for a common conniver pattern
   */
 abstract class FunctionConniver extends Conniver {
-  protected def conniveFunction(function : PlannedFunction) : PlannedFunction
+  protected def conniveFunction(function: PlannedFunction): PlannedFunction
 
-  def apply(plannedFunctions : Map[String, PlannedFunction]) : Map[String, PlannedFunction] =
+  def apply(plannedFunctions: Map[String, PlannedFunction]): Map[String, PlannedFunction] =
     plannedFunctions.mapValues(conniveFunction)
 }

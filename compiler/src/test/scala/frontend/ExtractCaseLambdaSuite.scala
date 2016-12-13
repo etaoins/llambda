@@ -8,7 +8,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
 class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
 
   test("(case-lambda) with no clauses") {

@@ -4,8 +4,8 @@ import io.llambda
 import org.scalatest.FunSuite
 import llambda.compiler._
 
-class ResolveImportDeclSuite extends FunSuite { 
-  def bindingFor(scheme : String) = {
+class ResolveImportDeclSuite extends FunSuite {
+  def bindingFor(scheme: String) = {
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(Nil),
       featureIdentifiers=Set()
@@ -15,20 +15,20 @@ class ResolveImportDeclSuite extends FunSuite {
 
     ResolveImportDecl(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
-  
+
   test("import all primitives") {
     val binding = bindingFor("(import (llambda internal primitives))")
 
     assert(binding("set!") === Primitives.Set)
   }
-  
+
   test("import only") {
     val binding = bindingFor("(import (only (llambda internal primitives) set! lambda))")
 
     assert(binding === Map("set!" -> Primitives.Set,
                            "lambda" -> Primitives.Lambda))
   }
-  
+
   test("import except") {
     val binding = bindingFor("(import (except (llambda internal primitives) if quote))")
 

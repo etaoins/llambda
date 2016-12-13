@@ -6,7 +6,7 @@ import io.llambda.typegen._
 import io.llambda.llvmir
 
 object WriteLlvmCellTypes extends writer.OutputWriter {
-  private def defineCellClass(cellClass : CellClass) : String = {
+  private def defineCellClass(cellClass: CellClass): String = {
     val sourceString = new collection.mutable.StringBuilder
 
     // Build the description chunks for our comment
@@ -19,8 +19,8 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
       }
     }
 
-    sourceString ++= "; {" + ("supertype" :: fieldDescriptions).mkString(", ") + "}\n" 
-    
+    sourceString ++= "; {" + ("supertype" :: fieldDescriptions).mkString(", ") + "}\n"
+
     // Find the LLVM types for our fields
     val fieldLlvmTypes = cellClass.fields map { field =>
       FieldTypeToLlvm(field.fieldType)
@@ -35,8 +35,8 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
     val allMemberTypes = superLlvmType.toList ++ fieldLlvmTypes
     val cellClassLlvmType = llvmir.StructureType(allMemberTypes)
 
-    sourceString ++= llvmir.UserDefinedType(cellClass.names.llvmName) + " = type " + cellClassLlvmType + "\n" 
-    
+    sourceString ++= llvmir.UserDefinedType(cellClass.names.llvmName) + " = type " + cellClassLlvmType + "\n"
+
     // Define our TBAA nodes
     for(metadataDef <- cellClass.fieldTbaaNodes.values) {
       sourceString ++= metadataDef.toIr + "\n"
@@ -45,7 +45,7 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
     sourceString.toString
   }
 
-  def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
+  def apply(processedTypes: ProcessedTypes): Map[String, String] = {
     val sourceString = new collection.mutable.StringBuilder
 
     sourceString ++= ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n"
@@ -56,7 +56,7 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
       sourceString ++= "\n"
       sourceString ++= defineCellClass(cellClass)
     }
-    
+
     Map("compiler/src/main/resources/generated/cellTypes.ll" -> sourceString.toString)
   }
 }

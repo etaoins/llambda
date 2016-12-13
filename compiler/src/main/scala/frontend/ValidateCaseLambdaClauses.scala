@@ -9,7 +9,7 @@ private[frontend] object ValidateCaseLambdaClauses {
     *
     * Thie ensures that no clauses are unconditionally shadowed by the signature of a previous clause
     */
-  def apply(clauses : List[(SourceLocated, vt.ProcedureType)]) {
+  def apply(clauses: List[(SourceLocated, vt.ProcedureType)]) {
     for ((located, clause) <- clauses) {
       if (clause.optionalArgTypes.length > 0) {
         throw new BadSpecialFormException(located, "Optional arguments cannot be used with case lambdas")

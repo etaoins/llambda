@@ -18,7 +18,7 @@ object NonTrivialProgram {
   private val lifeBaseDir = "life-example/"
   private val lifeBaseUrl = getClass.getClassLoader.getResource(lifeBaseDir)
 
-  lazy val data : List[ast.Datum] = { 
+  lazy val data: List[ast.Datum] = {
     val lifeProgramPath = s"${lifeBaseDir}life.scm"
 
     val includePath = frontend.IncludePath(List(lifeBaseUrl))

@@ -9,7 +9,7 @@ object CompactRepresentationForType extends (vt.ValueType => vt.ValueType) {
     * Compact in this context refers to both the memory and garbage collector overhead of the type. This is typically an
     * unboxed value for types that have unboxed representations
     */
-  def apply(valueType : vt.ValueType) : vt.ValueType = valueType match {
+  def apply(valueType: vt.ValueType): vt.ValueType = valueType match {
     case vt.IntegerType => vt.Int64
     case vt.FlonumType => vt.Double
     case vt.BooleanType => vt.Predicate

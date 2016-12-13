@@ -8,7 +8,7 @@ import llambda.compiler.valuetype.Implicits._
 
 sealed abstract class Datum extends SourceLocated {
   /** Scheme type for this datum */
-  val schemeType : vt.NonUnionSchemeType
+  val schemeType: vt.NonUnionSchemeType
 }
 
 sealed abstract class Leaf extends Datum
@@ -21,10 +21,10 @@ case class UnitValue() extends NonSymbolLeaf {
   override def toString = "#!unit"
 }
 
-case class StringLiteral(content : String) extends NonSymbolLeaf {
+case class StringLiteral(content: String) extends NonSymbolLeaf {
   val schemeType = vt.StringType
 
-  private def escapedContent = 
+  private def escapedContent =
     content.replaceAllLiterally("\\", "\\" + "\\")
            .replaceAllLiterally("\"", "\\" + "\"")
 
@@ -32,7 +32,7 @@ case class StringLiteral(content : String) extends NonSymbolLeaf {
     '"' + escapedContent + '"'
 }
 
-case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
+case class BooleanLiteral(value: Boolean) extends NonSymbolLeaf {
   val schemeType = vt.LiteralBooleanType(value)
 
   override def toString = value match {
@@ -41,20 +41,20 @@ case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
   }
 }
 
-sealed abstract class NumberLiteral extends NonSymbolLeaf 
+sealed abstract class NumberLiteral extends NonSymbolLeaf
 
-case class IntegerLiteral(value : Long) extends NumberLiteral {
+case class IntegerLiteral(value: Long) extends NumberLiteral {
   val schemeType = vt.IntegerType
 
   override def toString = value.toString
 }
 
-case class FlonumLiteral(value : Double) extends NumberLiteral {
+case class FlonumLiteral(value: Double) extends NumberLiteral {
   val schemeType = vt.FlonumType
-  
+
   // Consider all NaN literals to be equal
   // This is different from numeric equality which indeed doesn't make sense for NaNs
-  override def equals(other : Any) : Boolean = other match {
+  override def equals(other: Any): Boolean = other match {
     case FlonumLiteral(otherValue) =>
       if (otherValue.isNaN) {
         value.isNaN
@@ -87,7 +87,7 @@ object NaNLiteral {
   def apply() =  FlonumLiteral(Double.NaN)
 }
 
-case class Symbol(name : String) extends Leaf {
+case class Symbol(name: String) extends Leaf {
   val schemeType = vt.LiteralSymbolType(name)
 
   override def toString = if (SchemeParser.isValidIdentifier(name)) {
@@ -104,7 +104,7 @@ case class EmptyList() extends NonSymbolLeaf {
   override def toString = "()"
 }
 
-case class Pair(car : Datum, cdr : Datum) extends Datum {
+case class Pair(car: Datum, cdr: Datum) extends Datum {
   val schemeType = vt.PairType(car.schemeType, cdr.schemeType)
 
   override def toString = this match {
@@ -121,8 +121,8 @@ case class Pair(car : Datum, cdr : Datum) extends Datum {
 }
 
 object AnyList {
-  def unapply(datum : Datum) : Option[(List[Datum], Datum)] = datum match {
-    case Pair(car, tail : Pair)  => 
+  def unapply(datum: Datum): Option[(List[Datum], Datum)] = datum match {
+    case Pair(car, tail: Pair)  =>
       AnyList.unapply(tail).map { case (head, terminator) =>
         (car :: head, terminator)
       }
@@ -132,15 +132,15 @@ object AnyList {
     case _ => None
   }
 
-  def apply(head : Seq[Datum], terminator : Datum) = {
-    head.foldRight(terminator : Datum) { (car, cdr) => Pair(car, cdr) }
+  def apply(head: Seq[Datum], terminator: Datum) = {
+    head.foldRight(terminator: Datum) { (car, cdr) => Pair(car, cdr) }
   }
 }
 
 object ImproperList {
-  def unapply(datum : Datum) : Option[(List[Datum], Datum)] = datum match {
+  def unapply(datum: Datum): Option[(List[Datum], Datum)] = datum match {
     case Pair(_, EmptyList()) => None // This is a proper list
-    case Pair(car, tail : Pair)  => 
+    case Pair(car, tail: Pair)  =>
       ImproperList.unapply(tail).map { case (head, terminator) =>
         (car :: head, terminator)
       }
@@ -152,31 +152,31 @@ object ImproperList {
 }
 
 object ProperList {
-  def unapply(datum : Datum) : Option[List[Datum]] = datum match {
+  def unapply(datum: Datum): Option[List[Datum]] = datum match {
     case EmptyList() => Some(Nil)
     case Pair(car, cdr) => ProperList.unapply(cdr).map(car :: _)
     case _ => None
   }
 
-  def apply(data : Seq[Datum]) : Datum = 
-    data.foldRight(EmptyList() : Datum) { (car, cdr) => Pair(car, cdr) }
+  def apply(data: Seq[Datum]): Datum =
+    data.foldRight(EmptyList(): Datum) { (car, cdr) => Pair(car, cdr) }
 }
 
-case class VectorLiteral(elements : Vector[Datum]) extends Datum {
+case class VectorLiteral(elements: Vector[Datum]) extends Datum {
   val schemeType = vt.VectorType
 
   override def toString =
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class Bytevector(elements : Vector[Short]) extends NonSymbolLeaf {
+case class Bytevector(elements: Vector[Short]) extends NonSymbolLeaf {
   val schemeType = vt.BytevectorType
 
-  override def toString = 
+  override def toString =
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class CharLiteral(codePoint : Int) extends NonSymbolLeaf {
+case class CharLiteral(codePoint: Int) extends NonSymbolLeaf {
   val schemeType = vt.CharType
 
   override def toString = codePoint match {

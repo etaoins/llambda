@@ -16,12 +16,12 @@ private[planner] object ValuesToPair {
     * @param  listLengthOpt  Optional length of the proper list this pair is the head of
     */
   def apply(
-      carValue : iv.IntermediateValue,
-      cdrValue : iv.IntermediateValue,
-      listLengthOpt : Option[Long]
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      carValue: iv.IntermediateValue,
+      cdrValue: iv.IntermediateValue,
+      listLengthOpt: Option[Long]
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     (carValue, cdrValue) match {
-      case (constantCar : iv.ConstantValue, constantCdr : iv.ConstantValue) =>
+      case (constantCar: iv.ConstantValue, constantCdr: iv.ConstantValue) =>
         // We can make this a constant pair
         return iv.ConstantPairValue(constantCar, constantCdr)
 

@@ -6,7 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.InternalCompilerErrorException
 
 object GenSetRecordDataField {
-  def apply(block : IrBlockBuilder)(recordDataIr : IrValue, generatedType : GeneratedType, recordField : vt.RecordField, newValueIr : IrValue) {
+  def apply(block: IrBlockBuilder)(recordDataIr: IrValue, generatedType: GeneratedType, recordField: vt.RecordField, newValueIr: IrValue) {
     val fieldIndices = generatedType.fieldToGepIndices(recordField)
     val fieldType = generatedType.recordLikeType.typeForField(recordField)
     val fieldIrType = ValueTypeToIr(fieldType).irType

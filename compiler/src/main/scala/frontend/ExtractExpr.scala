@@ -8,10 +8,10 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 
 private[frontend] object ExtractExpr {
   private def extractInclude(
-      located : SourceLocated,
-      scope : Scope,
-      includeNameData : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : et.Expr = {
+      located: SourceLocated,
+      scope: Scope,
+      includeNameData: List[sst.ScopedDatum]
+  )(implicit context: FrontendContext): et.Expr = {
     val includeData = ResolveIncludeList(located, includeNameData.map(_.unscope))(context.config.includePath)
 
     val scopedData = includeData.map(sst.ScopedDatum(scope, _))
@@ -19,12 +19,12 @@ private[frontend] object ExtractExpr {
   }
 
   private def extractNonDefineApplication(
-      boundValue : BoundValue,
-      appliedSymbol : sst.ScopedSymbol,
-      operands : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : et.Expr = {
+      boundValue: BoundValue,
+      appliedSymbol: sst.ScopedSymbol,
+      operands: List[sst.ScopedDatum]
+  )(implicit context: FrontendContext): et.Expr = {
     (boundValue, operands) match {
-      case (storageLoc : StorageLocation, args) =>
+      case (storageLoc: StorageLocation, args) =>
         et.Apply(
           et.VarRef(storageLoc).assignLocationAndContextFrom(appliedSymbol, context.debugContext),
           args.map(ExtractExpr.apply)
@@ -49,9 +49,9 @@ private[frontend] object ExtractExpr {
           et.Literal(ast.UnitValue()).assignLocationAndContextFrom(appliedSymbol, context.debugContext)
         )
 
-      case (Primitives.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (Primitives.Set, (mutatingSymbol: sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
-          case storageLoc : StorageLocation =>
+          case storageLoc: StorageLocation =>
             if (storageLoc.forceImmutable) {
               throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) of immutable binding ${mutatingSymbol.name}")
             }
@@ -134,7 +134,7 @@ private[frontend] object ExtractExpr {
 
       case (Primitives.MakePredicate, List(typeDatum)) =>
         val nonProcType = ExtractType.extractSchemeType(typeDatum) match {
-          case _ : vt.ProcedureType =>
+          case _: vt.ProcedureType =>
             throw new BadSpecialFormException(typeDatum, "Creating procedure predicates it not possible; procedures of different types do not have distinct runtime representations")
 
           case nonProcType =>
@@ -159,11 +159,11 @@ private[frontend] object ExtractExpr {
     * @param  operands       Operands for the symbol application
     */
   private def extractApplication(
-      boundValue : BoundValue,
-      appliedSymbol : sst.ScopedSymbol,
-      operands : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : et.Expr = boundValue match {
-    case primitiveDefine : PrimitiveDefineExpr =>
+      boundValue: BoundValue,
+      appliedSymbol: sst.ScopedSymbol,
+      operands: List[sst.ScopedDatum]
+  )(implicit context: FrontendContext): et.Expr = boundValue match {
+    case primitiveDefine: PrimitiveDefineExpr =>
       throw new DefinitionOutsideTopLevelException(appliedSymbol)
 
     case _ =>
@@ -177,10 +177,10 @@ private[frontend] object ExtractExpr {
     *
     * If definitions are allowed in this level they should be handled before calling this method
     */
-  def apply(datum : sst.ScopedDatum)(implicit context : FrontendContext) : et.Expr = (datum match {
-    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+  def apply(datum: sst.ScopedDatum)(implicit context: FrontendContext): et.Expr = (datum match {
+    case sst.ScopedPair(appliedSymbol: sst.ScopedSymbol, cdr) =>
       appliedSymbol.resolve match {
-        case syntax : BoundSyntax =>
+        case syntax: BoundSyntax =>
           // This is a macro - expand it
           val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=context.config.traceMacroExpansion)
 
@@ -217,43 +217,43 @@ private[frontend] object ExtractExpr {
       val procedureExpr = ExtractExpr(procedure)
       et.Apply(procedureExpr, args.map(ExtractExpr.apply))
 
-    case scopedSymbol : sst.ScopedSymbol =>
+    case scopedSymbol: sst.ScopedSymbol =>
       scopedSymbol.resolve match {
-        case storageLoc : StorageLocation =>
+        case storageLoc: StorageLocation =>
           et.VarRef(storageLoc)
 
-        case _ : BoundSyntax =>
+        case _: BoundSyntax =>
           throw new MalformedExprException(scopedSymbol, "Syntax cannot be used as an expression")
 
-        case _ : PrimitiveExpr =>
+        case _: PrimitiveExpr =>
           throw new MalformedExprException(scopedSymbol, "Primitive cannot be used as an expression")
 
-        case _ : TypeConstructor =>
+        case _: TypeConstructor =>
           throw new MalformedExprException(scopedSymbol, "Type constructor cannot be used as an expression")
 
-        case _ : BoundType =>
+        case _: BoundType =>
           throw new MalformedExprException(scopedSymbol, "Type cannot be used as an expression")
 
-        case _ : NativeLibrary =>
+        case _: NativeLibrary =>
           throw new MalformedExprException(scopedSymbol, "Native library cannot be used as an expression")
       }
 
     // These all evaluate to themselves. See R7RS section 4.1.2
-    case literal : sst.ScopedVectorLiteral =>
+    case literal: sst.ScopedVectorLiteral =>
       et.Literal(literal.unscope)
-    case sst.NonSymbolLeaf(literal : ast.NumberLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.NumberLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal : ast.StringLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.StringLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal : ast.CharLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.CharLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal : ast.Bytevector) =>
+    case sst.NonSymbolLeaf(literal: ast.Bytevector) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal : ast.BooleanLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.BooleanLiteral) =>
       et.Literal(literal)
 
     // Additionally treat #!unit as self-evaluating
-    case sst.NonSymbolLeaf(literal : ast.UnitValue) =>
+    case sst.NonSymbolLeaf(literal: ast.UnitValue) =>
       et.Literal(literal)
 
     case malformed =>

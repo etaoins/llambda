@@ -8,5 +8,5 @@ trait KnownRecord {
     *
     * This may contain only a subset of the record's fields. For example, this will not contain any mutable fields.
     */
-  val knownFieldValues : Map[vt.RecordField, IntermediateValue]
+  val knownFieldValues: Map[vt.RecordField, IntermediateValue]
 }

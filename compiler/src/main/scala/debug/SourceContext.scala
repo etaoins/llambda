@@ -17,23 +17,23 @@ case object UnknownContext extends SourceContext
 
 /** Represents the top-level context of a file
   *
-  * This is a case class because top-level subprograms are defined entirely by their filename 
+  * This is a case class because top-level subprograms are defined entirely by their filename
   */
-case class FileContext(filename : String) extends SourceContext
+case class FileContext(filename: String) extends SourceContext
 
-/** Represents a subprogram (context) procedure in the Scheme source 
+/** Represents a subprogram (context) procedure in the Scheme source
   *
   * This is not a case class because the source procedures filename, start line and source name aren't necessarily
   * unique.
   */
 class SubprogramContext(
-    val parentContext : SourceContext,
-    val filenameOpt : Option[String],
-    val startLocation : SourceLocation,
-    val sourceNameOpt : Option[String]
+    val parentContext: SourceContext,
+    val filenameOpt: Option[String],
+    val startLocation: SourceLocation,
+    val sourceNameOpt: Option[String]
 ) extends SourceContext
 
 object SourceContext {
-  def fromFilenameOpt(filenameOpt : Option[String]) =
+  def fromFilenameOpt(filenameOpt: Option[String]) =
     filenameOpt.map(FileContext(_)).getOrElse(UnknownContext)
 }

@@ -2,7 +2,7 @@ package io.llambda.compiler.platform
 import io.llambda
 
 object DetectLlvmTarget {
-  def fromLlvmIr(llvmir : String) : Option[TargetPlatform] = {
+  def fromLlvmIr(llvmir: String): Option[TargetPlatform] = {
     //val TripleString = """(?m)^target triple\s*=\s*"([^"]*)"\s*$""".r
     val TripleString = """(?m)^\s*target\s+triple\s*=\s*"([^"]*)"\s*$""".r
 
@@ -11,7 +11,7 @@ object DetectLlvmTarget {
     }
   }
 
-  def fromTargetTriple(triple : String) : Option[TargetPlatform] = {
+  def fromTargetTriple(triple: String): Option[TargetPlatform] = {
     val Arm32ArchPattern = "^arm.*".r
     val Ia32ArchPattern = "^i[3-9]86$".r
 

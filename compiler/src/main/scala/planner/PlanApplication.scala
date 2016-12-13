@@ -9,13 +9,13 @@ import llambda.compiler.ArityException
 import llambda.compiler.codegen.CostForPlanSteps
 
 private[planner] object PlanApplication {
-  def apply(state : PlannerState)(
-      procExpr : et.Expr,
-      argExprs : List[et.Expr]
-  )(implicit plan : PlanWriter) : PlanResult = {
+  def apply(state: PlannerState)(
+      procExpr: et.Expr,
+      argExprs: List[et.Expr]
+  )(implicit plan: PlanWriter): PlanResult = {
     // Are we applying a stdlib procedure?
     procExpr match {
-      case et.VarRef(stdlibProc : StdlibProcedure) =>
+      case et.VarRef(stdlibProc: StdlibProcedure) =>
         val stdlibName = stdlibProc.stdlibName
         val stdlibProcPlanners = StdlibProcPlanner.activePlanners
 
@@ -43,11 +43,11 @@ private[planner] object PlanApplication {
   }
 
   /** Registers the types of our values with the occurrence typing system */
-  private def registerTypes(state : PlannerState)(
-      procedureType : vt.ProcedureType,
-      procValue : iv.IntermediateValue,
-      args : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter) : PlannerState = {
+  private def registerTypes(state: PlannerState)(
+      procedureType: vt.ProcedureType,
+      procValue: iv.IntermediateValue,
+      args: List[iv.IntermediateValue]
+  )(implicit plan: PlanWriter): PlannerState = {
     val constraint = ConstrainType.IntersectType(procedureType)
     val postProcState = ConstrainType(state)(procValue, constraint)(plan.config)
 
@@ -68,15 +68,15 @@ private[planner] object PlanApplication {
     }
   }
 
-  def planWithArgValues(initialState : PlannerState)(
-      procExpr : et.Expr,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : PlanResult = {
+  def planWithArgValues(initialState: PlannerState)(
+      procExpr: et.Expr,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): PlanResult = {
     // If this is a self-executing lambda try to apply it without planning a function at all
     // The procedure expression will never be used again so there's no reason to cost the the out-of-line version.
     // Perform this inlining at all optimisation levels because it can propagate important type information
     procExpr match {
-      case lambdaExpr : et.Lambda =>
+      case lambdaExpr: et.Lambda =>
         // We can apply this inline!
         for(inlineValue <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
           return PlanResult(
@@ -114,7 +114,7 @@ private[planner] object PlanApplication {
 
     // Does this procedure support planning its application inline?
     procValue match {
-      case knownProc : iv.KnownProc =>
+      case knownProc: iv.KnownProc =>
         for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(args)) {
           // StdlibProcPlanners rarely constrain the types of their arguments. Handle this for them.
           return inlineResult.copy(
@@ -132,7 +132,7 @@ private[planner] object PlanApplication {
 
     if (plan.config.optimise && (initialState.inlineDepth < 8)) {
       procValue match {
-        case schemeProc : iv.KnownSchemeProc if !schemeProc.manifest.isRecursive =>
+        case schemeProc: iv.KnownSchemeProc if !schemeProc.manifest.isRecursive =>
           // Try to plan this as in inline app[lication
           val inlinePlan = plan.forkPlan()
 
@@ -184,10 +184,10 @@ private[planner] object PlanApplication {
   }
 
   private def listToIntermediates(
-      listHeadValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : Option[List[iv.IntermediateValue]] =
+      listHeadValue: iv.IntermediateValue
+  )(implicit plan: PlanWriter): Option[List[iv.IntermediateValue]] =
     listHeadValue.schemeType match {
-      case _ : vt.SpecificPairType =>
+      case _: vt.SpecificPairType =>
         // Note that this will do the right thing with KnownListElement instances - no actual load will be performed
         listToIntermediates(PlanCadr.loadCdr(listHeadValue)) map { tailValues =>
           PlanCadr.loadCar(listHeadValue) :: tailValues
@@ -197,10 +197,10 @@ private[planner] object PlanApplication {
       case _ => None
     }
 
-  def planWithArgList(initialState : PlannerState)(
-      procExpr : et.Expr,
-      argList : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : PlanResult = {
+  def planWithArgList(initialState: PlannerState)(
+      procExpr: et.Expr,
+      argList: iv.IntermediateValue
+  )(implicit plan: PlanWriter): PlanResult = {
     val loadValuesPlan = plan.forkPlan()
 
     listToIntermediates(argList)(loadValuesPlan) match {

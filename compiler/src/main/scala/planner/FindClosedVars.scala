@@ -6,43 +6,43 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.StorageLocation
 import llambda.compiler.codegen.CompactRepresentationForType
-  
+
 private sealed abstract class ClosedVariable
 
 private sealed trait ClosedImmutable extends ClosedVariable {
-  val storageLoc : StorageLocation
-  val parentIntermediate : iv.IntermediateValue
+  val storageLoc: StorageLocation
+  val parentIntermediate: iv.IntermediateValue
 }
 
 private case class ImportedImmutable(
-  storageLoc : StorageLocation,
-  parentIntermediate : iv.IntermediateValue
+  storageLoc: StorageLocation,
+  parentIntermediate: iv.IntermediateValue
 ) extends ClosedImmutable
 
 private sealed abstract class CapturedVariable extends ClosedVariable {
-  val storageLoc : StorageLocation
-  val valueType : vt.ValueType
-  val recordField : vt.RecordField
+  val storageLoc: StorageLocation
+  val valueType: vt.ValueType
+  val recordField: vt.RecordField
 }
 
 private case class CapturedImmutable(
-  storageLoc : StorageLocation,
-  parentIntermediate : iv.IntermediateValue,
-  valueType : vt.ValueType,
-  recordField : vt.RecordField
+  storageLoc: StorageLocation,
+  parentIntermediate: iv.IntermediateValue,
+  valueType: vt.ValueType,
+  recordField: vt.RecordField
 ) extends CapturedVariable with ClosedImmutable
 
 private case class CapturedMutable(
-  storageLoc : StorageLocation,
-  parentMutable : MutableValue,
-  recordField : vt.RecordField
+  storageLoc: StorageLocation,
+  parentMutable: MutableValue,
+  recordField: vt.RecordField
 ) extends CapturedVariable {
   val valueType = parentMutable.mutableType
 }
- 
+
 private[planner] object FindClosedVars {
   /** Finds all referenced variables in an expression and returns them in a stable order */
-  private def findRefedVariables(expr : et.Expr) : List[StorageLocation] = expr match {
+  private def findRefedVariables(expr: et.Expr): List[StorageLocation] = expr match {
     case et.VarRef(variable) =>
       List(variable)
 
@@ -54,10 +54,10 @@ private[planner] object FindClosedVars {
   }
 
   def apply(
-      parentState : PlannerState,
-      lambdaExpr : et.Lambda,
-      recursiveSelfLoc : Option[StorageLocation]
-  ) : List[ClosedVariable] = {
+      parentState: PlannerState,
+      lambdaExpr: et.Lambda,
+      recursiveSelfLoc: Option[StorageLocation]
+  ): List[ClosedVariable] = {
     // Find the variables that are closed by the parent scope
     val refedVarsList = findRefedVariables(lambdaExpr)
 
@@ -86,7 +86,7 @@ private[planner] object FindClosedVars {
             ImportedImmutable(storageLoc, parentIntermediate)
           }
 
-      case parentMutable : MutableValue =>
+      case parentMutable: MutableValue =>
         // Note that while this field points to a mutable variable the pointer itself is actually immutable
         val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType, mutable=false)
         CapturedMutable(storageLoc, parentMutable, recordField)

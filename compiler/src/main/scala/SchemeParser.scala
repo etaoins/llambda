@@ -11,19 +11,19 @@ import scala.collection.mutable.LongMap
 
 import org.parboiled2._
 
-sealed abstract class ParseErrorException(message : String) extends Exception(message)
+sealed abstract class ParseErrorException(message: String) extends Exception(message)
 
-class ParseFailedException(val filename : Option[String], val message : String) extends
+class ParseFailedException(val filename: Option[String], val message: String) extends
   ParseErrorException(filename.getOrElse("(unknown)") + ": " + message)
 
-class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends Parser with StringBuilding {
+class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Parser with StringBuilding {
   import CharPredicate._
 
   private val datumLabels = new LongMap[ast.Datum]
 
-  val input : ParserInput = sourceString
+  val input: ParserInput = sourceString
 
-  private def fetchLocation : Rule1[SourceLocation] = rule {
+  private def fetchLocation: Rule1[SourceLocation] = rule {
     push {
       SourceLocation(
         filenameOpt=filenameOpt,
@@ -47,7 +47,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   private val WhitespaceChar = IntralineWhitespaceChar ++ NewlineChar
 
   // Whitespace handling
-  def Whitespace : Rule0 = rule {
+  def Whitespace: Rule0 = rule {
     zeroOrMore(WhitespaceChar | LineComment | DatumComment | BlockComment)
   }
 
@@ -66,7 +66,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   // The recursive BlockComment rule is to handle nested block comments
-  def UnclosedBlockComment : Rule0 = rule {
+  def UnclosedBlockComment: Rule0 = rule {
     zeroOrMore(noneOf("#|")) ~ (str("|#") | BlockComment ~ UnclosedBlockComment | (ANY ~ UnclosedBlockComment))
   }
 
@@ -79,9 +79,9 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   // Split data based on its initial character to speed up parsing
-  def Datum : Rule1[ast.Datum] = rule {
+  def Datum: Rule1[ast.Datum] = rule {
     fetchLocation ~ run {
-      (cursorChar : @switch) match {
+      (cursorChar: @switch) match {
         case '#' =>
           OctoDatum
 
@@ -117,7 +117,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
         case _ =>
           UnenclosedSymbol
       }
-    } ~> ({ (location : SourceLocation, unlocatedDatum : ast.Datum) =>
+    } ~> ({ (location: SourceLocation, unlocatedDatum: ast.Datum) =>
       unlocatedDatum.locationOpt = Some(location)
       unlocatedDatum
     })
@@ -127,7 +127,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     UnitDatum | BooleanDatum | VectorDatum | RadixedNumber | BytevectorDatum | CharDatum | DatumLabel | DatumReference
   }
 
-  private def expandSymbolShorthand(location : SourceLocation, expanded : String, datum : ast.Datum) : ast.Datum = {
+  private def expandSymbolShorthand(location: SourceLocation, expanded: String, datum: ast.Datum): ast.Datum = {
     val expandedSymbol = ast.Symbol(expanded)
     expandedSymbol.locationOpt = Some(location)
 
@@ -420,21 +420,21 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 }
 
 object SchemeParser {
-  def parseFileAsData(input : File) : List[ast.Datum] = {
+  def parseFileAsData(input: File): List[ast.Datum] = {
     val filename = input.getAbsolutePath
     val inputString = Source.fromFile(input, "UTF-8").mkString
 
     parseStringAsData(inputString, Some(filename))
   }
 
-  def parseStringAsData(input : String, filenameOpt : Option[String] = None) : List[ast.Datum] = {
+  def parseStringAsData(input: String, filenameOpt: Option[String] = None): List[ast.Datum] = {
     val parser = new SchemeParser(input, filenameOpt)
 
     parser.Data.run() match {
       case Success(data) =>
         data.toList
 
-      case Failure(parseError : ParseError) =>
+      case Failure(parseError: ParseError) =>
         throw new ParseFailedException(filenameOpt, parser.formatError(parseError))
 
       case Failure(throwable)=>
@@ -442,7 +442,7 @@ object SchemeParser {
     }
   }
 
-  def isValidIdentifier(string : String) : Boolean = {
+  def isValidIdentifier(string: String): Boolean = {
     val parser = new SchemeParser(string, None)
 
     parser.Data.run() match {

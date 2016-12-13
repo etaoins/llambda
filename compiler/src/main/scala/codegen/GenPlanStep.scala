@@ -12,11 +12,11 @@ object GenPlanStep {
   // We only do math on signed values so nsw is sufficient here
   private val integerWrapBehaviour = Set(
     WrapBehaviour.NoSignedWrap
-  ) : Set[WrapBehaviour]
+  ): Set[WrapBehaviour]
 
   private val fastMathFlags = Set[FastMathFlag]()
 
-  private def stepCompareCondToIntegerIr(stepCond : ps.CompareCond) : IComparisonCond = stepCond match {
+  private def stepCompareCondToIntegerIr(stepCond: ps.CompareCond): IComparisonCond = stepCond match {
     case ps.CompareCond.Equal => IComparisonCond.Equal
     case ps.CompareCond.NotEqual => IComparisonCond.NotEqual
     case ps.CompareCond.GreaterThan => IComparisonCond.GreaterThan
@@ -25,7 +25,7 @@ object GenPlanStep {
     case ps.CompareCond.LessThanEqual => IComparisonCond.LessThanEqual
   }
 
-  private def stepCompareCondToFloatIr(stepCond : ps.CompareCond) : FComparisonCond = stepCond match {
+  private def stepCompareCondToFloatIr(stepCond: ps.CompareCond): FComparisonCond = stepCond match {
     case ps.CompareCond.Equal => FComparisonCond.OrderedEqual
     case ps.CompareCond.NotEqual => FComparisonCond.OrderedNotEqual
     case ps.CompareCond.GreaterThan => FComparisonCond.OrderedGreaterThan
@@ -34,7 +34,7 @@ object GenPlanStep {
     case ps.CompareCond.LessThanEqual => FComparisonCond.OrderedLessThanEqual
   }
 
-  def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = step match {
+  def apply(state: GenerationState, genGlobals: GenGlobals)(step: ps.Step): GenResult = step match {
     case ps.AllocateCells(count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation won't be fully initialized
@@ -46,18 +46,18 @@ object GenPlanStep {
       val (allocState, allocation) = GenCellAllocation.genAllocation(state)(worldPtrIr, count)
       allocState.copy(currentAllocation=allocation)
 
-    case createConstantStep : ps.CreateConstant =>
+    case createConstantStep: ps.CreateConstant =>
       val irResult = genGlobals.constantGenerator(state, genGlobals)(createConstantStep)
 
       state.withTempValue(createConstantStep.result -> irResult)
 
-    case unboxValueStep : ps.UnboxValue =>
+    case unboxValueStep: ps.UnboxValue =>
       val irBoxed = state.liveTemps(unboxValueStep.boxed)
       val irResult = GenUnboxing(state)(unboxValueStep, irBoxed)
 
       state.withTempValue(unboxValueStep.result -> irResult)
-    
-    case boxValueStep : ps.BoxValue =>
+
+    case boxValueStep: ps.BoxValue =>
       val irUnboxed = state.liveTemps(boxValueStep.unboxed)
       val (boxState, irResult) = GenBoxing(state)(boxValueStep, irUnboxed)
 
@@ -73,14 +73,14 @@ object GenPlanStep {
       val subvalueIr = state.liveTemps(subvalueTemp)
 
       val irValue = subvalueIr match {
-        case constant : IrConstant =>
+        case constant: IrConstant =>
           // We can use an anonymous constant bitcast here
           BitcastToConstant(constant, PointerType(targetType.irType))
 
         case _ =>
           targetType.genPointerBitcast(state.currentBlock)(subvalueIr)
       }
-      
+
       state.copy(
         liveTemps=state.liveTemps.withAliasedTempValue(subvalueTemp, (resultTemp -> irValue))
       )
@@ -89,21 +89,21 @@ object GenPlanStep {
       val fromValueIr = state.liveTemps(fromValueTemp)
 
       val convertedIr = GenIntegerConversion(state.currentBlock)(fromValueIr, toBits, signed)
-      
+
       state.withTempValue(resultTemp -> convertedIr)
-    
+
     case ps.ConvertNativeIntegerToFloat(resultTemp, fromValueTemp, fromSigned, fpType) =>
       val fromValueIr = state.liveTemps(fromValueTemp)
       val resultIr = GenIntegerToFloatConversion(state.currentBlock)(fromValueIr, fromSigned, fpType)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.ConvertNativeFloat(resultTemp, fromValueTemp, fpType) =>
       val fromValueIr = state.liveTemps(fromValueTemp)
       val resultIr = GenFloatConversion(state.currentBlock)(fromValueIr, fpType)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.CalcProperListLength(resultTemp, listHeadTemp) =>
       val listHeadIr = state.liveTemps(listHeadTemp)
       val (listState, lengthIr) = GenCalcProperListLength(state)(listHeadIr)
@@ -133,7 +133,7 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> resultIr)
 
-    case condBranch : ps.CondBranch =>
+    case condBranch: ps.CondBranch =>
       GenCondBranch(state, genGlobals)(condBranch)
 
     case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, inputToDispose, _) =>
@@ -158,7 +158,7 @@ object GenPlanStep {
         // We need a GC barrier
         GenGcBarrier(preBarrierState) {
           val invokeBlock = preBarrierState.currentBlock
-          val successBlock = invokeBlock.function.startChildBlock("invokeSuccess") 
+          val successBlock = invokeBlock.function.startChildBlock("invokeSuccess")
 
           val irValue = invokeBlock.invoke(Some("invokeRet"))(
             signature=irSignature,
@@ -197,7 +197,7 @@ object GenPlanStep {
       val irArguments = arguments.map(state.liveTemps)
 
       // Always use call - we don't care about exceptions
-      state.terminateFunction({ () => 
+      state.terminateFunction({ () =>
         if (irSignature.result.irType == VoidType) {
           state.currentBlock.call(None)(irSignature, irFuncPtr, irArguments, tailCall=true)
           state.currentBlock.retVoid()
@@ -220,7 +220,7 @@ object GenPlanStep {
       state.terminateFunction(() => {
         state.currentBlock.retVoid()
       })
-    
+
     case ps.Return(Some(returnValueTemp)) =>
       val irRetValue = state.liveTemps(returnValueTemp)
 
@@ -233,7 +233,7 @@ object GenPlanStep {
       val carIr = ct.PairCell.genLoadFromCar(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> carIr)
-    
+
     case ps.LoadPairCdr(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
       val cdrIr = ct.PairCell.genLoadFromCdr(state.currentBlock)(pairIr)
@@ -287,14 +287,14 @@ object GenPlanStep {
       val lengthIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
 
       state.withTempValue(resultTemp -> lengthIr)
-    
+
     case ps.LoadVectorElement(resultTemp, _, elementsTemp, indexTemp) =>
       val elementsIr = state.liveTemps(elementsTemp)
       val indexIr = state.liveTemps(indexTemp)
 
       val elementIr = GenVector.loadElement(state.currentBlock)(elementsIr, indexIr)
       state.withTempValue(resultTemp -> elementIr)
-    
+
     case ps.StoreVectorElement(_, elementsTemp, indexTemp, newValueTemp) =>
       val elementsIr = state.liveTemps(elementsTemp)
       val indexIr = state.liveTemps(indexTemp)
@@ -310,18 +310,18 @@ object GenPlanStep {
 
       // Load the entry point
       val entryPointIr = ct.ProcedureCell.genLoadFromEntryPoint(block)(procIr)
-      // Cast it to the expected entry point type 
+      // Cast it to the expected entry point type
       val castEntryPointIr = block.bitcastTo("castEntryPoint")(entryPointIr, PointerType(signatureIrType))
 
       state.withTempValue(resultTemp -> castEntryPointIr)
 
-    case initStep : ps.InitRecord =>
+    case initStep: ps.InitRecord =>
       val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
 
       initedState
         .withTempValue(initStep.result -> resultIr)
 
-    case initStep : ps.InitProcedure =>
+    case initStep: ps.InitProcedure =>
       val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
 
       // Store the entry point
@@ -334,7 +334,7 @@ object GenPlanStep {
       initedState
         .withTempValue(initStep.result -> resultIr)
 
-    case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType, possibleTypesOpt) => 
+    case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType, possibleTypesOpt) =>
       val generatedType = genGlobals.generatedTypes(recordLikeType)
       val generatedPossibleTypes = possibleTypesOpt map { possibleTypes =>
         possibleTypes.map(genGlobals.generatedTypes)
@@ -344,10 +344,10 @@ object GenPlanStep {
       val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType, generatedPossibleTypes)
 
       state.withTempValue(resultTemp -> irResult)
-    
-    case ps.SetRecordLikeDefined(recordCellTemp, recordLikeType) => 
+
+    case ps.SetRecordLikeDefined(recordCellTemp, recordLikeType) =>
       val generatedType = genGlobals.generatedTypes(recordLikeType)
-      
+
       // Mark ourselves as defined
       val recordCellIr = state.liveTemps(recordCellTemp)
       val cellType = generatedType.recordLikeType.cellType
@@ -384,15 +384,15 @@ object GenPlanStep {
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
       val generatedType = genGlobals.generatedTypes(recordType)
-  
+
       GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, newValueIr)
 
       state
-    
+
     case ps.LoadRecordDataField(resultTemp, recordDataTemp, recordLikeType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val generatedType = genGlobals.generatedTypes(recordLikeType)
-  
+
       val resultIr = GenLoadRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
@@ -404,16 +404,16 @@ object GenPlanStep {
       val resultIr = GenLoadRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
 
       state.withTempValue(resultTemp -> resultIr)
-      
+
     case ps.DisposeValues(disposedTemps) =>
       state.copy(
         liveTemps=state.liveTemps -- disposedTemps
       )
 
-    case pushDynamic : ps.PushDynamicState =>
+    case pushDynamic: ps.PushDynamicState =>
       GenParameter.genPushDynamicState(state)(pushDynamic)
-    
-    case popDynamic : ps.PopDynamicState =>
+
+    case popDynamic: ps.PopDynamicState =>
       GenParameter.genPopDynamicState(state)(popDynamic)
 
     case ps.CreateParameterProc(resultTemp, initialValueTemp, inputToDispose) =>
@@ -433,7 +433,7 @@ object GenPlanStep {
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val parameterProcIr = state.liveTemps(parameterProcTemp)
 
-      val resultIr = GenParameter.genLoadValueForParameterProc(state)(worldPtrIr, parameterProcIr) 
+      val resultIr = GenParameter.genLoadValueForParameterProc(state)(worldPtrIr, parameterProcIr)
       state.withTempValue(resultTemp -> resultIr)
 
     case checkedStep @ ps.CheckedIntegerAdd(resultTemp, val1Temp, val2Temp, overflowMessage) =>
@@ -495,7 +495,7 @@ object GenPlanStep {
       val resultIr = state.currentBlock.fadd("faddResult")(fastMathFlags, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.FloatSub(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
@@ -503,7 +503,7 @@ object GenPlanStep {
       val resultIr = state.currentBlock.fsub("fsubResult")(fastMathFlags, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.FloatMul(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
@@ -511,7 +511,7 @@ object GenPlanStep {
       val resultIr = state.currentBlock.fmul("fmulResult")(fastMathFlags, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.FloatDiv(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
@@ -519,7 +519,7 @@ object GenPlanStep {
       val resultIr = state.currentBlock.fdiv("fdivResult")(fastMathFlags, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.IntegerCompare(resultTemp, compareCond, signed, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
@@ -528,7 +528,7 @@ object GenPlanStep {
       val resultIr = state.currentBlock.icmp("compResult")(condIr, signed, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
-    
+
     case ps.FloatCompare(resultTemp, compareCond, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
@@ -540,11 +540,11 @@ object GenPlanStep {
 
     case ps.FloatIsNaN(resultTemp, valTemp) =>
       val valIr = state.liveTemps(valTemp)
-      
+
       // This is tricky - only NaN is not equal to itself. This is actually now isnan is implemented on OS X and LLVM
       // optimises it appropriately
       val resultIr = state.currentBlock.fcmp("isNaN")(FComparisonCond.UnorderedNotEqual, valIr, valIr)
-      
+
       state.withTempValue(resultTemp -> resultIr)
 
     case ps.FloatBitwiseCompare(resultTemp, val1Temp, val2Temp) =>
@@ -583,7 +583,7 @@ object GenPlanStep {
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val predIr = state.liveTemps(predicateTemp)
       val evidenceIrOpt = evidenceOpt.map(state.liveTemps)
-      
+
       // Start our branches
       val irFunction = state.currentBlock.function
       val fatalBlock = irFunction.startChildBlock("predFalse")

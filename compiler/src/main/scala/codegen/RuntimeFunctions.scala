@@ -17,7 +17,7 @@ object RuntimeFunctions {
     ),
     attributes=Set(NoUnwind, Cold)
   )
-    
+
   val signalError = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
     name="llcore_signal_error",
@@ -31,7 +31,7 @@ object RuntimeFunctions {
     ),
     attributes=Set(NoReturn, Cold)
   )
-  
+
   val dynamicenvPush = IrFunctionDecl(
     result=Result(VoidType),
     name="llcore_dynamicenv_push",
@@ -102,7 +102,7 @@ object RuntimeFunctions {
 
   val isEqvSymbol = "llcore_is_eqv"
   val isEqualSymbol = "llcore_is_equal"
-  
+
   val equivalenceProcSignature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
@@ -145,7 +145,7 @@ object RuntimeFunctions {
     attributes=Set(IrFunction.NoUnwind, IrFunction.ReadOnly)
   )
 
-  def hasSideEffects(symbol : String, arity : Int) : Boolean = (symbol, arity) match {
+  def hasSideEffects(symbol: String, arity: Int): Boolean = (symbol, arity) match {
     case ("llcore_stdin_port", 0) =>  false
     case ("llcore_stdout_port", 0) => false
     case ("llcore_stderr_port", 0) => false

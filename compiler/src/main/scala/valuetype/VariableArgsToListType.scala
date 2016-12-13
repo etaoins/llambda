@@ -3,7 +3,7 @@ import io.llambda
 
 object VariableArgsToListType {
   /** Converts a list of optional args an a rest argument member type in to a list type  */
-  def apply(optionalArgs : List[SchemeType], restArgMemberTypeOpt : Option[SchemeType]) : SchemeType = {
+  def apply(optionalArgs: List[SchemeType], restArgMemberTypeOpt: Option[SchemeType]): SchemeType = {
     val restArgListType = restArgMemberTypeOpt match {
       case None =>
         EmptyListType

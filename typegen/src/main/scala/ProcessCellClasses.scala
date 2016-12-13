@@ -6,10 +6,10 @@ import io.llambda.llvmir
 
 object ProcessCellClasses {
   /** Simple class encapsulting an incrementing integer counter */
-  private class IntCounter(initialValue : Int = 0) extends Function0[Int] {
-    var nextValue : Int = initialValue
+  private class IntCounter(initialValue: Int = 0) extends Function0[Int] {
+    var nextValue: Int = initialValue
 
-    def apply() : Int = {
+    def apply(): Int = {
       val currentValue = nextValue
       nextValue = nextValue + 1
 
@@ -17,7 +17,7 @@ object ProcessCellClasses {
     }
   }
 
-  private def createSelfTbaaNodes(selfName : String, selfFields : List[CellField], indexCounter : () => Int) : ListMap[CellField, llvmir.NumberedMetadataDef] = 
+  private def createSelfTbaaNodes(selfName: String, selfFields: List[CellField], indexCounter: () => Int): ListMap[CellField, llvmir.NumberedMetadataDef] =
     // Create parentless TBAA nodes for the new fields we introduce
     ListMap(selfFields.map { cellField =>
       val identity = s"${selfName}::${cellField.name}"
@@ -25,13 +25,13 @@ object ProcessCellClasses {
 
       val tbaaIndex = indexCounter()
       (cellField -> llvmir.NumberedMetadataDef(tbaaIndex, tbaaNode))
-    } : _*)
+    }: _*)
 
   /** Creates TBAA nodes for our fields and the fields we inherit from our superclasses */
-  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentTbaaNodes : ListMap[CellField, llvmir.NumberedMetadataDef], indexCounter : () => Int) : ListMap[CellField, llvmir.NumberedMetadataDef] = {
+  private def createTbaaNodes(selfName: String, selfFields: List[CellField], parentTbaaNodes: ListMap[CellField, llvmir.NumberedMetadataDef], indexCounter: () => Int): ListMap[CellField, llvmir.NumberedMetadataDef] = {
     // Inherit the TBAA nodes from our parents
     val inheritsNodes = parentTbaaNodes.map {
-      case (cellField, parentNumberedMetadataDef @ llvmir.NumberedMetadataDef(_, parentTbaaNode : llvmir.TbaaMetadata)) =>
+      case (cellField, parentNumberedMetadataDef @ llvmir.NumberedMetadataDef(_, parentTbaaNode: llvmir.TbaaMetadata)) =>
         val identity = s"${parentTbaaNode.identity}->${selfName}"
         val tbaaNode = llvmir.TbaaMetadata(identity, Some(parentNumberedMetadataDef.numberedMetadata))
 
@@ -43,7 +43,7 @@ object ProcessCellClasses {
     inheritsNodes ++ createSelfTbaaNodes(selfName, selfFields, indexCounter)
   }
 
-  private def processField(fieldTypes : Map[String, FieldType])(parsedField : ParsedCellField) : CellField = {
+  private def processField(fieldTypes: Map[String, FieldType])(parsedField: ParsedCellField): CellField = {
     val resolvedType = ResolveParsedType(fieldTypes)(parsedField.fieldType)
 
     if (parsedField.initializer.isDefined) {
@@ -59,7 +59,7 @@ object ProcessCellClasses {
     cellField.setPos(parsedField.pos)
   }
 
-  private def collectFieldNames(cellClass : CellClass) : Set[String] = {
+  private def collectFieldNames(cellClass: CellClass): Set[String] = {
     val fieldNames = cellClass.fields.map(_.name).toSet
 
     cellClass.parentOption match {
@@ -72,9 +72,9 @@ object ProcessCellClasses {
     }
   }
 
-  def apply(fieldTypes : Map[String, FieldType])(definitions : List[ParsedDefinition]) : ProcessedTypes = {
+  def apply(fieldTypes: Map[String, FieldType])(definitions: List[ParsedDefinition]): ProcessedTypes = {
     val parsedCellDefs = definitions.collect {
-      case parsedCellDef : ParsedCellClassDefinition =>
+      case parsedCellDef: ParsedCellClassDefinition =>
         parsedCellDef
     }
 
@@ -118,7 +118,7 @@ object ProcessCellClasses {
       val parentTbaaNodes = parentCellClassOpt.map(_.fieldTbaaNodes).getOrElse(ListMap())
 
       val fieldTbaaNodes = parsedCellDef match {
-        case _ : ParsedVariantClassDefinition =>
+        case _: ParsedVariantClassDefinition =>
           // Don't redefine parent nodes
           // We use our parent nodes directly because we can switch between variants
           // of a cell at runtime so it's possible for them to alias
@@ -138,7 +138,7 @@ object ProcessCellClasses {
 
       // Turn the cell definition in to a cell class
       val cellClass = parsedCellDef match {
-        case rootClass : ParsedRootClassDefinition =>
+        case rootClass: ParsedRootClassDefinition =>
           // Find our type ID tag field
           val typeTagField = processedFields.find(rootClass.typeTagField == _.name).getOrElse({
             throw new UndefinedTypeTagFieldException(rootClass)
@@ -152,7 +152,7 @@ object ProcessCellClasses {
             fieldTbaaNodes=fieldTbaaNodes
           )
 
-        case taggedClass : ParsedTaggedClassDefinition =>
+        case taggedClass: ParsedTaggedClassDefinition =>
           val parentCellClass = parentCellClassOpt.get
 
           // It doesn't make sense to inherit from non-abstract cell classes
@@ -170,7 +170,7 @@ object ProcessCellClasses {
             fieldTbaaNodes=fieldTbaaNodes
           )
 
-        case variantClass : ParsedVariantClassDefinition =>
+        case variantClass: ParsedVariantClassDefinition =>
           val parentCellClass = parentCellClassOpt.get
 
           // It doesn't make sense to inherit from abstract cell classes
@@ -191,11 +191,11 @@ object ProcessCellClasses {
 
       cellClasses + (cellClass.name -> positionedCellClass)
     }
-    
+
     // Make sure we have exactly one root cell class
-    val rootCellClassOpt = cellClasses.values.foldLeft(None : Option[RootCellClass]) { (seenRootClass, cellClass) =>
+    val rootCellClassOpt = cellClasses.values.foldLeft(None: Option[RootCellClass]) { (seenRootClass, cellClass) =>
       cellClass match {
-        case rootClass : RootCellClass  =>
+        case rootClass: RootCellClass  =>
           if (seenRootClass.isDefined) {
             throw new DuplicateRootCellClassException(rootClass)
           }
@@ -213,7 +213,7 @@ object ProcessCellClasses {
     // Calculate this once so it's easy to navigate the cell class
     // hierarchy downwards
     val taggedCellClassesByParent = cellClasses.values.toList.collect({
-      case taggedClass : TaggedCellClass => taggedClass
+      case taggedClass: TaggedCellClass => taggedClass
     }).groupBy(_.parent)
 
     ProcessedTypes(

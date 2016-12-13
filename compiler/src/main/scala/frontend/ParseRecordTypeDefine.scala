@@ -22,38 +22,38 @@ private[frontend] object ParseRecordTypeDefine {
     * @param  procedures   The associated procedures for the record type
     */
   case class Result(
-      typeSymbol : sst.ScopedSymbol,
-      recordType : vt.RecordType,
-      constructor : (sst.ScopedSymbol, et.RecordConstructor),
-      procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]
+      typeSymbol: sst.ScopedSymbol,
+      recordType: vt.RecordType,
+      constructor: (sst.ScopedSymbol, et.RecordConstructor),
+      procedures: Map[sst.ScopedSymbol, et.ArtificialProcedure]
   )
 
   private case class ParsedField(
-    field : vt.RecordField,
-    accessorSymbol : sst.ScopedSymbol,
-    mutatorSymbol : Option[sst.ScopedSymbol]
+    field: vt.RecordField,
+    accessorSymbol: sst.ScopedSymbol,
+    mutatorSymbol: Option[sst.ScopedSymbol]
   )
 
   private def parseFields(
-      selfSymbol : sst.ScopedSymbol,
-      selfTypeVar : pm.TypeVar,
-      fieldData : List[sst.ScopedDatum],
-      inheritedFieldNames : Set[String]
-  )(implicit frontendConfig : FrontendConfig) : ListMap[String, ParsedField] = {
+      selfSymbol: sst.ScopedSymbol,
+      selfTypeVar: pm.TypeVar,
+      fieldData: List[sst.ScopedDatum],
+      inheritedFieldNames: Set[String]
+  )(implicit frontendConfig: FrontendConfig): ListMap[String, ParsedField] = {
     val typeBindings = List(selfSymbol -> BoundType(selfTypeVar))
     val typeScopeMapping = Scope.mappingForBoundValues(typeBindings)
 
     fieldData.foldLeft(ListMap[String, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
-        // We can either be just a symbol and have no type or we can be a Scala/Racket style [symbol : <type>]
+        // We can either be just a symbol and have no type or we can be a Scala/Racket style [symbol: <type>]
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
-          case nameSymbol : sst.ScopedSymbol =>
+          case nameSymbol: sst.ScopedSymbol =>
             // Just a bare symbol - implicitly we're of type <any>
             (nameSymbol, vt.AnySchemeType)
 
           case sst.ScopedProperList(List(
-              nameSymbol : sst.ScopedSymbol,
+              nameSymbol: sst.ScopedSymbol,
               sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
               fieldTypeDatum
           )) =>
@@ -66,7 +66,7 @@ private[frontend] object ParseRecordTypeDefine {
             (nameSymbol, compactType)
 
           case other =>
-            val message = s"Unrecognized record field name definition. Must be either identifier or [identifier : <type>]."
+            val message = s"Unrecognized record field name definition. Must be either identifier or [identifier: <type>]."
             throw new BadSpecialFormException(other, message)
         }
 
@@ -83,10 +83,10 @@ private[frontend] object ParseRecordTypeDefine {
 
         // Determine which procedures this field defines
         val (accessorSymbol, mutatorSymbolOpt) = procedureData match {
-          case List((accessorSymbol : sst.ScopedSymbol)) =>
+          case List((accessorSymbol: sst.ScopedSymbol)) =>
             (accessorSymbol, None)
 
-          case List((accessorSymbol : sst.ScopedSymbol), (mutatorSymbol : sst.ScopedSymbol)) =>
+          case List((accessorSymbol: sst.ScopedSymbol), (mutatorSymbol: sst.ScopedSymbol)) =>
             (accessorSymbol, Some(mutatorSymbol))
 
           case _ =>
@@ -107,10 +107,10 @@ private[frontend] object ParseRecordTypeDefine {
   }
 
   private def parseConstructor(
-      recordType : vt.RecordType,
-      constructorSymbol : sst.ScopedSymbol,
-      constructorArgs : List[sst.ScopedDatum]
-  ) : (sst.ScopedSymbol, et.RecordConstructor) = {
+      recordType: vt.RecordType,
+      constructorSymbol: sst.ScopedSymbol,
+      constructorArgs: List[sst.ScopedDatum]
+  ): (sst.ScopedSymbol, et.RecordConstructor) = {
     // Get a list of all of our fields including inherited ones
     val nameToField = (recordType.fieldsWithInherited.map { field =>
       field.name -> field
@@ -138,7 +138,7 @@ private[frontend] object ParseRecordTypeDefine {
       if (!initializedFields.contains(field)) {
         // Make sure this can be initialized to #!unit
         recordType.typeForField(field) match {
-          case schemeType : vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
+          case schemeType: vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
             // This is okay
 
           case _ =>
@@ -151,16 +151,16 @@ private[frontend] object ParseRecordTypeDefine {
   }
 
   private def parse(
-      nameSymbol : sst.ScopedSymbol,
-      parentSymbolOpt : Option[sst.ScopedSymbol],
-      constructorSymbol : sst.ScopedSymbol,
-      constructorArgs : List[sst.ScopedDatum],
-      predicateSymbol : sst.ScopedSymbol,
-      fieldData : List[sst.ScopedDatum]
-  )(implicit frontendConfig : FrontendConfig) : Result = {
+      nameSymbol: sst.ScopedSymbol,
+      parentSymbolOpt: Option[sst.ScopedSymbol],
+      constructorSymbol: sst.ScopedSymbol,
+      constructorArgs: List[sst.ScopedDatum],
+      predicateSymbol: sst.ScopedSymbol,
+      fieldData: List[sst.ScopedDatum]
+  )(implicit frontendConfig: FrontendConfig): Result = {
     val parentRecordOpt = parentSymbolOpt map { parentSymbol =>
       ExtractType.extractSchemeType(parentSymbol) match {
-        case parentRecord : vt.RecordType =>
+        case parentRecord: vt.RecordType =>
           parentRecord
 
         case _ =>
@@ -219,20 +219,20 @@ private[frontend] object ParseRecordTypeDefine {
   }
 
   def apply(
-      located : SourceLocated,
-      args : List[sst.ScopedDatum]
-  )(implicit frontendConfig : FrontendConfig) : Result = args match {
-    case (nameSymbol : sst.ScopedSymbol) ::
-         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorArgs) ::
-         (predicateSymbol : sst.ScopedSymbol) ::
+      located: SourceLocated,
+      args: List[sst.ScopedDatum]
+  )(implicit frontendConfig: FrontendConfig): Result = args match {
+    case (nameSymbol: sst.ScopedSymbol) ::
+         sst.ScopedProperList((constructorSymbol: sst.ScopedSymbol) :: constructorArgs) ::
+         (predicateSymbol: sst.ScopedSymbol) ::
          fieldData =>
 
       parse(nameSymbol, None, constructorSymbol, constructorArgs, predicateSymbol, fieldData)
 
-    case (nameSymbol : sst.ScopedSymbol) ::
-         (parentSymbol : sst.ScopedSymbol) ::
-         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorArgs) ::
-         (predicateSymbol : sst.ScopedSymbol) ::
+    case (nameSymbol: sst.ScopedSymbol) ::
+         (parentSymbol: sst.ScopedSymbol) ::
+         sst.ScopedProperList((constructorSymbol: sst.ScopedSymbol) :: constructorArgs) ::
+         (predicateSymbol: sst.ScopedSymbol) ::
          fieldData =>
 
       parse(nameSymbol, Some(parentSymbol), constructorSymbol, constructorArgs, predicateSymbol, fieldData)

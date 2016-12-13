@@ -6,7 +6,7 @@ object ConvertibleToType {
     *
     * This is equivalent to SatisfiesType except all types are convertible to UnitType
     */
-  def apply(destType : SchemeType, sourceType : SchemeType) : Option[Boolean] = (destType, sourceType) match {
+  def apply(destType: SchemeType, sourceType: SchemeType): Option[Boolean] = (destType, sourceType) match {
     case (UnitType, _) =>
       // Everything is convertible to the unit type
       Some(true)

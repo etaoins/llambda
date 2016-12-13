@@ -10,7 +10,7 @@ object GenSizeOf {
     * @param  resultType  Type of the resulting constant. This should be large enough to represent the size of the type.
     * @return Constant size of the type in bytes
     */
-  def apply(irType : FirstClassType, resultType : IntegerType = IntegerType(64)) : IrConstant = {
+  def apply(irType: FirstClassType, resultType: IntegerType = IntegerType(64)): IrConstant = {
     // Do a fake getelementptr as a contant
     val typeNullPointer = NullPointerConstant(PointerType(irType))
     val fakeElementPtr = ElementPointerConstant(irType, typeNullPointer, List(1))

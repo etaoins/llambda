@@ -9,10 +9,10 @@ import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
 sealed abstract class CastableValue {
-  val irType : FirstClassType
-  val llvmName : String
+  val irType: FirstClassType
+  val llvmName: String
 
-  def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =
+  def genPointerBitcast(block: IrBlockBuilder)(uncastValue: IrValue): IrValue =
     if (uncastValue.irType == PointerType(irType)) {
       uncastValue
     }
@@ -22,11 +22,11 @@ sealed abstract class CastableValue {
 }
 
 sealed abstract class CellType extends CastableValue with AnyFields {
-  val schemeName : String
-  val directSubtypes : Set[CellType]
+  val schemeName: String
+  val directSubtypes: Set[CellType]
 
-  lazy val concreteTypes : Set[ConcreteCellType] = this match {
-    case concreteType : ConcreteCellType => Set(concreteType)
+  lazy val concreteTypes: Set[ConcreteCellType] = this match {
+    case concreteType: ConcreteCellType => Set(concreteType)
     case abstractType => directSubtypes.flatMap(_.concreteTypes)
   }
 
@@ -34,7 +34,7 @@ sealed abstract class CellType extends CastableValue with AnyFields {
 }
 
 sealed abstract class ConcreteCellType extends CellType {
-  val typeId : Long
+  val typeId: Long
 }
 
 sealed abstract class PreconstructedCellType extends ConcreteCellType
@@ -46,17 +46,17 @@ object CellType {
 }
 
 sealed trait AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val typeIdIrType = IntegerType(8)
-  val typeIdTbaaNode : Metadata
-  val typeIdGepIndices : List[Int]
+  val typeIdTbaaNode: Metadata
+  val typeIdGepIndices: List[Int]
 
   val gcStateIrType = IntegerType(8)
-  val gcStateTbaaNode : Metadata
-  val gcStateGepIndices : List[Int]
+  val gcStateTbaaNode: Metadata
+  val gcStateGepIndices: List[Int]
 
-  def genPointerToTypeId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToTypeId(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -69,19 +69,19 @@ sealed trait AnyFields {
     )
   }
 
-  def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToTypeId(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val typeIdPtr = genPointerToTypeId(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> typeIdTbaaNode)
     block.store(toStore, typeIdPtr, metadata=allMetadata)
   }
 
-  def genLoadFromTypeId(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromTypeId(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val typeIdPtr = genPointerToTypeId(block)(valueCell)
     val allMetadata = Map("tbaa" -> typeIdTbaaNode) ++ metadata
     block.load("typeId")(typeIdPtr, metadata=allMetadata)
   }
 
-  def genPointerToGcState(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToGcState(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -94,13 +94,13 @@ sealed trait AnyFields {
     )
   }
 
-  def genStoreToGcState(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToGcState(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val gcStatePtr = genPointerToGcState(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> gcStateTbaaNode)
     block.store(toStore, gcStatePtr, metadata=allMetadata)
   }
 
-  def genLoadFromGcState(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromGcState(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val gcStatePtr = genPointerToGcState(block)(valueCell)
     val allMetadata = Map("tbaa" -> gcStateTbaaNode) ++ metadata
     block.load("gcState")(gcStatePtr, metadata=allMetadata)
@@ -119,7 +119,7 @@ object AnyCell extends CellType with AnyFields {
   val typeIdTbaaNode = NumberedMetadata(10L)
   val gcStateTbaaNode = NumberedMetadata(11L)
 
-  def createConstant(typeId : Long) : StructureConstant = {
+  def createConstant(typeId: Long): StructureConstant = {
     StructureConstant(List(
       IntegerConstant(typeIdIrType, typeId),
       IntegerConstant(gcStateIrType, 1)
@@ -128,7 +128,7 @@ object AnyCell extends CellType with AnyFields {
 }
 
 sealed trait UnitFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 }
 
 object UnitCell extends PreconstructedCellType with UnitFields {
@@ -147,7 +147,7 @@ object UnitCell extends PreconstructedCellType with UnitFields {
 }
 
 sealed trait ListElementFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 }
 
 object ListElementCell extends CellType with ListElementFields {
@@ -162,7 +162,7 @@ object ListElementCell extends CellType with ListElementFields {
   val typeIdTbaaNode = NumberedMetadata(14L)
   val gcStateTbaaNode = NumberedMetadata(15L)
 
-  def createConstant(typeId : Long) : StructureConstant = {
+  def createConstant(typeId: Long): StructureConstant = {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId)
     ), userDefinedType=Some(irType))
@@ -170,21 +170,21 @@ object ListElementCell extends CellType with ListElementFields {
 }
 
 sealed trait PairFields extends ListElementFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val listLengthIrType = IntegerType(32)
-  val listLengthTbaaNode : Metadata
-  val listLengthGepIndices : List[Int]
+  val listLengthTbaaNode: Metadata
+  val listLengthGepIndices: List[Int]
 
   val carIrType = PointerType(UserDefinedType("any"))
-  val carTbaaNode : Metadata
-  val carGepIndices : List[Int]
+  val carTbaaNode: Metadata
+  val carGepIndices: List[Int]
 
   val cdrIrType = PointerType(UserDefinedType("any"))
-  val cdrTbaaNode : Metadata
-  val cdrGepIndices : List[Int]
+  val cdrTbaaNode: Metadata
+  val cdrGepIndices: List[Int]
 
-  def genPointerToListLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToListLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -197,19 +197,19 @@ sealed trait PairFields extends ListElementFields {
     )
   }
 
-  def genStoreToListLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToListLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val listLengthPtr = genPointerToListLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> listLengthTbaaNode)
     block.store(toStore, listLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromListLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromListLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val listLengthPtr = genPointerToListLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> listLengthTbaaNode) ++ metadata
     block.load("listLength")(listLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToCar(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToCar(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -222,19 +222,19 @@ sealed trait PairFields extends ListElementFields {
     )
   }
 
-  def genStoreToCar(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToCar(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val carPtr = genPointerToCar(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> carTbaaNode)
     block.store(toStore, carPtr, metadata=allMetadata)
   }
 
-  def genLoadFromCar(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromCar(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val carPtr = genPointerToCar(block)(valueCell)
     val allMetadata = Map("tbaa" -> carTbaaNode) ++ metadata
     block.load("car")(carPtr, metadata=allMetadata)
   }
 
-  def genPointerToCdr(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToCdr(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -247,13 +247,13 @@ sealed trait PairFields extends ListElementFields {
     )
   }
 
-  def genStoreToCdr(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToCdr(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val cdrPtr = genPointerToCdr(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> cdrTbaaNode)
     block.store(toStore, cdrPtr, metadata=allMetadata)
   }
 
-  def genLoadFromCdr(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromCdr(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val cdrPtr = genPointerToCdr(block)(valueCell)
     val allMetadata = Map("tbaa" -> cdrTbaaNode) ++ metadata
     block.load("cdr")(cdrPtr, metadata=allMetadata)
@@ -280,7 +280,7 @@ object PairCell extends ConcreteCellType with PairFields {
   val carTbaaNode = NumberedMetadata(19L)
   val cdrTbaaNode = NumberedMetadata(20L)
 
-  def createConstant(listLength : Long, car : IrConstant, cdr : IrConstant) : StructureConstant = {
+  def createConstant(listLength: Long, car: IrConstant, cdr: IrConstant): StructureConstant = {
     if (car.irType != carIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field car")
     }
@@ -299,7 +299,7 @@ object PairCell extends ConcreteCellType with PairFields {
 }
 
 sealed trait EmptyListFields extends ListElementFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 }
 
 object EmptyListCell extends PreconstructedCellType with EmptyListFields {
@@ -318,13 +318,13 @@ object EmptyListCell extends PreconstructedCellType with EmptyListFields {
 }
 
 sealed trait StringFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val inlineByteLengthIrType = IntegerType(8)
-  val inlineByteLengthTbaaNode : Metadata
-  val inlineByteLengthGepIndices : List[Int]
+  val inlineByteLengthTbaaNode: Metadata
+  val inlineByteLengthGepIndices: List[Int]
 
-  def genPointerToInlineByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToInlineByteLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -337,13 +337,13 @@ sealed trait StringFields extends AnyFields {
     )
   }
 
-  def genStoreToInlineByteLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToInlineByteLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val inlineByteLengthPtr = genPointerToInlineByteLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> inlineByteLengthTbaaNode)
     block.store(toStore, inlineByteLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromInlineByteLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromInlineByteLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineByteLengthPtr = genPointerToInlineByteLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> inlineByteLengthTbaaNode) ++ metadata
     block.load("inlineByteLength")(inlineByteLengthPtr, metadata=allMetadata)
@@ -366,7 +366,7 @@ object StringCell extends ConcreteCellType with StringFields {
   val gcStateTbaaNode = NumberedMetadata(24L)
   val inlineByteLengthTbaaNode = NumberedMetadata(25L)
 
-  def createConstant(inlineByteLength : Long) : StructureConstant = {
+  def createConstant(inlineByteLength: Long): StructureConstant = {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
       IntegerConstant(inlineByteLengthIrType, inlineByteLength)
@@ -375,17 +375,17 @@ object StringCell extends ConcreteCellType with StringFields {
 }
 
 sealed trait InlineStringFields extends StringFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val inlineCharLengthIrType = IntegerType(8)
-  val inlineCharLengthTbaaNode : Metadata
-  val inlineCharLengthGepIndices : List[Int]
+  val inlineCharLengthTbaaNode: Metadata
+  val inlineCharLengthGepIndices: List[Int]
 
   val inlineDataIrType = ArrayType(20, IntegerType(8))
-  val inlineDataTbaaNode : Metadata
-  val inlineDataGepIndices : List[Int]
+  val inlineDataTbaaNode: Metadata
+  val inlineDataGepIndices: List[Int]
 
-  def genPointerToInlineCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToInlineCharLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -398,19 +398,19 @@ sealed trait InlineStringFields extends StringFields {
     )
   }
 
-  def genStoreToInlineCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToInlineCharLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val inlineCharLengthPtr = genPointerToInlineCharLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> inlineCharLengthTbaaNode)
     block.store(toStore, inlineCharLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromInlineCharLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromInlineCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineCharLengthPtr = genPointerToInlineCharLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> inlineCharLengthTbaaNode) ++ metadata
     block.load("inlineCharLength")(inlineCharLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToInlineData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToInlineData(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -423,13 +423,13 @@ sealed trait InlineStringFields extends StringFields {
     )
   }
 
-  def genStoreToInlineData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToInlineData(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val inlineDataPtr = genPointerToInlineData(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> inlineDataTbaaNode)
     block.store(toStore, inlineDataPtr, metadata=allMetadata)
   }
 
-  def genLoadFromInlineData(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromInlineData(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineDataPtr = genPointerToInlineData(block)(valueCell)
     val allMetadata = Map("tbaa" -> inlineDataTbaaNode) ++ metadata
     block.load("inlineData")(inlineDataPtr, metadata=allMetadata)
@@ -452,7 +452,7 @@ object InlineStringCell extends CellTypeVariant with InlineStringFields {
   val gcStateTbaaNode = NumberedMetadata(24L)
   val inlineByteLengthTbaaNode = NumberedMetadata(25L)
 
-  def createConstant(inlineCharLength : Long, inlineData : IrConstant, inlineByteLength : Long) : StructureConstant = {
+  def createConstant(inlineCharLength: Long, inlineData: IrConstant, inlineByteLength: Long): StructureConstant = {
     if (inlineData.irType != inlineDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field inlineData")
     }
@@ -466,21 +466,21 @@ object InlineStringCell extends CellTypeVariant with InlineStringFields {
 }
 
 sealed trait HeapStringFields extends StringFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val heapByteLengthIrType = IntegerType(32)
-  val heapByteLengthTbaaNode : Metadata
-  val heapByteLengthGepIndices : List[Int]
+  val heapByteLengthTbaaNode: Metadata
+  val heapByteLengthGepIndices: List[Int]
 
   val heapCharLengthIrType = IntegerType(32)
-  val heapCharLengthTbaaNode : Metadata
-  val heapCharLengthGepIndices : List[Int]
+  val heapCharLengthTbaaNode: Metadata
+  val heapCharLengthGepIndices: List[Int]
 
   val heapByteArrayIrType = PointerType(UserDefinedType("sharedByteArray"))
-  val heapByteArrayTbaaNode : Metadata
-  val heapByteArrayGepIndices : List[Int]
+  val heapByteArrayTbaaNode: Metadata
+  val heapByteArrayGepIndices: List[Int]
 
-  def genPointerToHeapByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapByteLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -493,19 +493,19 @@ sealed trait HeapStringFields extends StringFields {
     )
   }
 
-  def genStoreToHeapByteLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToHeapByteLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val heapByteLengthPtr = genPointerToHeapByteLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> heapByteLengthTbaaNode)
     block.store(toStore, heapByteLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromHeapByteLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromHeapByteLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapByteLengthPtr = genPointerToHeapByteLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> heapByteLengthTbaaNode) ++ metadata
     block.load("heapByteLength")(heapByteLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToHeapCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapCharLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -518,19 +518,19 @@ sealed trait HeapStringFields extends StringFields {
     )
   }
 
-  def genStoreToHeapCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToHeapCharLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val heapCharLengthPtr = genPointerToHeapCharLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> heapCharLengthTbaaNode)
     block.store(toStore, heapCharLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromHeapCharLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromHeapCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapCharLengthPtr = genPointerToHeapCharLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> heapCharLengthTbaaNode) ++ metadata
     block.load("heapCharLength")(heapCharLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapByteArray(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -543,13 +543,13 @@ sealed trait HeapStringFields extends StringFields {
     )
   }
 
-  def genStoreToHeapByteArray(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToHeapByteArray(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> heapByteArrayTbaaNode)
     block.store(toStore, heapByteArrayPtr, metadata=allMetadata)
   }
 
-  def genLoadFromHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromHeapByteArray(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
     val allMetadata = Map("tbaa" -> heapByteArrayTbaaNode) ++ metadata
     block.load("heapByteArray")(heapByteArrayPtr, metadata=allMetadata)
@@ -574,7 +574,7 @@ object HeapStringCell extends CellTypeVariant with HeapStringFields {
   val gcStateTbaaNode = NumberedMetadata(24L)
   val inlineByteLengthTbaaNode = NumberedMetadata(25L)
 
-  def createConstant(heapByteLength : Long, heapCharLength : Long, heapByteArray : IrConstant, inlineByteLength : Long) : StructureConstant = {
+  def createConstant(heapByteLength: Long, heapCharLength: Long, heapByteArray: IrConstant, inlineByteLength: Long): StructureConstant = {
     if (heapByteArray.irType != heapByteArrayIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field heapByteArray")
     }
@@ -589,13 +589,13 @@ object HeapStringCell extends CellTypeVariant with HeapStringFields {
 }
 
 sealed trait SymbolFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val inlineByteLengthIrType = IntegerType(8)
-  val inlineByteLengthTbaaNode : Metadata
-  val inlineByteLengthGepIndices : List[Int]
+  val inlineByteLengthTbaaNode: Metadata
+  val inlineByteLengthGepIndices: List[Int]
 
-  def genPointerToInlineByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToInlineByteLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -608,13 +608,13 @@ sealed trait SymbolFields extends AnyFields {
     )
   }
 
-  def genStoreToInlineByteLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToInlineByteLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val inlineByteLengthPtr = genPointerToInlineByteLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> inlineByteLengthTbaaNode)
     block.store(toStore, inlineByteLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromInlineByteLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromInlineByteLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineByteLengthPtr = genPointerToInlineByteLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> inlineByteLengthTbaaNode) ++ metadata
     block.load("inlineByteLength")(inlineByteLengthPtr, metadata=allMetadata)
@@ -637,7 +637,7 @@ object SymbolCell extends ConcreteCellType with SymbolFields {
   val gcStateTbaaNode = NumberedMetadata(32L)
   val inlineByteLengthTbaaNode = NumberedMetadata(33L)
 
-  def createConstant(inlineByteLength : Long) : StructureConstant = {
+  def createConstant(inlineByteLength: Long): StructureConstant = {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
       IntegerConstant(inlineByteLengthIrType, inlineByteLength)
@@ -646,17 +646,17 @@ object SymbolCell extends ConcreteCellType with SymbolFields {
 }
 
 sealed trait InlineSymbolFields extends SymbolFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val inlineCharLengthIrType = IntegerType(8)
-  val inlineCharLengthTbaaNode : Metadata
-  val inlineCharLengthGepIndices : List[Int]
+  val inlineCharLengthTbaaNode: Metadata
+  val inlineCharLengthGepIndices: List[Int]
 
   val inlineDataIrType = ArrayType(20, IntegerType(8))
-  val inlineDataTbaaNode : Metadata
-  val inlineDataGepIndices : List[Int]
+  val inlineDataTbaaNode: Metadata
+  val inlineDataGepIndices: List[Int]
 
-  def genPointerToInlineCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToInlineCharLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -669,19 +669,19 @@ sealed trait InlineSymbolFields extends SymbolFields {
     )
   }
 
-  def genStoreToInlineCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToInlineCharLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val inlineCharLengthPtr = genPointerToInlineCharLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> inlineCharLengthTbaaNode)
     block.store(toStore, inlineCharLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromInlineCharLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromInlineCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineCharLengthPtr = genPointerToInlineCharLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> inlineCharLengthTbaaNode) ++ metadata
     block.load("inlineCharLength")(inlineCharLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToInlineData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToInlineData(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -694,13 +694,13 @@ sealed trait InlineSymbolFields extends SymbolFields {
     )
   }
 
-  def genStoreToInlineData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToInlineData(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val inlineDataPtr = genPointerToInlineData(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> inlineDataTbaaNode)
     block.store(toStore, inlineDataPtr, metadata=allMetadata)
   }
 
-  def genLoadFromInlineData(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromInlineData(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineDataPtr = genPointerToInlineData(block)(valueCell)
     val allMetadata = Map("tbaa" -> inlineDataTbaaNode) ++ metadata
     block.load("inlineData")(inlineDataPtr, metadata=allMetadata)
@@ -723,7 +723,7 @@ object InlineSymbolCell extends CellTypeVariant with InlineSymbolFields {
   val gcStateTbaaNode = NumberedMetadata(32L)
   val inlineByteLengthTbaaNode = NumberedMetadata(33L)
 
-  def createConstant(inlineCharLength : Long, inlineData : IrConstant, inlineByteLength : Long) : StructureConstant = {
+  def createConstant(inlineCharLength: Long, inlineData: IrConstant, inlineByteLength: Long): StructureConstant = {
     if (inlineData.irType != inlineDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field inlineData")
     }
@@ -737,21 +737,21 @@ object InlineSymbolCell extends CellTypeVariant with InlineSymbolFields {
 }
 
 sealed trait HeapSymbolFields extends SymbolFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val heapByteLengthIrType = IntegerType(32)
-  val heapByteLengthTbaaNode : Metadata
-  val heapByteLengthGepIndices : List[Int]
+  val heapByteLengthTbaaNode: Metadata
+  val heapByteLengthGepIndices: List[Int]
 
   val heapCharLengthIrType = IntegerType(32)
-  val heapCharLengthTbaaNode : Metadata
-  val heapCharLengthGepIndices : List[Int]
+  val heapCharLengthTbaaNode: Metadata
+  val heapCharLengthGepIndices: List[Int]
 
   val heapByteArrayIrType = PointerType(UserDefinedType("sharedByteArray"))
-  val heapByteArrayTbaaNode : Metadata
-  val heapByteArrayGepIndices : List[Int]
+  val heapByteArrayTbaaNode: Metadata
+  val heapByteArrayGepIndices: List[Int]
 
-  def genPointerToHeapByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapByteLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -764,19 +764,19 @@ sealed trait HeapSymbolFields extends SymbolFields {
     )
   }
 
-  def genStoreToHeapByteLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToHeapByteLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val heapByteLengthPtr = genPointerToHeapByteLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> heapByteLengthTbaaNode)
     block.store(toStore, heapByteLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromHeapByteLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromHeapByteLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapByteLengthPtr = genPointerToHeapByteLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> heapByteLengthTbaaNode) ++ metadata
     block.load("heapByteLength")(heapByteLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToHeapCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapCharLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -789,19 +789,19 @@ sealed trait HeapSymbolFields extends SymbolFields {
     )
   }
 
-  def genStoreToHeapCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToHeapCharLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val heapCharLengthPtr = genPointerToHeapCharLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> heapCharLengthTbaaNode)
     block.store(toStore, heapCharLengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromHeapCharLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromHeapCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapCharLengthPtr = genPointerToHeapCharLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> heapCharLengthTbaaNode) ++ metadata
     block.load("heapCharLength")(heapCharLengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapByteArray(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -814,13 +814,13 @@ sealed trait HeapSymbolFields extends SymbolFields {
     )
   }
 
-  def genStoreToHeapByteArray(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToHeapByteArray(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> heapByteArrayTbaaNode)
     block.store(toStore, heapByteArrayPtr, metadata=allMetadata)
   }
 
-  def genLoadFromHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromHeapByteArray(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
     val allMetadata = Map("tbaa" -> heapByteArrayTbaaNode) ++ metadata
     block.load("heapByteArray")(heapByteArrayPtr, metadata=allMetadata)
@@ -845,7 +845,7 @@ object HeapSymbolCell extends CellTypeVariant with HeapSymbolFields {
   val gcStateTbaaNode = NumberedMetadata(32L)
   val inlineByteLengthTbaaNode = NumberedMetadata(33L)
 
-  def createConstant(heapByteLength : Long, heapCharLength : Long, heapByteArray : IrConstant, inlineByteLength : Long) : StructureConstant = {
+  def createConstant(heapByteLength: Long, heapCharLength: Long, heapByteArray: IrConstant, inlineByteLength: Long): StructureConstant = {
     if (heapByteArray.irType != heapByteArrayIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field heapByteArray")
     }
@@ -860,13 +860,13 @@ object HeapSymbolCell extends CellTypeVariant with HeapSymbolFields {
 }
 
 sealed trait BooleanFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val valueIrType = IntegerType(8)
-  val valueTbaaNode : Metadata
-  val valueGepIndices : List[Int]
+  val valueTbaaNode: Metadata
+  val valueGepIndices: List[Int]
 
-  def genPointerToValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToValue(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -879,13 +879,13 @@ sealed trait BooleanFields extends AnyFields {
     )
   }
 
-  def genStoreToValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToValue(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val valuePtr = genPointerToValue(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> valueTbaaNode)
     block.store(toStore, valuePtr, metadata=allMetadata)
   }
 
-  def genLoadFromValue(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val valuePtr = genPointerToValue(block)(valueCell)
     val allMetadata = Map("tbaa" -> valueTbaaNode) ++ metadata
     block.load("value")(valuePtr, metadata=allMetadata)
@@ -910,7 +910,7 @@ object BooleanCell extends PreconstructedCellType with BooleanFields {
 }
 
 sealed trait NumberFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 }
 
 object NumberCell extends CellType with NumberFields {
@@ -925,7 +925,7 @@ object NumberCell extends CellType with NumberFields {
   val typeIdTbaaNode = NumberedMetadata(42L)
   val gcStateTbaaNode = NumberedMetadata(43L)
 
-  def createConstant(typeId : Long) : StructureConstant = {
+  def createConstant(typeId: Long): StructureConstant = {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId)
     ), userDefinedType=Some(irType))
@@ -933,13 +933,13 @@ object NumberCell extends CellType with NumberFields {
 }
 
 sealed trait IntegerFields extends NumberFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val valueIrType = IntegerType(64)
-  val valueTbaaNode : Metadata
-  val valueGepIndices : List[Int]
+  val valueTbaaNode: Metadata
+  val valueGepIndices: List[Int]
 
-  def genPointerToValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToValue(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -952,13 +952,13 @@ sealed trait IntegerFields extends NumberFields {
     )
   }
 
-  def genStoreToValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToValue(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val valuePtr = genPointerToValue(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> valueTbaaNode)
     block.store(toStore, valuePtr, metadata=allMetadata)
   }
 
-  def genLoadFromValue(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val valuePtr = genPointerToValue(block)(valueCell)
     val allMetadata = Map("tbaa" -> valueTbaaNode) ++ metadata
     block.load("value")(valuePtr, metadata=allMetadata)
@@ -981,7 +981,7 @@ object IntegerCell extends ConcreteCellType with IntegerFields {
   val gcStateTbaaNode = NumberedMetadata(45L)
   val valueTbaaNode = NumberedMetadata(46L)
 
-  def createConstant(value : Long) : StructureConstant = {
+  def createConstant(value: Long): StructureConstant = {
     StructureConstant(List(
       NumberCell.createConstant(typeId=typeId),
       IntegerConstant(valueIrType, value)
@@ -990,13 +990,13 @@ object IntegerCell extends ConcreteCellType with IntegerFields {
 }
 
 sealed trait FlonumFields extends NumberFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val valueIrType = DoubleType
-  val valueTbaaNode : Metadata
-  val valueGepIndices : List[Int]
+  val valueTbaaNode: Metadata
+  val valueGepIndices: List[Int]
 
-  def genPointerToValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToValue(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1009,13 +1009,13 @@ sealed trait FlonumFields extends NumberFields {
     )
   }
 
-  def genStoreToValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToValue(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val valuePtr = genPointerToValue(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> valueTbaaNode)
     block.store(toStore, valuePtr, metadata=allMetadata)
   }
 
-  def genLoadFromValue(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val valuePtr = genPointerToValue(block)(valueCell)
     val allMetadata = Map("tbaa" -> valueTbaaNode) ++ metadata
     block.load("value")(valuePtr, metadata=allMetadata)
@@ -1038,7 +1038,7 @@ object FlonumCell extends ConcreteCellType with FlonumFields {
   val gcStateTbaaNode = NumberedMetadata(48L)
   val valueTbaaNode = NumberedMetadata(49L)
 
-  def createConstant(value : IrConstant) : StructureConstant = {
+  def createConstant(value: IrConstant): StructureConstant = {
     if (value.irType != valueIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field value")
     }
@@ -1051,13 +1051,13 @@ object FlonumCell extends ConcreteCellType with FlonumFields {
 }
 
 sealed trait CharFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val unicodeCharIrType = IntegerType(32)
-  val unicodeCharTbaaNode : Metadata
-  val unicodeCharGepIndices : List[Int]
+  val unicodeCharTbaaNode: Metadata
+  val unicodeCharGepIndices: List[Int]
 
-  def genPointerToUnicodeChar(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToUnicodeChar(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1070,13 +1070,13 @@ sealed trait CharFields extends AnyFields {
     )
   }
 
-  def genStoreToUnicodeChar(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToUnicodeChar(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val unicodeCharPtr = genPointerToUnicodeChar(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> unicodeCharTbaaNode)
     block.store(toStore, unicodeCharPtr, metadata=allMetadata)
   }
 
-  def genLoadFromUnicodeChar(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromUnicodeChar(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val unicodeCharPtr = genPointerToUnicodeChar(block)(valueCell)
     val allMetadata = Map("tbaa" -> unicodeCharTbaaNode) ++ metadata
     block.load("unicodeChar")(unicodeCharPtr, metadata=allMetadata)
@@ -1099,7 +1099,7 @@ object CharCell extends ConcreteCellType with CharFields {
   val gcStateTbaaNode = NumberedMetadata(51L)
   val unicodeCharTbaaNode = NumberedMetadata(52L)
 
-  def createConstant(unicodeChar : Long) : StructureConstant = {
+  def createConstant(unicodeChar: Long): StructureConstant = {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
       IntegerConstant(unicodeCharIrType, unicodeChar)
@@ -1108,17 +1108,17 @@ object CharCell extends ConcreteCellType with CharFields {
 }
 
 sealed trait VectorFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val lengthIrType = IntegerType(64)
-  val lengthTbaaNode : Metadata
-  val lengthGepIndices : List[Int]
+  val lengthTbaaNode: Metadata
+  val lengthGepIndices: List[Int]
 
   val elementsIrType = PointerType(PointerType(UserDefinedType("any")))
-  val elementsTbaaNode : Metadata
-  val elementsGepIndices : List[Int]
+  val elementsTbaaNode: Metadata
+  val elementsGepIndices: List[Int]
 
-  def genPointerToLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1131,19 +1131,19 @@ sealed trait VectorFields extends AnyFields {
     )
   }
 
-  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val lengthPtr = genPointerToLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> lengthTbaaNode)
     block.store(toStore, lengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val lengthPtr = genPointerToLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> lengthTbaaNode) ++ metadata
     block.load("length")(lengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToElements(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToElements(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1156,13 +1156,13 @@ sealed trait VectorFields extends AnyFields {
     )
   }
 
-  def genStoreToElements(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToElements(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val elementsPtr = genPointerToElements(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> elementsTbaaNode)
     block.store(toStore, elementsPtr, metadata=allMetadata)
   }
 
-  def genLoadFromElements(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromElements(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val elementsPtr = genPointerToElements(block)(valueCell)
     val allMetadata = Map("tbaa" -> elementsTbaaNode) ++ metadata
     block.load("elements")(elementsPtr, metadata=allMetadata)
@@ -1187,7 +1187,7 @@ object VectorCell extends ConcreteCellType with VectorFields {
   val lengthTbaaNode = NumberedMetadata(55L)
   val elementsTbaaNode = NumberedMetadata(56L)
 
-  def createConstant(length : Long, elements : IrConstant) : StructureConstant = {
+  def createConstant(length: Long, elements: IrConstant): StructureConstant = {
     if (elements.irType != elementsIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field elements")
     }
@@ -1201,17 +1201,17 @@ object VectorCell extends ConcreteCellType with VectorFields {
 }
 
 sealed trait BytevectorFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val lengthIrType = IntegerType(64)
-  val lengthTbaaNode : Metadata
-  val lengthGepIndices : List[Int]
+  val lengthTbaaNode: Metadata
+  val lengthGepIndices: List[Int]
 
   val byteArrayIrType = PointerType(UserDefinedType("sharedByteArray"))
-  val byteArrayTbaaNode : Metadata
-  val byteArrayGepIndices : List[Int]
+  val byteArrayTbaaNode: Metadata
+  val byteArrayGepIndices: List[Int]
 
-  def genPointerToLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToLength(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1224,19 +1224,19 @@ sealed trait BytevectorFields extends AnyFields {
     )
   }
 
-  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToLength(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val lengthPtr = genPointerToLength(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> lengthTbaaNode)
     block.store(toStore, lengthPtr, metadata=allMetadata)
   }
 
-  def genLoadFromLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val lengthPtr = genPointerToLength(block)(valueCell)
     val allMetadata = Map("tbaa" -> lengthTbaaNode) ++ metadata
     block.load("length")(lengthPtr, metadata=allMetadata)
   }
 
-  def genPointerToByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToByteArray(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1249,13 +1249,13 @@ sealed trait BytevectorFields extends AnyFields {
     )
   }
 
-  def genStoreToByteArray(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToByteArray(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val byteArrayPtr = genPointerToByteArray(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> byteArrayTbaaNode)
     block.store(toStore, byteArrayPtr, metadata=allMetadata)
   }
 
-  def genLoadFromByteArray(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromByteArray(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val byteArrayPtr = genPointerToByteArray(block)(valueCell)
     val allMetadata = Map("tbaa" -> byteArrayTbaaNode) ++ metadata
     block.load("byteArray")(byteArrayPtr, metadata=allMetadata)
@@ -1280,7 +1280,7 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val lengthTbaaNode = NumberedMetadata(59L)
   val byteArrayTbaaNode = NumberedMetadata(60L)
 
-  def createConstant(length : Long, byteArray : IrConstant) : StructureConstant = {
+  def createConstant(length: Long, byteArray: IrConstant): StructureConstant = {
     if (byteArray.irType != byteArrayIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field byteArray")
     }
@@ -1294,25 +1294,25 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
 }
 
 sealed trait RecordLikeFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val dataIsInlineIrType = IntegerType(8)
-  val dataIsInlineTbaaNode : Metadata
-  val dataIsInlineGepIndices : List[Int]
+  val dataIsInlineTbaaNode: Metadata
+  val dataIsInlineGepIndices: List[Int]
 
   val isUndefinedIrType = IntegerType(8)
-  val isUndefinedTbaaNode : Metadata
-  val isUndefinedGepIndices : List[Int]
+  val isUndefinedTbaaNode: Metadata
+  val isUndefinedGepIndices: List[Int]
 
   val recordClassIdIrType = IntegerType(32)
-  val recordClassIdTbaaNode : Metadata
-  val recordClassIdGepIndices : List[Int]
+  val recordClassIdTbaaNode: Metadata
+  val recordClassIdGepIndices: List[Int]
 
   val recordDataIrType = PointerType(IntegerType(8))
-  val recordDataTbaaNode : Metadata
-  val recordDataGepIndices : List[Int]
+  val recordDataTbaaNode: Metadata
+  val recordDataGepIndices: List[Int]
 
-  def genPointerToDataIsInline(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToDataIsInline(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1325,19 +1325,19 @@ sealed trait RecordLikeFields extends AnyFields {
     )
   }
 
-  def genStoreToDataIsInline(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToDataIsInline(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val dataIsInlinePtr = genPointerToDataIsInline(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> dataIsInlineTbaaNode)
     block.store(toStore, dataIsInlinePtr, metadata=allMetadata)
   }
 
-  def genLoadFromDataIsInline(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromDataIsInline(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val dataIsInlinePtr = genPointerToDataIsInline(block)(valueCell)
     val allMetadata = Map("tbaa" -> dataIsInlineTbaaNode) ++ metadata
     block.load("dataIsInline")(dataIsInlinePtr, metadata=allMetadata)
   }
 
-  def genPointerToIsUndefined(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToIsUndefined(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1350,19 +1350,19 @@ sealed trait RecordLikeFields extends AnyFields {
     )
   }
 
-  def genStoreToIsUndefined(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToIsUndefined(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val isUndefinedPtr = genPointerToIsUndefined(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> isUndefinedTbaaNode)
     block.store(toStore, isUndefinedPtr, metadata=allMetadata)
   }
 
-  def genLoadFromIsUndefined(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromIsUndefined(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val isUndefinedPtr = genPointerToIsUndefined(block)(valueCell)
     val allMetadata = Map("tbaa" -> isUndefinedTbaaNode) ++ metadata
     block.load("isUndefined")(isUndefinedPtr, metadata=allMetadata)
   }
 
-  def genPointerToRecordClassId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToRecordClassId(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1375,19 +1375,19 @@ sealed trait RecordLikeFields extends AnyFields {
     )
   }
 
-  def genStoreToRecordClassId(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToRecordClassId(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val recordClassIdPtr = genPointerToRecordClassId(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> recordClassIdTbaaNode)
     block.store(toStore, recordClassIdPtr, metadata=allMetadata)
   }
 
-  def genLoadFromRecordClassId(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromRecordClassId(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val recordClassIdPtr = genPointerToRecordClassId(block)(valueCell)
     val allMetadata = Map("tbaa" -> recordClassIdTbaaNode) ++ metadata
     block.load("recordClassId")(recordClassIdPtr, metadata=allMetadata)
   }
 
-  def genPointerToRecordData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToRecordData(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1400,13 +1400,13 @@ sealed trait RecordLikeFields extends AnyFields {
     )
   }
 
-  def genStoreToRecordData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToRecordData(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val recordDataPtr = genPointerToRecordData(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> recordDataTbaaNode)
     block.store(toStore, recordDataPtr, metadata=allMetadata)
   }
 
-  def genLoadFromRecordData(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromRecordData(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val recordDataPtr = genPointerToRecordData(block)(valueCell)
     val allMetadata = Map("tbaa" -> recordDataTbaaNode) ++ metadata
     block.load("recordData")(recordDataPtr, metadata=allMetadata)
@@ -1433,7 +1433,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
   val recordClassIdTbaaNode = NumberedMetadata(65L)
   val recordDataTbaaNode = NumberedMetadata(66L)
 
-  def createConstant(dataIsInline : Long, isUndefined : Long, recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
+  def createConstant(dataIsInline: Long, isUndefined: Long, recordClassId: Long, recordData: IrConstant, typeId: Long): StructureConstant = {
     if (recordData.irType != recordDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field recordData")
     }
@@ -1449,13 +1449,13 @@ object RecordLikeCell extends CellType with RecordLikeFields {
 }
 
 sealed trait ProcedureFields extends RecordLikeFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val entryPointIrType = PointerType(IntegerType(8))
-  val entryPointTbaaNode : Metadata
-  val entryPointGepIndices : List[Int]
+  val entryPointTbaaNode: Metadata
+  val entryPointGepIndices: List[Int]
 
-  def genPointerToEntryPoint(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToEntryPoint(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1468,13 +1468,13 @@ sealed trait ProcedureFields extends RecordLikeFields {
     )
   }
 
-  def genStoreToEntryPoint(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToEntryPoint(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val entryPointPtr = genPointerToEntryPoint(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> entryPointTbaaNode)
     block.store(toStore, entryPointPtr, metadata=allMetadata)
   }
 
-  def genLoadFromEntryPoint(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromEntryPoint(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val entryPointPtr = genPointerToEntryPoint(block)(valueCell)
     val allMetadata = Map("tbaa" -> entryPointTbaaNode) ++ metadata
     block.load("entryPoint")(entryPointPtr, metadata=allMetadata)
@@ -1505,7 +1505,7 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val recordDataTbaaNode = NumberedMetadata(72L)
   val entryPointTbaaNode = NumberedMetadata(73L)
 
-  def createConstant(entryPoint : IrConstant, dataIsInline : Long, isUndefined : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+  def createConstant(entryPoint: IrConstant, dataIsInline: Long, isUndefined: Long, recordClassId: Long, recordData: IrConstant): StructureConstant = {
     if (entryPoint.irType != entryPointIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
@@ -1518,13 +1518,13 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
 }
 
 sealed trait RecordFields extends RecordLikeFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val extraDataIrType = PointerType(IntegerType(8))
-  val extraDataTbaaNode : Metadata
-  val extraDataGepIndices : List[Int]
+  val extraDataTbaaNode: Metadata
+  val extraDataGepIndices: List[Int]
 
-  def genPointerToExtraData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToExtraData(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1537,13 +1537,13 @@ sealed trait RecordFields extends RecordLikeFields {
     )
   }
 
-  def genStoreToExtraData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToExtraData(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val extraDataPtr = genPointerToExtraData(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> extraDataTbaaNode)
     block.store(toStore, extraDataPtr, metadata=allMetadata)
   }
 
-  def genLoadFromExtraData(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromExtraData(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val extraDataPtr = genPointerToExtraData(block)(valueCell)
     val allMetadata = Map("tbaa" -> extraDataTbaaNode) ++ metadata
     block.load("extraData")(extraDataPtr, metadata=allMetadata)
@@ -1574,7 +1574,7 @@ object RecordCell extends ConcreteCellType with RecordFields {
   val recordDataTbaaNode = NumberedMetadata(79L)
   val extraDataTbaaNode = NumberedMetadata(80L)
 
-  def createConstant(extraData : IrConstant, dataIsInline : Long, isUndefined : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+  def createConstant(extraData: IrConstant, dataIsInline: Long, isUndefined: Long, recordClassId: Long, recordData: IrConstant): StructureConstant = {
     if (extraData.irType != extraDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field extraData")
     }
@@ -1587,21 +1587,21 @@ object RecordCell extends ConcreteCellType with RecordFields {
 }
 
 sealed trait ErrorObjectFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val categoryIrType = IntegerType(16)
-  val categoryTbaaNode : Metadata
-  val categoryGepIndices : List[Int]
+  val categoryTbaaNode: Metadata
+  val categoryGepIndices: List[Int]
 
   val messageIrType = PointerType(UserDefinedType("string"))
-  val messageTbaaNode : Metadata
-  val messageGepIndices : List[Int]
+  val messageTbaaNode: Metadata
+  val messageGepIndices: List[Int]
 
   val irritantsIrType = PointerType(UserDefinedType("listElement"))
-  val irritantsTbaaNode : Metadata
-  val irritantsGepIndices : List[Int]
+  val irritantsTbaaNode: Metadata
+  val irritantsGepIndices: List[Int]
 
-  def genPointerToCategory(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToCategory(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1614,19 +1614,19 @@ sealed trait ErrorObjectFields extends AnyFields {
     )
   }
 
-  def genStoreToCategory(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToCategory(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val categoryPtr = genPointerToCategory(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> categoryTbaaNode)
     block.store(toStore, categoryPtr, metadata=allMetadata)
   }
 
-  def genLoadFromCategory(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromCategory(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val categoryPtr = genPointerToCategory(block)(valueCell)
     val allMetadata = Map("tbaa" -> categoryTbaaNode) ++ metadata
     block.load("category")(categoryPtr, metadata=allMetadata)
   }
 
-  def genPointerToMessage(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToMessage(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1639,19 +1639,19 @@ sealed trait ErrorObjectFields extends AnyFields {
     )
   }
 
-  def genStoreToMessage(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToMessage(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val messagePtr = genPointerToMessage(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> messageTbaaNode)
     block.store(toStore, messagePtr, metadata=allMetadata)
   }
 
-  def genLoadFromMessage(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromMessage(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val messagePtr = genPointerToMessage(block)(valueCell)
     val allMetadata = Map("tbaa" -> messageTbaaNode) ++ metadata
     block.load("message")(messagePtr, metadata=allMetadata)
   }
 
-  def genPointerToIrritants(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToIrritants(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1664,13 +1664,13 @@ sealed trait ErrorObjectFields extends AnyFields {
     )
   }
 
-  def genStoreToIrritants(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToIrritants(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val irritantsPtr = genPointerToIrritants(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> irritantsTbaaNode)
     block.store(toStore, irritantsPtr, metadata=allMetadata)
   }
 
-  def genLoadFromIrritants(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromIrritants(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val irritantsPtr = genPointerToIrritants(block)(valueCell)
     val allMetadata = Map("tbaa" -> irritantsTbaaNode) ++ metadata
     block.load("irritants")(irritantsPtr, metadata=allMetadata)
@@ -1697,7 +1697,7 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val messageTbaaNode = NumberedMetadata(84L)
   val irritantsTbaaNode = NumberedMetadata(85L)
 
-  def createConstant(category : Long, message : IrConstant, irritants : IrConstant) : StructureConstant = {
+  def createConstant(category: Long, message: IrConstant, irritants: IrConstant): StructureConstant = {
     if (message.irType != messageIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field message")
     }
@@ -1716,13 +1716,13 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
 }
 
 sealed trait PortFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val portIrType = PointerType(IntegerType(8))
-  val portTbaaNode : Metadata
-  val portGepIndices : List[Int]
+  val portTbaaNode: Metadata
+  val portGepIndices: List[Int]
 
-  def genPointerToPort(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToPort(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1735,13 +1735,13 @@ sealed trait PortFields extends AnyFields {
     )
   }
 
-  def genStoreToPort(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToPort(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val portPtr = genPointerToPort(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> portTbaaNode)
     block.store(toStore, portPtr, metadata=allMetadata)
   }
 
-  def genLoadFromPort(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromPort(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val portPtr = genPointerToPort(block)(valueCell)
     val allMetadata = Map("tbaa" -> portTbaaNode) ++ metadata
     block.load("port")(portPtr, metadata=allMetadata)
@@ -1764,7 +1764,7 @@ object PortCell extends ConcreteCellType with PortFields {
   val gcStateTbaaNode = NumberedMetadata(87L)
   val portTbaaNode = NumberedMetadata(88L)
 
-  def createConstant(port : IrConstant) : StructureConstant = {
+  def createConstant(port: IrConstant): StructureConstant = {
     if (port.irType != portIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field port")
     }
@@ -1777,7 +1777,7 @@ object PortCell extends ConcreteCellType with PortFields {
 }
 
 sealed trait EofObjectFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 }
 
 object EofObjectCell extends PreconstructedCellType with EofObjectFields {
@@ -1796,13 +1796,13 @@ object EofObjectCell extends PreconstructedCellType with EofObjectFields {
 }
 
 sealed trait MailboxFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val mailboxIrType = PointerType(IntegerType(8))
-  val mailboxTbaaNode : Metadata
-  val mailboxGepIndices : List[Int]
+  val mailboxTbaaNode: Metadata
+  val mailboxGepIndices: List[Int]
 
-  def genPointerToMailbox(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToMailbox(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1815,13 +1815,13 @@ sealed trait MailboxFields extends AnyFields {
     )
   }
 
-  def genStoreToMailbox(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToMailbox(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val mailboxPtr = genPointerToMailbox(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> mailboxTbaaNode)
     block.store(toStore, mailboxPtr, metadata=allMetadata)
   }
 
-  def genLoadFromMailbox(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromMailbox(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val mailboxPtr = genPointerToMailbox(block)(valueCell)
     val allMetadata = Map("tbaa" -> mailboxTbaaNode) ++ metadata
     block.load("mailbox")(mailboxPtr, metadata=allMetadata)
@@ -1844,7 +1844,7 @@ object MailboxCell extends ConcreteCellType with MailboxFields {
   val gcStateTbaaNode = NumberedMetadata(92L)
   val mailboxTbaaNode = NumberedMetadata(93L)
 
-  def createConstant(mailbox : IrConstant) : StructureConstant = {
+  def createConstant(mailbox: IrConstant): StructureConstant = {
     if (mailbox.irType != mailboxIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field mailbox")
     }
@@ -1857,13 +1857,13 @@ object MailboxCell extends ConcreteCellType with MailboxFields {
 }
 
 sealed trait HashMapFields extends AnyFields {
-  val irType : FirstClassType
+  val irType: FirstClassType
 
   val datumHashTreeIrType = PointerType(IntegerType(8))
-  val datumHashTreeTbaaNode : Metadata
-  val datumHashTreeGepIndices : List[Int]
+  val datumHashTreeTbaaNode: Metadata
+  val datumHashTreeGepIndices: List[Int]
 
-  def genPointerToDatumHashTree(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToDatumHashTree(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
@@ -1876,13 +1876,13 @@ sealed trait HashMapFields extends AnyFields {
     )
   }
 
-  def genStoreToDatumHashTree(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+  def genStoreToDatumHashTree(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
     val datumHashTreePtr = genPointerToDatumHashTree(block)(valueCell)
     val allMetadata = metadata ++ Map("tbaa" -> datumHashTreeTbaaNode)
     block.store(toStore, datumHashTreePtr, metadata=allMetadata)
   }
 
-  def genLoadFromDatumHashTree(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+  def genLoadFromDatumHashTree(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val datumHashTreePtr = genPointerToDatumHashTree(block)(valueCell)
     val allMetadata = Map("tbaa" -> datumHashTreeTbaaNode) ++ metadata
     block.load("datumHashTree")(datumHashTreePtr, metadata=allMetadata)
@@ -1905,7 +1905,7 @@ object HashMapCell extends ConcreteCellType with HashMapFields {
   val gcStateTbaaNode = NumberedMetadata(95L)
   val datumHashTreeTbaaNode = NumberedMetadata(96L)
 
-  def createConstant(datumHashTree : IrConstant) : StructureConstant = {
+  def createConstant(datumHashTree: IrConstant): StructureConstant = {
     if (datumHashTree.irType != datumHashTreeIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field datumHashTree")
     }

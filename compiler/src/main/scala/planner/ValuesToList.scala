@@ -16,12 +16,12 @@ private[planner] object ValuesToList {
     *                       proper list.
     */
   def apply(
-      memberValues : List[iv.IntermediateValue],
-      tailValue : iv.IntermediateValue = iv.EmptyListValue
-  )(implicit plan : PlanWriter) : iv.IntermediateValue =
+      memberValues: List[iv.IntermediateValue],
+      tailValue: iv.IntermediateValue = iv.EmptyListValue
+  )(implicit plan: PlanWriter): iv.IntermediateValue =
     memberValues.foldRight(tailValue) { case(carValue, cdrValue) =>
       val listLengthOpt = cdrValue match {
-        case knownListElement : iv.KnownListElement =>
+        case knownListElement: iv.KnownListElement =>
           knownListElement.listLengthOpt.map(_ + 1)
 
         case _ =>

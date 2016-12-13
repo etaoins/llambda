@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 
 object ExtractProgram {
-  def apply(data : List[ast.Datum])(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[et.Expr] = {
+  def apply(data: List[ast.Datum])(implicit libraryLoader: LibraryLoader, frontendConfig: FrontendConfig): List[et.Expr] = {
     val filenameOpt = for(datum <- data.headOption;
                           location <- datum.locationOpt;
                           filename <- location.filenameOpt) yield filename
@@ -27,7 +27,7 @@ object ExtractProgram {
     val importBindingList = importData.flatMap(ResolveImportDecl(_))
 
     // Convert it to a scope
-    val scope = new Scope(collection.mutable.Map(importBindingList : _*), None)
+    val scope = new Scope(collection.mutable.Map(importBindingList: _*), None)
 
     // Extract the program's body expressions
     val programExprs = ExtractModuleBody(exprData, scope)

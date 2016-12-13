@@ -281,10 +281,10 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
           ProcedureSignature(
             false,
             false,
-            List(fixedTypeVar : pm.TypeVar),
+            List(fixedTypeVar: pm.TypeVar),
             Nil,
             Some(vt.IntegerType),
-            vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
+            vt.ReturnType.Reachable(returnTypeVar: pm.TypeVar),
             _
           )
         ),
@@ -306,10 +306,10 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
           ProcedureSignature(
             false,
             false,
-            List(fixedTypeVar : pm.TypeVar),
+            List(fixedTypeVar: pm.TypeVar),
             Nil,
             Some(vt.IntegerType),
-            vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
+            vt.ReturnType.Reachable(returnTypeVar: pm.TypeVar),
             _
           )
         ),
@@ -332,10 +332,10 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
           ProcedureSignature(
             false,
             false,
-            List(fixedTypeVar : pm.TypeVar),
+            List(fixedTypeVar: pm.TypeVar),
             Nil,
             Some(vt.IntegerType),
-            vt.ReturnType.Reachable(returnTypeVar : pm.TypeVar),
+            vt.ReturnType.Reachable(returnTypeVar: pm.TypeVar),
             _
           )
         ),

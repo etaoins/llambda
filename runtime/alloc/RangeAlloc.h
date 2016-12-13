@@ -22,7 +22,7 @@ public:
 		{
 			return m_currentCell == other.m_currentCell;
 		}
-		
+
 		bool operator!=(const Iterator &other) const
 		{
 			return m_currentCell != other.m_currentCell;
@@ -37,26 +37,26 @@ public:
 
 			return m_currentCell;
 		}
-		
+
 		Iterator& operator++()
 		{
 			m_currentCell++;
 			return *this;
 		}
-		
+
 		Iterator operator++(int postfix)
 		{
 			Iterator originalValue(*this);
 			++(*this);
 			return originalValue;
 		}
-		
+
 		Iterator& operator--()
 		{
 			m_currentCell--;
 			return *this;
 		}
-		
+
 		Iterator operator--(int postfix)
 		{
 			Iterator originalValue(*this);
@@ -88,7 +88,7 @@ public:
 		m_endPointer(endPointer)
 	{
 	}
-	
+
 	size_t size() const
 	{
 		return m_endPointer - m_startPointer;
@@ -98,7 +98,7 @@ public:
 	{
 		return Iterator(m_startPointer, m_startPointer, m_endPointer);
 	}
-	
+
 	Iterator end()
 	{
 		return Iterator(m_startPointer, m_endPointer, m_endPointer);

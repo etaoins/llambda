@@ -5,13 +5,13 @@ import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 
 object GenCheckedIntegerInstr {
-  def apply(state : GenerationState)(
-      worldPtrIr : IrValue,
-      step : ps.CheckedIntegerStep,
-      opName : String,
-      val1 : IrValue,
-      val2 : IrValue
-  ) : (GenerationState, IrValue) = {
+  def apply(state: GenerationState)(
+      worldPtrIr: IrValue,
+      step: ps.CheckedIntegerStep,
+      opName: String,
+      val1: IrValue,
+      val2: IrValue
+  ): (GenerationState, IrValue) = {
     val entryBlock = state.currentBlock
     val irFunction = entryBlock.function
     val module = irFunction.module

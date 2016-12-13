@@ -5,45 +5,45 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 case class ParsedOptional(
-    symbol : sst.ScopedSymbol,
-    schemeTypeOpt : Option[vt.SchemeType],
-    defaultDatum : sst.ScopedDatum
+    symbol: sst.ScopedSymbol,
+    schemeTypeOpt: Option[vt.SchemeType],
+    defaultDatum: sst.ScopedDatum
 )
 
 
 case class ParsedFormals(
-    mandatoryArgs : List[(sst.ScopedSymbol, Option[vt.SchemeType])],
-    optionalArgs : List[ParsedOptional],
-    restArgOpt : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
+    mandatoryArgs: List[(sst.ScopedSymbol, Option[vt.SchemeType])],
+    optionalArgs: List[ParsedOptional],
+    restArgOpt: Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
 )
 
 object ParseFormals {
   private case class ParsedFixed(
-      symbol : sst.ScopedSymbol,
-      schemeTypeOpt : Option[vt.SchemeType],
-      defaultDatumOpt : Option[sst.ScopedDatum]
+      symbol: sst.ScopedSymbol,
+      schemeTypeOpt: Option[vt.SchemeType],
+      defaultDatumOpt: Option[sst.ScopedDatum]
   )
 
   def apply(
-      argList : List[sst.ScopedDatum],
-      argTerminator : sst.ScopedDatum,
-      allowOptionals : Boolean = true
-  ) : ParsedFormals = {
+      argList: List[sst.ScopedDatum],
+      argTerminator: sst.ScopedDatum,
+      allowOptionals: Boolean = true
+  ): ParsedFormals = {
     val (fixedArgData, restArgNameOpt, restArgMemberTypeOpt) =
       (argList.reverse, argTerminator) match {
-        // This looks for a terminal rest arg in the form: name : <type> *
+        // This looks for a terminal rest arg in the form: name: <type> *
         case (
             sst.ScopedSymbol(_, "*") ::
-            (restArgType : sst.ScopedDatum) ::
+            (restArgType: sst.ScopedDatum) ::
             sst.ResolvedSymbol(Primitives.AnnotateStorageLocType) ::
-            (restArgName : sst.ScopedSymbol) ::
+            (restArgName: sst.ScopedSymbol) ::
             reverseFixedArgs
           , sst.NonSymbolLeaf(ast.EmptyList())
         ) =>
           // This is a typed rest argument
           (reverseFixedArgs.reverse, Some(restArgName), Some(ExtractType.extractNonEmptySchemeType(restArgType)))
 
-        case (_, restArgSymbol : sst.ScopedSymbol) =>
+        case (_, restArgSymbol: sst.ScopedSymbol) =>
           // This has an untyped rest argument
           (argList, Some(restArgSymbol), None)
 
@@ -58,7 +58,7 @@ object ParseFormals {
     // Find the types in our signature
     val fixedArgs = fixedArgData.map {
       case sst.ScopedProperList(List(
-          scopedSymbol : sst.ScopedSymbol,
+          scopedSymbol: sst.ScopedSymbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
           typeDatum,
           defaultDatum
@@ -70,7 +70,7 @@ object ParseFormals {
         )
 
       case sst.ScopedProperList(List(
-          scopedSymbol : sst.ScopedSymbol,
+          scopedSymbol: sst.ScopedSymbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
           typeDatum
       )) =>
@@ -80,14 +80,14 @@ object ParseFormals {
           defaultDatumOpt=None
         )
 
-      case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, defaultDatum)) if allowOptionals =>
+      case sst.ScopedProperList(List(scopedSymbol: sst.ScopedSymbol, defaultDatum)) if allowOptionals =>
         ParsedFixed(
           symbol=scopedSymbol,
           schemeTypeOpt=None,
           defaultDatumOpt=Some(defaultDatum)
         )
 
-      case scopedSymbol : sst.ScopedSymbol =>
+      case scopedSymbol: sst.ScopedSymbol =>
         ParsedFixed(
           symbol=scopedSymbol,
           schemeTypeOpt=None,
@@ -96,10 +96,10 @@ object ParseFormals {
 
       case datum =>
         val message = if (allowOptionals) {
-          s"Unrecognised argument definition. Must be either identifier, [identifier default], [identifier : <type>] or [identifier : <type> default]."
+          s"Unrecognised argument definition. Must be either identifier, [identifier default], [identifier: <type>] or [identifier: <type> default]."
         }
         else {
-          s"Unrecognised argument definition. Must be either identifier or [identifier : <type>]."
+          s"Unrecognised argument definition. Must be either identifier or [identifier: <type>]."
         }
 
         throw new BadSpecialFormException(datum, message)
@@ -121,7 +121,7 @@ object ParseFormals {
 
     val restArgOpt = restArgNameOpt map { restArgName =>
       restArgName -> restArgMemberTypeOpt
-    } : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
+    }: Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
 
     ParsedFormals(
       mandatoryArgs=mandatoryArgs,

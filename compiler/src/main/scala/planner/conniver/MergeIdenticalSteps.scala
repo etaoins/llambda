@@ -12,14 +12,14 @@ object MergeIdenticalSteps extends FunctionConniver {
   // They're equal for our purposes regardless if their result is equal
   private object PlaceholderResultTemp extends ps.TempValue(false)
 
-  protected def dropAndRename(steps : List[ps.Step], renames : Map[ps.TempValue, ps.TempValue], availableMerges : AvailableMerges, acc : List[ps.Step]) : (List[ps.Step], Map[ps.TempValue, ps.TempValue]) = steps match {
+  protected def dropAndRename(steps: List[ps.Step], renames: Map[ps.TempValue, ps.TempValue], availableMerges: AvailableMerges, acc: List[ps.Step]): (List[ps.Step], Map[ps.TempValue, ps.TempValue]) = steps match {
     case step :: tailSteps =>
       val renamedStep = step.renamed { tempValue =>
         renames.getOrElse(tempValue, tempValue)
       }
 
       renamedStep match {
-        case nestingStep : ps.NestingStep =>
+        case nestingStep: ps.NestingStep =>
           val mappedStep = nestingStep.mapInnerBranches { case (innerSteps, innerResultTemps) =>
             val (mappedSteps, finalRenames) = dropAndRename(innerSteps, renames, availableMerges, Nil)
 
@@ -33,7 +33,7 @@ object MergeIdenticalSteps extends FunctionConniver {
 
           dropAndRename(tailSteps, renames, availableMerges, mappedStep :: acc)
 
-        case mergeableStep : ps.MergeableStep =>
+        case mergeableStep: ps.MergeableStep =>
           // Rename the result temp for comparison purposes
           val mergeKey = mergeableStep.mergeKey
 
@@ -58,10 +58,10 @@ object MergeIdenticalSteps extends FunctionConniver {
       (acc.reverse, renames)
   }
 
-  def mergeSteps(steps : List[ps.Step]) : List[ps.Step] =
+  def mergeSteps(steps: List[ps.Step]): List[ps.Step] =
     dropAndRename(steps, Map(), Map(), Nil)._1
 
-  protected def conniveFunction(function : PlannedFunction) : PlannedFunction = {
+  protected def conniveFunction(function: PlannedFunction): PlannedFunction = {
     function.copy(
       steps=mergeSteps(function.steps)
     )

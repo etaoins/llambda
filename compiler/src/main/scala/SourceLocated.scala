@@ -4,13 +4,13 @@ import io.llambda
 import scala.annotation.tailrec
 
 case class SourceLocation(
-  filenameOpt : Option[String],
-  sourceString : String,
-  offset : Int
+  filenameOpt: Option[String],
+  sourceString: String,
+  offset: Int
 ) {
-  private lazy val lineColumn : (Int, Int) = {
+  private lazy val lineColumn: (Int, Int) = {
     @tailrec
-    def findLineColumn(cursor : Int = 0, line : Int = 1, column : Int = 1) : (Int, Int) =
+    def findLineColumn(cursor: Int = 0, line: Int = 1, column: Int = 1): (Int, Int) =
       if (cursor == offset) {
         // We're done
         (line, column)
@@ -29,11 +29,11 @@ case class SourceLocation(
 
   def line =
     lineColumn._1
-  
+
   def column =
     lineColumn._2
-  
-  private def sourceSnippet : String = {
+
+  private def sourceSnippet: String = {
     val sourceLines = sourceString.split('\n')
     val lineOfInterest = sourceLines(line - 1)
 
@@ -51,29 +51,29 @@ case class SourceLocation(
   def locationOnlyString =
     filenameOpt.getOrElse("(unknown)") + ":" + line
 
-  override def toString = 
+  override def toString =
     locationWithSnippetString
 }
 
 abstract trait SourceLocated {
-  var locationOpt : Option[SourceLocation] = None
+  var locationOpt: Option[SourceLocation] = None
 
   def hasLocation = locationOpt.isDefined
 
-  def assignLocationTo(other : SourceLocated) {
+  def assignLocationTo(other: SourceLocated) {
     if (this.locationOpt.isDefined) {
       other.locationOpt = this.locationOpt
     }
   }
-  
-  def assignLocationFrom(other : SourceLocated) : SourceLocated.this.type = {
+
+  def assignLocationFrom(other: SourceLocated): SourceLocated.this.type = {
     if (other.locationOpt.isDefined) {
       this.locationOpt = other.locationOpt
     }
     this
   }
 
-  def locationString : String = {
+  def locationString: String = {
     locationOpt.map(_.toString).getOrElse("")
   }
 }
@@ -87,20 +87,20 @@ object InlineReason {
 }
 
 case class InlinePathEntry(
-  contextOpt : Option[debug.SourceContext],
-  locationOpt : Option[SourceLocation],
-  inlineReason : InlineReason
+  contextOpt: Option[debug.SourceContext],
+  locationOpt: Option[SourceLocation],
+  inlineReason: InlineReason
 )
 
 abstract trait ContextLocated extends SourceLocated {
-  var contextOpt : Option[debug.SourceContext] = None
-  var inlinePath : List[InlinePathEntry] = Nil
-  
-  override def assignLocationTo(other : SourceLocated) {
+  var contextOpt: Option[debug.SourceContext] = None
+  var inlinePath: List[InlinePathEntry] = Nil
+
+  override def assignLocationTo(other: SourceLocated) {
     super.assignLocationTo(other)
 
     other match {
-      case otherSpLocated : ContextLocated =>
+      case otherSpLocated: ContextLocated =>
         if (this.contextOpt.isDefined) {
           otherSpLocated.contextOpt = this.contextOpt
           otherSpLocated.inlinePath = this.inlinePath
@@ -110,18 +110,18 @@ abstract trait ContextLocated extends SourceLocated {
     }
   }
 
-  def assignLocationAndContextFrom(other : SourceLocated, context : debug.SourceContext) : ContextLocated.this.type = {
+  def assignLocationAndContextFrom(other: SourceLocated, context: debug.SourceContext): ContextLocated.this.type = {
     assignLocationFrom(other)
     this.contextOpt = Some(context)
 
     this
   }
-  
-  override def assignLocationFrom(other : SourceLocated) : ContextLocated.this.type = {
+
+  override def assignLocationFrom(other: SourceLocated): ContextLocated.this.type = {
     super.assignLocationFrom(other)
 
     other match {
-      case otherSpLocated : ContextLocated =>
+      case otherSpLocated: ContextLocated =>
         if (otherSpLocated.contextOpt.isDefined) {
           this.contextOpt = otherSpLocated.contextOpt
           this.inlinePath = otherSpLocated.inlinePath
@@ -132,12 +132,12 @@ abstract trait ContextLocated extends SourceLocated {
 
     this
   }
-  
-  override def locationString : String = {
+
+  override def locationString: String = {
     val locationPathParts = super.locationString :: inlinePath.collect {
       case InlinePathEntry(_, Some(location), InlineReason.MacroExpansion) =>
         "Expanded from:\n" + location.toString
-      
+
       case InlinePathEntry(_, Some(location), InlineReason.LambdaInline) =>
         "Inlined from:\n" + location.toString
     }

@@ -9,7 +9,7 @@ import llambda.compiler.codegen.RuntimeFunctions
 import llambda.compiler.{InternalCompilerErrorException, TypeException}
 
 object PlanTypeCheck {
-  private def unrolledTypeRef(schemeTypeRef : vt.SchemeTypeRef) : vt.SchemeType = {
+  private def unrolledTypeRef(schemeTypeRef: vt.SchemeTypeRef): vt.SchemeType = {
     // We pre-unroll our types so we should never encounter a recursive ref
     schemeTypeRef match {
       case vt.DirectSchemeTypeRef(directType) =>
@@ -20,17 +20,17 @@ object PlanTypeCheck {
     }
   }
 
-  private def flattenType(schemeType : vt.SchemeType) : Set[vt.NonUnionSchemeType] = schemeType match {
-    case nonUnion : vt.NonUnionSchemeType => Set(nonUnion)
+  private def flattenType(schemeType: vt.SchemeType): Set[vt.NonUnionSchemeType] = schemeType match {
+    case nonUnion: vt.NonUnionSchemeType => Set(nonUnion)
     case vt.UnionType(memberTypes)        => memberTypes
   }
 
   private def testRecordClass(
-      plan : PlanWriter,
-      checkValue : BoxedValue,
-      valueType : vt.SchemeType,
-      recordType : vt.RecordType
-  ) : CheckResult = {
+      plan: PlanWriter,
+      checkValue: BoxedValue,
+      valueType: vt.SchemeType,
+      recordType: vt.RecordType
+  ): CheckResult = {
     val flattenedType = flattenType(valueType)
 
     // If we contain a generic record type we can be of any record class
@@ -42,30 +42,30 @@ object PlanTypeCheck {
     }
     else {
       Some(flattenType(valueType) collect {
-        case recordType : vt.RecordType =>
+        case recordType: vt.RecordType =>
           recordType
-      } : Set[vt.RecordLikeType])
+      }: Set[vt.RecordLikeType])
     }
 
     // Cast the value to its boxed form
     val recordCellTemp = checkValue.castToCellTempValue(recordType.cellType)(plan)
 
     val classMatchedPred = ps.Temp(vt.Predicate)
-    plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
+    plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt)
     DynamicResult(classMatchedPred)
   }
 
   private def testPairType(
-      plan : PlanWriter,
-      checkValue : BoxedValue,
-      valueType : vt.SchemeType,
-      testCarType : vt.SchemeType,
-      testCdrType : vt.SchemeType
-  ) : CheckResult = {
+      plan: PlanWriter,
+      checkValue: BoxedValue,
+      valueType: vt.SchemeType,
+      testCarType: vt.SchemeType,
+      testCdrType: vt.SchemeType
+  ): CheckResult = {
     // Determine what we know about the car and cdr types already
     // This can speed up their type checks
     val (knownCarType, knownCdrType) = valueType match {
-      case pairType : vt.PairType =>
+      case pairType: vt.PairType =>
         (unrolledTypeRef(pairType.carTypeRef), unrolledTypeRef(pairType.cdrTypeRef))
 
       case _ =>
@@ -94,11 +94,11 @@ object PlanTypeCheck {
   }
 
   private def testExternalRecordType(
-      plan : PlanWriter,
-      checkValue : BoxedValue,
-      valueType : vt.SchemeType,
-      testType : vt.ExternalRecordType
-  ) : CheckResult = {
+      plan: PlanWriter,
+      checkValue: BoxedValue,
+      valueType: vt.SchemeType,
+      testType: vt.ExternalRecordType
+  ): CheckResult = {
     val predicate = testType.predicateOpt getOrElse {
       throw new TypeException(
         located=plan.activeContextLocated,
@@ -128,19 +128,19 @@ object PlanTypeCheck {
   }
 
   private def testNonUnionType(
-      plan : PlanWriter,
-      checkValue : BoxedValue,
-      valueType : vt.SchemeType,
-      testType : vt.NonUnionSchemeType
-  ) : CheckResult = {
+      plan: PlanWriter,
+      checkValue: BoxedValue,
+      valueType: vt.SchemeType,
+      testType: vt.NonUnionSchemeType
+  ): CheckResult = {
     testType match {
-      case recordType : vt.RecordType =>
+      case recordType: vt.RecordType =>
         branchOnType(plan, checkValue, valueType, recordType.parentType, isTypePlanner=Some({
           (isRecordPlan, remainingType) =>
             testRecordClass(isRecordPlan, checkValue, remainingType, recordType)
         }))
 
-      case externalRecordType : vt.ExternalRecordType =>
+      case externalRecordType: vt.ExternalRecordType =>
         testExternalRecordType(plan, checkValue, valueType, externalRecordType)
 
       case vt.SpecificPairType(testCarTypeRef, testCdrTypeRef) =>
@@ -180,13 +180,13 @@ object PlanTypeCheck {
       case vt.AnyHashMapType =>
         testNonUnionType(plan, checkValue, valueType, vt.SchemeTypeAtom(ct.HashMapCell))
 
-      case _ : vt.HashMapType  =>
+      case _: vt.HashMapType  =>
         throw new TypeException(
           located=plan.activeContextLocated,
           message=s"Value of type ${valueType} does not statically satisfy hash map type ${testType}"
         )
 
-      case _ : vt.ApplicableType =>
+      case _: vt.ApplicableType =>
         throw new TypeException(
           located=plan.activeContextLocated,
           message=s"Value of type ${valueType} does not statically satisfy procedure type ${testType}"
@@ -195,11 +195,11 @@ object PlanTypeCheck {
   }
 
   private def testUnionTypeRecursively(
-      plan : PlanWriter,
-      checkValue : BoxedValue,
-      valueType : vt.SchemeType,
-      memberTypes : List[vt.NonUnionSchemeType]
-  ) : CheckResult = memberTypes match {
+      plan: PlanWriter,
+      checkValue: BoxedValue,
+      valueType: vt.SchemeType,
+      memberTypes: List[vt.NonUnionSchemeType]
+  ): CheckResult = memberTypes match {
     case testType :: restTypes =>
       branchOnType(plan, checkValue, valueType, testType, isNotTypePlanner=Some({
         (isNotTypePlan, remainingType) =>
@@ -210,16 +210,16 @@ object PlanTypeCheck {
       // No types left
       StaticFalseResult
   }
-  
+
   private def branchOnType(
-      plan : PlanWriter,
-      checkValue : => BoxedValue,
-      valueType : vt.SchemeType,
-      testType : vt.SchemeType,
-      isTypePlanner : Option[((PlanWriter, vt.SchemeType) => CheckResult)] = None,
-      isNotTypePlanner : Option[((PlanWriter, vt.SchemeType) => CheckResult)] = None,
-      mustInline : Boolean = false
-  ) : CheckResult =  {
+      plan: PlanWriter,
+      checkValue: => BoxedValue,
+      valueType: vt.SchemeType,
+      testType: vt.SchemeType,
+      isTypePlanner: Option[((PlanWriter, vt.SchemeType) => CheckResult)] = None,
+      isNotTypePlanner: Option[((PlanWriter, vt.SchemeType) => CheckResult)] = None,
+      mustInline: Boolean = false
+  ): CheckResult =  {
     vt.SatisfiesType(testType, valueType) match {
       case Some(true) =>
         isTypePlanner.map { planner =>
@@ -239,17 +239,17 @@ object PlanTypeCheck {
 
         // Have we either:
         // 1) Explicitly been asked to inline (e.g. while planning the type predicate itself(
-        // 2) Been given a value with type information that would be lost calling a predicate. Exclude types with 
+        // 2) Been given a value with type information that would be lost calling a predicate. Exclude types with
         //    recursive references as they require a function call
         // 3) Have an extremely trivial check to perform
-        val shouldInline = mustInline || 
-          (!(valueType eq vt.AnySchemeType) && !vt.HasRecursiveRef(valueType) && !planningTypes.contains(valueType)) || 
+        val shouldInline = mustInline ||
+          (!(valueType eq vt.AnySchemeType) && !vt.HasRecursiveRef(valueType) && !planningTypes.contains(valueType)) ||
           testType.isInstanceOf[vt.SchemeTypeAtom]
 
         val testResult = if (shouldInline) {
           // Unroll this type in case it's recursive
           testType.unrolled match {
-            case nonUnion : vt.NonUnionSchemeType =>
+            case nonUnion: vt.NonUnionSchemeType =>
               testNonUnionType(plan, checkValue, valueType, nonUnion)
 
             case vt.UnionType(memberTypes) =>
@@ -287,9 +287,9 @@ object PlanTypeCheck {
             arguments=List(datumValueTemp)
           )
 
-          DynamicResult(resultPredTemp) 
+          DynamicResult(resultPredTemp)
         }
-          
+
         val isTypePlan = plan.forkPlan()
         val isNotTypePlan = plan.forkPlan()
 
@@ -331,18 +331,18 @@ object PlanTypeCheck {
     * This will either plan an inline type check or plan a call to a type predicate based on internal heuristics
     *
     * @param  checkValue     Value to plan a type test for. This value may be of any cell type.
-    * @param  valueType      Known Scheme type of the value being checked 
+    * @param  valueType      Known Scheme type of the value being checked
     * @param  testType       Scheme type to test checkValue's membership in
     * @param  selfSymbolOpt  If defined the native symbol referring to the type predicate procedure being planned. This
     *                        is required for planning recursive types to recursive tail self calls
     * @return CheckResult indicating if checkValue satisfies testType
     */
   def apply(
-      checkValue : => BoxedValue,
-      valueType : vt.SchemeType,
-      testType : vt.SchemeType,
-      selfSymbolOpt : Option[String] = None
-  )(implicit plan : PlanWriter) : CheckResult = {
+      checkValue: => BoxedValue,
+      valueType: vt.SchemeType,
+      testType: vt.SchemeType,
+      selfSymbolOpt: Option[String] = None
+  )(implicit plan: PlanWriter): CheckResult = {
     val predProcs = (selfSymbolOpt map { selfSymbol =>
       (testType -> selfSymbol)
     }).toMap

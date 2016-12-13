@@ -12,9 +12,9 @@ private[frontend] object SchemeTypeForSymbol {
     * declarations.
     */
   def apply(
-      symbol : sst.ScopedSymbol,
-      providedTypeOpt : Option[vt.SchemeType] = None,
-      defaultType : vt.SchemeType = vt.AnySchemeType
-  ) : vt.SchemeType =
+      symbol: sst.ScopedSymbol,
+      providedTypeOpt: Option[vt.SchemeType] = None,
+      defaultType: vt.SchemeType = vt.AnySchemeType
+  ): vt.SchemeType =
     LocTypeDeclarationForSymbol(symbol, providedTypeOpt.map(MonomorphicDeclaration), defaultType).toSchemeType
 }

@@ -3,16 +3,16 @@ package io.llambda.llvmir
 import collection.mutable.ListBuffer
 
 class IrModuleBuilder extends Irable {
-  private case class NamedType(name : String, irType : IrType) extends Irable {
+  private case class NamedType(name: String, irType: IrType) extends Irable {
     private val escapedName = EscapeIdentifier(name)
 
     def toIr = s"%${escapedName} = type ${irType.toIr}"
   }
 
-  private case class NamedMetadata(name : String, members : Seq[NumberedMetadata]) extends Irable {
+  private case class NamedMetadata(name: String, members: Seq[NumberedMetadata]) extends Irable {
     // Note the lack of types here - named metadata can only refer to other metadata
     def toIr =
-      s"!${name} = !{" + members.map(_.toIr).mkString(", ") + "}" 
+      s"!${name} = !{" + members.map(_.toIr).mkString(", ") + "}"
   }
 
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]
@@ -30,39 +30,39 @@ class IrModuleBuilder extends Irable {
 
   val metadataIndexSource = new MetadataIndexSource
 
-  def defineGlobalVariable(variableDef : IrGlobalVariableDef) {
+  def defineGlobalVariable(variableDef: IrGlobalVariableDef) {
     globalVariableDefs.append(variableDef)
     declaredNames += variableDef.name
   }
 
-  def declareFunction(function : IrFunctionDecl) {
+  def declareFunction(function: IrFunctionDecl) {
     functionDecls.append(function)
     declaredNames += function.name
   }
-  
-  def defineFunction(function : IrFunctionBuilder) {
+
+  def defineFunction(function: IrFunctionBuilder) {
     functionDefs.append(function)
     declaredNames += function.name
   }
 
-  def defineAlias(aliasDef : IrAliasDef) {
+  def defineAlias(aliasDef: IrAliasDef) {
     aliasDefs.append(aliasDef)
     declaredNames += aliasDef.name
   }
 
-  def nameType(name : String, irType : IrType) : UserDefinedType = {
+  def nameType(name: String, irType: IrType): UserDefinedType = {
     namedTypes += NamedType(name, irType)
     declaredNames += name
 
     UserDefinedType(name)
   }
 
-  def defineNumberedMetadata(numberedMetadataDef : NumberedMetadataDef) {
+  def defineNumberedMetadata(numberedMetadataDef: NumberedMetadataDef) {
     numberedMetadataDefs += numberedMetadataDef
   }
 
   /** Assigns metadata a number and returns the NumberedMetadata referencing it */
-  def numberMetadataNode(metadataNode : MetadataNode) : NumberedMetadata = {
+  def numberMetadataNode(metadataNode: MetadataNode): NumberedMetadata = {
     val newIndex = metadataIndexSource.allocate()
     val metadataDef = NumberedMetadataDef(newIndex, metadataNode)
 
@@ -71,7 +71,7 @@ class IrModuleBuilder extends Irable {
     metadataDef.numberedMetadata
   }
 
-  def nameMetadata(name : String, members : Seq[NumberedMetadata]) {
+  def nameMetadata(name: String, members: Seq[NumberedMetadata]) {
     namedMetadata += NamedMetadata(name, members)
   }
 
@@ -79,7 +79,7 @@ class IrModuleBuilder extends Irable {
     *
     * @param  identifier  Human readable identifier string for the compiler
     */
-  def identifyCompiler(identifier : String) {
+  def identifyCompiler(identifier: String) {
     val numberedMetadata = numberMetadataNode(
       UserDefinedMetadataNode(List(Some(
         MetadataString.fromUtf8String(identifier)
@@ -89,23 +89,23 @@ class IrModuleBuilder extends Irable {
     nameMetadata("llvm.ident", List(numberedMetadata))
   }
 
-  def isDeclared(name : String) : Boolean = 
+  def isDeclared(name: String): Boolean =
     declaredNames.contains(name)
-  
-  def isDeclared(global : IrNamedGlobal) : Boolean = 
+
+  def isDeclared(global: IrNamedGlobal): Boolean =
     isDeclared(global.name)
 
-  def unlessDeclared(name : String)(unlessBlock : => Unit) : Unit = {
+  def unlessDeclared(name: String)(unlessBlock: => Unit): Unit = {
     if (!isDeclared(name)) {
       unlessBlock
     }
   }
 
-  def unlessDeclared(global : IrNamedGlobal)(unlessBlock : => Unit) : Unit =
+  def unlessDeclared(global: IrNamedGlobal)(unlessBlock: => Unit): Unit =
     unlessDeclared(global.name)(unlessBlock)
 
-  def toIr : String = {
-    val allIr : List[Irable] =
+  def toIr: String = {
+    val allIr: List[Irable] =
       namedTypes.toList ++
       numberedMetadataDefs.toList ++
       namedMetadata.toList ++
@@ -113,7 +113,7 @@ class IrModuleBuilder extends Irable {
       functionDecls.toList ++
       functionDefs.toList ++
       aliasDefs.toList
-    
+
     allIr.map(_.toIr).mkString("\n")
   }
 }

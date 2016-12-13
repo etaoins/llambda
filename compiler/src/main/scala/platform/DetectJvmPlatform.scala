@@ -5,7 +5,7 @@ import java.nio.ByteOrder
 import java.nio.ByteOrder.{BIG_ENDIAN, LITTLE_ENDIAN}
 
 object DetectJvmPlatform {
-  def apply() : Option[TargetPlatform] = {
+  def apply(): Option[TargetPlatform] = {
     val dataModelBits = System.getProperty("sun.arch.data.model").toInt
     val isWindows = util.Properties.isWin
 

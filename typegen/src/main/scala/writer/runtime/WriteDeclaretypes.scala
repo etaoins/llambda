@@ -3,7 +3,7 @@ package io.llambda.typegen.writer.runtime
 import io.llambda.typegen._
 
 object WriteDeclaretypes extends writer.OutputWriter {
-  def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
+  def apply(processedTypes: ProcessedTypes): Map[String, String] = {
     val incBuilder = new CppIncludeBuilder("_LLIBY_BINDING_DECLARETYPES_H")
 
     incBuilder.appendRaw(writer.GeneratedClikeFileComment)
@@ -20,7 +20,7 @@ object WriteDeclaretypes extends writer.OutputWriter {
       val cppName = cellClass.names.cppClassName
       incBuilder += s"class ${cppName};"
     }
-    
+
     incBuilder.sep()
 
     // Add all of the typedefs
@@ -28,7 +28,7 @@ object WriteDeclaretypes extends writer.OutputWriter {
 
     for(fieldType <- processedTypes.fieldTypes.values) {
       fieldType match {
-        case alias : FieldTypeAlias if (alias != typeTagFieldType) && alias.needsDefinition =>
+        case alias: FieldTypeAlias if (alias != typeTagFieldType) && alias.needsDefinition =>
           val cppTypeName = alias.cppTypeName.get
           incBuilder += "typedef " + FieldTypeToCpp(alias.aliasedType, Some(cppTypeName)) + ";"
 

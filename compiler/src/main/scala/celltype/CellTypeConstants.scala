@@ -5,7 +5,7 @@ import llambda.llvmir._
 import io.llambda.compiler.InternalCompilerErrorException
 
 private object ArrayElementsForIrType {
-  def apply(irType : IrType) : Int = irType match {
+  def apply(irType: IrType): Int = irType match {
     case ArrayType(elements, _) =>
       elements
 

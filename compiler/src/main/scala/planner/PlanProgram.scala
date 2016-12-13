@@ -6,8 +6,8 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.codegen.LlambdaTopLevelSignature
 
 case class PlannedProgram(
-    functions : Map[String, PlannedFunction],
-    requiredNativeLibraries : Set[NativeLibrary]
+    functions: Map[String, PlannedFunction],
+    requiredNativeLibraries: Set[NativeLibrary]
 )
 
 object PlanProgram {
@@ -17,7 +17,7 @@ object PlanProgram {
     conniver.FindTailCalls
   )
 
-  def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : PlannedProgram = {
+  def apply(exprs: List[et.Expr])(planConfig: PlanConfig): PlannedProgram = {
     val plan = PlanWriter(planConfig)
 
     PlanExpr(PlannerState())(et.Begin(exprs))(plan)

@@ -8,7 +8,7 @@ import io.llambda
   * @param  exitValue  Exit value of the process. 0 indicates success.
   * @param  runMethod  Method used to run the program
   */
-case class RunResult(stdout : String, stderr : String, exitValue : Int, runMethod : RunResult.RunMethod)
+case class RunResult(stdout: String, stderr: String, exitValue: Int, runMethod: RunResult.RunMethod)
 
 object RunResult {
   sealed abstract class RunMethod

@@ -9,7 +9,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.codegen.CompactRepresentationForType
 
 private[planner] object PlanBind {
-  private def storageLocRefedByExpr(storageLoc : StorageLocation, expr : et.Expr) : Boolean = expr match {
+  private def storageLocRefedByExpr(storageLoc: StorageLocation, expr: et.Expr): Boolean = expr match {
     case et.VarRef(`storageLoc`) =>
       true
 
@@ -17,7 +17,7 @@ private[planner] object PlanBind {
       nonVarRef.subexprs.exists(storageLocRefedByExpr(storageLoc, _))
   }
 
-  def apply(initialState : PlannerState)(bindings : List[et.Binding])(implicit plan : PlanWriter) : PlannerState = {
+  def apply(initialState: PlannerState)(bindings: List[et.Binding])(implicit plan: PlanWriter): PlannerState = {
     val bindingLocs = bindings.map(_.storageLoc).toSet
 
     bindings.foldLeft(initialState) { case (prerecursiveState, binding) =>
@@ -63,7 +63,7 @@ private[planner] object PlanBind {
       }
 
       val initialValueResult = binding match {
-        case et.Binding(storageLoc, lambdaExpr : et.Lambda) if isSelfRecursiveLambda =>
+        case et.Binding(storageLoc, lambdaExpr: et.Lambda) if isSelfRecursiveLambda =>
           plan.withContextLocation(binding.initialiser) {
             val procValue = PlanLambda(postrecursiveState, plan)(
               lambdaExpr=lambdaExpr,
@@ -137,7 +137,7 @@ private[planner] object PlanBind {
         else {
           // Send a hint about our name
           val stdlibNamedValue = (initialIntermediate, storageLoc) match {
-            case (userProc : iv.KnownUserProc, stdlibProc : StdlibProcedure) =>
+            case (userProc: iv.KnownUserProc, stdlibProc: StdlibProcedure) =>
               // Annotate with our stdlib name so we can optimise when we try to apply this
               // Note this is agnostic to if the implementation is a native function versus a Scheme procedure
               userProc.withStdlibName(stdlibProc.stdlibName)

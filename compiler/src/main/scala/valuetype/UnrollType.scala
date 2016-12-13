@@ -7,10 +7,10 @@ private[valuetype] object UnrollType {
     * @see [[unrollType]]
     */
   def unrollTypeRef(
-      schemeTypeRef : SchemeTypeRef,
-      replacementType : SchemeType,
-      depth : Int
-  ) : SchemeTypeRef = {
+      schemeTypeRef: SchemeTypeRef,
+      replacementType: SchemeType,
+      depth: Int
+  ): SchemeTypeRef = {
     schemeTypeRef match {
       case RecursiveSchemeTypeRef(`depth`) =>
         // Replacment!
@@ -29,14 +29,14 @@ private[valuetype] object UnrollType {
     }
   }
 
-  def unrollNonUnionType(inputType : NonUnionSchemeType, replacementType : SchemeType, depth : Int) : NonUnionSchemeType = inputType match {
-    case pairType : SpecificPairType =>
+  def unrollNonUnionType(inputType: NonUnionSchemeType, replacementType: SchemeType, depth: Int): NonUnionSchemeType = inputType match {
+    case pairType: SpecificPairType =>
       val replacedCar = unrollTypeRef(pairType.carTypeRef, replacementType, depth)
       val replacedCdr = unrollTypeRef(pairType.cdrTypeRef, replacementType, depth)
 
       SpecificPairType(replacedCar, replacedCdr)
 
-    case other : NonRecursiveType =>
+    case other: NonRecursiveType =>
       other
   }
 
@@ -52,12 +52,12 @@ private[valuetype] object UnrollType {
     * @param  depth            Depth of the replacement type inside the input type. In normal unrolling this is 0 but
     *                          when e.g. replacing the union type inside union members this can be > 0
     */
-  def unrollType(inputType : SchemeType, replacementType : SchemeType, depth : Int) : SchemeType = inputType match {
+  def unrollType(inputType: SchemeType, replacementType: SchemeType, depth: Int): SchemeType = inputType match {
     case UnionType(memberTypes) =>
       val replacedMembers = memberTypes.map(unrollType(_, replacementType, depth + 1))
       SchemeType.fromTypeUnion(replacedMembers)
 
-    case nonUnion : NonUnionSchemeType =>
+    case nonUnion: NonUnionSchemeType =>
       unrollNonUnionType(nonUnion, replacementType, depth)
   }
 }

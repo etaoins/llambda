@@ -1,11 +1,11 @@
 package io.llambda.llvmir
 
 private[llvmir] trait AggregateInstrs extends IrInstrBuilder {
-  def extractvalue(resultDest : ResultDestination)(valueType : FirstClassType, aggregateValue : IrValue, indices : Seq[Long]) : LocalVariable = {
+  def extractvalue(resultDest: ResultDestination)(valueType: FirstClassType, aggregateValue: IrValue, indices: Seq[Long]): LocalVariable = {
     val resultVar = resultDest.asLocalVariable(nameSource, valueType)
 
     aggregateValue.irType match {
-      case _ : AggregateType | _ : UserDefinedType =>
+      case _: AggregateType | _: UserDefinedType =>
       case _ =>
         throw new InconsistentIrException("Attempted extractvalue on non-aggregate type")
     }

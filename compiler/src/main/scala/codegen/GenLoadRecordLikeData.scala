@@ -6,9 +6,9 @@ import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
 object GenLoadRecordLikeData {
-  def apply(block : IrBlockBuilder)(recordCellIr : IrValue, generatedType : GeneratedType) : IrValue = {
+  def apply(block: IrBlockBuilder)(recordCellIr: IrValue, generatedType: GeneratedType): IrValue = {
     val cellType = generatedType.recordLikeType.cellType
-    val recordDataIrType = generatedType.irType 
+    val recordDataIrType = generatedType.irType
 
     val uncastRecordData = generatedType.storageType match {
       case TypeDataStorage.Empty =>

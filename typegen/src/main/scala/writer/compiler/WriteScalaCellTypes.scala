@@ -7,54 +7,54 @@ import io.llambda.llvmir
 
 object WriteScalaCellTypes extends writer.OutputWriter {
   private sealed abstract class ConstructorValue {
-    val field : CellField
+    val field: CellField
     // If this is None we don't need a parameter
-    val paramScalaType : Option[String]
-    val valueExpr : String
+    val paramScalaType: Option[String]
+    val valueExpr: String
   }
 
-  private class IrConstantConstructorValue(val field : CellField) extends ConstructorValue { 
+  private class IrConstantConstructorValue(val field: CellField) extends ConstructorValue {
     val paramScalaType = Some("IrConstant")
     val valueExpr = s"${field.name}"
   }
 
-  private class IntegerConstructorValue(val field : CellField) extends ConstructorValue {
+  private class IntegerConstructorValue(val field: CellField) extends ConstructorValue {
     val paramScalaType = Some("Long")
     val valueExpr = s"IntegerConstant(${field.name}IrType, ${field.name})"
   }
 
-  private class InitializedConstructorValue(val field : CellField, initializer : Long) extends ConstructorValue {
+  private class InitializedConstructorValue(val field: CellField, initializer: Long) extends ConstructorValue {
     val paramScalaType = None
     val valueExpr = s"IntegerConstant(${field.name}IrType, ${initializer})"
   }
-  
-  private class KnownTypeIdConstructorValue(val field : CellField) extends ConstructorValue {
+
+  private class KnownTypeIdConstructorValue(val field: CellField) extends ConstructorValue {
     val paramScalaType = Some("Long")
     val valueExpr = field.name
   }
 
   private case class ConstructorValues(
-    selfValues : List[ConstructorValue],
-    superValues : List[ConstructorValue]
+    selfValues: List[ConstructorValue],
+    superValues: List[ConstructorValue]
   )
 
-  private def resourceAsString(resourcePath : String) : String = {
+  private def resourceAsString(resourcePath: String): String = {
     val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
     Source.fromInputStream(stream, "UTF-8").mkString
   }
 
-  private def writeFieldTrait(scalaBuilder : ScalaBuilder, cellClass : CellClass) {
+  private def writeFieldTrait(scalaBuilder: ScalaBuilder, cellClass: CellClass) {
     val traitName = cellClass.names.scalaFieldsTraitName
 
     val extendsClause = cellClass.parentOption.map({ parent =>
       s" extends ${parent.names.scalaFieldsTraitName}"
-    }).getOrElse("") 
-    
+    }).getOrElse("")
+
     scalaBuilder += "sealed trait " + traitName + extendsClause
 
     // Output our field information
     scalaBuilder.blockSep {
-      scalaBuilder += s"val irType : FirstClassType" 
+      scalaBuilder += s"val irType: FirstClassType"
       scalaBuilder.sep()
 
       // Output our field types
@@ -65,21 +65,21 @@ object WriteScalaCellTypes extends writer.OutputWriter {
         val scalaConstructor = LlvmTypeToScalaConstructor(llvmType)
 
         scalaBuilder += s"val ${field.name}IrType = ${scalaConstructor}"
-        scalaBuilder += s"val ${field.name}TbaaNode : Metadata" 
-        scalaBuilder += s"val ${field.name}GepIndices : List[Int]"
+        scalaBuilder += s"val ${field.name}TbaaNode: Metadata"
+        scalaBuilder += s"val ${field.name}GepIndices: List[Int]"
         scalaBuilder.sep()
       }
 
       scalaBuilder.sep()
 
-      // Output our abstract field accessors 
+      // Output our abstract field accessors
       for(field <- cellClass.fields) {
         // These are reused by every method
         val capitalizedName = field.name.capitalize
         val pointerVarName = field.name + "Ptr"
 
         // This generates a pointer to the field
-        scalaBuilder += s"def genPointerTo${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue) : IrValue ="
+        scalaBuilder += s"def genPointerTo${capitalizedName}(block: IrBlockBuilder)(valueCell: IrValue): IrValue ="
         scalaBuilder.blockSep {
           scalaBuilder += "if (valueCell.irType != PointerType(irType))"
           scalaBuilder.block {
@@ -100,16 +100,16 @@ object WriteScalaCellTypes extends writer.OutputWriter {
           }
           scalaBuilder += ")"
         }
-  
+
         // This generates a TBAA-annotated store to the field
-        scalaBuilder += s"def genStoreTo${capitalizedName}(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map()) "
+        scalaBuilder += s"def genStoreTo${capitalizedName}(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map()) "
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
           scalaBuilder += s"""val allMetadata = metadata ++ Map("tbaa" -> ${field.name}TbaaNode)"""
           scalaBuilder += s"block.store(toStore, ${pointerVarName}, metadata=allMetadata)"
         }
-  
-        scalaBuilder += s"def genLoadFrom${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue ="
+
+        scalaBuilder += s"def genLoadFrom${capitalizedName}(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue ="
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
           scalaBuilder += s"""val allMetadata = Map("tbaa" -> ${field.name}TbaaNode) ++ metadata"""
@@ -119,7 +119,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     }
   }
 
-  private def collectConstructorValues(typeTagField : CellField, cellClass : CellClass) : ConstructorValues = {
+  private def collectConstructorValues(typeTagField: CellField, cellClass: CellClass): ConstructorValues = {
     // Does this cell class like have a defined type ID field?
     val hasTypeId = cellClass.instanceType != CellClass.Abstract
 
@@ -136,7 +136,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
       else {
         new IrConstantConstructorValue(field)
       }
-    } 
+    }
 
     cellClass.parentOption match {
       case Some(parentCellClass) =>
@@ -165,7 +165,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     }
   }
 
-  private def writeConstructor(scalaBuilder : ScalaBuilder, typeTagField : CellField, cellClass : CellClass) {
+  private def writeConstructor(scalaBuilder: ScalaBuilder, typeTagField: CellField, cellClass: CellClass) {
     val constructorValues = collectConstructorValues(typeTagField, cellClass)
     val allValues = constructorValues.selfValues ++ constructorValues.superValues
 
@@ -173,12 +173,12 @@ object WriteScalaCellTypes extends writer.OutputWriter {
       // If paramScalaType is None then that value doesn't need a parameter
       value.paramScalaType.isDefined && !value.isInstanceOf[KnownTypeIdConstructorValue]
     }).map({ paramValue =>
-      s"${paramValue.field.name} : ${paramValue.paramScalaType.get}"
+      s"${paramValue.field.name}: ${paramValue.paramScalaType.get}"
     })
 
-    scalaBuilder += s"""def createConstant(${methodParams.mkString(", ")}) : StructureConstant ="""
+    scalaBuilder += s"""def createConstant(${methodParams.mkString(", ")}): StructureConstant ="""
     scalaBuilder.blockSep {
-      // Make sure our fields are of the correct type 
+      // Make sure our fields are of the correct type
       for(selfValue <- constructorValues.selfValues if selfValue.paramScalaType == Some("IrConstant")) {
         scalaBuilder += s"if (${selfValue.field.name}.irType != ${selfValue.field.name}IrType)"
         scalaBuilder.blockSep {
@@ -204,16 +204,16 @@ object WriteScalaCellTypes extends writer.OutputWriter {
         scalaBuilder.appendLines(superFieldOpt.toList ++ selfFields, ",")
       }
 
-      scalaBuilder += "), userDefinedType=Some(irType))" 
+      scalaBuilder += "), userDefinedType=Some(irType))"
     }
   }
 
-  private def writeGepIndices(scalaBuilder : ScalaBuilder, cellClass : CellClass, depth : Int = 1) {
+  private def writeGepIndices(scalaBuilder: ScalaBuilder, cellClass: CellClass, depth: Int = 1) {
     // Write our parent fields first so they come out in memory order
     for(parent <- cellClass.parentOption) {
       writeGepIndices(scalaBuilder, parent, depth + 1)
     }
-    
+
     // If we have a parent that takes the position of the first field
     val fieldBaseIndex = if (cellClass.parentOption.isDefined) {
       1
@@ -223,13 +223,13 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     }
 
     for((field, fieldIndex) <- cellClass.fields.zipWithIndex) {
-      val gepIndices = List.fill(depth)(0) :+ (fieldBaseIndex + fieldIndex) 
+      val gepIndices = List.fill(depth)(0) :+ (fieldBaseIndex + fieldIndex)
 
       scalaBuilder += s"""val ${field.name}GepIndices = List(${gepIndices.mkString(", ")})"""
     }
   }
 
-  private def writeCellObject(scalaBuilder : ScalaBuilder, processedTypes : ProcessedTypes, cellClass : CellClass) = {
+  private def writeCellObject(scalaBuilder: ScalaBuilder, processedTypes: ProcessedTypes, cellClass: CellClass) = {
     val names  = cellClass.names
 
     val scalaSuperclass = cellClass.instanceType match {
@@ -243,7 +243,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
 
       case CellClass.Concrete =>
         "ConcreteCellType"
-      
+
       case CellClass.Preconstructed =>
         "PreconstructedCellType"
     }
@@ -254,15 +254,15 @@ object WriteScalaCellTypes extends writer.OutputWriter {
       val irType = llvmir.UserDefinedType(names.llvmName)
       val scalaConstructor = LlvmTypeToScalaConstructor(irType)
 
-      scalaBuilder += "val llvmName = \"" + names.llvmName + "\"" 
+      scalaBuilder += "val llvmName = \"" + names.llvmName + "\""
       scalaBuilder += s"val irType = ${scalaConstructor}"
-      
+
       // Variants aren't properly part of the Scheme type tree
       // This is because our automatic type determination machinery cannot
       // distinguish them from the tagged cell class they inherit
-      if (cellClass.instanceType != CellClass.Variant) { 
-        scalaBuilder += "val schemeName = \"" + names.schemeName + "\"" 
-        
+      if (cellClass.instanceType != CellClass.Variant) {
+        scalaBuilder += "val schemeName = \"" + names.schemeName + "\""
+
         // Get all of our subclasses
         val subtypes = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil)
         val subtypeParts = subtypes filter(_.visibility.fromCompiler) map { taggedClass =>
@@ -270,7 +270,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
         }
 
         scalaBuilder += s"""val directSubtypes = Set[CellType](${subtypeParts.mkString(", ")})"""
-        
+
         scalaBuilder.sep()
 
         for(typeId <- cellClass.typeId) {
@@ -278,7 +278,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
           scalaBuilder += s"val ${typeTagFieldName} = ${typeId}L"
         }
       }
-        
+
       scalaBuilder.sep()
 
       // Create our GEP indices
@@ -291,13 +291,13 @@ object WriteScalaCellTypes extends writer.OutputWriter {
         scalaBuilder += s"val ${field.name}TbaaNode = NumberedMetadata(${metadataDef.index}L)"
       }
 
-      // Cell classes don't repeat their parent TBAA nodes because they use the 
-      // same values as their parent. However, they need to be in the Scala 
+      // Cell classes don't repeat their parent TBAA nodes because they use the
+      // same values as their parent. However, they need to be in the Scala
       // object for our accessors to work
       cellClass match {
-        case variantCellClass : VariantCellClass =>
+        case variantCellClass: VariantCellClass =>
           for((field, tbaaNode) <- variantCellClass.parent.fieldTbaaNodes) {
-            scalaBuilder += s"val ${field.name}TbaaNode = NumberedMetadata(${tbaaNode.index}L)" 
+            scalaBuilder += s"val ${field.name}TbaaNode = NumberedMetadata(${tbaaNode.index}L)"
           }
 
         case _ =>
@@ -311,7 +311,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     }
   }
 
-  def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
+  def apply(processedTypes: ProcessedTypes): Map[String, String] = {
     val initialTemplate = resourceAsString("CellType.template.scala")
 
     // Expand our template
@@ -336,7 +336,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
       // Write the cell object
       writeCellObject(scalaBuilder, processedTypes, cellClass)
     }
-    
+
     Map("compiler/src/main/scala/celltype/generated/CellType.scala" -> scalaBuilder.toString)
   }
 }

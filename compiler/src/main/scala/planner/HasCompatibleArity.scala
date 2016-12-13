@@ -10,6 +10,6 @@ private[planner] object HasCompatibleArity {
    * @param  optionalArg    Number of optional arguments the procedure accepts
    * @param  hasRestARg     Indicates if the procedures accepts rest arguments
    */
-  def apply(suppliedArgs : Int, mandatoryArgs : Int, optionalArgs : Int, hasRestArg : Boolean) : Boolean =
+  def apply(suppliedArgs: Int, mandatoryArgs: Int, optionalArgs: Int, hasRestArg: Boolean): Boolean =
     (suppliedArgs >= mandatoryArgs) && ((suppliedArgs <= (mandatoryArgs + optionalArgs)) || hasRestArg)
 }

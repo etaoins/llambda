@@ -11,10 +11,10 @@ import llambda.compiler.valuetype.Implicits._
 
 object PlanInvokeApply {
   private def withTempValues(
-      invokableProc : iv.InvokableProc,
-      fixedTemps : Seq[ps.TempValue],
-      varArgTempOpt : Option[ps.TempValue]
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      invokableProc: iv.InvokableProc,
+      fixedTemps: Seq[ps.TempValue],
+      varArgTempOpt: Option[ps.TempValue]
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.polySignature.upperBound
 
@@ -66,9 +66,9 @@ object PlanInvokeApply {
   }
 
   def withArgumentList(
-      invokableProc : iv.InvokableProc,
-      argListValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      invokableProc: iv.InvokableProc,
+      argListValue: iv.IntermediateValue
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     val signature = invokableProc.polySignature.upperBound
 
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
@@ -112,9 +112,9 @@ object PlanInvokeApply {
   }
 
   def withIntermediateValues(
-      invokableProc : iv.InvokableProc,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      invokableProc: iv.InvokableProc,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     val signature = invokableProc.polySignature.upperBound
 
     // Convert all the args

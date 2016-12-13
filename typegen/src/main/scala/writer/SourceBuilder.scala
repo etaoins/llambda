@@ -4,27 +4,27 @@ import collection.mutable.StringBuilder
 
 /** Builds indented source strings for a C-like language */
 abstract class SourceBuilder {
-  protected val indentString : String
+  protected val indentString: String
   protected def buildBlockStart()
   protected def buildBlockEnd()
 
-  protected var indentLevel : Int = 0
-  protected var sourceString = new StringBuilder 
-  protected var shouldSep : Boolean = false
+  protected var indentLevel: Int = 0
+  protected var sourceString = new StringBuilder
+  protected var shouldSep: Boolean = false
 
   /** Add a new line to the source string
     *
     * The line will be automatically indented to the appropriate level
     */
-  def +=(line : String) {
+  def +=(line: String) {
     appendRaw((indentString * indentLevel) + line + "\n")
   }
 
-  /** Appends multiple lines separated by the specified string 
-    * 
+  /** Appends multiple lines separated by the specified string
+    *
     * This is useful for creating lists where each value is a separate line.
     */
-  def appendLines(lines : Iterable[String], separator : String) {
+  def appendLines(lines: Iterable[String], separator: String) {
     if (!lines.isEmpty) {
       val indentPrefix = indentString * indentLevel
 
@@ -36,39 +36,39 @@ abstract class SourceBuilder {
     *
     * This does not indent or add a trailing newline
     */
-  def appendRaw(str : String) {
+  def appendRaw(str: String) {
     shouldSep = true
     sourceString ++= str
   }
 
   /** Increases the current indent level by the specified amount */
-  def indent(levels : Int = 1) {
+  def indent(levels: Int = 1) {
     indentLevel = indentLevel + levels
   }
-  
+
   /** Decreases the current indent level by the specified amount */
-  def outdent(levels : Int = 1) {
+  def outdent(levels: Int = 1) {
     indentLevel = indentLevel - levels
   }
 
   /** Runs a block with an increased indent level
     *
-    * indent() is called before the block is run and outdent() once it completes 
+    * indent() is called before the block is run and outdent() once it completes
     */
-  def indented[T](innerBlock : => T) : T = {
+  def indented[T](innerBlock: => T): T = {
     indent(1)
     val result = innerBlock
     outdent(1)
 
     result
   }
-  
+
   /** Starts a new block in the target language
     *
     * This will output the appropriate braces and increase the indent level
     * for the duration of the passed Scala block
     */
-  def block[T](innerBlock : => T) : T = {
+  def block[T](innerBlock: => T): T = {
     buildBlockStart()
 
     indentLevel = indentLevel + 1
@@ -81,12 +81,12 @@ abstract class SourceBuilder {
     buildBlockEnd()
     result
   }
-  
+
   /** Starts a new block in the target language followed by a separator
     *
     * This is shorthand for block + sep
     */
-  def blockSep[T](innerBlock : => T) : T = {
+  def blockSep[T](innerBlock: => T): T = {
     val result = block(innerBlock)
     sep()
     result
@@ -109,6 +109,6 @@ abstract class SourceBuilder {
     }
   }
 
-  override def toString : String = 
+  override def toString: String =
     sourceString.toString
 }

@@ -10,16 +10,16 @@ import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute
 
 private[planner] object PlanLambda {
   private def closureFieldValues(
-      closureType : vt.ClosureType,
-      capturedVariables : List[CapturedVariable]
-  )(implicit plan : PlanWriter) : Map[vt.RecordField, ps.TempValue] = {
+      closureType: vt.ClosureType,
+      capturedVariables: List[CapturedVariable]
+  )(implicit plan: PlanWriter): Map[vt.RecordField, ps.TempValue] = {
     capturedVariables.map({ capturedVar =>
       val varTemp = capturedVar match {
-        case immutable : CapturedImmutable =>
+        case immutable: CapturedImmutable =>
           // Cast the value to its preferred type
           immutable.parentIntermediate.toTempValue(capturedVar.valueType, convertProcType=false)
 
-        case mutable : CapturedMutable =>
+        case mutable: CapturedMutable =>
           // Store the pointer to the mutable directly
           mutable.parentMutable.mutableTemp
       }
@@ -29,11 +29,11 @@ private[planner] object PlanLambda {
     }).toMap
   }
 
-  def apply(parentState : PlannerState, parentPlan : PlanWriter)(
-      lambdaExpr : et.Lambda,
-      sourceNameHint : Option[String],
-      recursiveSelfLocOpt : Option[StorageLocation]
-  ) : iv.KnownSchemeProc = {
+  def apply(parentState: PlannerState, parentPlan: PlanWriter)(
+      lambdaExpr: et.Lambda,
+      sourceNameHint: Option[String],
+      recursiveSelfLocOpt: Option[StorageLocation]
+  ): iv.KnownSchemeProc = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
     val nativeSymbol = parentPlan.allocSymbol(sourceName)
@@ -42,7 +42,7 @@ private[planner] object PlanLambda {
 
     // Collect only the capture variables
     val capturedVariables = (closedVars collect {
-      case captured : CapturedVariable => captured
+      case captured: CapturedVariable => captured
     }).toList
 
     // Make our closure type

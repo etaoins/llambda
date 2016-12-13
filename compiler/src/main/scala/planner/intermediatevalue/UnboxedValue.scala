@@ -8,8 +8,8 @@ import llambda.compiler.{valuetype => vt}
   * This is implemented by NativeValue to represent dynamic unboxed values and by the relevant ConstantValue types
   */
 abstract trait UnboxedValue extends IntermediateValue {
-  val nativeType : vt.NativeType
+  val nativeType: vt.NativeType
 
-  override def preferredRepresentation : vt.ValueType =
+  override def preferredRepresentation: vt.ValueType =
     nativeType
 }

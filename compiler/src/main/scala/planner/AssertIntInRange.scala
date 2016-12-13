@@ -16,11 +16,11 @@ object AssertIntInRange {
     * @param  evidenceOpt  Datum cell evidence for the signalled error
     */
   def apply(
-      tempValue : ps.TempValue,
-      fromType : vt.IntType,
-      toType : vt.IntType,
-      evidenceOpt : Option[ps.TempValue] = None
-  )(implicit plan : PlanWriter) : Unit = {
+      tempValue: ps.TempValue,
+      fromType: vt.IntType,
+      toType: vt.IntType,
+      evidenceOpt: Option[ps.TempValue] = None
+  )(implicit plan: PlanWriter): Unit = {
     if (fromType.minIntValue < toType.minIntValue) {
       val lowerRangeTemp = ps.Temp(toType)
       plan.steps += ps.CreateNativeInteger(lowerRangeTemp, toType.minIntValue, fromType.bits)

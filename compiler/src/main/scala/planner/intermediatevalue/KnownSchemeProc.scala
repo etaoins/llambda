@@ -10,21 +10,21 @@ import llambda.compiler.et
 
 /** Represents a user-provided procedure with a Scheme language definitio */
 class KnownSchemeProc(
-    polySignature : PolymorphicSignature,
-    plannedSymbol : String,
-    selfTempOpt : Option[ps.TempValue],
-    val manifest : LambdaManifest,
-    isPrimaryPolymorph : Boolean,
-    stdlibNameOpt : Option[String] = None)
+    polySignature: PolymorphicSignature,
+    plannedSymbol: String,
+    selfTempOpt: Option[ps.TempValue],
+    val manifest: LambdaManifest,
+    isPrimaryPolymorph: Boolean,
+    stdlibNameOpt: Option[String] = None)
 extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) {
   // Override this to ensure we have vt.ProcedureType
   // This is required for KnownCaseLambdaProc to collect its type from its clauses
-  override val schemeType : vt.ProcedureType = polySignature.toSchemeProcedureType
+  override val schemeType: vt.ProcedureType = polySignature.toSchemeProcedureType
 
-  override def locationOpt : Option[ContextLocated] =
+  override def locationOpt: Option[ContextLocated] =
     Some(manifest.lambdaExpr)
 
-  override def withStdlibName(newStdlibName : String) : KnownSchemeProc = {
+  override def withStdlibName(newStdlibName: String): KnownSchemeProc = {
     new KnownSchemeProc(
       polySignature,
       plannedSymbol,
@@ -35,7 +35,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) 
     )
   }
 
-  override def withSelfTemp(selfTemp : ps.TempValue) : KnownSchemeProc =
+  override def withSelfTemp(selfTemp: ps.TempValue): KnownSchemeProc =
     new KnownSchemeProc(
       polySignature,
       plannedSymbol,
@@ -45,7 +45,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) 
       stdlibNameOpt
     )
 
-  private def createPolymorph(resolvedType : vt.ProcedureType)(implicit plan : PlanWriter) : KnownSchemeProc = {
+  private def createPolymorph(resolvedType: vt.ProcedureType)(implicit plan: PlanWriter): KnownSchemeProc = {
     val polymorphKey = (manifest, resolvedType)
 
     val polymorphSymbol = plan.polymorphInstances.getOrElseUpdate(polymorphKey, {
@@ -84,8 +84,8 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) 
   }
 
   override def toApplicableValueForArgs (
-      args : List[vt.SchemeType]
-  )(implicit plan : PlanWriter) : IntermediateValue =
+      args: List[vt.SchemeType]
+  )(implicit plan: PlanWriter): IntermediateValue =
     if (isPrimaryPolymorph && !manifest.lambdaExpr.polyType.typeVars.isEmpty) {
       val polyType = manifest.lambdaExpr.polyType
       val resolvedType = polyType.typeForArgs(args)

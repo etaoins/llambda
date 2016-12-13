@@ -5,7 +5,7 @@ import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.{valuetype => vt}
 
 object IntrinsicTypes {
-  def apply(targetPlatform : TargetPlatform) : Map[String, vt.ValueType] = 
+  def apply(targetPlatform: TargetPlatform): Map[String, vt.ValueType] =
     // Intrinsic native types
     List(
       vt.Predicate,

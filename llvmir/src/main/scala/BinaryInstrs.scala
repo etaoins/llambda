@@ -1,13 +1,13 @@
 package io.llambda.llvmir
 
-sealed abstract class WrapBehaviour(val mnemonic : String)
+sealed abstract class WrapBehaviour(val mnemonic: String)
 
 object WrapBehaviour {
   case object NoSignedWrap extends WrapBehaviour("nsw")
   case object NoUnsignedWrap extends WrapBehaviour("nuw")
 }
 
-sealed abstract class FastMathFlag(val mnemonic : String)
+sealed abstract class FastMathFlag(val mnemonic: String)
 
 object FastMathFlag {
   case object NoNaN extends FastMathFlag("nnan")
@@ -18,20 +18,20 @@ object FastMathFlag {
 }
 
 private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
-  private def commonIntegerType(instruction : String)(op1 : IrValue, op2 : IrValue) : IntegerType = {
+  private def commonIntegerType(instruction: String)(op1: IrValue, op2: IrValue): IntegerType = {
     if (op1.irType != op2.irType) {
       throw new InconsistentIrException(s"Attempted ${instruction} with non-identical types")
     }
-    
+
     op1.irType match {
-      case intType : IntegerType =>
+      case intType: IntegerType =>
         intType
       case _ =>
         throw new InconsistentIrException(s"Attempted ${instruction} of non-integer")
     }
   }
 
-  private def simpleIntegerMathInstr(instruction : String)(resultDest : ResultDestination)(wrapBehavior : Set[WrapBehaviour], op1 : IrValue, op2 : IrValue) : IrValue = {
+  private def simpleIntegerMathInstr(instruction: String)(resultDest: ResultDestination)(wrapBehavior: Set[WrapBehaviour], op1: IrValue, op2: IrValue): IrValue = {
     val resultType = commonIntegerType(instruction)(op1, op2)
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
@@ -40,20 +40,20 @@ private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
 
     resultVar
   }
-  
-  private def simpleFloatMathInstr(instruction : String)(resultDest : ResultDestination)(fastMathFlags : Set[FastMathFlag], op1 : IrValue, op2 : IrValue) : IrValue = {
+
+  private def simpleFloatMathInstr(instruction: String)(resultDest: ResultDestination)(fastMathFlags: Set[FastMathFlag], op1: IrValue, op2: IrValue): IrValue = {
     if (op1.irType != op2.irType) {
       throw new InconsistentIrException(s"Attempted ${instruction} with non-identical types")
     }
-    
-    val resultType = op1.irType 
-    
+
+    val resultType = op1.irType
+
     resultType match {
-      case _ : FloatingPointType =>
+      case _: FloatingPointType =>
       case _ =>
         throw new InconsistentIrException(s"Attempted ${instruction} of non-integer")
     }
-    
+
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
     val fastMathIr = fastMathFlags.toList.map(_.mnemonic).sorted.map(_ + " ").mkString("")
@@ -62,11 +62,11 @@ private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  private def integerDivisionInstr(instruction : String)(resultDest : ResultDestination)(
-      exact : Boolean,
-      op1 : IrValue,
-      op2 : IrValue
-  ) : IrValue = {
+  private def integerDivisionInstr(instruction: String)(resultDest: ResultDestination)(
+      exact: Boolean,
+      op1: IrValue,
+      op2: IrValue
+  ): IrValue = {
     val resultType = commonIntegerType(instruction)(op1, op2)
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
@@ -77,10 +77,10 @@ private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  private def integerRemainderInstr(instruction : String)(resultDest : ResultDestination)(
-      op1 : IrValue,
-      op2 : IrValue
-  ) : IrValue = {
+  private def integerRemainderInstr(instruction: String)(resultDest: ResultDestination)(
+      op1: IrValue,
+      op2: IrValue
+  ): IrValue = {
     val resultType = commonIntegerType(instruction)(op1, op2)
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
@@ -96,7 +96,7 @@ private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
   val udiv = integerDivisionInstr("udiv")_
   val srem = integerRemainderInstr("srem")_
   val urem = integerRemainderInstr("urem")_
-  
+
   val fadd = simpleFloatMathInstr("fadd")_
   val fsub = simpleFloatMathInstr("fsub")_
   val fmul = simpleFloatMathInstr("fmul")_

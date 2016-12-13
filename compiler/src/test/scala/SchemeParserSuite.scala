@@ -8,7 +8,7 @@ class SchemeParserSuite extends FunSuite with Inside {
   // This checks:
   // 1) parsed source === expected
   // 2) parse((parsed source).toString) === expected
-  def assertReflexiveParse(source : String, expected : List[ast.Datum]) {
+  def assertReflexiveParse(source: String, expected: List[ast.Datum]) {
     val parsed = SchemeParser.parseStringAsData(source)
     assert(parsed === expected)
 
@@ -19,15 +19,15 @@ class SchemeParserSuite extends FunSuite with Inside {
     assert(reparsed === expected)
   }
 
-  def assertParsesAsSymbol(string : String, identifier : String) {
+  def assertParsesAsSymbol(string: String, identifier: String) {
     assertReflexiveParse(string, List(ast.Symbol(identifier)))
   }
 
-  def assertParsesAsSymbol(string : String) {
+  def assertParsesAsSymbol(string: String) {
     assertParsesAsSymbol(string, string)
   }
 
-  def testSymbolShorthand(shorthand : String, symbolName : String) {
+  def testSymbolShorthand(shorthand: String, symbolName: String) {
     assertReflexiveParse(shorthand + "foo",
       ast.ProperList(List(ast.Symbol(symbolName), ast.Symbol("foo"))) :: Nil
     )
@@ -149,7 +149,7 @@ class SchemeParserSuite extends FunSuite with Inside {
   }
 
   test("strings") {
-     def assertStringParsesAs(schemeString : String, result : String) = {
+     def assertStringParsesAs(schemeString: String, result: String) = {
        assertReflexiveParse("\"" + schemeString + "\"", List(ast.StringLiteral(result)))
      }
 

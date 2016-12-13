@@ -7,19 +7,19 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 
 object ExtractModuleBody {
   private def extractInclude(
-      located : SourceLocated,
-      scope : Scope,
-      includeNameData : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : List[et.Expr] = {
+      located: SourceLocated,
+      scope: Scope,
+      includeNameData: List[sst.ScopedDatum]
+  )(implicit context: FrontendContext): List[et.Expr] = {
     val includeData = ResolveIncludeList(located, includeNameData.map(_.unscope))(context.config.includePath)
 
     ExtractModuleBody(includeData, scope)
   }
 
   private def handleExtractedDefine(
-      located : SourceLocated,
-      extractedDefine : ExtractedVarDefine
-  )(implicit context : FrontendContext) : List[et.Expr] = extractedDefine match {
+      located: SourceLocated,
+      extractedDefine: ExtractedVarDefine
+  )(implicit context: FrontendContext): List[et.Expr] = extractedDefine match {
     case ExtractedVarDefine(valueTarget, exprBlock) =>
       val symbol = valueTarget.definedSymbol
 
@@ -35,11 +35,11 @@ object ExtractModuleBody {
   }
 
   private def extractOutermostExpr(
-      datum : sst.ScopedDatum
-  )(implicit context : FrontendContext) : List[et.Expr] = datum match {
-    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+      datum: sst.ScopedDatum
+  )(implicit context: FrontendContext): List[et.Expr] = datum match {
+    case sst.ScopedPair(appliedSymbol: sst.ScopedSymbol, cdr) =>
       (appliedSymbol.resolve, cdr) match {
-        case (syntax : BoundSyntax, _) =>
+        case (syntax: BoundSyntax, _) =>
           // This is a macro - expand it
           val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=context.config.traceMacroExpansion)
           extractOutermostExpr(expandedDatum)
@@ -53,7 +53,7 @@ object ExtractModuleBody {
           val scope = appliedSymbol.scope
           extractInclude(appliedSymbol, scope, includeNames)
 
-        case (definePrimitive : PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
+        case (definePrimitive: PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
           ExtractDefine(datum, definePrimitive, operands).flatMap { define =>
             handleExtractedDefine(datum, define)
           }
@@ -71,7 +71,7 @@ object ExtractModuleBody {
     * @param  data       Scheme date of the module's body
     * @param  evalScope  Scope to evaluate the body in
     */
-  def apply(data : List[ast.Datum], evalScope : Scope)(implicit context : FrontendContext) : List[et.Expr] =
+  def apply(data: List[ast.Datum], evalScope: Scope)(implicit context: FrontendContext): List[et.Expr] =
     data flatMap { datum =>
       // Annotate our symbols with our current scope
       val scopedDatum = sst.ScopedDatum(evalScope, datum)

@@ -9,7 +9,7 @@ import llambda.compiler.valuetype.{polymorphic => pm}
 import llambda.compiler.valuetype.Implicits._
 
 class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
 
   test("type declaration for untyped lambda with compatible arity") {
@@ -94,7 +94,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         inside(polyType) {
           case pm.PolymorphicProcedureType(typeVars,
-            vt.ProcedureType(List(polyVarA : pm.TypeVar), Nil, None, vt.ReturnType.Reachable(vt.SymbolType))
+            vt.ProcedureType(List(polyVarA: pm.TypeVar), Nil, None, vt.ReturnType.Reachable(vt.SymbolType))
           ) =>
             assert(polyVarA.upperBound === vt.NumberType)
             assert(typeVars === Set(polyVarA))
@@ -121,7 +121,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
       case et.TopLevelDefine(et.Binding(storageLoc, et.Lambda(polyType, _, _, _, _, _))) =>
         inside(polyType) {
           case pm.PolymorphicProcedureType(typeVars,
-            vt.ProcedureType(Nil, List(polyVarA : pm.TypeVar), None, vt.ReturnType.Reachable(vt.NumberType))
+            vt.ProcedureType(Nil, List(polyVarA: pm.TypeVar), None, vt.ReturnType.Reachable(vt.NumberType))
           ) =>
             assert(polyVarA.upperBound === vt.NumberType)
             assert(typeVars === Set(polyVarA))
@@ -583,7 +583,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
 
     inside(scope.get("return-true").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(storageLoc.sourceName === "return-true")
     }
   }
@@ -609,7 +609,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
 
     inside(scope.get("return-true").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(storageLoc.sourceName === "return-true")
     }
   }
@@ -638,7 +638,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
 
     inside(scope.get("return-true").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(storageLoc.sourceName === "return-true")
     }
   }
@@ -686,7 +686,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
 
     inside(scope.get("return-false").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(storageLoc.sourceName === "return-false")
     }
   }
@@ -739,7 +739,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val procLoc = scope.get("return-false").value
 
     inside(procLoc) {
-      case sp : StdlibProcedure =>
+      case sp: StdlibProcedure =>
         assert(sp.stdlibName === "return-false")
     }
 
@@ -778,7 +778,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
 
     inside(scope.get("return-six").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(storageLoc.sourceName === "return-six")
     }
   }

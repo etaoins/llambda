@@ -8,12 +8,12 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
-  
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
+
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
-  
+
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions
     intercept[UnboundVariableException] {
@@ -29,17 +29,17 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(exprFor("'#(a b c)") === et.Literal(
       ast.VectorLiteral(Vector(ast.Symbol("a"), ast.Symbol("b"), ast.Symbol("c")))
     ))
-    
+
     assert(exprFor("'()") === et.Literal(ast.EmptyList()))
-    
+
     assert(exprFor("'(+ 1 2)") === et.Literal(
       ast.ProperList(List(ast.Symbol("+"), ast.IntegerLiteral(1), ast.IntegerLiteral(2)))
     ))
-    
+
     assert(exprFor("'(quote a)") === et.Literal(
       ast.ProperList(List(ast.Symbol("quote"), ast.Symbol("a")))
     ))
-    
+
     assert(exprFor("''a") === et.Literal(
       ast.ProperList(List(ast.Symbol("quote"), ast.Symbol("a")))
     ))
@@ -47,43 +47,43 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(exprFor("'145932") === et.Literal(
       ast.IntegerLiteral(145932)
     ))
-    
+
     assert(exprFor("145932") === et.Literal(
       ast.IntegerLiteral(145932)
     ))
-    
+
     assert(exprFor("'\"" + "abc" + "\"") === et.Literal(
       ast.StringLiteral("abc")
     ))
-    
+
     assert(exprFor("\"" + "abc" + "\"") === et.Literal(
       ast.StringLiteral("abc")
     ))
-    
+
     assert(exprFor("'#(a 10)") === et.Literal(
       ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
     ))
-    
+
     assert(exprFor("#(a 10)") === et.Literal(
       ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
     ))
-    
+
     assert(exprFor("'#u8(64 65)") === et.Literal(
       ast.Bytevector(Vector(64, 65))
     ))
-    
+
     assert(exprFor("#u8(64 65)") === et.Literal(
       ast.Bytevector(Vector(64, 65))
     ))
-    
+
     assert(exprFor("'#t") === et.Literal(
       ast.BooleanLiteral(true)
     ))
-    
+
     assert(exprFor("#t") === et.Literal(
       ast.BooleanLiteral(true)
     ))
-    
+
     assert(exprFor("#!unit") === et.Literal(
       ast.UnitValue()
     ))
@@ -146,7 +146,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[UnboundVariableException] {
       exprFor("(set! b 1)")
     }
-    
+
     intercept[BadSpecialFormException] {
       exprFor("(set! set! 1)")
     }
@@ -158,7 +158,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       et.Literal(ast.Symbol("yes")),
       et.Literal(ast.Symbol("no"))
     ))
-    
+
     assert(exprFor("(if #f 'yes)") === et.Cond(
       et.Literal(ast.BooleanLiteral(false)),
       et.Literal(ast.Symbol("yes")),
@@ -171,7 +171,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define a 2)")(scope)
 
     inside(scope.get("a").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(expressions === List(
           et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
@@ -187,7 +187,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define a : <integer> 2)")(scope)
 
     inside(scope.get("a").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(expressions === List(
           et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
@@ -205,7 +205,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define a 2)""")(scope)
 
     inside(scope.get("a").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(expressions === List(
           et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
@@ -213,7 +213,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(storageLoc.schemeType === vt.IntegerType)
     }
   }
-  
+
   test("multiple compatible type declarations are allowed") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor(
@@ -222,7 +222,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define a 2)""")(scope)
 
     inside(scope.get("a").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(expressions === List(
           et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
         ))
@@ -230,7 +230,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(storageLoc.schemeType === vt.IntegerType)
     }
   }
-  
+
   test("type declaration without define fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -248,7 +248,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
            (: a <integer>)""")(scope)
     }
   }
-  
+
   test("type declaration with unbound type fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -272,26 +272,26 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define a 2)(define b a)")(scope)
 
     inside((scope.get("a").value, scope.get("b").value)) {
-      case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
+      case (storageLocA: StorageLocation, storageLocB: StorageLocation) =>
         assert(expressions === List(
           et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(2)))),
           et.TopLevelDefine(et.Binding(storageLocB, et.VarRef(storageLocA)))
         ))
     }
   }
-  
+
   test("reference variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     val expressions = bodyFor("(define a 2) a")(scope)
 
     inside(scope.get("a").value) {
-      case storageLoc : StorageLocation =>
+      case storageLoc: StorageLocation =>
         assert(expressions === List(
           et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2)))),
           et.VarRef(storageLoc)
         ))
     }
-  } 
+  }
 
   test("parameters shadow") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -309,7 +309,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor(
       """(define x 1)
          (lambda () (define x 2))"""
-    )(scope) 
+    )(scope)
 
     inside(expressions) {
       case List(et.TopLevelDefine(et.Binding(shadowed, _)), et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
@@ -337,7 +337,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (lambda ()
            (: x <integer>)
            (define x 2))"""
-    )(scope) 
+    )(scope)
 
     inside(expressions) {
       case List(et.TopLevelDefine(et.Binding(shadowed, _)), et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
@@ -347,7 +347,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(inner.schemeType === vt.IntegerType)
     }
   }
-  
+
   test("type declaration of internal definition") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -355,14 +355,14 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       """(lambda ()
          (: x <integer>)
          (define x 2))"""
-    )(scope) 
+    )(scope)
 
     inside(expressions) {
       case List( et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(et.Binding(inner, _)), _), _)) =>
         assert(inner.schemeType === vt.IntegerType)
     }
   }
-  
+
   test("type declaration of internal definition with incompatible type fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -371,10 +371,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         """(lambda ()
            (define x : <flonum> 4.0)
            (: x <integer>))"""
-      )(scope) 
+      )(scope)
     }
   }
-  
+
   test("type declaring compatible typed define") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -389,7 +389,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(inner.schemeType === vt.IntegerType)
     }
   }
-  
+
   test("type declaring incompatible typed define fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -398,10 +398,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         """(lambda ()
            (: x <integer>)
            (define x : <flonum> 2))"""
-      )(scope) 
+      )(scope)
     }
   }
-  
+
   test("type declaration wihout internal define fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -409,10 +409,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       bodyFor(
         """(lambda ()
            (: x <integer>))"""
-      )(scope) 
+      )(scope)
     }
   }
-  
+
   test("type declaration from outer scope fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -421,11 +421,11 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         """(: x <integer>)
            (lambda ()
            (define x 2))"""
-      )(scope) 
+      )(scope)
     }
   }
-  
-  
+
+
   test("capturing") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
@@ -443,7 +443,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val listBinding = scope.get("list").value
 
     inside(listBinding) {
-      case sp : StdlibProcedure =>
+      case sp: StdlibProcedure =>
         assert(sp.stdlibName === "list")
     }
 
@@ -487,9 +487,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("""(include "includes/definea.scm")""")(scope)
 
     inside(scope("a")) {
-      case storageLocA : StorageLocation =>
+      case storageLocA: StorageLocation =>
         inside(scope("b")) {
-          case storageLocB : StorageLocation =>
+          case storageLocB: StorageLocation =>
             assert(expressions ===
               List(
                 et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
@@ -543,61 +543,61 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("cast expression types") {
-    assert(exprFor("(cast #t <boolean>)")(nfiScope) === 
+    assert(exprFor("(cast #t <boolean>)")(nfiScope) ===
       et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, false)
     )
-  
+
     intercept[BadSpecialFormException] {
       // No args
       exprFor("(cast #t)")(nfiScope)
     }
-    
+
     intercept[BadSpecialFormException] {
       // Too many args
       exprFor("(cast #t <any> <string>)")(nfiScope)
     }
-    
+
     intercept[UnboundVariableException] {
       // Not a type
       exprFor("(cast #t <not-a-type>)")(nfiScope)
     }
-    
+
     intercept[BadSpecialFormException] {
       // Native type
       exprFor("(cast #t <native-int64>)")(nfiScope)
     }
   }
-  
+
   test("annotation expression types") {
-    assert(exprFor("(ann #t <boolean>)")(nfiScope) === 
+    assert(exprFor("(ann #t <boolean>)")(nfiScope) ===
       et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, true)
     )
-  
+
     intercept[BadSpecialFormException] {
       // No args
       exprFor("(ann #t)")(nfiScope)
     }
-    
+
     intercept[BadSpecialFormException] {
       // Too many args
       exprFor("(ann #t <any> <string>)")(nfiScope)
     }
-    
+
     intercept[UnboundVariableException] {
       // Not a type
       exprFor("(ann #t <not-a-type>)")(nfiScope)
     }
-    
+
     intercept[BadSpecialFormException] {
       // Native type
       exprFor("(ann #t <native-int64>)")(nfiScope)
     }
   }
-  
+
   test("cond-expand with no clauses fails") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
     intercept[BadSpecialFormException] {
-      exprFor("""(cond-expand)""") 
+      exprFor("""(cond-expand)""")
     }
   }
 
@@ -625,13 +625,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       )
     )
   }
-  
+
   test("parameterize with no arguments fails") {
     intercept[BadSpecialFormException] {
       exprFor("""(parameterize)""")
     }
   }
-  
+
   test("parameterize with three valued parameter fails") {
     intercept[BadSpecialFormException] {
       exprFor("""(parameterize (('param 'value 'extra)) #t)""")
@@ -646,7 +646,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       )
     )
   }
-  
+
   test("parameterize with two parameters") {
     assert(exprFor("""(parameterize (('param1 'value1) ('param2 'value2)) #t)""") ===
       et.Parameterize(
@@ -658,7 +658,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       )
     )
   }
-  
+
   test("parameterize with multiple body expressions") {
     assert(exprFor("""(parameterize (('param1 'value1)) 1 2 3)""") ===
       et.Parameterize(
@@ -673,9 +673,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       )
     )
   }
-  
+
   test("parameterize introduces a body context") {
-    inside(exprFor("""(parameterize () (define a 1))""")) { 
+    inside(exprFor("""(parameterize () (define a 1))""")) {
       case et.Parameterize(Nil, et.InternalDefine(_, _)) =>
         // Checks out
     }
@@ -686,13 +686,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       exprFor("(make-predicate)")(nfiScope)
     }
   }
-  
+
   test("creating type predicates with non-type fails ") {
     intercept[BadSpecialFormException] {
       exprFor("(make-predicate 5)")(nfiScope)
     }
   }
-  
+
   test("creating type predicate from a procedure type fails") {
     intercept[BadSpecialFormException] {
       exprFor("(make-predicate (-> <symbol> <symbol>))")(nfiScope)
@@ -700,7 +700,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("creating type predicate from a Scheme type") {
-    assert(exprFor("(make-predicate <symbol>)")(nfiScope) === 
+    assert(exprFor("(make-predicate <symbol>)")(nfiScope) ===
       et.TypePredicate(vt.SymbolType)
     )
   }

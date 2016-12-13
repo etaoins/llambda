@@ -6,7 +6,7 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends KnownArtificialProc(
+class KnownRecordConstructorProc(recordType: vt.RecordType, initializedFields: List[vt.RecordField]) extends KnownArtificialProc(
     ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=false,
@@ -22,7 +22,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "")
 
-  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
+  def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
     val plan = parentPlan.forkPlan()
 
     val fieldToTempValue = (initializedFields.map { field =>
@@ -65,9 +65,9 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     )
   }
 
-  override def attemptInlineApplication(state : PlannerState)(
-      args : List[(ContextLocated, IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+  override def attemptInlineApplication(state: PlannerState)(
+      args: List[(ContextLocated, IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = {
     if (args.length != initializedFields.length) {
       // Not the right number of args
       return None

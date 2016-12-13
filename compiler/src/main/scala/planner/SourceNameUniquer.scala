@@ -5,11 +5,11 @@ import io.llambda
 class SourceNameUniquer {
   private val nextSuffixForSourceName = new collection.mutable.HashMap[String, Int]()
 
-  def reserve(sourceNames : String*) : Unit =
+  def reserve(sourceNames: String*): Unit =
     for(sourceName <- sourceNames)
       apply(sourceName)
 
-  def apply(sourceName : String) : String = {
+  def apply(sourceName: String): String = {
     // Allocate another number
     val nextSuffix = nextSuffixForSourceName.getOrElse(sourceName, 1)
     nextSuffixForSourceName.put(sourceName, nextSuffix + 1)

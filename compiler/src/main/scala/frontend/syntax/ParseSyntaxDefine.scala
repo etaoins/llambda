@@ -5,9 +5,9 @@ import llambda.compiler.sst
 import llambda.compiler._
 
 private[frontend] object ParseSyntaxDefine {
-  private def checkDuplicateVariables(foundVariables : PatternVariables, seenVariables : Set[SyntaxVariable]) : Set[SyntaxVariable] = {
+  private def checkDuplicateVariables(foundVariables: PatternVariables, seenVariables: Set[SyntaxVariable]): Set[SyntaxVariable] = {
     val afterVisitedSelf = foundVariables.variables.foldLeft(seenVariables) {
-      case (seenVariables, _ : BoundSyntaxVariable) =>
+      case (seenVariables, _: BoundSyntaxVariable) =>
         // Allow duplicate bound syntax variables as they must always resolve to the same bound value
         seenVariables
 
@@ -19,18 +19,18 @@ private[frontend] object ParseSyntaxDefine {
         seenVariables + foundVariable
     }
 
-    foundVariables.subpatterns.foldLeft(afterVisitedSelf) { case (seenVariables, subpattern) => 
+    foundVariables.subpatterns.foldLeft(afterVisitedSelf) { case (seenVariables, subpattern) =>
       checkDuplicateVariables(subpattern, seenVariables)
     }
   }
 
   private def parseTransformers(
-      definedSymbol : sst.ScopedSymbol,
-      ellipsisVariable : SyntaxVariable,
-      literalData : List[sst.ScopedDatum],
-      rulesData : List[sst.ScopedDatum],
-      debugContext : debug.SourceContext
-  ) : (sst.ScopedSymbol, BoundSyntax) = {
+      definedSymbol: sst.ScopedSymbol,
+      ellipsisVariable: SyntaxVariable,
+      literalData: List[sst.ScopedDatum],
+      rulesData: List[sst.ScopedDatum],
+      debugContext: debug.SourceContext
+  ): (sst.ScopedSymbol, BoundSyntax) = {
     val literals = (literalData.map {
       case symbol @ sst.ScopedSymbol(_, identifier) =>
         SyntaxVariable.fromSymbol(symbol)
@@ -38,7 +38,7 @@ private[frontend] object ParseSyntaxDefine {
       case nonSymbol =>
         throw new BadSpecialFormException(nonSymbol, "Symbol expected in literal list")
     }).toSet
-    
+
     val parsedRules = rulesData map {
       case sst.ScopedProperList(sst.ScopedPair(_, patternDatum) :: template :: Nil) =>
         // Find all of our pattern variables
@@ -48,8 +48,8 @@ private[frontend] object ParseSyntaxDefine {
         )
 
         val patternVariables = FindPatternVariables(patternDatum)(matchConfig)
-          
-        checkDuplicateVariables(patternVariables, Set()) 
+
+        checkDuplicateVariables(patternVariables, Set())
 
         Transformer(patternDatum, patternVariables, template)
 
@@ -60,7 +60,7 @@ private[frontend] object ParseSyntaxDefine {
       throw new InternalCompilerErrorException("Unable to determine macro location for debug info purposes")
     })
 
-    val macroDebugContext = new debug.SubprogramContext(   
+    val macroDebugContext = new debug.SubprogramContext(
       parentContext=debugContext,
       filenameOpt=macroLocation.filenameOpt,
       startLocation=macroLocation,
@@ -71,20 +71,20 @@ private[frontend] object ParseSyntaxDefine {
   }
 
   def apply(
-      located : SourceLocated,
-      operands : List[sst.ScopedDatum],
-      debugContext : debug.SourceContext
-  ) : (sst.ScopedSymbol, BoundSyntax) = operands match {
-    case List((definedSymbol : sst.ScopedSymbol),
+      located: SourceLocated,
+      operands: List[sst.ScopedDatum],
+      debugContext: debug.SourceContext
+  ): (sst.ScopedSymbol, BoundSyntax) = operands match {
+    case List((definedSymbol: sst.ScopedSymbol),
              sst.ScopedProperList(
                sst.ResolvedSymbol(Primitives.SyntaxRules) :: sst.ScopedProperList(literalData) :: rulesData
              )) =>
       parseTransformers(definedSymbol, BoundSyntaxVariable(Primitives.Ellipsis), literalData, rulesData, debugContext)
 
-    case List((definedSymbol : sst.ScopedSymbol),
+    case List((definedSymbol: sst.ScopedSymbol),
              sst.ScopedProperList(
                sst.ResolvedSymbol(Primitives.SyntaxRules) ::
-               (ellipsisSymbol : sst.ScopedSymbol) ::
+               (ellipsisSymbol: sst.ScopedSymbol) ::
                sst.ScopedProperList(literalData) ::
                rulesData
              )) =>

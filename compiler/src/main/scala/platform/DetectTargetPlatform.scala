@@ -16,5 +16,5 @@ object DetectTargetPlatform {
     }
   }
 
-  def apply() : TargetPlatform = targetPlatform
+  def apply(): TargetPlatform = targetPlatform
 }

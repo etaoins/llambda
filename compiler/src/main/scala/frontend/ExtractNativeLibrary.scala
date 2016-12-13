@@ -5,10 +5,10 @@ import llambda.compiler.{ast, sst, NativeLibrary, NativeStaticLibrary, Primitive
 import llambda.compiler.BadSpecialFormException
 
 object ExtractNativeLibrary {
-  def apply(datum : sst.ScopedDatum) : NativeLibrary = datum match {
-    case symbol : sst.ScopedSymbol =>
+  def apply(datum: sst.ScopedDatum): NativeLibrary = datum match {
+    case symbol: sst.ScopedSymbol =>
       symbol.resolve match {
-        case nativeLibrary : NativeLibrary =>
+        case nativeLibrary: NativeLibrary =>
           nativeLibrary
 
         case _ =>

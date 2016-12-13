@@ -8,14 +8,14 @@ import llambda.llvmir.IrFunction._
 
 object GenParameter {
   private val dynamicenvPushDecl = RuntimeFunctions.dynamicenvPush
-  private val dynamicenvSetValueDecl = RuntimeFunctions.dynamicenvSetValue 
-  private val dynamicenvPopDecl = RuntimeFunctions.dynamicenvPop 
+  private val dynamicenvSetValueDecl = RuntimeFunctions.dynamicenvSetValue
+  private val dynamicenvPopDecl = RuntimeFunctions.dynamicenvPop
   private val makeParameterDecl = RuntimeFunctions.makeParameter
   private val valueForParameterDecl = RuntimeFunctions.valueForParameter
 
-  private def declareSupportFunctions(state : GenerationState) {
+  private def declareSupportFunctions(state: GenerationState) {
     val module = state.currentBlock.function.module
-    
+
     // Declare all support functions
     val supportFuncs = List(dynamicenvPushDecl, dynamicenvSetValueDecl, dynamicenvPopDecl, makeParameterDecl,
                             valueForParameterDecl)
@@ -27,7 +27,7 @@ object GenParameter {
     }
   }
 
-  def genPushDynamicState(state : GenerationState)(step : ps.PushDynamicState) : GenerationState = {
+  def genPushDynamicState(state: GenerationState)(step: ps.PushDynamicState): GenerationState = {
     declareSupportFunctions(state)
 
     val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
@@ -48,7 +48,7 @@ object GenParameter {
     state
   }
 
-  def genPopDynamicState(state : GenerationState)(step : ps.PopDynamicState) : GenerationState = {
+  def genPopDynamicState(state: GenerationState)(step: ps.PopDynamicState): GenerationState = {
     declareSupportFunctions(state)
 
     // Pop the environment
@@ -58,10 +58,10 @@ object GenParameter {
     state
   }
 
-  def genCreateParameterProc(state : GenerationState)(
-      worldPtrIr : IrValue,
-      initialValueIr : IrValue
-  ) : (GenerationState, IrValue) = {
+  def genCreateParameterProc(state: GenerationState)(
+      worldPtrIr: IrValue,
+      initialValueIr: IrValue
+  ): (GenerationState, IrValue) = {
     val entryBlock = state.currentBlock
 
     declareSupportFunctions(state)
@@ -81,10 +81,10 @@ object GenParameter {
     }
   }
 
-  def genLoadValueForParameterProc(state : GenerationState)(
-      worldPtrIr : IrValue,
-      parameterProcIr : IrValue
-  ) : IrValue = {
+  def genLoadValueForParameterProc(state: GenerationState)(
+      worldPtrIr: IrValue,
+      parameterProcIr: IrValue
+  ): IrValue = {
     // This isn't a GC barrier thankfully
     val block = state.currentBlock
 

@@ -7,7 +7,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
 private[frontend] object FeaturesProcedure {
-  def apply(frontendConfig : FrontendConfig) : et.Lambda = {
+  def apply(frontendConfig: FrontendConfig): et.Lambda = {
     // Create a fake lambda for this
     // This prevents us from having to duplicate features between the frontend and stdlib
     val featuresList = frontendConfig.featureIdentifiers.toList.sorted

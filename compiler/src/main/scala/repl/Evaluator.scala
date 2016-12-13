@@ -10,7 +10,7 @@ import annotation.tailrec
 
 import llambda.compiler.SchemeStringImplicits._
 
-class ReplProcessNonZeroExitException(val code : Int, val stdout : String, val stderr : String) extends
+class ReplProcessNonZeroExitException(val code: Int, val stdout: String, val stderr: String) extends
   Exception(s"Process exited with code ${code}")
 
 private object ReplFrontendConfig {
@@ -19,7 +19,7 @@ private object ReplFrontendConfig {
     * This passes through the feature identifiers from the command line and sets the include and package root
     * directories to the current directory
     */
-  def apply(targetPlatform : platform.TargetPlatform) : frontend.FrontendConfig =  {
+  def apply(targetPlatform: platform.TargetPlatform): frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
 
     val includePath = frontend.IncludePath(List(currentDirUrl))
@@ -35,7 +35,7 @@ private object ReplFrontendConfig {
   *
   * This is the core of the REPL implementation. It is responsible for evaluating data and tracking the REPL state.
   */
-class Evaluator(targetPlatform : platform.TargetPlatform) {
+class Evaluator(targetPlatform: platform.TargetPlatform) {
   private implicit val frontendConfig = ReplFrontendConfig(targetPlatform)
 
   private val compileConfig = CompileConfig(
@@ -44,8 +44,8 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
     targetPlatform=targetPlatform
   )
 
-  val loader : frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
-  val prefixExprs : mutable.ListBuffer[et.Expr] = new mutable.ListBuffer
+  val loader: frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
+  val prefixExprs: mutable.ListBuffer[et.Expr] = new mutable.ListBuffer
 
   implicit val frontendContext = frontend.FrontendContext(frontendConfig, loader, debug.UnknownContext)
 
@@ -58,9 +58,9 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
 
   val initialBindings = initialLibraries.flatMap(loader.load(_))
 
-  var scope : Scope = new Scope(mutable.Map(initialBindings : _*))
+  var scope: Scope = new Scope(mutable.Map(initialBindings: _*))
 
-  private def exprsToOutputString(exprs : List[et.Expr]) : String = {
+  private def exprsToOutputString(exprs: List[et.Expr]): String = {
     val result = Compiler.runExprs(exprs, compileConfig, Nil)
 
     if (result.exitValue != 0) {
@@ -74,7 +74,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
     *
     * This includes (define-type) and (define-syntax)
     */
-  private def evalSimpleDefine(defineDatum : ast.Datum) : String = {
+  private def evalSimpleDefine(defineDatum: ast.Datum): String = {
     // Evaluating this in our top-level scope and collect any expressions required for record type defines
     prefixExprs ++= frontend.ExtractModuleBody(List(defineDatum), scope)
 
@@ -82,7 +82,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
   }
 
   /** Handles evaluating definitions of values and mutations */
-  private def evalValueDefine(defineDatum : ast.Datum, identifier : String) : String = {
+  private def evalValueDefine(defineDatum: ast.Datum, identifier: String): String = {
     // Create a test scope in case binding fails
     val childScope = new Scope(mutable.Map(), Some(scope))
 
@@ -124,7 +124,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
       }
     }
     catch {
-      case _ : ParseErrorException =>
+      case _: ParseErrorException =>
         None
     }
 
@@ -147,7 +147,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform) {
     */
   @throws(classOf[SemanticException])
   @throws(classOf[ReplProcessNonZeroExitException])
-  def apply(userDatum : ast.Datum) : String = userDatum match {
+  def apply(userDatum: ast.Datum): String = userDatum match {
     case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
       // Load the library
       scope.bindings ++= frontend.ResolveImportDecl(importDecl)(loader, frontendConfig)

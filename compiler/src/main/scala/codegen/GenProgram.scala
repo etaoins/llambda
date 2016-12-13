@@ -10,12 +10,12 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 object GenProgram {
-  def resourceAsString(resourcePath : String) : String = {
+  def resourceAsString(resourcePath: String): String = {
     val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
     Source.fromInputStream(stream).mkString
   }
 
-  def preludeIr : String = {
+  def preludeIr: String = {
     List(
       RuntimeBuildFiles.llvmTarget,
       resourceAsString("generated/cellTypes.ll"),
@@ -23,7 +23,7 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  def apply(functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, entryFilenameOpt : Option[String]) : String = {
+  def apply(functions: Map[String, planner.PlannedFunction], compileConfig: CompileConfig, entryFilenameOpt: Option[String]): String = {
     val module = new IrModuleBuilder
     module.metadataIndexSource.nextIndex = ct.CellType.nextMetadataIndex
 
@@ -44,12 +44,12 @@ object GenProgram {
     )
 
     // Build each program-supplied function
-    val functionGenerator = GenFunction(module, genGlobals)_ 
+    val functionGenerator = GenFunction(module, genGlobals)_
 
     for((nativeSymbol, plannedFunction) <- functions) {
       functionGenerator(nativeSymbol, plannedFunction)
     }
-    
+
     // Build our main() glue to init the runtime and call our program
     val result = IrFunction.Result(IntegerType(32))
     val namedArguments = List(

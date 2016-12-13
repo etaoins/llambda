@@ -20,16 +20,16 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProc {
+abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOpt: Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProc {
   val typeDescription = "procedure"
 
-  val schemeType : vt.ApplicableType = polySignature.upperBound.toSchemeProcedureType
+  val schemeType: vt.ApplicableType = polySignature.upperBound.toSchemeProcedureType
 
   /** Optional location of this procedure's definition
     *
     * This is used to generate a comment for the procedure's trampoline
     */
-  def locationOpt : Option[ContextLocated] =
+  def locationOpt: Option[ContextLocated] =
     None
 
   override def procedureSignatureOpt =
@@ -39,18 +39,18 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
     *
     * If the procedure is lazily planned it should be planned here
     */
-  def nativeSymbol(implicit plan : PlanWriter) : String
+  def nativeSymbol(implicit plan: PlanWriter): String
 
-  def nativeSymbolOpt(implicit plan : PlanWriter) : Option[String] =
+  def nativeSymbolOpt(implicit plan: PlanWriter): Option[String] =
     Some(nativeSymbol)
-  
-  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
+
+  def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =
     BoxedValue(ct.ProcedureCell, planSelf())
-  
+
   def toProcedureTempValue(
-      targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter) : ps.TempValue = {
+      targetType: vt.ApplicableType,
+      errorMessageOpt: Option[RuntimeErrorMessage]
+  )(implicit plan: PlanWriter): ps.TempValue = {
     if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
       val message = s"Unable to convert ${typeDescription} to procedure type ${targetType}"
       impossibleConversion(message)
@@ -89,7 +89,7 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
 
     // Load the trampoline's entry point
     val trampEntryPointTemp = ps.EntryPointTemp()
-    plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
+    plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol)
 
     // Create the adapter procedure cell
     val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
@@ -108,17 +108,17 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
     adapterProcTemp
   }
 
-  def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc =
+  def toInvokableProc()(implicit plan: PlanWriter): InvokableProc =
     this
 
-  def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
+  def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, polySignature.upperBound, nativeSymbol)
 
     entryPointTemp
   }
 
-  def planSelf()(implicit plan : PlanWriter) : ps.TempValue =
+  def planSelf()(implicit plan: PlanWriter): ps.TempValue =
     selfTempOpt match {
       case Some(selfTemp) => selfTemp
 
@@ -127,26 +127,26 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
         plan.steps += ps.CreateEmptyClosure(cellTemp, planEntryPoint())
         cellTemp
     }
-  
-  def preferredRepresentation : vt.ValueType =
+
+  def preferredRepresentation: vt.ValueType =
     schemeType
 
-  def needsClosureRepresentation  = 
+  def needsClosureRepresentation  =
     // We only need a closure if we have a closure ourselves (i.e. a self temp)
     selfTempOpt.isDefined
 
   /** Optionally plans an application of this procedure inline at the call site */
-  def attemptInlineApplication(state : PlannerState)(args : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] =
+  def attemptInlineApplication(state: PlannerState)(args: List[(ContextLocated, IntermediateValue)])(implicit plan: PlanWriter): Option[PlanResult] =
     None
 
-  override def withSchemeType(newType : vt.SchemeType) : KnownProc =
+  override def withSchemeType(newType: vt.SchemeType): KnownProc =
     this
-  
-  def withSelfTemp(selfValue : ps.TempValue) : KnownProc
+
+  def withSelfTemp(selfValue: ps.TempValue): KnownProc
 
   override def restoreFromClosure(
-      valueType : vt.ValueType,
-      varTemp : ps.TempValue
-  )(planConfig : PlanConfig) : IntermediateValue = 
+      valueType: vt.ValueType,
+      varTemp: ps.TempValue
+  )(planConfig: PlanConfig): IntermediateValue =
     withSelfTemp(varTemp)
 }

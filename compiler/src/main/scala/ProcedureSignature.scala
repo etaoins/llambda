@@ -23,13 +23,13 @@ object ProcedureAttribute {
   * This includes both native functions and generated lambdas
   */
 case class ProcedureSignature(
-  hasWorldArg : Boolean,
-  hasSelfArg : Boolean,
-  mandatoryArgTypes : List[vt.ValueType],
-  optionalArgTypes : List[vt.SchemeType],
-  restArgMemberTypeOpt : Option[vt.SchemeType],
-  returnType : vt.ReturnType.ReturnType[vt.ValueType],
-  attributes : Set[ProcedureAttribute]
+  hasWorldArg: Boolean,
+  hasSelfArg: Boolean,
+  mandatoryArgTypes: List[vt.ValueType],
+  optionalArgTypes: List[vt.SchemeType],
+  restArgMemberTypeOpt: Option[vt.SchemeType],
+  returnType: vt.ReturnType.ReturnType[vt.ValueType],
+  attributes: Set[ProcedureAttribute]
 ) {
   /** Converts this signature to a polymorphic signaure with no type variables */
   def toPolymorphic =

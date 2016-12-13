@@ -7,7 +7,7 @@ import llambda.compiler.{celltype => ct}
 import Implicits._
 
 class PairTypeSuite extends SchemeTypeSuite {
-  protected def binaryTreeType(memberType : SchemeType) : SchemeType =
+  protected def binaryTreeType(memberType: SchemeType): SchemeType =
     SchemeType.fromTypeUnion(List(
       memberType,
       SpecificPairType(
@@ -15,8 +15,8 @@ class PairTypeSuite extends SchemeTypeSuite {
         RecursiveSchemeTypeRef(1)
       )
     ))
-  
-  protected def infiniteListType(memberType : SchemeType) : SchemeType =
+
+  protected def infiniteListType(memberType: SchemeType): SchemeType =
     SpecificPairType(
       memberType,
       RecursiveSchemeTypeRef(0)
@@ -25,7 +25,7 @@ class PairTypeSuite extends SchemeTypeSuite {
   test("the any pair type satisfies itself") {
     assert(SatisfiesType(AnyPairType, AnyPairType) === Some(true))
   }
-  
+
   test("specific pair type satisfies the any pair type") {
     val specificPairType = PairType(SymbolType, StringType)
     assert(SatisfiesType(AnyPairType, specificPairType) === Some(true))
@@ -53,7 +53,7 @@ class PairTypeSuite extends SchemeTypeSuite {
 
     assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
   }
-  
+
   test("partially compatible specific pair types do not satisfy each other") {
     // car may satisfy, cdr does not satisfy
     val specificPairType1 = PairType(IntegerType, StringType)
@@ -61,19 +61,19 @@ class PairTypeSuite extends SchemeTypeSuite {
 
     assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
   }
-  
+
   test("integer binary tree definitely satisfies itself") {
     assert(SatisfiesType(binaryTreeType(IntegerType), binaryTreeType(IntegerType)) === Some(true))
   }
-  
+
   test("integer binary tree definitely satisfies number binary tree") {
     assert(SatisfiesType(binaryTreeType(NumberType), binaryTreeType(IntegerType)) === Some(true))
   }
-  
+
   test("number binary tree may satisfy integer binary tree") {
     assert(SatisfiesType(binaryTreeType(IntegerType), binaryTreeType(NumberType)) === None)
   }
-  
+
   test("binary tree type minus itself is the empty type") {
     assert((binaryTreeType(SymbolType) - binaryTreeType(SymbolType)) === EmptySchemeType)
   }
@@ -85,23 +85,23 @@ class PairTypeSuite extends SchemeTypeSuite {
   test("intersection of two binary trees is the most specific binary tree") {
     assertIntersection(binaryTreeType(NumberType), binaryTreeType(FlonumType), binaryTreeType(FlonumType))
   }
-  
+
   test("empty list does not satisfy an infinite list") {
     assert(SatisfiesType(infiniteListType(StringType), EmptyListType) === Some(false))
   }
-  
+
   test("proper list may satisify an infinite list") {
     assert(SatisfiesType(infiniteListType(StringType), stringList) === None)
   }
-  
+
   test("non-empty proper list may satisify an infinite list") {
     assert(SatisfiesType(infiniteListType(StringType), nonEmptyProperList(StringType)) === None)
   }
-  
+
   test("infinite list definitely satisfies a proper list") {
     assert(SatisfiesType(stringList, infiniteListType(StringType)) === Some(true))
   }
-  
+
   test("infinite list definitely satisfies a non-empty list") {
     assert(SatisfiesType(nonEmptyProperList(StringType), infiniteListType(StringType)) === Some(true))
   }

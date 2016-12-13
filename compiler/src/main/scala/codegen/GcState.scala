@@ -4,12 +4,12 @@ import io.llambda
 import llambda.llvmir._
 
 case class GcState(
-  rootedIdentities : Map[GcPointerIdentity, Int] = Map(),
-  nextUnallocatedSlot : Int = 0
+  rootedIdentities: Map[GcPointerIdentity, Int] = Map(),
+  nextUnallocatedSlot: Int = 0
 )
 
 object GcState {
-  def fromBranches(continuingState : GcState, otherStates : List[GcState]) = {
+  def fromBranches(continuingState: GcState, otherStates: List[GcState]) = {
     val nextUnallocatedSlot = (continuingState :: otherStates).map(_.nextUnallocatedSlot).max
 
     // This is tricky and depends on a few assumptions:

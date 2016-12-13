@@ -10,8 +10,8 @@ import llambda.compiler._
 import llambda.compiler.SchemeStringImplicits._
 
 abstract class SchemeFunctionalTestRunner(
-    testName : String,
-    onlyOptimised : Boolean = false
+    testName: String,
+    onlyOptimised: Boolean = false
 ) extends FunSuite with Inside {
   // Implicit import decl every test gets
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
@@ -30,11 +30,11 @@ abstract class SchemeFunctionalTestRunner(
   private val targetPlatform = platform.DetectTargetPlatform()
 
   private case class ExecutionResult(
-      success : Boolean,
-      output : List[ast.Datum],
-      errorString : String,
-      exitValue : Int,
-      runMethod : RunResult.RunMethod
+      success: Boolean,
+      output: List[ast.Datum],
+      errorString: String,
+      exitValue: Int,
+      runMethod: RunResult.RunMethod
   )
 
   val resourceBaseDir = "functional/"
@@ -55,7 +55,7 @@ abstract class SchemeFunctionalTestRunner(
   val parsed = SchemeParser.parseStringAsData(allTestSource, Some(s":/${resourcePath}"))
   runAllTests(parsed)
 
-  private def runAllTests(allTests : List[ast.Datum]) {
+  private def runAllTests(allTests: List[ast.Datum]) {
     if (!onlyOptimised) {
       runTestConfiguration(allTests, 0)
     }
@@ -64,7 +64,7 @@ abstract class SchemeFunctionalTestRunner(
   }
 
   /** Expands top-level (cond-expand) expressions in the test source */
-  private def expandTopLevel(data : List[ast.Datum])(implicit libraryLoader : frontend.LibraryLoader, frontendConfig : frontend.FrontendConfig) : List[ast.Datum] = {
+  private def expandTopLevel(data: List[ast.Datum])(implicit libraryLoader: frontend.LibraryLoader, frontendConfig: frontend.FrontendConfig): List[ast.Datum] = {
     data flatMap {
       case ast.ProperList(ast.Symbol("cond-expand") :: firstClause :: restClauses) =>
         frontend.CondExpander.expandData(firstClause :: restClauses)
@@ -74,7 +74,7 @@ abstract class SchemeFunctionalTestRunner(
     }
   }
 
-  private def runTestConfiguration(allTests : List[ast.Datum], optimiseLevel : Int) {
+  private def runTestConfiguration(allTests: List[ast.Datum], optimiseLevel: Int) {
     // Deal with (cond-expand) for this configuration
     val expandLibraryLoader = new frontend.LibraryLoader(targetPlatform)
     val expandFrontendConfig = frontend.FrontendConfig(
@@ -98,7 +98,7 @@ abstract class SchemeFunctionalTestRunner(
     }
   }
 
-  private def runSingleCondition(condition : ast.Datum, optimiseLevel : Int) {
+  private def runSingleCondition(condition: ast.Datum, optimiseLevel: Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
         val result = executeProgram(wrapForPrinting(program), optimiseLevel)
@@ -175,7 +175,7 @@ abstract class SchemeFunctionalTestRunner(
           }
         }
         catch {
-          case expectedError : SemanticException
+          case expectedError: SemanticException
             if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
         }
 
@@ -184,10 +184,10 @@ abstract class SchemeFunctionalTestRunner(
           executeProgram(program, optimiseLevel)
         }
         catch {
-          case _ : SemanticException if errorPredicate == "error-object?" =>
+          case _: SemanticException if errorPredicate == "error-object?" =>
             return
 
-          case expectedError : SemanticException
+          case expectedError: SemanticException
               if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
             return
         }
@@ -199,7 +199,7 @@ abstract class SchemeFunctionalTestRunner(
     }
   }
 
-  private def wrapForPrinting(program : List[ast.Datum]) : List[ast.Datum] = {
+  private def wrapForPrinting(program: List[ast.Datum]): List[ast.Datum] = {
     // Our special version of (write) that generates less code due to not using parameters
     val lastValueWriter = datum"""(native-function system-library "llcore_write_stdout" (-> <any> <unit>))"""
 
@@ -212,7 +212,7 @@ abstract class SchemeFunctionalTestRunner(
     program.dropRight(1) :+ wrappedDatum
   }
 
-  private def wrapForAssertRaises(errorPredicate : String, program : List[ast.Datum]) : List[ast.Datum] = {
+  private def wrapForAssertRaises(errorPredicate: String, program: List[ast.Datum]): List[ast.Datum] = {
     // Make sure we don't wrap any (import)s the test may have
     val (testImports, testExprs) = program.span {
       case ast.ProperList(ast.Symbol("import") :: _) => true
@@ -224,10 +224,10 @@ abstract class SchemeFunctionalTestRunner(
       ast.ProperList(ast.Symbol("assert-raises") :: ast.Symbol(errorPredicate) :: testExprs)
   }
 
-  private def utf8InputStreamToString(stream : InputStream) : String =
+  private def utf8InputStreamToString(stream: InputStream): String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum], optimiseLevel : Int) : ExecutionResult = {
+  private def executeProgram(program: List[ast.Datum], optimiseLevel: Int): ExecutionResult = {
     val finalProgram = testImportDecl :: program
 
     // Compile the program

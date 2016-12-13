@@ -6,7 +6,7 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc(
+class KnownRecordAccessorProc(recordType: vt.RecordType, field: vt.RecordField) extends KnownArtificialProc(
     ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
@@ -23,20 +23,20 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
       .replaceAllLiterally(">", "") +
       "-" + field.name
 
-  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
+  def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
     val recordCellTemp = ps.RecordTemp()
-    
+
     val plan = parentPlan.forkPlan()
 
     // Extract the record data
     val recordDataTemp = ps.RecordLikeDataTemp()
-    plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
-    
+    plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
+
     // Read the field
     val fieldType = recordType.typeForField(field)
     val fieldValueTemp = ps.Temp(fieldType)
 
-    plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
+    plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field)
     plan.steps += ps.Return(Some(fieldValueTemp))
 
     PlannedFunction(
@@ -47,11 +47,11 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
     )
   }
 
-  override def attemptInlineApplication(state : PlannerState)(
-      args : List[(ContextLocated, IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+  override def attemptInlineApplication(state: PlannerState)(
+      args: List[(ContextLocated, IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = {
     args match {
-      case List((_, knownRecord : KnownRecord))
+      case List((_, knownRecord: KnownRecord))
           if vt.SatisfiesType(recordType, knownRecord.schemeType) == Some(true) && knownRecord.knownFieldValues.contains(field) =>
         val fieldValue = knownRecord.knownFieldValues(field)
 
@@ -64,7 +64,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
         val recordCellTemp = recordValue.toTempValue(recordType)
 
         val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
+        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
 
         // Read the field
         val fieldType = recordType.typeForField(field)

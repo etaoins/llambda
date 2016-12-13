@@ -1,5 +1,5 @@
 package io.llambda.compiler.planner
-  
+
 import io.llambda
 
 import scala.collection.breakOut
@@ -10,20 +10,20 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 
 private[planner] object RetypeLambdaArgs {
   private case class AppliedProcData(
-    fixedArgTypes : List[vt.SchemeType],
-    hasRestArg : Boolean,
-    canTerminate : Boolean
+    fixedArgTypes: List[vt.SchemeType],
+    hasRestArg: Boolean,
+    canTerminate: Boolean
   ) {
-    def compatibleArity(argCount : Int) =
+    def compatibleArity(argCount: Int) =
       (argCount == fixedArgTypes.length) ||
         ((argCount > fixedArgTypes.length) && hasRestArg)
   }
 
   private type ArgTypes = Map[StorageLocation, vt.SchemeType]
 
-  private class CollectionAborted(val argTypes : ArgTypes) extends Exception
+  private class CollectionAborted(val argTypes: ArgTypes) extends Exception
 
-  private def attributeTypeToStorageLoc(storageLoc : StorageLocation, schemeType : vt.SchemeType, argTypes : ArgTypes) : ArgTypes = {
+  private def attributeTypeToStorageLoc(storageLoc: StorageLocation, schemeType: vt.SchemeType, argTypes: ArgTypes): ArgTypes = {
     if (schemeType != vt.AnySchemeType) {
       argTypes.get(storageLoc) match {
         case Some(existingType) =>
@@ -45,7 +45,7 @@ private[planner] object RetypeLambdaArgs {
     }
   }
 
-  private def attributeTypeToExpr(expr : et.Expr, schemeType : vt.SchemeType, argTypes : ArgTypes)(implicit state : PlannerState) : ArgTypes = {
+  private def attributeTypeToExpr(expr: et.Expr, schemeType: vt.SchemeType, argTypes: ArgTypes)(implicit state: PlannerState): ArgTypes = {
     expr match {
       case et.VarRef(storageLoc) =>
         // Simple re-assignment to another location
@@ -56,8 +56,8 @@ private[planner] object RetypeLambdaArgs {
         collectTypeEvidence(otherExpr, argTypes)
     }
   }
-  
-  private def collectTypeEvidence(expr : et.Expr, argTypes : ArgTypes)(implicit state : PlannerState) : ArgTypes = expr match {
+
+  private def collectTypeEvidence(expr: et.Expr, argTypes: ArgTypes)(implicit state: PlannerState): ArgTypes = expr match {
     case et.Begin(exprs) =>
       exprs.foldLeft(argTypes) { case (currentArgTypes, subexpr) =>
         collectTypeEvidence(subexpr, currentArgTypes)
@@ -77,10 +77,10 @@ private[planner] object RetypeLambdaArgs {
     case et.Apply(et.VarRef(procLoc), argExprs) =>
       // Do the proc first
       val knownProcOpt = state.values.get(procLoc) match {
-        case Some(ImmutableValue(knownCaseLambda : iv.KnownCaseLambdaProc)) =>
+        case Some(ImmutableValue(knownCaseLambda: iv.KnownCaseLambdaProc)) =>
           knownCaseLambda.clauseForArityOpt(argExprs.length).map(_.knownProc)
 
-        case Some(ImmutableValue(knownProc : iv.KnownProc)) =>
+        case Some(ImmutableValue(knownProc: iv.KnownProc)) =>
           Some(knownProc)
 
         case _ =>
@@ -137,22 +137,22 @@ private[planner] object RetypeLambdaArgs {
         (false, collectTypeEvidence(trueExpr, postTestArgTypes))
       }
       catch {
-        case aborted : CollectionAborted =>
+        case aborted: CollectionAborted =>
           (true, aborted.argTypes)
       }
-      
+
       val (falseAborted, falseArgTypes) = try {
         (false, collectTypeEvidence(falseExpr, postTestArgTypes))
       }
       catch {
-        case aborted : CollectionAborted =>
+        case aborted: CollectionAborted =>
           (true, aborted.argTypes)
       }
 
       // Now union the type argTypes from both branches
       val mergedArgTypes = trueArgTypes.keys.map({ storageLoc =>
         storageLoc -> (trueArgTypes(storageLoc) + falseArgTypes(storageLoc))
-      })(breakOut) : ArgTypes
+      })(breakOut): ArgTypes
 
       // If either branch aborted we have to abort
       if (trueAborted || falseAborted) {
@@ -165,21 +165,21 @@ private[planner] object RetypeLambdaArgs {
     case et.Cast(valueExpr, targetType, _) =>
       attributeTypeToExpr(valueExpr, targetType, argTypes)
 
-    case _ : et.Lambda | _ : et.CaseLambda | _ : et.NativeFunction | _ : et.Literal | _ : et.ArtificialProcedure |
-         _ : et.VarRef  =>
+    case _: et.Lambda | _: et.CaseLambda | _: et.NativeFunction | _: et.Literal | _: et.ArtificialProcedure |
+         _: et.VarRef  =>
       // Ignore these
       argTypes
 
-    case _ : et.Parameterize | _ : et.TopLevelDefine | _ : et.Apply =>
+    case _: et.Parameterize | _: et.TopLevelDefine | _: et.Apply =>
       // These can terminate (or in the case of TopLevelDefine, shouldn't exist)
       // Abort!
       throw new CollectionAborted(argTypes)
   }
 
   def apply(
-      lambdaExpr : et.Lambda,
-      procType : vt.ProcedureType
-  )(implicit state : PlannerState, planConfig : PlanConfig) : ArgTypes = {
+      lambdaExpr: et.Lambda,
+      procType: vt.ProcedureType
+  )(implicit state: PlannerState, planConfig: PlanConfig): ArgTypes = {
     val fixedArgs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
     val fixedArgTypes = procType.mandatoryArgTypes ++ procType.optionalArgTypes
 
@@ -194,7 +194,7 @@ private[planner] object RetypeLambdaArgs {
       )
     }
     catch {
-      case aborted : CollectionAborted =>
+      case aborted: CollectionAborted =>
         aborted.argTypes
     }
   }

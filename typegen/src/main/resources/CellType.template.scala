@@ -30,7 +30,7 @@ sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TR
 }
 
 sealed abstract class ConcreteCellType extends CellType {
-  val ${TYPE_TAG_FIELD_NAME} : Long
+  val ${TYPE_TAG_FIELD_NAME}: Long
 }
 
 sealed abstract class PreconstructedCellType extends ConcreteCellType

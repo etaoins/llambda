@@ -8,11 +8,11 @@ import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
   private def extractMonoSignature(
-      hasWorldArg : Boolean,
-      args : List[sst.ScopedDatum],
-      procTypeDatum : sst.ScopedDatum,
-      attributeData : List[sst.ScopedDatum]
-  ) : ProcedureSignature = {
+      hasWorldArg: Boolean,
+      args: List[sst.ScopedDatum],
+      procTypeDatum: sst.ScopedDatum,
+      attributeData: List[sst.ScopedDatum]
+  ): ProcedureSignature = {
     val parsed = ParseProcedureTypeConstructor(procTypeDatum, args)
 
     val fixedArgTypes = parsed.fixedArgData.map(ExtractType.extractValueType(_))
@@ -25,7 +25,7 @@ object ExtractNativeFunction {
 
       case other =>
         throw new BadSpecialFormException(other, "Non-attribute used where procedure attribute expected")
-    })(breakOut) : Set[ProcedureAttribute]
+    })(breakOut): Set[ProcedureAttribute]
 
     ProcedureSignature(
       hasWorldArg=hasWorldArg,
@@ -39,17 +39,17 @@ object ExtractNativeFunction {
   }
 
   private def extractPolySignature(
-      hasWorldArg : Boolean,
-      typeVarData : List[sst.ScopedDatum],
-      args : List[sst.ScopedDatum],
-      procTypeDatum : sst.ScopedDatum,
-      attributeData : List[sst.ScopedDatum]
-  ) : PolymorphicSignature = {
+      hasWorldArg: Boolean,
+      typeVarData: List[sst.ScopedDatum],
+      args: List[sst.ScopedDatum],
+      procTypeDatum: sst.ScopedDatum,
+      attributeData: List[sst.ScopedDatum]
+  ): PolymorphicSignature = {
     val namedTypeVars = typeVarData map ExtractTypeVar
 
     // Rescope the definition
     val typeBindings = namedTypeVars map { case (name, typeVar) =>
-      name -> (BoundType(typeVar) : BoundValue)
+      name -> (BoundType(typeVar): BoundValue)
     }
 
     val scopeMapping = Scope.mappingForBoundValues(typeBindings)
@@ -62,10 +62,10 @@ object ExtractNativeFunction {
 
 
   private def extractSignature(
-      hasWorldArg : Boolean,
-      procTypeDatum : sst.ScopedDatum,
-      attributeData : List[sst.ScopedDatum]
-  ) : PolymorphicSignature = procTypeDatum match {
+      hasWorldArg: Boolean,
+      procTypeDatum: sst.ScopedDatum,
+      attributeData: List[sst.ScopedDatum]
+  ): PolymorphicSignature = procTypeDatum match {
     case sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args) =>
       extractMonoSignature(hasWorldArg, args, procTypeDatum, attributeData).toPolymorphic
 
@@ -90,10 +90,10 @@ object ExtractNativeFunction {
   }
 
   def apply(
-      located : SourceLocated,
-      hasWorldArg : Boolean,
-      args : List[sst.ScopedDatum]
-  ) : et.NativeFunction = args match {
+      located: SourceLocated,
+      hasWorldArg: Boolean,
+      args: List[sst.ScopedDatum]
+  ): et.NativeFunction = args match {
     case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: procTypeDatum :: attributeData =>
       val nativeLibrary = ExtractNativeLibrary(libraryDatum)
 

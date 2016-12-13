@@ -8,9 +8,9 @@ import llambda.compiler.planner.BoxedValue
 
 /** Represents a constructed vector with a length known at compile time */
 class KnownVectorCellValue(
-    val vectorLength : Long,
-    tempValue : ps.TempValue
+    val vectorLength: Long,
+    tempValue: ps.TempValue
 ) extends CellValue(vt.VectorType, BoxedValue(ct.VectorCell, tempValue)) with KnownVector {
-  override def withSchemeType(newType : vt.SchemeType) : IntermediateValue =
+  override def withSchemeType(newType: vt.SchemeType): IntermediateValue =
     this
 }

@@ -8,9 +8,9 @@ import llambda.compiler.{celltype => ct}
 
 object GenInitRecordLike {
   def apply(
-      state : GenerationState,
-      generatedTypes : Map[vt.RecordLikeType, GeneratedType]
-  )(initStep : ps.InitRecordLikeStep) : (GenerationState, IrValue) = {
+      state: GenerationState,
+      generatedTypes: Map[vt.RecordLikeType, GeneratedType]
+  )(initStep: ps.InitRecordLikeStep): (GenerationState, IrValue) = {
     val cellType = initStep.recordLikeType.cellType
 
     val block = state.currentBlock

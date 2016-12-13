@@ -28,7 +28,7 @@ public:
 			return falseInstance();
 		}
 	}
-	
+
 	static BooleanCell* falseInstance()
 	{
 		return const_cast<BooleanCell*>(&llcore_false_value);

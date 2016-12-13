@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 
 private[frontend] object ExtractLibrary {
-  private def expandDecls(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[ast.Datum] = datum match {
+  private def expandDecls(datum: ast.Datum)(implicit libraryLoader: LibraryLoader, frontendConfig: FrontendConfig): List[ast.Datum] = datum match {
     case ast.ProperList(ast.Symbol("include") :: includeNameData) =>
       // Include the files and wrap them in (begin)
       val includeData = ResolveIncludeList(datum, includeNameData)(frontendConfig.includePath)
@@ -33,12 +33,12 @@ private[frontend] object ExtractLibrary {
     *                       if the library's defined name does not match
     */
   def apply(
-      datum : ast.Datum, expectedName : Option[Seq[String]] = None
-  )(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
+      datum: ast.Datum, expectedName: Option[Seq[String]] = None
+  )(implicit libraryLoader: LibraryLoader, frontendConfig: FrontendConfig): Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)
-    
+
       for (expected <- expectedName) {
         if (libraryName != expected) {
           throw new LibraryNameMismatchException(libraryNameData, expected, libraryName)
@@ -71,9 +71,9 @@ private[frontend] object ExtractLibrary {
       val initialBindings = importDecls.flatMap { importDecl =>
         ResolveImportDecl(importDecl)
       }
-      
-      val scope = new Scope(collection.mutable.Map(initialBindings : _*), None)
-      
+
+      val scope = new Scope(collection.mutable.Map(initialBindings: _*), None)
+
       // Evaluate all (begin)s and (include)s
       val beginDeclData = groupedDecls.getOrElse(DeclType.Begin, List())
 

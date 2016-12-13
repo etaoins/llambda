@@ -18,7 +18,7 @@ class DisposeValuesSuite extends FunSuite {
     attributes=Set()
   )
 
-  def namedTemp(valueType : vt.ValueType, name : String) : ps.TempValue = 
+  def namedTemp(valueType: vt.ValueType, name: String): ps.TempValue =
     new ps.TempValue(valueType.isGcManaged) {
       override def toString = name
     }
@@ -27,7 +27,7 @@ class DisposeValuesSuite extends FunSuite {
   val fixedArgTemp = namedTemp(vt.IntegerType, "fixedArg")
   val restArgTemp = namedTemp(vt.ListElementType, "restArg")
 
-  def functionForSteps(steps : List[ps.Step]) : PlannedFunction =
+  def functionForSteps(steps: List[ps.Step]): PlannedFunction =
     PlannedFunction(
       signature=testSignature,
       namedArguments=List(
@@ -49,7 +49,7 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("unused step is completely removed") {
     val unboxResult = namedTemp(vt.Int64, "unboxResult")
 
@@ -65,7 +65,7 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("simple step with used result") {
     val unboxResult = namedTemp(vt.Int64, "unboxResult")
 
@@ -86,14 +86,14 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("condition with unused test value discards at top of branches") {
     val trueUnboxResult = namedTemp(vt.Int64, "trueUnboxResult")
 
     val trueSteps = List(
       ps.UnboxInteger(trueUnboxResult, fixedArgTemp)
     )
-    
+
     val falseUnboxResult = namedTemp(vt.Int64, "falseUnboxResult")
 
     val falseSteps = List(
@@ -115,7 +115,7 @@ class DisposeValuesSuite extends FunSuite {
       ps.UnboxInteger(trueUnboxResult, fixedArgTemp),
       ps.DisposeValues(Set(fixedArgTemp))
     )
-    
+
     val expectedFalseSteps = List(
       ps.DisposeValues(Set(restArgTemp)),
       ps.UnboxInteger(falseUnboxResult, fixedArgTemp),
@@ -154,7 +154,7 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("condition using outer value as branch result can dispose that value") {
     val condResult = namedTemp(vt.IntegerType, "condResult")
 
@@ -190,7 +190,7 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("condition using outer value in only one branch disposes value in other branch") {
     val condResult = namedTemp(vt.Int64, "condResult")
     val outerValue = namedTemp(vt.IntegerType, "outerValue")
@@ -242,7 +242,7 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("invoke disposing both arguments") {
     val entryPoint = ps.EntryPointTemp()
     val invokeResult = namedTemp(vt.Int64, "invokeResult")
@@ -271,7 +271,7 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
-  
+
   test("invoke disposing one argument and its result") {
     val entryPoint = ps.EntryPointTemp()
     val invokeResult = namedTemp(vt.Int64, "invokeResult")

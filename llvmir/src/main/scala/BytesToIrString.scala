@@ -2,7 +2,7 @@ package io.llambda.llvmir
 
 private[llvmir] object BytesToIrString {
   /** Converts a sequence of bytes to an LLVM IR string */
-  def apply(stringBytes : Seq[Byte]) : String = "\"" + (stringBytes flatMap {
+  def apply(stringBytes: Seq[Byte]): String = "\"" + (stringBytes flatMap {
     case backslash if backslash == 92 =>
       """\\"""
     case doubleQuote if doubleQuote == 34 =>

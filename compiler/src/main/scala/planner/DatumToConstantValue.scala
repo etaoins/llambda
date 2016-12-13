@@ -5,7 +5,7 @@ import llambda.compiler.ast
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 object DatumToConstantValue {
-  def apply(datum : ast.Datum) : iv.ConstantValue = {
+  def apply(datum: ast.Datum): iv.ConstantValue = {
     datum match {
       case ast.StringLiteral(content) =>
         iv.ConstantStringValue(content)

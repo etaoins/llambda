@@ -8,8 +8,8 @@ import llambda.compiler.planner._
 import llambda.compiler.ArityException
 
 case class KnownCaseLambdaClause(
-    knownProc : KnownSchemeProc,
-    recordField : Option[vt.RecordField]
+    knownProc: KnownSchemeProc,
+    recordField: Option[vt.RecordField]
 )
 
 /** Represents a user-provided procedure with a known signature and direct entry point
@@ -27,13 +27,13 @@ case class KnownCaseLambdaClause(
   *                        optimisation to avoid having to load them from the (case-lambda)'s closure
   */
 class KnownCaseLambdaProc(
-    polySignature : PolymorphicSignature,
-    closureType : vt.ClosureType,
-    clauses : List[KnownCaseLambdaClause],
-    plannedSymbol : String,
-    selfTempOpt : Option[ps.TempValue],
-    stdlibNameOpt : Option[String] = None,
-    clausesInScope : Boolean = false
+    polySignature: PolymorphicSignature,
+    closureType: vt.ClosureType,
+    clauses: List[KnownCaseLambdaClause],
+    plannedSymbol: String,
+    selfTempOpt: Option[ps.TempValue],
+    stdlibNameOpt: Option[String] = None,
+    clausesInScope: Boolean = false
 ) extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) {
   override val typeDescription = "case procedure"
 
@@ -41,7 +41,7 @@ class KnownCaseLambdaProc(
     clauses.map(_.knownProc.schemeType)
   )
 
-  override def withStdlibName(newStdlibName : String) : KnownUserProc = {
+  override def withStdlibName(newStdlibName: String): KnownUserProc = {
     val mappedClauses = clauses.map { clause =>
       clause.copy(knownProc=clause.knownProc.withStdlibName(newStdlibName))
     }
@@ -56,8 +56,8 @@ class KnownCaseLambdaProc(
       clausesInScope=clausesInScope
     )
   }
-  
-  override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc =
+
+  override def withSelfTemp(selfTemp: ps.TempValue): KnownUserProc =
     new KnownCaseLambdaProc(
       polySignature=polySignature,
       closureType=closureType,
@@ -69,8 +69,8 @@ class KnownCaseLambdaProc(
     )
 
   private def restoreClause(
-      clause : KnownCaseLambdaClause
-  )(implicit plan : PlanWriter) : IntermediateValue = {
+      clause: KnownCaseLambdaClause
+  )(implicit plan: PlanWriter): IntermediateValue = {
     clause.recordField match {
       case Some(recordField) if !clausesInScope =>
         val closureDataTemp = ps.RecordLikeDataTemp()
@@ -79,9 +79,9 @@ class KnownCaseLambdaProc(
         val fieldType = closureType.typeForField(recordField)
         val clauseSelfTemp = new ps.TempValue(fieldType.isGcManaged)
 
-        plan.steps += ps.LoadRecordDataField(clauseSelfTemp, closureDataTemp, closureType, recordField) 
-        
-        clause.knownProc.withSelfTemp(clauseSelfTemp) 
+        plan.steps += ps.LoadRecordDataField(clauseSelfTemp, closureDataTemp, closureType, recordField)
+
+        clause.knownProc.withSelfTemp(clauseSelfTemp)
 
       case _ =>
         // We can use the value directly
@@ -90,7 +90,7 @@ class KnownCaseLambdaProc(
   }
 
   /** Returns the clause matching the passed arity or None if no clauses match */
-  def clauseForArityOpt(argCount : Int) : Option[KnownCaseLambdaClause] =
+  def clauseForArityOpt(argCount: Int): Option[KnownCaseLambdaClause] =
     clauses find { clause =>
       val signatureTemplate = clause.knownProc.polySignature.template
       val mandatoryArgCount = signatureTemplate.mandatoryArgTypes.length
@@ -100,8 +100,8 @@ class KnownCaseLambdaProc(
     }
 
   override def toApplicableValueForArgs (
-      args : List[vt.SchemeType]
-  )(implicit plan : PlanWriter) : IntermediateValue = {
+      args: List[vt.SchemeType]
+  )(implicit plan: PlanWriter): IntermediateValue = {
     clauseForArityOpt(args.length) match {
       case Some(clause) =>
         restoreClause(clause)

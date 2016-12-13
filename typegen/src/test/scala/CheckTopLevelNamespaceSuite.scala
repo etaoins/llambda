@@ -3,7 +3,7 @@ package io.llambda.typegen
 import org.scalatest.FunSuite
 
 class CheckTopLevelNamespaceSuite extends FunSuite {
-  def checkString(str : String) = 
+  def checkString(str : String) =
     CheckTopLevelNamespace(DefinitionParser.parseString(str))
 
   test("duplicate cell name fails") {
@@ -20,7 +20,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("duplicate field type fails") {
     intercept[DuplicateTypeNameException] {
       checkString("""
@@ -29,7 +29,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("redefining builtin type fails") {
     intercept[DuplicateTypeNameException] {
       checkString("""
@@ -37,7 +37,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("conflicting field type and cell class name fails") {
     intercept[DuplicateTypeNameException] {
       checkString("""
@@ -48,7 +48,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("undefined cell class fails") {
     intercept[UndefinedCellClassException] {
       checkString("""

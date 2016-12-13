@@ -8,8 +8,8 @@ import llambda.compiler.RuntimeErrorMessage
 
 object DestructureList {
   case class DestructureResult(
-    memberTemps : List[ps.TempValue],
-    listTailValue : iv.IntermediateValue
+    memberTemps: List[ps.TempValue],
+    listTailValue: iv.IntermediateValue
   )
 
   /**
@@ -22,11 +22,11 @@ object DestructureList {
    *                                    insufficientLengthMessage if it's not defined
    */
   def apply(
-      listValue : iv.IntermediateValue,
-      memberTypes : List[vt.ValueType],
-      insufficientLengthMessage : RuntimeErrorMessage,
-      improperListMessageOpt : Option[RuntimeErrorMessage] = None
-  )(implicit plan : PlanWriter) : DestructureResult = {
+      listValue: iv.IntermediateValue,
+      memberTypes: List[vt.ValueType],
+      insufficientLengthMessage: RuntimeErrorMessage,
+      improperListMessageOpt: Option[RuntimeErrorMessage] = None
+  )(implicit plan: PlanWriter): DestructureResult = {
     val initialState = DestructureResult(Nil, listValue)
 
     memberTypes.foldLeft(initialState) {

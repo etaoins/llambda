@@ -5,7 +5,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 private[stdlibproc] object StaticValueEqv {
-  private def elementsAreEqual(elems1 : Seq[iv.IntermediateValue], elems2 : Seq[iv.IntermediateValue]) : Option[Boolean] = {
+  private def elementsAreEqual(elems1: Seq[iv.IntermediateValue], elems2: Seq[iv.IntermediateValue]): Option[Boolean] = {
     if (elems1.length != elems2.length) {
       // Nope
       return Some(false)
@@ -31,7 +31,7 @@ private[stdlibproc] object StaticValueEqv {
 
   type EqvFunction = (iv.IntermediateValue, iv.IntermediateValue) => Option[Boolean]
 
-  def valuesAreEqv(val1 : iv.IntermediateValue, val2 : iv.IntermediateValue) : Option[Boolean] = {
+  def valuesAreEqv(val1: iv.IntermediateValue, val2: iv.IntermediateValue): Option[Boolean] = {
     if (val1 eq val2) {
       // Definitely the same
       return Some(true)
@@ -47,17 +47,17 @@ private[stdlibproc] object StaticValueEqv {
         // This needs to be special to deal with NaN
         Some(val1.equals(val2))
 
-      case (constVal1 : iv.ConstantValue, constVal2 : iv.ConstantValue) =>
+      case (constVal1: iv.ConstantValue, constVal2: iv.ConstantValue) =>
         Some(constVal1 == constVal2)
 
       case _ =>
         None
     }
   }
-  
-  def valuesAreEqual(val1 : iv.IntermediateValue, val2 : iv.IntermediateValue) : Option[Boolean] = {
+
+  def valuesAreEqual(val1: iv.IntermediateValue, val2: iv.IntermediateValue): Option[Boolean] = {
     (val1, val2) match {
-      case (knownPair1 : iv.KnownPair, knownPair2 : iv.KnownPair) =>
+      case (knownPair1: iv.KnownPair, knownPair2: iv.KnownPair) =>
        elementsAreEqual(List(knownPair1.car, knownPair1.cdr), List(knownPair2.car, knownPair2.cdr))
 
       case (iv.ConstantVectorValue(elements1), iv.ConstantVectorValue(elements2)) =>

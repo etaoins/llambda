@@ -5,7 +5,7 @@ import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
 
 object GenLoadRecordDataField {
-  def apply(block : IrBlockBuilder)(recordDataIr : IrValue, generatedType : GeneratedType, recordField : vt.RecordField) : IrValue = {
+  def apply(block: IrBlockBuilder)(recordDataIr: IrValue, generatedType: GeneratedType, recordField: vt.RecordField): IrValue = {
     val fieldIndices = generatedType.fieldToGepIndices(recordField)
     val fieldType = generatedType.recordLikeType.typeForField(recordField)
     val fieldIrType = ValueTypeToIr(fieldType).irType

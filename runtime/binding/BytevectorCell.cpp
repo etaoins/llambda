@@ -46,7 +46,7 @@ BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const
 		// This allows implicit data sharing while the below always allocates
 		return byteVectors.front()->copy(world);
 	}
-	
+
 	std::uint64_t totalLength = 0;
 
 	for(auto byteVector : byteVectors)
@@ -108,7 +108,7 @@ bool BytevectorCell::replace(LengthType offset, const BytevectorCell *from, Slic
 
 	// Break any COW
 	m_byteArray = m_byteArray->asWritable(length());
-	
+
 	memmove(&byteArray()->data()[offset], &from->byteArray()->data()[fromStart], replacedLength);
 
 	return true;
@@ -120,7 +120,7 @@ StringCell* BytevectorCell::utf8ToString(World &world, SliceIndexType start, Sli
 	{
 		return nullptr;
 	}
-	
+
 	if ((start == 0) && (end == length()))
 	{
 		// We can share our byte array

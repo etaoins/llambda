@@ -3,9 +3,9 @@ package io.llambda.typegen
 import io.llambda.llvmir
 
 object PredefinedFieldTypes {
-  private def intTypes() : Map[String, PrimitiveFieldType] =
+  private def intTypes(): Map[String, PrimitiveFieldType] =
     (List(true, false) flatMap { signed =>
-      List(8, 16, 32, 64) map { bits => 
+      List(8, 16, 32, 64) map { bits =>
         // Base our type name off of the C++ names
         val typeName = if (signed) {
           s"int${bits}"
@@ -24,9 +24,9 @@ object PredefinedFieldTypes {
       }
     }).toMap
 
-  def apply() : Map[String, PrimitiveFieldType] = 
+  def apply(): Map[String, PrimitiveFieldType] =
     (
-      intTypes() + 
+      intTypes() +
       ("float" ->
         PrimitiveFieldType(
           signed=None,
@@ -40,7 +40,7 @@ object PredefinedFieldTypes {
           llvmType=llvmir.DoubleType,
           cppTypeName="double"
         )
-      ) + 
+      ) +
       ("bool" ->
         PrimitiveFieldType(
           signed=Some(false),

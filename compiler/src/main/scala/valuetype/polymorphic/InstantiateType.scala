@@ -5,13 +5,13 @@ import llambda.compiler.valuetype._
 
 object InstantiateType {
   private def visitTypeRef(
-      typeVars : ReconcileTypeVars.Result,
-      polyRef : SchemeTypeRef
-  ) : SchemeTypeRef = polyRef match {
-    case recursiveRef : RecursiveSchemeTypeRef =>
+      typeVars: ReconcileTypeVars.Result,
+      polyRef: SchemeTypeRef
+  ): SchemeTypeRef = polyRef match {
+    case recursiveRef: RecursiveSchemeTypeRef =>
       recursiveRef
 
-    case DirectSchemeTypeRef(typeVar : TypeVar) =>
+    case DirectSchemeTypeRef(typeVar: TypeVar) =>
       DirectSchemeTypeRef(typeVars.values(typeVar))
 
     case DirectSchemeTypeRef(directType) =>
@@ -21,9 +21,9 @@ object InstantiateType {
   }
 
   private def visitProcedureType(
-      typeVars : ReconcileTypeVars.Result,
-      procType : ProcedureType
-  ) : ProcedureType = procType match {
+      typeVars: ReconcileTypeVars.Result,
+      procType: ProcedureType
+  ): ProcedureType = procType match {
     case ProcedureType(mandatoryArgTypes, optionalArgTypes, restArgMemberTypeOpt, returnType) =>
       ProcedureType(
         mandatoryArgTypes=mandatoryArgTypes.map(apply(typeVars, _)),
@@ -34,9 +34,9 @@ object InstantiateType {
   }
 
   def instantiateReturnType[T >: SchemeType <: ValueType](
-      typeVars : ReconcileTypeVars.Result,
-      returnType : ReturnType.ReturnType[T]
-  ) : ReturnType.ReturnType[T] = returnType match {
+      typeVars: ReconcileTypeVars.Result,
+      returnType: ReturnType.ReturnType[T]
+  ): ReturnType.ReturnType[T] = returnType match {
     case ReturnType.Unreachable =>
       ReturnType.Unreachable
 
@@ -53,31 +53,31 @@ object InstantiateType {
     * @param  poly      Polymorphic template type
     * @return Expanded template type
     */
-  def apply[T >: SchemeType <: ValueType](typeVars : ReconcileTypeVars.Result, poly : T) : T = poly match {
+  def apply[T >: SchemeType <: ValueType](typeVars: ReconcileTypeVars.Result, poly: T): T = poly match {
     case _ if typeVars.values.isEmpty =>
       // Nothing to do!
       poly
 
-    case typeVar : TypeVar =>
+    case typeVar: TypeVar =>
       typeVars.values(typeVar)
 
     case UnionType(memberTypes) =>
       val replacedMembers = memberTypes.map(apply(typeVars, _))
       SchemeType.fromTypeUnion(replacedMembers)
 
-    case pairType : SpecificPairType =>
+    case pairType: SpecificPairType =>
       val replacedCar = visitTypeRef(typeVars, pairType.carTypeRef)
       val replacedCdr = visitTypeRef(typeVars, pairType.cdrTypeRef)
 
       SpecificPairType(replacedCar, replacedCdr)
 
-    case procType : ProcedureType =>
+    case procType: ProcedureType =>
       visitProcedureType(typeVars, procType)
 
     case CaseProcedureType(clauseTypes) =>
       CaseProcedureType(clauseTypes.map(visitProcedureType(typeVars, _)))
 
-    case recordType : RecordType =>
+    case recordType: RecordType =>
       // Record types cannot have unresovled type variables inside of them - they must be fully instantiated when
       // they're bound to a type
       recordType
@@ -85,7 +85,7 @@ object InstantiateType {
     case HashMapType(keyType, valueType) =>
       HashMapType(apply(typeVars, keyType), apply(typeVars, valueType))
 
-    case _ : LeafType =>
+    case _: LeafType =>
       poly
   }
 }

@@ -1,7 +1,7 @@
 package io.llambda.llvmir
 
 private[llvmir] object CallLikeInstructionBody {
-  def apply(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue]) : String = {
+  def apply(signature: IrSignatureLike, functionPtr: IrValue, arguments: Seq[IrValue]): String = {
     // Add our calling convention if we're using a non-default one
     val callingConvIrOpt = signature.callingConv.toOptIr
 

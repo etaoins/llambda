@@ -1,11 +1,11 @@
 package io.llambda.typegen
 
-/** Alternative names for a [[CellClass]] 
+/** Alternative names for a [[CellClass]]
   *
   * @param definitionName  Name of the class defined in the definition file.
-  *                        This is the same as [CellClass.name] 
+  *                        This is the same as [CellClass.name]
   **/
-case class CellClassNames(definitionName : String) {
+case class CellClassNames(definitionName: String) {
   /** Name for the user defined type in LLVM
     *
     * This is the definition name with the initial letter lowercased
@@ -29,7 +29,7 @@ case class CellClassNames(definitionName : String) {
 
   /** Name for the value type in the valuetype package */
   lazy val scalaValueTypeName = definitionName + "Type"
-  
+
   /** Name for the Scheme type */
   lazy val schemeName = "<" + definitionName.replaceAll("""(?<!^)([A-Z]+)""", """-$1""").toLowerCase + ">"
 }

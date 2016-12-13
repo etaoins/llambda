@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import org.scalatest.FunSuite
 
 class UnboxEarlySuite extends FunSuite {
-  private def unboxEarly(steps : List[ps.Step]) : List[ps.Step] = {
+  private def unboxEarly(steps: List[ps.Step]): List[ps.Step] = {
     UnboxEarly.conniveSteps(steps)
   }
 

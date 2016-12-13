@@ -4,10 +4,10 @@ import io.llambda
 import llambda.compiler._
 
 object FinishScope {
-  def apply(scope : Scope) = {
+  def apply(scope: Scope) = {
     for((declaredSymbol, _) <- scope.typeDeclarations) {
       scope.bindings.get(declaredSymbol.name) match {
-        case Some(_ : StorageLocation) =>
+        case Some(_: StorageLocation) =>
           // This is okay
 
         case _ =>

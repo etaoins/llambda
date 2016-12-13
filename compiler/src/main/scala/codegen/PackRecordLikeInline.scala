@@ -11,14 +11,14 @@ object PackRecordLikeInline {
     * @param inline      True if the record fields will fit within the inline data area
     */
   case class PackedRecordLike(
-    fieldOrder : List[vt.RecordField],
-    inline : Boolean
+    fieldOrder: List[vt.RecordField],
+    inline: Boolean
   )
 
-  private def isPowerOfTwo(number : Long) =
+  private def isPowerOfTwo(number: Long) =
     (number & (number - 1)) == 0
 
-  private def sizeOfStruct(fields : Seq[vt.ValueType], targetPlatform : TargetPlatform) : Long = 
+  private def sizeOfStruct(fields: Seq[vt.ValueType], targetPlatform: TargetPlatform): Long = 
     fields.foldLeft(0) { case (currentOffset, field) =>
       val fieldSize = targetPlatform.bytesForType(field)
 
@@ -43,7 +43,7 @@ object PackRecordLikeInline {
     * @param inlineDataByres   Number of bytes available for inline data storage
     * @param targetPlatform    Target platform to use when determing type sizes and alignments
     */
-  def apply(recordLike : vt.RecordLikeType, inlineDataBytes : Int, targetPlatform : TargetPlatform) : PackedRecordLike = {
+  def apply(recordLike: vt.RecordLikeType, inlineDataBytes: Int, targetPlatform: TargetPlatform): PackedRecordLike = {
     // The existing order stored out-of-line
     lazy val existingOutOfLine = PackedRecordLike(recordLike.fields, false)
     // The existing order stored inline

@@ -12,7 +12,7 @@ object LiveValuesAtBarrier {
       *
       * @param  liveValues  Set of values live at the GC barrier
       */
-    case class BarrierEncountered(liveValues : Set[ps.TempValue]) extends Result
+    case class BarrierEncountered(liveValues: Set[ps.TempValue]) extends Result
 
     /** No GC barrier was encountered in at least one execution path */
     case object NoBarrier extends Result
@@ -30,21 +30,21 @@ object LiveValuesAtBarrier {
     * @param  steps           List of steps in forward order to examine for GC barriers
     * @param  initialValues   Set of values to consider live at the beginning of the steps
     */
-  def apply(steps : List[ps.Step], initialValues : Set[ps.TempValue]) : Result.Result = {
+  def apply(steps: List[ps.Step], initialValues: Set[ps.TempValue]): Result.Result = {
     import Result._
 
     steps match {
       case ps.DisposeValues(toDispose) :: tail =>
         LiveValuesAtBarrier(tail, initialValues -- toDispose)
 
-      case (nestingStep : ps.NestingStep) :: tail =>
+      case (nestingStep: ps.NestingStep) :: tail =>
         val nestedResults = nestingStep.innerBranches.map { case (nestedSteps, _) =>
           LiveValuesAtBarrier(nestedSteps, initialValues)
         }
 
         // Determine which values will be live in every branch at the barrier - these will be rooted by the flush at
         // the beginning of the branch
-        nestedResults.reduce { (leftResult : Result, rightResult : Result) =>
+        nestedResults.reduce { (leftResult: Result, rightResult: Result) =>
           (leftResult, rightResult) match {
             case (BarrierEncountered(leftValues), BarrierEncountered(rightValues)) =>
               BarrierEncountered(leftValues & rightValues)
@@ -53,7 +53,7 @@ object LiveValuesAtBarrier {
               NoBarrier
           }
         } match {
-          case barrier : BarrierEncountered =>
+          case barrier: BarrierEncountered =>
             // All branches have a barrier, stop here
             barrier
 
@@ -65,7 +65,7 @@ object LiveValuesAtBarrier {
       case terminating :: _ if terminating.alwaysTerminates =>
         NoBarrier
 
-      case (inputDisposable : ps.InputDisposableStep) :: tail =>
+      case (inputDisposable: ps.InputDisposableStep) :: tail =>
         val disposedValues = initialValues -- inputDisposable.inputToDispose
 
         if (inputDisposable.canAllocate) {

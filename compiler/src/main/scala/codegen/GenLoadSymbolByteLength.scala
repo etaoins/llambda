@@ -7,10 +7,10 @@ import llambda.compiler.{celltype => ct}
 
 object GenLoadSymbolByteLength {
   /** Loads the length of a symbol from a symbol cell */
-  def apply(initialState : GenerationState)(
-      symbolIr : IrValue,
-      possibleLengthsOpt : Option[Set[Int]]
-  ) : (GenerationState, IrValue) = {
+  def apply(initialState: GenerationState)(
+      symbolIr: IrValue,
+      possibleLengthsOpt: Option[Set[Int]]
+  ): (GenerationState, IrValue) = {
     // We expand both the inline and heap length to this size
     val targetType = ct.HeapSymbolCell.heapByteLengthIrType
 

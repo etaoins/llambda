@@ -16,9 +16,9 @@ private[frontend] object ResolveIncludeList {
     * @return Include load results for the include name data
     */
   def apply(
-      located : SourceLocated,
-      includeNameData : List[ast.Datum]
-  )(implicit includePath : IncludePath) : List[ast.Datum] = {
+      located: SourceLocated,
+      includeNameData: List[ast.Datum]
+  )(implicit includePath: IncludePath): List[ast.Datum] = {
     if (includeNameData.isEmpty) {
       throw new BadSpecialFormException(located, "At least one file required for include")
     }

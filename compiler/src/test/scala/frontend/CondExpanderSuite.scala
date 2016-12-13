@@ -6,10 +6,10 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class CondExpanderSuite extends FunSuite {
-  private val primitiveScope = new Scope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  private val primitiveScope = new Scope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
   private val libraryLoader = new LibraryLoader(platform.Posix64LE)
 
-  private def expansionFor(clauseList : List[String], featureIdentifiers : Set[String]) : List[ast.Datum] = {
+  private def expansionFor(clauseList: List[String], featureIdentifiers: Set[String]): List[ast.Datum] = {
     val parsedClauses = clauseList.map(SchemeParser.parseStringAsData(_, None).head)
 
     val frontendConfig = FrontendConfig(
@@ -19,7 +19,7 @@ class CondExpanderSuite extends FunSuite {
 
     CondExpander.expandData(parsedClauses)(libraryLoader, frontendConfig)
   }
-  
+
   test("non-proper list clause fails") {
     intercept[BadSpecialFormException] {
       expansionFor(
@@ -32,7 +32,7 @@ class CondExpanderSuite extends FunSuite {
       )
     }
   }
-  
+
   test("empty proper list clause fails") {
     intercept[BadSpecialFormException] {
       expansionFor(
@@ -45,7 +45,7 @@ class CondExpanderSuite extends FunSuite {
       )
     }
   }
-  
+
   test("empty expansion when no conditions match and no else") {
     val data = expansionFor(
       List(
@@ -58,7 +58,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === Nil)
   }
-  
+
   test("else clause fallback no conditions match") {
     val data = expansionFor(
       List(
@@ -72,7 +72,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("non-terminal else clause fails") {
     intercept[BadSpecialFormException] {
       expansionFor(
@@ -99,7 +99,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("first matching clause is expanded") {
     val data = expansionFor(
       List(
@@ -114,7 +114,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("trivial fallback feature identifier expansion") {
     val data = expansionFor(
       List(
@@ -128,7 +128,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("trivial existing library expansion") {
     val data = expansionFor(
       List(
@@ -141,7 +141,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("non-existing library expansion") {
     val data = expansionFor(
       List(
@@ -155,7 +155,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("empty (and) condition is true") {
     val data = expansionFor(
       List(
@@ -168,7 +168,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("(and) with two true requirements") {
     val data = expansionFor(
       List(
@@ -182,7 +182,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("(and) with one true and one false requirement") {
     val data = expansionFor(
       List(
@@ -195,7 +195,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === Nil)
   }
-  
+
   test("empty (or) condition is false") {
     val data = expansionFor(
       List(
@@ -208,7 +208,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === Nil)
   }
-  
+
   test("(or) with two true requirements") {
     val data = expansionFor(
       List(
@@ -222,7 +222,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("(or) with one true and one false requirement") {
     val data = expansionFor(
       List(
@@ -235,7 +235,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
   }
-  
+
   test("empty (not) fails") {
     intercept[BadSpecialFormException] {
       expansionFor(
@@ -248,7 +248,7 @@ class CondExpanderSuite extends FunSuite {
       )
     }
   }
-  
+
   test("(not) with true value") {
     val data = expansionFor(
       List(
@@ -261,7 +261,7 @@ class CondExpanderSuite extends FunSuite {
 
     assert(data === Nil)
   }
-  
+
   test("(not) with false value") {
     val data = expansionFor(
       List(

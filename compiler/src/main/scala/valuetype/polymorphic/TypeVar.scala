@@ -9,6 +9,6 @@ import llambda.compiler.valuetype._
   * infrastructure to handle the type variable transparently before it's been resolved.
   */
 class TypeVar(
-    sourceName : String,
-    val upperBound : SchemeType = AnySchemeType
+    sourceName: String,
+    val upperBound: SchemeType = AnySchemeType
 ) extends RecordType(sourceName, Nil)

@@ -4,9 +4,9 @@ import io.llambda
 import java.net.URL
 
 /** Represents a list of paths to search for libraries and included files */
-case class IncludePath(userConfiguredPaths : Seq[URL]) {
+case class IncludePath(userConfiguredPaths: Seq[URL]) {
   /** Returns a list of paths to search for libraries */
-  def librarySearchRoots : Seq[URL] =
+  def librarySearchRoots: Seq[URL] =
     (userConfiguredPaths ++ IncludePath.systemLibraryPaths).distinct
 
   /** Returns a list of paths for search for includes
@@ -14,7 +14,7 @@ case class IncludePath(userConfiguredPaths : Seq[URL]) {
     * This intentionally doesn't include library paths. Libraries should only expose library definitions and should be
     * free to use internal relative includes without polluting the global include namespace.
     */
-  def includeSearchRoots : Seq[URL] =
+  def includeSearchRoots: Seq[URL] =
     userConfiguredPaths
 }
 

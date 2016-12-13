@@ -5,9 +5,9 @@ import llambda.compiler.ast
 
 object NameForType {
   private def stackedNameForTypeRef(
-      schemeTypeRef : SchemeTypeRef,
-      typeStack : SchemeType.Stack,
-      recurseVarNames : Map[SchemeType, Char]
+      schemeTypeRef: SchemeTypeRef,
+      typeStack: SchemeType.Stack,
+      recurseVarNames: Map[SchemeType, Char]
   ) = schemeTypeRef match {
     case RecursiveSchemeTypeRef(depth) =>
       if (depth >= typeStack.length) {
@@ -21,7 +21,7 @@ object NameForType {
       stackedNameForType(directType :: typeStack, recurseVarNames)
   }
 
-  private def nameForProcedureType(procType : ProcedureType) : String = procType match {
+  private def nameForProcedureType(procType: ProcedureType): String = procType match {
     case ProcedureType(mandatoryArgTypes, Nil, restArgMemberTypeOpt, returnType) =>
       val mandatoryArgNames = mandatoryArgTypes.map(apply(_))
 
@@ -46,7 +46,7 @@ object NameForType {
       s"(->* ${mandatoryArgList} ${optionalArgList}${restArgList} ${returnTypeName})"
   }
 
-  private[valuetype] def stackedNameForNonRecurseType(typeStack : SchemeType.Stack, recurseVarNames : Map[SchemeType, Char]) : String = {
+  private[valuetype] def stackedNameForNonRecurseType(typeStack: SchemeType.Stack, recurseVarNames: Map[SchemeType, Char]): String = {
     typeStack.head match {
       case LiteralBooleanType(false) =>
         "#f"
@@ -60,7 +60,7 @@ object NameForType {
       case SchemeTypeAtom(concreteCellType) =>
         concreteCellType.schemeName
 
-      case pairType : PairType =>
+      case pairType: PairType =>
         val carName = stackedNameForTypeRef(pairType.carTypeRef, typeStack, recurseVarNames)
         val cdrName = stackedNameForTypeRef(pairType.cdrTypeRef, typeStack, recurseVarNames)
 
@@ -72,16 +72,16 @@ object NameForType {
 
         s"(HashMap ${keyName} ${valueName})"
 
-      case recordType : RecordType =>
+      case recordType: RecordType =>
         recordType.sourceName
 
-      case externalType : ExternalRecordType =>
+      case externalType: ExternalRecordType =>
         externalType.sourceNameOpt getOrElse "<external-record-type>"
 
-      case procType : ProcedureType =>
+      case procType: ProcedureType =>
         nameForProcedureType(procType)
 
-      case caseProcType : CaseProcedureType =>
+      case caseProcType: CaseProcedureType =>
         val signatureNames = caseProcType.signatures.map(nameForProcedureType).mkString(" ")
 
         s"(case-> ${signatureNames})"
@@ -108,7 +108,7 @@ object NameForType {
     }
   }
 
-  private[valuetype] def stackedNameForType(typeStack : SchemeType.Stack, recurseVarNames : Map[SchemeType, Char]) : String = {
+  private[valuetype] def stackedNameForType(typeStack: SchemeType.Stack, recurseVarNames: Map[SchemeType, Char]): String = {
     val schemeType = typeStack.head
 
     schemeType match {
@@ -128,7 +128,7 @@ object NameForType {
       // Allocate a type variable
       val typeVariable = ('A' + recurseVarNames.size).toChar
       val newRecurseVarNames = recurseVarNames + (schemeType -> typeVariable)
-      val recursiveResult = stackedNameForNonRecurseType(typeStack, newRecurseVarNames) 
+      val recursiveResult = stackedNameForNonRecurseType(typeStack, newRecurseVarNames)
 
       // Wrap this in a recursive type constructor
       s"(Rec ${typeVariable} ${recursiveResult})"
@@ -143,26 +143,26 @@ object NameForType {
     * Note that this is not aware of any renaming or aliasing of types that occured in the frontend. Instead this
     * assumes that all types have their default binding.
     */
-  def apply(valueType : ValueType) : String = valueType match {
+  def apply(valueType: ValueType): String = valueType match {
     case Predicate =>
       "<native-bool>"
 
-    case signedIntType : IntType if signedIntType.signed =>
+    case signedIntType: IntType if signedIntType.signed =>
       s"<native-int${signedIntType.bits}>"
 
-    case unsignedIntType : IntType if !unsignedIntType.signed =>
+    case unsignedIntType: IntType if !unsignedIntType.signed =>
       s"<native-uint${unsignedIntType.bits}>"
 
     case Float =>
       "<native-float>"
-    
+
     case Double =>
       "<native-double>"
 
     case UnicodeChar =>
       "<native-unicode-char>"
 
-    case schemeType : SchemeType =>
+    case schemeType: SchemeType =>
       // We need to deal with recursion etc.
       stackedNameForType(schemeType :: Nil, Map())
   }

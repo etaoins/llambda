@@ -22,22 +22,22 @@ trait ExprHelpers extends FunSuite with OptionValues {
     )
 
   val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
-  def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
+  def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq: _*))
 
   val typedLambdaBindings = libraryLoader.load(List("llambda", "typed"), NoSourceLocation)(frontendConfig)
-  def typedLambdaScope = new Scope(collection.mutable.Map((schemeBaseBindings ++ typedLambdaBindings).toSeq : _*))
+  def typedLambdaScope = new Scope(collection.mutable.Map((schemeBaseBindings ++ typedLambdaBindings).toSeq: _*))
 
-  def exprFor(scheme : String)(implicit scope : Scope) = {
+  def exprFor(scheme: String)(implicit scope: Scope) = {
     val (expr :: Nil) = bodyFor(scheme)(scope)
     expr
   }
 
-  def bindingFor(scheme : String, varName : String)(scope : Scope)  = {
+  def bindingFor(scheme: String, varName: String)(scope: Scope)  = {
     bodyFor(scheme)(scope)
     scope.get(varName).value
   }
 
-  def bodyFor(scheme : String)(scope : Scope) = {
+  def bodyFor(scheme: String)(scope: Scope) = {
     val data = SchemeParser.parseStringAsData(scheme)
 
     val frontendContext = frontend.FrontendContext(
@@ -53,16 +53,16 @@ trait ExprHelpers extends FunSuite with OptionValues {
     exprs
   }
 
-  def assertExprLocated(expr : et.Expr) {
+  def assertExprLocated(expr: et.Expr) {
     expr match {
-      case et.TopLevelDefine(et.Binding(stdlibProc : StdlibProcedure, _))
+      case et.TopLevelDefine(et.Binding(stdlibProc: StdlibProcedure, _))
           if stdlibProc.stdlibName == "features" =>
         // This is an artificial procedure - don't check subexpressions
         return
 
-      case _ : et.Begin =>
-      case _ : et.InternalDefine =>
-      case _ : et.TopLevelDefine =>
+      case _: et.Begin =>
+      case _: et.InternalDefine =>
+      case _: et.TopLevelDefine =>
         // These are structural - can be unlocated
 
       case other =>

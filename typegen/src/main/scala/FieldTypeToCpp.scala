@@ -1,22 +1,22 @@
 package io.llambda.typegen
 
-/** Convert a [[FieldType]] instance to a C++ type name 
+/** Convert a [[FieldType]] instance to a C++ type name
   *
-  * @param fieldType    [[FieldType]] instance to convert 
+  * @param fieldType    [[FieldType]] instance to convert
   * @param definedName  If None then just the type name is returned. If defined
-  *                     then a definition suitable for a member variable or 
+  *                     then a definition suitable for a member variable or
   *                     typedef is generated
   */
 object FieldTypeToCpp {
-  def apply(fieldType : FieldType, definedName : Option[String], isReturnType : Boolean = false) : String = {
+  def apply(fieldType: FieldType, definedName: Option[String], isReturnType: Boolean = false): String = {
     // Except for function pointers we can define an instance or name for a type
     // by placing its identifier after the type specifier
-    val definedNameSuffix = definedName.map(" " + _).getOrElse("") 
+    val definedNameSuffix = definedName.map(" " + _).getOrElse("")
 
     fieldType match {
       case PointerFieldType(pointeeType) =>
         apply(pointeeType, None, isReturnType) + "*" + definedNameSuffix
-      
+
       case ReferenceFieldType(pointeeType) =>
         apply(pointeeType, None, isReturnType) + "&" + definedNameSuffix
 
@@ -43,7 +43,7 @@ object FieldTypeToCpp {
         // This is easy
         cppTypeName + definedNameSuffix
 
-      case alias : FieldTypeAlias =>
+      case alias: FieldTypeAlias =>
         alias.cppTypeName match {
           case Some(cppTypeName) =>
             cppTypeName + definedNameSuffix

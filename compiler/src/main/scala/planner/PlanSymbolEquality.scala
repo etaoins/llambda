@@ -11,9 +11,9 @@ import llambda.compiler.InternalCompilerErrorException
 
 object PlanSymbolEquality {
   private def planRuntimeEqualityFallback(
-      symbolTemp1 : ps.TempValue,
-      symbolTemp2 : ps.TempValue
-  )(implicit plan : PlanWriter) : ps.TempValue = {
+      symbolTemp1: ps.TempValue,
+      symbolTemp2: ps.TempValue
+  )(implicit plan: PlanWriter): ps.TempValue = {
     val entryTemp = ps.EntryPointTemp()
     plan.steps += ps.CreateNamedEntryPoint(
       entryTemp,
@@ -33,10 +33,10 @@ object PlanSymbolEquality {
   }
 
   private def planMinimalTest(
-      staticName : String,
-      otherNames : Set[String],
-      dynamicTemp : ps.TempValue
-  )(implicit plan : PlanWriter) : ps.TempValue = {
+      staticName: String,
+      otherNames: Set[String],
+      dynamicTemp: ps.TempValue
+  )(implicit plan: PlanWriter): ps.TempValue = {
     // Convert everything to UTF-8 first
     val staticUtf8Data = Codec.toUTF8(staticName)
     val otherUtf8Data = otherNames.map(Codec.toUTF8)
@@ -123,7 +123,7 @@ object PlanSymbolEquality {
     }
   }
 
-  private def extractLiteralSymbolNames(schemeType : vt.SchemeType) : Set[String] = schemeType match {
+  private def extractLiteralSymbolNames(schemeType: vt.SchemeType): Set[String] = schemeType match {
     case vt.LiteralSymbolType(symbolName) =>
       Set(symbolName)
 
@@ -146,10 +146,10 @@ object PlanSymbolEquality {
     * @param  dynamicSymbolTemp  Temp value of the dynamic symbol. This must be of type ct.SymbolCell
     */
   def compareStatic(
-      staticSymbolName : String,
-      dynamicSymbolType : vt.SchemeType,
-      dynamicSymbolTemp : ps.TempValue
-  )(implicit plan : PlanWriter) : ps.TempValue =
+      staticSymbolName: String,
+      dynamicSymbolType: vt.SchemeType,
+      dynamicSymbolTemp: ps.TempValue
+  )(implicit plan: PlanWriter): ps.TempValue =
     if (vt.SatisfiesType(dynamicSymbolType, vt.SymbolType) == Some(true)) {
       // This can be any symbol - we can't do anything clever here
       val staticSymbolTemp = ps.Temp(vt.SymbolType, knownConstant=true)
@@ -174,9 +174,9 @@ object PlanSymbolEquality {
     * results.
     */
   def compareDynamic(
-    val1 : iv.IntermediateValue,
-    val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : ps.TempValue =
+    val1: iv.IntermediateValue,
+    val2: iv.IntermediateValue
+  )(implicit plan: PlanWriter): ps.TempValue =
     (val1.schemeType, val2.schemeType) match {
       case (vt.LiteralSymbolType(staticName1), dynamicType2) =>
         val dynamicTemp2 = val2.toTempValue(vt.SymbolType)

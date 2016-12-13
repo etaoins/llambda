@@ -7,7 +7,7 @@ import llambda.compiler._
 import llambda.compiler.valuetype.Implicits._
 
 class ExtractNativeLibrarySuite extends FunSuite with testutil.ExprHelpers {
-  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
 
   test("simple static library definition") {

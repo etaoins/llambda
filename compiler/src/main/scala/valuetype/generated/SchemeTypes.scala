@@ -25,7 +25,7 @@ object EofObjectType extends SchemeTypeAtom(ct.EofObjectCell)
 object MailboxType extends SchemeTypeAtom(ct.MailboxCell)
 
 object IntrinsicSchemeTypes {
-  def apply() : Map[String, SchemeType] = Map(
+  def apply(): Map[String, SchemeType] = Map(
     (ct.UnitCell.schemeName -> UnitType),
     (ct.ListElementCell.schemeName -> ListElementType),
     (ct.EmptyListCell.schemeName -> EmptyListType),

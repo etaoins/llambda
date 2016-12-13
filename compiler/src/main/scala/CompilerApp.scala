@@ -6,15 +6,15 @@ import scala.sys.process._
 
 object CompilerApp extends App {
   case class Config(
-    inputFile : Option[File] = None,
-    outputFile : Option[File] = None,
-    emitLlvm : Boolean = false,
-    optimiseLevel : Int = 2,
-    extraFeatureIdents : Set[String] = Set(),
-    targetPlatformOpt : Option[platform.TargetPlatform] = None,
-    dumpPlan : Boolean = false,
-    traceMacroExpansion : Boolean = false,
-    runAsScript : Boolean = false
+    inputFile: Option[File] = None,
+    outputFile: Option[File] = None,
+    emitLlvm: Boolean = false,
+    optimiseLevel: Int = 2,
+    extraFeatureIdents: Set[String] = Set(),
+    targetPlatformOpt: Option[platform.TargetPlatform] = None,
+    dumpPlan: Boolean = false,
+    traceMacroExpansion: Boolean = false,
+    runAsScript: Boolean = false
   )
 
   private val stringToPlatform = Map(
@@ -62,7 +62,7 @@ object CompilerApp extends App {
       else {
         success
       }
-    } text("target platform") 
+    } text("target platform")
 
     opt[String]("with-feature-ident") unbounded() action { (featureIdent, c) =>
       c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)

@@ -5,7 +5,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
 
 private[codegen] object GenCondBranch {
-  def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.CondBranch) : GenResult = step match {
+  def apply(state: GenerationState, genGlobals: GenGlobals)(step: ps.CondBranch): GenResult = step match {
     case ps.CondBranch(testTemp, trueSteps, falseSteps, valuePhis) =>
       val testIr = state.liveTemps(testTemp)
 
@@ -55,7 +55,7 @@ private[codegen] object GenCondBranch {
             GcState.fromBranches(postFlushState.gcState, List(trueResult.gcState, falseResult.gcState))
           )
 
-        case (trueEndState : GenerationState, BlockTerminated(_)) =>
+        case (trueEndState: GenerationState, BlockTerminated(_)) =>
           // Only true terminated
           val state = trueEndState.copy(
             gcState=GcState.fromBranches(trueResult.gcState, List(falseResult.gcState))
@@ -65,7 +65,7 @@ private[codegen] object GenCondBranch {
             state.withTempValue(valuePhi.result -> trueEndState.liveTemps(valuePhi.trueValue))
           }
 
-        case (BlockTerminated(_), falseEndState : GenerationState) =>
+        case (BlockTerminated(_), falseEndState: GenerationState) =>
           // Only false terminated
           val state = falseEndState.copy(
             gcState=GcState.fromBranches(falseResult.gcState, List(trueResult.gcState))
@@ -75,7 +75,7 @@ private[codegen] object GenCondBranch {
             state.withTempValue(valuePhi.result -> falseEndState.liveTemps(valuePhi.falseValue))
           }
 
-        case (trueEndState : GenerationState, falseEndState : GenerationState) =>
+        case (trueEndState: GenerationState, falseEndState: GenerationState) =>
           // Neither branch terminated - we need to phi
 
           val trueEndBlock = trueEndState.currentBlock

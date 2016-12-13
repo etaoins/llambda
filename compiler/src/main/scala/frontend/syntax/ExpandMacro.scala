@@ -9,15 +9,15 @@ import llambda.compiler._
 import llambda.compiler.frontend.UniqueScopesForDatum
 
 private[frontend] object ExpandMacro {
-  private case class Expandable(transformer : Transformer, matchedData : MatchedData)
-  
+  private case class Expandable(transformer: Transformer, matchedData: MatchedData)
+
   private class MatchFailedException extends NoStackTrace
 
   private case class MatchedData(
-    variableData : Map[SyntaxVariable, sst.ScopedDatum] = Map(),
-    subpatternData : Vector[List[MatchedData]] = Vector()
+    variableData: Map[SyntaxVariable, sst.ScopedDatum] = Map(),
+    subpatternData: Vector[List[MatchedData]] = Vector()
   ) {
-    def ++(other : MatchedData) : MatchedData = 
+    def ++(other: MatchedData): MatchedData =
       MatchedData(
         variableData=variableData ++ other.variableData,
         subpatternData=subpatternData ++ other.subpatternData
@@ -26,42 +26,42 @@ private[frontend] object ExpandMacro {
 
   /** Recopes the passed datum so that each scope is replaced with an empty child scope parented to its previous scope
     */
-  private def assignFreshScopes(datum : sst.ScopedDatum) : sst.ScopedDatum = {
+  private def assignFreshScopes(datum: sst.ScopedDatum): sst.ScopedDatum = {
     val scopeMapping = UniqueScopesForDatum(datum).map({ parentScope =>
       parentScope -> new Scope(new collection.mutable.HashMap[String, BoundValue], Some(parentScope))
-    })(breakOut) : Map[Scope, Scope]
+    })(breakOut): Map[Scope, Scope]
 
     datum.rescoped(scopeMapping)
   }
 
-  private def matchPatternListWithRest(patternData : List[sst.ScopedDatum], operandData : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig) : (List[sst.ScopedDatum], MatchedData) = {
+  private def matchPatternListWithRest(patternData: List[sst.ScopedDatum], operandData: List[sst.ScopedDatum])(implicit matchConfig: MatchConfig): (List[sst.ScopedDatum], MatchedData) = {
     (patternData, operandData) match {
-      case (subpatternDatum :: (ellipsisSymbol : sst.ScopedSymbol) :: patternTail,
+      case (subpatternDatum :: (ellipsisSymbol: sst.ScopedSymbol) :: patternTail,
             _
            ) if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         // Take in to account any fixed patterns after us
         val (subpatternOperands, fixedTailOperands) = operandData.splitAt(operandData.length - patternTail.length)
 
         // Go over each operand and match
-        val submatches = subpatternOperands.map(matchPattern(subpatternDatum, _)) 
+        val submatches = subpatternOperands.map(matchPattern(subpatternDatum, _))
 
-        // Add the subpattern in 
+        // Add the subpattern in
         val submatchData = MatchedData(
           subpatternData=Vector(submatches)
         )
 
         // Run on the rest of our operands
-        val (restOperands, tailData) = matchPatternListWithRest(patternTail, fixedTailOperands) 
+        val (restOperands, tailData) = matchPatternListWithRest(patternTail, fixedTailOperands)
 
         (restOperands, submatchData ++ tailData)
 
-      case (patternDatum :: patternTail, operandDatum :: operandTail) => 
+      case (patternDatum :: patternTail, operandDatum :: operandTail) =>
         val newVariables = matchPattern(patternDatum, operandDatum)
         val (restOperands, tailData) = matchPatternListWithRest(patternTail, operandTail)
 
-        (restOperands, newVariables ++ tailData) 
+        (restOperands, newVariables ++ tailData)
 
-      case (Nil, restOperands) => 
+      case (Nil, restOperands) =>
         // We terminated at the same time - this is expected
         (restOperands, MatchedData())
 
@@ -72,7 +72,7 @@ private[frontend] object ExpandMacro {
   }
 
   // Same as matchPatternListWithRest except it throws a MatchFailedException if there are rest operands
-  private def matchPatternList(patternData : List[sst.ScopedDatum], operandData : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig) : MatchedData = {
+  private def matchPatternList(patternData: List[sst.ScopedDatum], operandData: List[sst.ScopedDatum])(implicit matchConfig: MatchConfig): MatchedData = {
     val (restOperands, matchData) = matchPatternListWithRest(patternData, operandData)
 
     if (restOperands != Nil) {
@@ -82,18 +82,18 @@ private[frontend] object ExpandMacro {
     matchData
   }
 
-  private def matchPattern(patternDatum : sst.ScopedDatum, operandDatum : sst.ScopedDatum)(implicit matchConfig : MatchConfig) : MatchedData = 
+  private def matchPattern(patternDatum: sst.ScopedDatum, operandDatum: sst.ScopedDatum)(implicit matchConfig: MatchConfig): MatchedData =
     (patternDatum, operandDatum) match {
-      case (wildcardSymbol : sst.ScopedSymbol, _) if matchConfig.isWildcard(wildcardSymbol) =>
+      case (wildcardSymbol: sst.ScopedSymbol, _) if matchConfig.isWildcard(wildcardSymbol) =>
         // Consume the wildcard without producing any data
         MatchedData()
 
-      case ((patternSymbol : sst.ScopedSymbol), (operandDatum : sst.ScopedDatum)) =>
+      case ((patternSymbol: sst.ScopedSymbol), (operandDatum: sst.ScopedDatum)) =>
         val literals = matchConfig.literals
         val patternSyntaxVariable = SyntaxVariable.fromSymbol(patternSymbol)
 
         val operandSyntaxVariableOpt = operandDatum match {
-          case operandSymbol : sst.ScopedSymbol =>
+          case operandSymbol: sst.ScopedSymbol =>
             Some(SyntaxVariable.fromSymbol(operandSymbol))
 
           case _ =>
@@ -134,13 +134,13 @@ private[frontend] object ExpandMacro {
         // Build a fake list with the rest of the operands and the terminator
         val fakeRestList = sst.ScopedAnyList(restOperands, termOperand)
         val termVariables = matchPatternList(List(termPattern), List(fakeRestList))
-        
+
         innerVariables ++ termVariables
-      
+
       case (sst.ScopedVectorLiteral(innerPattern), sst.ScopedVectorLiteral(innerOperands)) =>
         matchPatternList(innerPattern.toList, innerOperands.toList)
 
-      case ((patternLeaf : sst.NonSymbolLeaf), (operandLeaf : sst.NonSymbolLeaf)) =>
+      case ((patternLeaf: sst.NonSymbolLeaf), (operandLeaf: sst.NonSymbolLeaf)) =>
         if (patternLeaf != operandLeaf) {
           throw new MatchFailedException
         }
@@ -151,10 +151,10 @@ private[frontend] object ExpandMacro {
       case _ =>
         throw new MatchFailedException
     }
-  
-  private def vectorElementsUsePattern(elements : List[sst.ScopedDatum], patternVariables : PatternVariables)(implicit matchConfig : MatchConfig) : Boolean = {
+
+  private def vectorElementsUsePattern(elements: List[sst.ScopedDatum], patternVariables: PatternVariables)(implicit matchConfig: MatchConfig): Boolean = {
     elements match {
-      case subtemplate :: (ellipsisSymbol : sst.ScopedSymbol) :: tailTemplate
+      case subtemplate :: (ellipsisSymbol: sst.ScopedSymbol) :: tailTemplate
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         patternVariables.subpatterns.exists(templateUsesPattern(subtemplate, _))
 
@@ -167,34 +167,34 @@ private[frontend] object ExpandMacro {
     }
   }
 
-  private def templateUsesPattern(template : sst.ScopedDatum, patternVariables : PatternVariables)(implicit matchConfig : MatchConfig) : Boolean = {
+  private def templateUsesPattern(template: sst.ScopedDatum, patternVariables: PatternVariables)(implicit matchConfig: MatchConfig): Boolean = {
     template match {
-      case sst.ScopedPair(ellipsisSymbol : sst.ScopedSymbol, sst.ScopedPair(subtemplate, sst.NonSymbolLeaf(ast.EmptyList())))
+      case sst.ScopedPair(ellipsisSymbol: sst.ScopedSymbol, sst.ScopedPair(subtemplate, sst.NonSymbolLeaf(ast.EmptyList())))
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         // Treat ... as literal inside the subtemplate
         templateUsesPattern(subtemplate, patternVariables)(matchConfig.withoutZeroOrMoreAllowed)
 
-      case symbol : sst.ScopedSymbol =>
+      case symbol: sst.ScopedSymbol =>
         val syntaxVariable = SyntaxVariable.fromSymbol(symbol)
         patternVariables.variables.contains(syntaxVariable)
-      
-      case sst.ScopedPair(subtemplate, sst.ScopedPair(ellipsisSymbol : sst.ScopedSymbol, cdr))
+
+      case sst.ScopedPair(subtemplate, sst.ScopedPair(ellipsisSymbol: sst.ScopedSymbol, cdr))
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         // Figure out if this matches one of our subpatterns
         patternVariables.subpatterns.exists(templateUsesPattern(subtemplate, _))
 
       case sst.ScopedPair(car, cdr) =>
         templateUsesPattern(car, patternVariables) || templateUsesPattern(cdr, patternVariables)
-      
+
       case sst.ScopedVectorLiteral(elements) =>
         vectorElementsUsePattern(elements.toList, patternVariables)
 
-      case leaf : sst.NonSymbolLeaf =>
+      case leaf: sst.NonSymbolLeaf =>
         false
     }
   }
 
-  private def expandRepeatingTemplate(subtemplate : sst.ScopedDatum, patternVariables : PatternVariables, matchedData : MatchedData)(implicit matchConfig : MatchConfig, expandedFrom : SourceLocated) : List[sst.ScopedDatum] = {
+  private def expandRepeatingTemplate(subtemplate: sst.ScopedDatum, patternVariables: PatternVariables, matchedData: MatchedData)(implicit matchConfig: MatchConfig, expandedFrom: SourceLocated): List[sst.ScopedDatum] = {
     // Figure out if this matches one of our subpatterns
     val possibleSubpatterns = patternVariables.subpatterns.zipWithIndex.filter { case (subpatternVariables, index) =>
       templateUsesPattern(subtemplate, subpatternVariables)
@@ -210,15 +210,15 @@ private[frontend] object ExpandMacro {
       case multiple =>
        throw new BadSpecialFormException(subtemplate, "Repeating template references multiple subpatterns")
     }
-        
-    matchedData.subpatternData(subpatternIndex) map { submatchedData => 
-      expandTemplate(subtemplate, subpatternVariables, submatchedData) 
+
+    matchedData.subpatternData(subpatternIndex) map { submatchedData =>
+      expandTemplate(subtemplate, subpatternVariables, submatchedData)
     }
   }
 
-  private def expandVectorElements(elements : List[sst.ScopedDatum], patternVariables : PatternVariables, matchedData : MatchedData)(implicit matchConfig : MatchConfig, expandedFrom : SourceLocated) : List[sst.ScopedDatum] = {
+  private def expandVectorElements(elements: List[sst.ScopedDatum], patternVariables: PatternVariables, matchedData: MatchedData)(implicit matchConfig: MatchConfig, expandedFrom: SourceLocated): List[sst.ScopedDatum] = {
     elements match {
-      case subtemplate :: (ellipsisSymbol : sst.ScopedSymbol) :: tailTemplate
+      case subtemplate :: (ellipsisSymbol: sst.ScopedSymbol) :: tailTemplate
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         val replacements = expandRepeatingTemplate(subtemplate, patternVariables, matchedData)
 
@@ -236,15 +236,15 @@ private[frontend] object ExpandMacro {
     }
   }
 
-  private def expandTemplate(template : sst.ScopedDatum, patternVariables : PatternVariables, matchedData : MatchedData)(implicit matchConfig : MatchConfig, expandedFrom : SourceLocated) : sst.ScopedDatum = {
+  private def expandTemplate(template: sst.ScopedDatum, patternVariables: PatternVariables, matchedData: MatchedData)(implicit matchConfig: MatchConfig, expandedFrom: SourceLocated): sst.ScopedDatum = {
     template match {
       // Avoid sst.ScopedProperList here so we can fail early in the match as an optimisation
-      case sst.ScopedPair(ellipsisSymbol : sst.ScopedSymbol, sst.ScopedPair(subtemplate, sst.NonSymbolLeaf(ast.EmptyList())))
+      case sst.ScopedPair(ellipsisSymbol: sst.ScopedSymbol, sst.ScopedPair(subtemplate, sst.NonSymbolLeaf(ast.EmptyList())))
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         // Treat ... as literal inside the subtemplate
         expandTemplate(subtemplate, patternVariables, matchedData)(matchConfig.withoutZeroOrMoreAllowed, expandedFrom)
 
-      case symbol : sst.ScopedSymbol =>
+      case symbol: sst.ScopedSymbol =>
         val syntaxVariable = SyntaxVariable.fromSymbol(symbol)
 
         matchedData.variableData.get(syntaxVariable) match {
@@ -257,7 +257,7 @@ private[frontend] object ExpandMacro {
             replacement
         }
 
-      case sst.ScopedPair(subtemplate, sst.ScopedPair(ellipsisSymbol : sst.ScopedSymbol, cdr))
+      case sst.ScopedPair(subtemplate, sst.ScopedPair(ellipsisSymbol: sst.ScopedSymbol, cdr))
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         // Copy the template for each instance of our matched data
         val replacements = expandRepeatingTemplate(subtemplate, patternVariables, matchedData)
@@ -267,7 +267,7 @@ private[frontend] object ExpandMacro {
 
         replacements.foldRight(expandedCdr) { (car, cdr) =>
           sst.ScopedPair(car, cdr)
-            .assignLocationFrom(template) 
+            .assignLocationFrom(template)
         }
 
       case sst.ScopedPair(car, cdr) =>
@@ -282,17 +282,17 @@ private[frontend] object ExpandMacro {
 
         sst.ScopedVectorLiteral(expandedElements.toVector).assignLocationFrom(template)
 
-      case leaf : sst.NonSymbolLeaf =>
+      case leaf: sst.NonSymbolLeaf =>
         // There are no symbols here - don't recurse and don't consume any of the pattern
         leaf
     }
   }
 
   private def dumpExpansion(
-      expandedFrom : SourceLocated,
-      operands : sst.ScopedDatum,
-      expandable : Expandable,
-      expansion : sst.ScopedDatum
+      expandedFrom: SourceLocated,
+      operands: sst.ScopedDatum,
+      expandable: Expandable,
+      expansion: sst.ScopedDatum
   ) {
     println(expandedFrom.locationString)
     println("Pattern:   " + expandable.transformer.pattern.unscope)
@@ -303,11 +303,11 @@ private[frontend] object ExpandMacro {
   }
 
   def apply(
-      syntax : BoundSyntax,
-      operands : sst.ScopedDatum,
-      expandedFrom : SourceLocated,
-      trace : Boolean = false
-  ) : sst.ScopedDatum = {
+      syntax: BoundSyntax,
+      operands: sst.ScopedDatum,
+      expandedFrom: SourceLocated,
+      trace: Boolean = false
+  ): sst.ScopedDatum = {
     val matchConfig = MatchConfig(
       ellipsisVariable=syntax.ellipsisVariable,
       literals=syntax.literals

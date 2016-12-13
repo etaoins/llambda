@@ -4,8 +4,8 @@ import io.llambda
 import llambda.compiler.valuetype._
 
 object ResolveTypeVars {
-  case class Result(values : Map[TypeVar, SchemeType] = Map()) {
-    def +(newValue : (TypeVar, SchemeType)) : Result = {
+  case class Result(values: Map[TypeVar, SchemeType] = Map()) {
+    def +(newValue: (TypeVar, SchemeType)): Result = {
       val (typeVar, newType) = newValue
 
       values.get(typeVar) match {
@@ -18,7 +18,7 @@ object ResolveTypeVars {
       }
     }
 
-    def ++(other : Result) : Result = {
+    def ++(other: Result): Result = {
       other.values.foldLeft(this) { case (intermediateResult, (typeVar, newType)) =>
         intermediateResult + (typeVar -> newType)
       }
@@ -26,12 +26,12 @@ object ResolveTypeVars {
   }
 
   private def visitTypeRef(
-      typeVars : Set[TypeVar],
-      polyRef : SchemeTypeRef,
-      polyStack : SchemeType.Stack,
-      evidenceRef : SchemeTypeRef,
-      evidenceStack : SchemeType.Stack
-  ) : Result = polyRef match {
+      typeVars: Set[TypeVar],
+      polyRef: SchemeTypeRef,
+      polyStack: SchemeType.Stack,
+      evidenceRef: SchemeTypeRef,
+      evidenceStack: SchemeType.Stack
+  ): Result = polyRef match {
     case RecursiveSchemeTypeRef(innerDistance) =>
       // This is an internal recursive reference in the polymorphic type
       val poly = polyRef.resolve(polyStack)
@@ -45,7 +45,7 @@ object ResolveTypeVars {
         visitType(typeVars, poly, polyStack, evidence, evidenceStack)
       }
 
-    case DirectSchemeTypeRef(typeVar : TypeVar) if typeVars.contains(typeVar) =>
+    case DirectSchemeTypeRef(typeVar: TypeVar) if typeVars.contains(typeVar) =>
       // We found a type variable!
       val evidence  = evidenceRef.resolve(evidenceStack)
       Result(Map(typeVar -> evidence))
@@ -57,13 +57,13 @@ object ResolveTypeVars {
   }
 
   private def visitType(
-      typeVars : Set[TypeVar],
-      poly : ValueType,
-      polyStack : SchemeType.Stack,
-      evidence : SchemeType,
-      evidenceStack : SchemeType.Stack
-  ) : Result = (poly, evidence) match {
-    case (typeVar : TypeVar, evidence) if typeVars.contains(typeVar) =>
+      typeVars: Set[TypeVar],
+      poly: ValueType,
+      polyStack: SchemeType.Stack,
+      evidence: SchemeType,
+      evidenceStack: SchemeType.Stack
+  ): Result = (poly, evidence) match {
+    case (typeVar: TypeVar, evidence) if typeVars.contains(typeVar) =>
       Result(Map(typeVar -> evidence))
 
     case (EmptySchemeType, _) | (_, EmptySchemeType) =>
@@ -83,7 +83,7 @@ object ResolveTypeVars {
 
       results.reduce(_ ++ _)
 
-    case (polyPair : SpecificPairType, evidencePair : SpecificPairType) =>
+    case (polyPair: SpecificPairType, evidencePair: SpecificPairType) =>
       val newPolyStack = polyPair :: polyStack
       val newEvidenceStack = evidencePair :: evidenceStack
 
@@ -121,7 +121,7 @@ object ResolveTypeVars {
     * @param  poly      Polymorphic template type
     * @param  evidence  Evidence type to match against
     */
-  def apply(typeVars : Set[TypeVar], poly : ValueType, evidence : SchemeType) : Result = {
+  def apply(typeVars: Set[TypeVar], poly: ValueType, evidence: SchemeType): Result = {
     visitType(typeVars, poly, Nil, evidence, Nil)
   }
 }

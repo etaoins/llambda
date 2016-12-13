@@ -10,9 +10,9 @@ import llambda.compiler._
 //   runtime procedures at this point
 //
 // - Quasiquoted lists and vectors without unquoting should be represented "for free" as literals
-// 
+//
 // - The number of procedure applications should be minimized
-// 
+//
 // To implement this the expander first does a pass to build "segments". A segment is either completely constant
 // (ConstantSegment), composed of expressions (DynamicSegment) or a procedure returning a list (SplicedSegment, used
 // to implement splicing). The only thing that can create a new segment is splicing which will terminate the previous
@@ -24,45 +24,45 @@ import llambda.compiler._
 //
 // After building the segments they are converted to the target collection type using the abstract helper methods
 // createConstantLiteral, createFromList and createFromElements. These are implemented in the concrete subclasses
-// ListQuasiquotationExpander and VectorQuasiquotationExpander. 
+// ListQuasiquotationExpander and VectorQuasiquotationExpander.
 //
 // There are a number of special cases that try to minimize the number of procedure applications required to expand the
 // quasiquotation. The fallback case simply converts every segment to a list, appends them to a final list, and then
 // calls createFromList
 //
-abstract class QuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, schemeBase : Map[String, BoundValue]) {
+abstract class QuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, schemeBase: Map[String, BoundValue]) {
   protected sealed abstract class QuasiquoteSegment
-  protected case class ConstantSegment(data : List[ast.Datum]) extends QuasiquoteSegment
-  protected case class DynamicSegment(exprs : List[et.Expr]) extends QuasiquoteSegment
-  protected case class SplicedSegment(generator : et.Expr) extends QuasiquoteSegment
-    
-  protected def schemeBaseProcedure(name : String) = schemeBase(name) match {
-    case storageLoc : StorageLocation => et.VarRef(storageLoc)
+  protected case class ConstantSegment(data: List[ast.Datum]) extends QuasiquoteSegment
+  protected case class DynamicSegment(exprs: List[et.Expr]) extends QuasiquoteSegment
+  protected case class SplicedSegment(generator: et.Expr) extends QuasiquoteSegment
+
+  protected def schemeBaseProcedure(name: String) = schemeBase(name) match {
+    case storageLoc: StorageLocation => et.VarRef(storageLoc)
     case _ =>
-      throw new InternalCompilerErrorException("Procedure name passed that does not correspond to a storage location") 
+      throw new InternalCompilerErrorException("Procedure name passed that does not correspond to a storage location")
   }
 
   protected val listProc = schemeBaseProcedure("list")
   protected val listAppendProc = schemeBaseProcedure("append")
-  
-  // Makes a constant literal 
-  protected def createConstantLiteral(elements : List[ast.Datum]) : ast.Datum
+
+  // Makes a constant literal
+  protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum
 
   // Makes a value from a single list expression
   // This is used to convert a splicing unquote to the right type of collection
-  protected def createFromList(list : et.Expr) : et.Expr
+  protected def createFromList(list: et.Expr): et.Expr
 
   // Makes a value from a list of expressions
-  protected def createFromElements(elements : List[et.Expr]) : et.Expr
-  
-  private def buildQuasiquotationSegments(data : List[sst.ScopedDatum]) : List[QuasiquoteSegment] = data match {
+  protected def createFromElements(elements: List[et.Expr]): et.Expr
+
+  private def buildQuasiquotationSegments(data: List[sst.ScopedDatum]): List[QuasiquoteSegment] = data match {
     case Nil => Nil
 
     case head :: rest =>
       val restSegments = buildQuasiquotationSegments(rest)
-  
+
       head match {
-        case sst.ScopedProperList((unquote : sst.ScopedSymbol) :: unquotedDatum :: Nil)
+        case sst.ScopedProperList((unquote: sst.ScopedSymbol) :: unquotedDatum :: Nil)
             if unquote.resolveOpt == Some(Primitives.Unquote) =>
 
           val appendingExpr = extractExpr(unquotedDatum)
@@ -80,8 +80,8 @@ abstract class QuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, 
               // Create a new segment
               DynamicSegment(appendingExpr :: Nil) :: other
           }
-          
-        case sst.ScopedProperList((unquoteSplicing : sst.ScopedSymbol) :: unquotedDatum :: Nil)
+
+        case sst.ScopedProperList((unquoteSplicing: sst.ScopedSymbol) :: unquotedDatum :: Nil)
             if unquoteSplicing.resolveOpt == Some(Primitives.UnquoteSplicing) =>
           // This is always a new segement
           SplicedSegment(extractExpr(unquotedDatum)) :: restSegments
@@ -103,7 +103,7 @@ abstract class QuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, 
       }
   }
 
-  def apply(data : List[sst.ScopedDatum]) : et.Expr = {
+  def apply(data: List[sst.ScopedDatum]): et.Expr = {
     // Plan out our segments
     val segments = buildQuasiquotationSegments(data)
 
@@ -112,7 +112,7 @@ abstract class QuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, 
         et.Literal(createConstantLiteral(Nil))
 
       case ConstantSegment(data) :: Nil =>
-        // Single constant segment - build it as-is in place 
+        // Single constant segment - build it as-is in place
         et.Literal(createConstantLiteral(data))
 
       case DynamicSegment(exprs) :: Nil =>
@@ -138,29 +138,29 @@ abstract class QuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, 
   }
 }
 
-class ListQuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, schemeBase : Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, schemeBase) {
-  protected def createConstantLiteral(elements : List[ast.Datum]) : ast.Datum = 
+class ListQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, schemeBase: Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, schemeBase) {
+  protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum =
     ast.ProperList(elements)
-  
-  protected def createFromList(list : et.Expr) : et.Expr =
+
+  protected def createFromList(list: et.Expr): et.Expr =
     // Return the list direct
     list
-  
-  protected def createFromElements(elements : List[et.Expr]) : et.Expr =
+
+  protected def createFromElements(elements: List[et.Expr]): et.Expr =
     et.Apply(listProc, elements)
 }
 
-class VectorQuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, schemeBase : Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, schemeBase) {
+class VectorQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, schemeBase: Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, schemeBase) {
   private val listToVectorProc = schemeBaseProcedure("list->vector")
   private val vectorProc = schemeBaseProcedure("vector")
 
-  protected def createConstantLiteral(elements : List[ast.Datum]) : ast.Datum = 
+  protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum =
     ast.VectorLiteral(elements.toVector)
-  
-  protected def createFromList(list : et.Expr) : et.Expr =
+
+  protected def createFromList(list: et.Expr): et.Expr =
     // Use (list->vector)
     et.Apply(listToVectorProc, List(list))
-  
-  protected def createFromElements(elements : List[et.Expr]) : et.Expr =
+
+  protected def createFromElements(elements: List[et.Expr]): et.Expr =
     et.Apply(vectorProc, elements)
 }

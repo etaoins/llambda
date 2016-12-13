@@ -5,17 +5,17 @@ import llambda.compiler.{StorageLocation, et}
 import llambda.compiler.InternalCompilerErrorException
 
 case class AnalysedExprs(
-  usedTopLevelExprs : List[et.Expr] = List(),
-  mutableVars : Set[StorageLocation] = Set(),
-  constantTopLevelBindings : List[(StorageLocation, et.Expr)] = Nil,
-  varUses : Map[StorageLocation, Int] = Map(),
-  nativeSymbols : Set[String] = Set(),
-  parameterized : Boolean = false
+  usedTopLevelExprs: List[et.Expr] = List(),
+  mutableVars: Set[StorageLocation] = Set(),
+  constantTopLevelBindings: List[(StorageLocation, et.Expr)] = Nil,
+  varUses: Map[StorageLocation, Int] = Map(),
+  nativeSymbols: Set[String] = Set(),
+  parameterized: Boolean = false
 )
 
 object AnalyseExprs  {
-  private def handleNestedExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
-    case _ : et.TopLevelDefine =>
+  private def handleNestedExpr(expr: et.Expr, acc: AnalysedExprs): AnalysedExprs = expr match {
+    case _: et.TopLevelDefine =>
       // This voids our warranty
       throw new InternalCompilerErrorException("Top-level definition found nested in other expression")
 
@@ -39,7 +39,7 @@ object AnalyseExprs  {
         nativeSymbols=acc.nativeSymbols + nativeSymbol
       )
 
-    case parameterize : et.Parameterize =>
+    case parameterize: et.Parameterize =>
       parameterize.subexprs.foldLeft(acc) { case (previousAcc, expr) =>
         handleNestedExpr(expr, previousAcc)
       }.copy(parameterized=true)
@@ -51,7 +51,7 @@ object AnalyseExprs  {
       }
   }
 
-  private def handleTopLevelExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
+  private def handleTopLevelExpr(expr: et.Expr, acc: AnalysedExprs): AnalysedExprs = expr match {
     case et.TopLevelDefine(binding @ et.Binding(storageLoc, initialiser)) =>
       // Filter out the bindings that are unused
       val bindingUsed = TopLevelDefineRequired(storageLoc, initialiser, acc)
@@ -94,7 +94,7 @@ object AnalyseExprs  {
       )
   }
 
-  def apply(exprs : List[et.Expr]) = {
+  def apply(exprs: List[et.Expr]) = {
     // Fold right because we want to know if a binding is used by the time we encounter it
     // This means we must visit them in reverse order
     exprs.foldRight(AnalysedExprs()) { case (expr, previousAcc) =>

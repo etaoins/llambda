@@ -8,20 +8,20 @@ import llambda.compiler.{celltype => ct}
 
 object SymbolForTypePredicateProc {
   private def planTypePredicateProc(
-      parentPlan : PlanWriter,
-      testingType : vt.SchemeType
-  ) : String = {
+      parentPlan: PlanWriter,
+      testingType: vt.SchemeType
+  ): String = {
     val symbolHint = vt.NameForType(testingType)
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "") + "?"
-        
+
     val allocedSymbol = parentPlan.allocSymbol(symbolHint)
 
     // We only have a single argument
     val argumentTemp = ps.CellTemp(ct.AnyCell)
-    
+
     val plan = parentPlan.forkPlan()
-        
+
     // Add this to the list of planned type predicates in case it's a recursive type
     plan.plannedTypePredicates += (testingType -> allocedSymbol)
 
@@ -48,7 +48,7 @@ object SymbolForTypePredicateProc {
     allocedSymbol
   }
 
-  def apply(parentPlan : PlanWriter, testingType : vt.SchemeType) : String = {
+  def apply(parentPlan: PlanWriter, testingType: vt.SchemeType): String = {
     parentPlan.plannedTypePredicates.get(testingType).getOrElse {
       planTypePredicateProc(parentPlan, testingType)
     }

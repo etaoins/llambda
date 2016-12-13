@@ -4,7 +4,7 @@ import io.llambda
 object StdlibProcHasSideEffects {
   // Be *very* careful here - the procedure cannot throw an exception if passed the indicated number of arguments
   // This precludes any functions that have typed parameters
-  def apply(reportProcName : String, arity : Int) : Boolean = (reportProcName, arity) match {
+  def apply(reportProcName: String, arity: Int): Boolean = (reportProcName, arity) match {
     case ("eqv?", 2) | ("equals?", 2) =>
       false
 

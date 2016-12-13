@@ -9,22 +9,22 @@ import llambda.compiler.valuetype.Implicits._
 
 object ExtractLambda {
   private case class ReconciledTypes(
-    mandatoryArgTypes : List[(sst.ScopedSymbol, vt.SchemeType)],
-    optionalArgTypes : List[(sst.ScopedSymbol, vt.SchemeType)],
-    restArgMemberTypeOpt : Option[(sst.ScopedSymbol, vt.SchemeType)],
-    returnType : vt.ReturnType.ReturnType[vt.SchemeType],
-    polymorphicType : pm.PolymorphicProcedureType
+    mandatoryArgTypes: List[(sst.ScopedSymbol, vt.SchemeType)],
+    optionalArgTypes: List[(sst.ScopedSymbol, vt.SchemeType)],
+    restArgMemberTypeOpt: Option[(sst.ScopedSymbol, vt.SchemeType)],
+    returnType: vt.ReturnType.ReturnType[vt.SchemeType],
+    polymorphicType: pm.PolymorphicProcedureType
   )
 
   private def validateArity(
-      located : SourceLocated,
-      formalsMandatoryArgs : Int,
-      formalsOptionalArgs : Int,
-      formalsRestArg : Boolean,
-      declMandatoryArgs : Int,
-      declOptionalArgs : Int,
-      declRestArg : Boolean
-  ) : Unit = {
+      located: SourceLocated,
+      formalsMandatoryArgs: Int,
+      formalsOptionalArgs: Int,
+      formalsRestArg: Boolean,
+      declMandatoryArgs: Int,
+      declOptionalArgs: Int,
+      declRestArg: Boolean
+  ): Unit = {
     if (formalsMandatoryArgs != declMandatoryArgs) {
       throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${declMandatoryArgs} mandatory arguments")
     }
@@ -43,10 +43,10 @@ object ExtractLambda {
   }
 
   private def reconcileTypes(
-      located : SourceLocated,
-      parsedFormals : ParsedFormals,
-      typeDeclaration : LocTypeDeclaration
-  ) : ReconciledTypes = {
+      located: SourceLocated,
+      parsedFormals: ParsedFormals,
+      typeDeclaration: LocTypeDeclaration
+  ): ReconciledTypes = {
     val formalsMandatoryArgTypes = parsedFormals.mandatoryArgs map { case (symbol, typeOpt) =>
       symbol -> typeOpt.getOrElse(vt.AnySchemeType)
     }
@@ -71,7 +71,7 @@ object ExtractLambda {
           declRestArg=restArgAnnOpt.isDefined
         )
 
-        def combineArgTypes(symbol : sst.ScopedSymbol, signatureType : vt.SchemeType, annType : vt.SchemeType) : vt.SchemeType = {
+        def combineArgTypes(symbol: sst.ScopedSymbol, signatureType: vt.SchemeType, annType: vt.SchemeType): vt.SchemeType = {
           val combinedType = signatureType & annType
 
           if (combinedType == vt.EmptySchemeType) {
@@ -94,7 +94,7 @@ object ExtractLambda {
 
         val combinedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
           symbol -> combineArgTypes(symbol, signatureType, restArgAnnOpt.get)
-        } : Option[(sst.ScopedSymbol, vt.SchemeType)]
+        }: Option[(sst.ScopedSymbol, vt.SchemeType)]
 
         val polyType = vt.ProcedureType(
           mandatoryArgTypes=combinedMandatoryArgs.map(_._2),
@@ -123,7 +123,7 @@ object ExtractLambda {
           declRestArg=restArgAnnOpt.isDefined
         )
 
-        def checkForArgTypes(symbol : sst.ScopedSymbol, signatureType : vt.SchemeType, annType : vt.SchemeType) : vt.SchemeType = {
+        def checkForArgTypes(symbol: sst.ScopedSymbol, signatureType: vt.SchemeType, annType: vt.SchemeType): vt.SchemeType = {
           if (signatureType != vt.AnySchemeType) {
             throw new BadSpecialFormException(symbol, s"Polymorphic type declarations cannot be mixed with argument type annotations")
           }
@@ -143,7 +143,7 @@ object ExtractLambda {
 
         val checkedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
           symbol -> checkForArgTypes(symbol, signatureType, restArgAnnOpt.get)
-        } : Option[(sst.ScopedSymbol, vt.SchemeType)]
+        }: Option[(sst.ScopedSymbol, vt.SchemeType)]
 
         ReconciledTypes(checkedMandatoryArgs, checkedOptionalArgs, checkedRestArgOpt, returnTypeAnn, polyType)
 
@@ -165,13 +165,13 @@ object ExtractLambda {
   }
 
   def apply(
-      located : SourceLocated,
-      argList : List[sst.ScopedDatum],
-      argTerminator : sst.ScopedDatum,
-      definition : List[sst.ScopedDatum],
-      sourceNameHint : Option[String] = None,
-      typeDeclaration : LocTypeDeclaration = MonomorphicDeclaration(vt.AnySchemeType)
-  )(implicit parentContext : FrontendContext) : et.Lambda = {
+      located: SourceLocated,
+      argList: List[sst.ScopedDatum],
+      argTerminator: sst.ScopedDatum,
+      definition: List[sst.ScopedDatum],
+      sourceNameHint: Option[String] = None,
+      typeDeclaration: LocTypeDeclaration = MonomorphicDeclaration(vt.AnySchemeType)
+  )(implicit parentContext: FrontendContext): et.Lambda = {
     // Parse our argument list
     val parsedFormals = ParseFormals(argList, argTerminator)
 
@@ -197,7 +197,7 @@ object ExtractLambda {
         boundOptionalArgs :+ (symbol -> et.OptionalArg(storageLoc, ExtractExpr(scopedDefault)(parentContext)))
     }
 
-    val boundRestArgOpt = reconciledTypes.restArgMemberTypeOpt map { case (symbol, memberType : vt.SchemeType) =>
+    val boundRestArgOpt = reconciledTypes.restArgMemberTypeOpt map { case (symbol, memberType: vt.SchemeType) =>
       val storageLoc = new StorageLocation(symbol.name, vt.UniformProperListType(memberType))
       symbol -> storageLoc
     }

@@ -11,15 +11,15 @@ import scala.collection.breakOut
 
 private[planner] object AttemptInlineApply {
   private sealed abstract class ValueSource
-  private case class DirectSource(storageLoc : StorageLocation, value : LocationValue) extends ValueSource
-  private case class ClosureSource(storageLoc : StorageLocation) extends ValueSource
+  private case class DirectSource(storageLoc: StorageLocation, value: LocationValue) extends ValueSource
+  private case class ClosureSource(storageLoc: StorageLocation) extends ValueSource
 
-  private def attemptInline(parentState : PlannerState, inlineState : PlannerState)(
-      lambdaExpr : et.Lambda,
-      args : List[(ContextLocated, iv.IntermediateValue)],
-      selfTempOpt : Option[ps.TempValue] = None,
-      manifestOpt : Option[LambdaManifest] = None
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+  private def attemptInline(parentState: PlannerState, inlineState: PlannerState)(
+      lambdaExpr: et.Lambda,
+      args: List[(ContextLocated, iv.IntermediateValue)],
+      selfTempOpt: Option[ps.TempValue] = None,
+      manifestOpt: Option[LambdaManifest] = None
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc) ++ lambdaExpr.restArgOpt
 
@@ -45,12 +45,12 @@ private[planner] object AttemptInlineApply {
       case ImportedImmutable(storageLoc, parentIntermediate) =>
         DirectSource(storageLoc, ImmutableValue(parentIntermediate))
 
-      case commonCapture : CapturedVariable if inlineState.values.contains(commonCapture.storageLoc) =>
+      case commonCapture: CapturedVariable if inlineState.values.contains(commonCapture.storageLoc) =>
         // This is captured variable the lambda expression and our inline state have in common
         // We can just import it directly for the purposes of inlining
         DirectSource(commonCapture.storageLoc, inlineState.values(commonCapture.storageLoc))
 
-      case closureCapture : CapturedVariable =>
+      case closureCapture: CapturedVariable =>
         ClosureSource(closureCapture.storageLoc)
     }
 
@@ -146,10 +146,10 @@ private[planner] object AttemptInlineApply {
     * @param  args        Arguments for the SEL
     * @return Result values if inlining was successful, None otherwise
     */
-  def fromSEL(state : PlannerState)(
-      lambdaExpr : et.Lambda,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
+  def fromSEL(state: PlannerState)(
+      lambdaExpr: et.Lambda,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] =
     attemptInline(state, state)(lambdaExpr, args)
 
   /** Attempts to inline an already planned lambda from its manifest
@@ -161,11 +161,11 @@ private[planner] object AttemptInlineApply {
     *                      closure for the procedure.
     * @return Result values if inlining was successful, None otherwise
     */
-  def fromManifiest(inlineState : PlannerState)(
-      manifest : LambdaManifest,
-      args : List[(ContextLocated, iv.IntermediateValue)],
-      selfTempOpt : Option[ps.TempValue] = None
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
+  def fromManifiest(inlineState: PlannerState)(
+      manifest: LambdaManifest,
+      args: List[(ContextLocated, iv.IntermediateValue)],
+      selfTempOpt: Option[ps.TempValue] = None
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] =
     attemptInline(manifest.parentState, inlineState)(
       lambdaExpr=manifest.lambdaExpr,
       args=args,

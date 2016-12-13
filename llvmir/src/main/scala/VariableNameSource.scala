@@ -3,7 +3,7 @@ package io.llambda.llvmir
 private sealed abstract class VariableNameSource {
   private val nextNumberForBaseName = new collection.mutable.HashMap[String, Int]()
 
-  def allocate(baseName : String) : String = {
+  def allocate(baseName: String): String = {
     // Allocate another number
     val nextNumber = nextNumberForBaseName.getOrElse(baseName, 1)
     nextNumberForBaseName.put(baseName, nextNumber + 1)

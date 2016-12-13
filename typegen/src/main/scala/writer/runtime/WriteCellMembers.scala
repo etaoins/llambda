@@ -3,13 +3,13 @@ package io.llambda.typegen.writer.runtime
 import io.llambda.typegen._
 
 object WriteCellMembers extends writer.OutputWriter {
-  private def writeMemberFile(processedTypes : ProcessedTypes, cellClass : CellClass) : String = {
+  private def writeMemberFile(processedTypes: ProcessedTypes, cellClass: CellClass): String = {
     val rootCellCppName = processedTypes.rootCellClass.names.cppClassName
     val typeTagField = processedTypes.rootCellClass.typeTagField
     val typeTagEnumName = FieldTypeToCpp(typeTagField.fieldType, None)
 
-    def cppTypePredicate(processedTypes : ProcessedTypes, cellClass : CellClass) : String = cellClass match {
-      case _ : RootCellClass =>
+    def cppTypePredicate(processedTypes: ProcessedTypes, cellClass: CellClass): String = cellClass match {
+      case _: RootCellClass =>
         // We're always an instance of the root classes
         "true"
 
@@ -24,7 +24,7 @@ object WriteCellMembers extends writer.OutputWriter {
         childTypeChecks.mkString(" || ")
 
       case _ =>
-        s"typeId == ${typeTagEnumName}::${cellClass.name}" 
+        s"typeId == ${typeTagEnumName}::${cellClass.name}"
     }
 
     val cppBuilder = new CppBuilder
@@ -46,7 +46,7 @@ object WriteCellMembers extends writer.OutputWriter {
             cppBuilder.blockSep {
               cppBuilder += s"return m_${field.name};"
             }
-            
+
             // And non-const version
             cppBuilder += s"${cppReturnType} ${field.name}()"
             cppBuilder.blockSep {
@@ -65,7 +65,7 @@ object WriteCellMembers extends writer.OutputWriter {
     }
 
     cellClass match {
-      case _ : VariantCellClass =>
+      case _: VariantCellClass =>
         // Variants can only be distinguished in a variant-specific way at runtime
 
       case _ =>
@@ -97,7 +97,7 @@ object WriteCellMembers extends writer.OutputWriter {
     cppBuilder.toString
   }
 
-  def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
+  def apply(processedTypes: ProcessedTypes): Map[String, String] = {
     (processedTypes.cellClasses.values.map { case cellClass =>
       val cppName = cellClass.names.cppClassName
       val outputPath = s"runtime/binding/generated/${cppName}Members.h"

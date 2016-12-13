@@ -21,10 +21,10 @@ private[planner] object PlanProcedureTrampoline {
     *                              output IR identifying the trampoline.
     */
   def apply(
-      trampolineSignature : ProcedureSignature,
-      targetProc : iv.InvokableProc,
-      targetProcLocOpt : Option[ContextLocated] = None
-  )(implicit parentPlan : PlanWriter) : PlannedFunction = {
+      trampolineSignature: ProcedureSignature,
+      targetProc: iv.InvokableProc,
+      targetProcLocOpt: Option[ContextLocated] = None
+  )(implicit parentPlan: PlanWriter): PlannedFunction = {
     val inSelfTemp = ps.CellTemp(ct.ProcedureCell)
     implicit val plan = parentPlan.forkPlan()
 

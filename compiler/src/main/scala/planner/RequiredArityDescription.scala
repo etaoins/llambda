@@ -5,7 +5,7 @@ import llambda.compiler.ProcedureSignature
 import llambda.compiler.valuetype.ProcedureType
 
 private[planner] object RequiredArityDescription {
-  def apply(mandatoryArgs : Int, optionalArgs : Int, hasRestArg : Boolean) : String = {
+  def apply(mandatoryArgs: Int, optionalArgs: Int, hasRestArg: Boolean): String = {
     if (hasRestArg) {
       s"at least ${mandatoryArgs} arguments"
     }
@@ -17,7 +17,7 @@ private[planner] object RequiredArityDescription {
     }
   }
 
-  def fromProcedureType(procType : ProcedureType) : String = {
+  def fromProcedureType(procType: ProcedureType): String = {
     apply(
       mandatoryArgs=procType.mandatoryArgTypes.length,
       optionalArgs=procType.optionalArgTypes.length,
@@ -25,7 +25,7 @@ private[planner] object RequiredArityDescription {
     )
   }
 
-  def fromProcedureSignature(signature : ProcedureSignature) : String = {
+  def fromProcedureSignature(signature: ProcedureSignature): String = {
     apply(
       mandatoryArgs=signature.mandatoryArgTypes.length,
       optionalArgs=signature.optionalArgTypes.length,

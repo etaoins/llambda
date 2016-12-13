@@ -15,7 +15,7 @@ private[frontend] object IncludeLoader {
   // becoming a problem as (scheme base) grew in size. This ends up halving the time the unit tests take
   private val parsedCache = new TrieMap[String, Option[List[ast.Datum]]]
 
-  private def attemptLoad(rootDir : URL, includeName : String) : Option[List[ast.Datum]] = {
+  private def attemptLoad(rootDir: URL, includeName: String): Option[List[ast.Datum]] = {
     // Parse the include name relative to our root
     val includeUrl = new URL(rootDir, includeName)
 
@@ -33,7 +33,7 @@ private[frontend] object IncludeLoader {
         Some(SchemeParser.parseStringAsData(libraryString, Some(includeFilename)))
       }
       catch {
-        case _ : FileNotFoundException => None
+        case _: FileNotFoundException => None
       }
     })
   }
@@ -45,7 +45,7 @@ private[frontend] object IncludeLoader {
     * @return List of loaded data or None if the file could not be found
     */
   @tailrec
-  def apply(rootDirs : Seq[URL], includeName : String) : Option[List[ast.Datum]] = rootDirs match {
+  def apply(rootDirs: Seq[URL], includeName: String): Option[List[ast.Datum]] = rootDirs match {
     case headRootDir :: tailRootDirs =>
       attemptLoad(headRootDir, includeName) match {
         case Some(data) =>

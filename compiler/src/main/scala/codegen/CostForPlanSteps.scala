@@ -21,97 +21,97 @@ object CostForPlanSteps {
   /** Cost of a function call */
   private val functionCallCost = 10L
 
-  private def costForStep(step : ps.Step) : Long = step match {
-    case _ : ps.DisposeValues | _ : ps.ConvertNativeInteger | _ : ps.CreateNamedEntryPoint | _ : ps.CreateBooleanCell |
-         _ : ps.CreateEmptyListCell | _ : ps.CreateUnitCell | _ : ps.CastCellToTypeUnchecked =>
+  private def costForStep(step: ps.Step): Long = step match {
+    case _: ps.DisposeValues | _: ps.ConvertNativeInteger | _: ps.CreateNamedEntryPoint | _: ps.CreateBooleanCell |
+         _: ps.CreateEmptyListCell | _: ps.CreateUnitCell | _: ps.CastCellToTypeUnchecked =>
       // These typically don't generate any asembler
       0L
-    
-    case _ : ps.CreateNativeConstant =>
+
+    case _: ps.CreateNativeConstant =>
       // These typically will just be included in the instruction stream or as a small external constant
       trivialInstrCost
 
-    case _ : ps.ConvertNativeFloat | _ : ps.ConvertNativeIntegerToFloat =>
+    case _: ps.ConvertNativeFloat | _: ps.ConvertNativeIntegerToFloat =>
       // These are usually cheap don't require a load
       trivialInstrCost
 
-    case _ : ps.IntegerDiv | _ : ps.IntegerRem | _ : ps.IntegerCompare | _ : ps.FloatCompare | _ : ps.FloatIsNaN |
-         _ : ps.FloatBitwiseCompare | _ : ps.Return =>
+    case _: ps.IntegerDiv | _: ps.IntegerRem | _: ps.IntegerCompare | _: ps.FloatCompare | _: ps.FloatIsNaN |
+         _: ps.FloatBitwiseCompare | _: ps.Return =>
       // These effectively map 1:1 to assembler instructions
       trivialInstrCost
 
-    case _ : ps.CheckedIntegerStep =>
+    case _: ps.CheckedIntegerStep =>
       // These are a trivial instructions + a very predicable branch to hit overflow
       trivialInstrCost * 2
 
-    case _ : ps.FloatAdd | _ : ps.FloatSub | _ : ps.FloatMul | _ : ps.FloatDiv =>
+    case _: ps.FloatAdd | _: ps.FloatSub | _: ps.FloatMul | _: ps.FloatDiv =>
       floatMathCost
-    
-    case _ : ps.UnboxValue | _ : ps.LoadPairCar | _ : ps.LoadPairCdr | _ : ps.LoadProcedureEntryPoint |
-         _ : ps.LoadVectorLength | _ : ps.LoadRecordLikeData | _ : ps.LoadRecordDataField | _ : ps.LoadVectorElement |
-         _ : ps.LoadVectorElementsData | _ : ps.LoadBytevectorLength | _ : ps.LoadSymbolByteLength |
-         _ : ps.LoadSymbolByte =>
+
+    case _: ps.UnboxValue | _: ps.LoadPairCar | _: ps.LoadPairCdr | _: ps.LoadProcedureEntryPoint |
+         _: ps.LoadVectorLength | _: ps.LoadRecordLikeData | _: ps.LoadRecordDataField | _: ps.LoadVectorElement |
+         _: ps.LoadVectorElementsData | _: ps.LoadBytevectorLength | _: ps.LoadSymbolByteLength |
+         _: ps.LoadSymbolByte =>
       // This is a load from memory
       loadCost
 
-    case _ : ps.SetRecordDataField | _ : ps.SetRecordLikeDefined | _ : ps.StoreVectorElement =>
+    case _: ps.SetRecordDataField | _: ps.SetRecordLikeDefined | _: ps.StoreVectorElement =>
       storeCost
 
-    case _ : ps.TestCellType | _ : ps.TestRecordLikeClass =>
+    case _: ps.TestCellType | _: ps.TestRecordLikeClass =>
       // These are typically a load + test
       loadCost + trivialInstrCost
-    
-    case _ : ps.CreateConstant =>
+
+    case _: ps.CreateConstant =>
       // Constant just create additional .data in the resulting executable and have a good chance of being merged
       constantCellCost
 
-    case nestingStep : ps.NestingStep =>
+    case nestingStep: ps.NestingStep =>
       // The branch might force a GC barrier
       // Also, if the branch actually makes it to the assembler it can be fairly expensive
       (gcBarrierCost / 2) + trivialInstrCost +
         nestingStep.innerBranches.flatMap(_._1).map(costForStep).sum
-    
-    case _ : ps.CalcProperListLength =>
+
+    case _: ps.CalcProperListLength =>
       // Assume lists have an average length of 5
       // We need to load the cdr and test its type for each cell
       // Add an additional instruction for dealing with looping
       (loadCost + (trivialInstrCost * 2)) * 5
 
-    case _ : ps.InitPair =>
+    case _: ps.InitPair =>
       // This requires an allocation and a store to the cell type
       cellConsumptionCost
 
     case ps.InitVector(_, elements) =>
       cellConsumptionCost + (elements.length * storeCost)
 
-    case _ : ps.InitFilledVector =>
+    case _: ps.InitFilledVector =>
       // Assume the average vector is 8 elements long
       cellConsumptionCost + (8 * storeCost)
 
-    case initRecordLike : ps.InitRecordLikeStep =>
+    case initRecordLike: ps.InitRecordLikeStep =>
       // This requires an allocation and then a store for each field
       cellConsumptionCost + (initRecordLike.fieldValues.size * storeCost)
 
-    case _ : ps.BoxValue =>
+    case _: ps.BoxValue =>
       // This requires an allocation plus a store of the boxed value
       cellConsumptionCost + storeCost
 
-    case allocateCells : ps.AllocateCells =>
+    case allocateCells: ps.AllocateCells =>
       gcBarrierCost
 
-    case _ : ps.AssertPredicate | _ : ps.AssertRecordLikeDefined =>
+    case _: ps.AssertPredicate | _: ps.AssertRecordLikeDefined =>
       // These require a test + a possible GC barrier if the test fails
       (gcBarrierCost / 2) + trivialInstrCost
 
-    case _ : ps.LoadValueForParameterProc | _ : ps.PushDynamicState | _ : ps.PopDynamicState =>
+    case _: ps.LoadValueForParameterProc | _: ps.PushDynamicState | _: ps.PopDynamicState =>
       // These are a function call
       functionCallCost
 
-    case _ : ps.CreateParameterProc =>
+    case _: ps.CreateParameterProc =>
       // This is an allocating function call
       functionCallCost + gcBarrierCost
 
-    case invoke : ps.InvokeLike =>
+    case invoke: ps.InvokeLike =>
       functionCallCost + (if (invoke.signature.hasWorldArg) {
         // This can allocate cells and throw exceptions - this requires a GC barrier
         gcBarrierCost
@@ -126,6 +126,6 @@ object CostForPlanSteps {
     *
     * The number returned isn't meaningful except for ranking the relative cost of different plans
     */
-  def apply(steps : Seq[ps.Step]) : Long =
+  def apply(steps: Seq[ps.Step]): Long =
     steps.map(costForStep).sum
 }

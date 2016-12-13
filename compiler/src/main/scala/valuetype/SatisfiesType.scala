@@ -5,11 +5,11 @@ import llambda.compiler.{celltype => ct}
 
 object SatisfiesType {
   private def satisfiesTypeRef(
-      superTypeRef : SchemeTypeRef,
-      superStack : SchemeType.Stack,
-      testingTypeRef : SchemeTypeRef,
-      testingStack : SchemeType.Stack
-  ) : Option[Boolean] = {
+      superTypeRef: SchemeTypeRef,
+      superStack: SchemeType.Stack,
+      testingTypeRef: SchemeTypeRef,
+      testingStack: SchemeType.Stack
+  ): Option[Boolean] = {
     val superType = superTypeRef.resolve(superStack)
     val testingType = testingTypeRef.resolve(testingStack)
 
@@ -21,7 +21,7 @@ object SatisfiesType {
     }
   }
 
-  private def mergeNonUnionMemberTypeResults(memberResults : Set[Option[Boolean]]) : Option[Boolean] =
+  private def mergeNonUnionMemberTypeResults(memberResults: Set[Option[Boolean]]): Option[Boolean] =
     if (memberResults.contains(Some(false))) {
       // Definitely not compatible
       Some(false)
@@ -35,7 +35,7 @@ object SatisfiesType {
       Some(true)
     }
 
-  private def satifiesProcedureType(superType : ProcedureType, testingType : ProcedureType) : Option[Boolean] =
+  private def satifiesProcedureType(superType: ProcedureType, testingType: ProcedureType): Option[Boolean] =
     (superType, testingType) match {
       case (ProcedureType(superMandatoryArgTypes, superOptionalArgTypes, superRestArgMemberTypeOpt, superReturnType),
             ProcedureType(testingMandatoryArgTypes, testingOptionalArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
@@ -64,7 +64,7 @@ object SatisfiesType {
     *
     * This ensures that each signature in the testing type is satisfied by at least one signature in the super type
     */
-  private def satifiesApplicableType(superType : ApplicableType, testingType : ApplicableType) : Option[Boolean] = {
+  private def satifiesApplicableType(superType: ApplicableType, testingType: ApplicableType): Option[Boolean] = {
     val allSignatureResults = (testingType.signatures.map { testingSignature =>
       val testingSignatureResults = superType.signatures map { superSignature =>
         satifiesProcedureType(superSignature, testingSignature)
@@ -97,12 +97,12 @@ object SatisfiesType {
     }
   }
 
-  def stackedSatisfiesType(superStack : SchemeType.Stack, testingStack : SchemeType.Stack) : Option[Boolean] = {
+  def stackedSatisfiesType(superStack: SchemeType.Stack, testingStack: SchemeType.Stack): Option[Boolean] = {
     (superStack.head, testingStack.head) match {
       case (superAny, _) if superAny eq AnySchemeType =>
         // Quick optimisation - this should not affect correctness
         Some(true)
-      
+
       case (_, EmptySchemeType) =>
         // The empty type satisfies all types
         Some(true)
@@ -148,14 +148,14 @@ object SatisfiesType {
           None
         }
 
-      case (superAtom : SchemeTypeAtom, testingAtom : SchemeTypeAtom) =>
+      case (superAtom: SchemeTypeAtom, testingAtom: SchemeTypeAtom) =>
         // Atoms are easy
         Some(superAtom == testingAtom)
 
-      case (superValue : LiteralValueType, testingValue : LiteralValueType) =>
+      case (superValue: LiteralValueType, testingValue: LiteralValueType) =>
         Some(superValue == testingValue)
 
-      case (superRecord : RecordType, testingRecord : RecordType) =>
+      case (superRecord: RecordType, testingRecord: RecordType) =>
         if (testingRecord.isEqualToOrChildOf(superRecord)) {
           // Testing record is a child record
           Some(true)
@@ -170,10 +170,10 @@ object SatisfiesType {
 
         }
 
-      case (superExternal : ExternalRecordType, testingExternal : ExternalRecordType) =>
+      case (superExternal: ExternalRecordType, testingExternal: ExternalRecordType) =>
         Some(superExternal eq testingExternal)
 
-      case (superPair : PairType, testingPair : PairType) =>
+      case (superPair: PairType, testingPair: PairType) =>
         // Pairs satisfy their more general pairs
         val memberResults = Set(
           satisfiesTypeRef(superPair.carTypeRef, superStack, testingPair.carTypeRef, testingStack),
@@ -182,7 +182,7 @@ object SatisfiesType {
 
         mergeNonUnionMemberTypeResults(memberResults)
 
-      case (superHashMap : HashMapType, testingHashMap : HashMapType) =>
+      case (superHashMap: HashMapType, testingHashMap: HashMapType) =>
         val memberResults = Set(
           stackedSatisfiesType(superHashMap.keyType :: superStack, testingHashMap.keyType :: testingStack),
           stackedSatisfiesType(superHashMap.valueType :: superStack, testingHashMap.valueType :: testingStack)
@@ -190,10 +190,10 @@ object SatisfiesType {
 
         mergeNonUnionMemberTypeResults(memberResults)
 
-      case (superApplicable : ApplicableType, testingApplicable : ApplicableType) =>
+      case (superApplicable: ApplicableType, testingApplicable: ApplicableType) =>
         satifiesApplicableType(superApplicable, testingApplicable)
 
-      case (superDerived : DerivedSchemeType, _) =>
+      case (superDerived: DerivedSchemeType, _) =>
         // Didn't have an exact match - check our parent types
         stackedSatisfiesType(superDerived.parentType :: superStack.tail, testingStack) match {
           case Some(false) =>
@@ -204,8 +204,8 @@ object SatisfiesType {
             // May match a super type
             None
         }
-      
-      case (_, testingDerived : DerivedSchemeType) =>
+
+      case (_, testingDerived: DerivedSchemeType) =>
         stackedSatisfiesType(superStack, testingDerived.parentType :: testingStack.tail)
     }
   }
@@ -216,7 +216,7 @@ object SatisfiesType {
     * the testing type satisfy the super type.  None indicates that some values of the testing type satisfy the super
     * type.
     */
-  def apply(superType : SchemeType, testingType : SchemeType) : Option[Boolean] = {
+  def apply(superType: SchemeType, testingType: SchemeType): Option[Boolean] = {
     stackedSatisfiesType(superType :: Nil, testingType :: Nil)
   }
 }

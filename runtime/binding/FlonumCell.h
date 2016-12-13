@@ -26,7 +26,7 @@ public:
 		void *cellPlacement = alloc::allocateCells(world);
 		return new (cellPlacement) FlonumCell(value);
 	}
-	
+
 	static FlonumCell *NaN(World &world)
 	{
 		void *cellPlacement = alloc::allocateCells(world);
@@ -38,7 +38,7 @@ public:
 		void *cellPlacement = alloc::allocateCells(world);
 		return new (cellPlacement) FlonumCell(std::numeric_limits<double>::infinity());
 	}
-	
+
 	static FlonumCell *negativeInfinity(World &world)
 	{
 		void *cellPlacement = alloc::allocateCells(world);
@@ -59,7 +59,7 @@ public:
 	{
 		return isInfinite() && (value() > 0);
 	}
-	
+
 	bool isNegativeInfinity() const
 	{
 		return isInfinite() && (value() < 0);

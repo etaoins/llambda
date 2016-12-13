@@ -3,11 +3,11 @@ import io.llambda
 
 object IntersectTypes {
   private[valuetype] def intersectTypeSets(
-     leftTypes : Set[NonUnionSchemeType],
-     leftUnionOpt : Option[UnionType],
-     rightTypes : Set[NonUnionSchemeType],
-     rightUnionOpt : Option[UnionType]
-  ) : SchemeType = {
+     leftTypes: Set[NonUnionSchemeType],
+     leftUnionOpt: Option[UnionType],
+     rightTypes: Set[NonUnionSchemeType],
+     rightUnionOpt: Option[UnionType]
+  ): SchemeType = {
     val leftTypeStack = leftUnionOpt.toList
     val rightTypeStack = rightUnionOpt.toList
 
@@ -17,7 +17,7 @@ object IntersectTypes {
         SatisfiesType.stackedSatisfiesType(rightType :: rightTypeStack, leftType :: leftTypeStack) == Some(true)
       }
     }
-    
+
     val moreDerivedRightTypes = rightTypes.filter { rightType =>
       leftTypes.exists { leftType =>
         SatisfiesType.stackedSatisfiesType(leftType :: leftTypeStack, rightType :: rightTypeStack) == Some(true)
@@ -38,7 +38,7 @@ object IntersectTypes {
       case _ =>
         moreDerivedLeftTypes
     }
-    
+
     val unrolledRightTypes = rightUnionOpt match {
       case Some(rightUnion) =>
         moreDerivedRightTypes.map(rightUnion.unrollChildType)
@@ -52,15 +52,15 @@ object IntersectTypes {
 
   /** Returns the intersection of two types
     *
-    * The intersection of two types is the type that both the passed types satisfy. For example, the  intersection of 
+    * The intersection of two types is the type that both the passed types satisfy. For example, the  intersection of
     * (U <symbol> <string>) and (U <symbol> <boolean>) is <symbol>.
     */
-  def apply(type1 : SchemeType, type2 : SchemeType) : SchemeType = {
-    def expandType(schemeType : SchemeType) : (Set[NonUnionSchemeType], Option[UnionType]) = schemeType match {
+  def apply(type1: SchemeType, type2: SchemeType): SchemeType = {
+    def expandType(schemeType: SchemeType): (Set[NonUnionSchemeType], Option[UnionType]) = schemeType match {
       case unionType @ UnionType(memberTypes) =>
         (memberTypes, Some(unionType))
 
-      case nonUnionType : NonUnionSchemeType =>
+      case nonUnionType: NonUnionSchemeType =>
         (Set(nonUnionType), None)
     }
 

@@ -6,14 +6,14 @@ import org.scalatest.{FunSuite, Inside}
 import io.llambda.llvmir
 
 class ProcessCellClassesSuite extends FunSuite with Inside {
-  def processString(str : String) = { 
+  def processString(str: String) = {
     val defns = DefinitionParser.parseString(str)
     CheckTopLevelNamespace(defns)
 
     val fieldTypes = ProcessFieldTypes(defns)
     ProcessCellClasses(fieldTypes)(defns)
   }
-  
+
   test("multiple root cell classes fails") {
     intercept[DuplicateRootCellClassException] {
       processString("""
@@ -27,7 +27,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
-  
+
   test("no root cell classes fails") {
     intercept[NoRootCellClassException] {
       processString("""
@@ -51,7 +51,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
- 
+
   test("root class with undefined tag field fails") {
     intercept[UndefinedTypeTagFieldException] {
       processString("""
@@ -60,7 +60,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
-  
+
   test("duplicate field names fails") {
     intercept[DuplicateFieldNameException] {
       processString("""
@@ -71,7 +71,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
-  
+
   test("duplicate field names from parent fails") {
     intercept[DuplicateFieldNameException] {
       processString("""
@@ -85,7 +85,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
-  
+
   test("initializing non-integer field fails") {
     intercept[InitializingNonIntegralFieldException] {
       processString("""
@@ -107,7 +107,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     val classes = processedTypes.cellClasses
     assert(processedTypes.nextMetadataIndex === 11)
 
-    inside(classes("Datum")) { case (datumClass : RootCellClass) =>
+    inside(classes("Datum")) { case (datumClass: RootCellClass) =>
       assert(datumClass.name === "Datum")
       assert(datumClass.fields.size === 1)
       assert(datumClass.visibility === CellClass.Public)
@@ -117,35 +117,35 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(processedTypes.rootCellClass === datumClass)
     }
   }
-  
+
   test("minimal internal root class") {
     val processedTypes = processString("""
       root internal cell Datum typetag typeId {
         int32 typeId;
       };
     """)
-    
+
     val classes = processedTypes.cellClasses
 
-    inside(classes("Datum")) { case (datumClass : RootCellClass) =>
+    inside(classes("Datum")) { case (datumClass: RootCellClass) =>
       assert(datumClass.visibility === CellClass.Internal)
     }
   }
-  
+
   test("minimal runtime-only root class") {
     val processedTypes = processString("""
       root runtime cell Datum typetag typeId {
         int32 typeId;
       };
     """)
-    
+
     val classes = processedTypes.cellClasses
 
-    inside(classes("Datum")) { case (datumClass : RootCellClass) =>
+    inside(classes("Datum")) { case (datumClass: RootCellClass) =>
       assert(datumClass.visibility === CellClass.RuntimeOnly)
     }
   }
-  
+
   test("root class with additional fields") {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
@@ -153,11 +153,11 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         int8 gcState = 16;
       };
     """)
-    
+
     val classes = processedTypes.cellClasses
     assert(processedTypes.nextMetadataIndex === 12)
 
-    inside(classes("Datum")) { case (datumClass : RootCellClass) =>
+    inside(classes("Datum")) { case (datumClass: RootCellClass) =>
       assert(datumClass.name === "Datum")
       assert(datumClass.instanceType === CellClass.Abstract)
       assert(datumClass.visibility === CellClass.Public)
@@ -182,19 +182,19 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       val typeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)
       assert(typeIdTbaaNode.index === 10)
       inside(typeIdTbaaNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === None)
       }
 
       val gcStateTbaaNode = datumClass.fieldTbaaNodes(gcStateField)
       assert(gcStateTbaaNode.index === 11)
       inside(gcStateTbaaNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === None)
       }
     }
   }
-  
+
   test("abstract tagged class with fields of root class with fields") {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
@@ -208,18 +208,18 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         uint8 *data;
       };
     """)
-    
+
     val classes = processedTypes.cellClasses
     assert(processedTypes.nextMetadataIndex === 17)
 
     val datumClass = classes("Datum")
 
-    inside(classes("StringLike")) { case (stringLikeClass : TaggedCellClass) =>
+    inside(classes("StringLike")) { case (stringLikeClass: TaggedCellClass) =>
       assert(stringLikeClass.name === "StringLike")
       assert(stringLikeClass.visibility === CellClass.Public)
       assert(stringLikeClass.typeId === None)
       assert(stringLikeClass.instanceType === CellClass.Abstract)
-      assert(stringLikeClass.parent === datumClass) 
+      assert(stringLikeClass.parent === datumClass)
 
       val List(charCountField, byteCountField, dataField) = stringLikeClass.fields
 
@@ -228,7 +228,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         llvmir.IntegerType(32),
         "std::uint32_t"
       ))
-      
+
       assert(byteCountField.fieldType === PrimitiveFieldType(
         Some(false),
         llvmir.IntegerType(32),
@@ -250,14 +250,14 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       val parentTypeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)
       assert(parentTypeIdTbaaNode.index === 10)
       inside(parentTypeIdTbaaNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === None)
       }
-      
+
       val parentGcStateTbaaNode = datumClass.fieldTbaaNodes(gcStateField)
       assert(parentGcStateTbaaNode.index === 11)
       inside(parentGcStateTbaaNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === None)
       }
 
@@ -265,14 +265,14 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       val childTypeIdTbaaNode = stringLikeClass.fieldTbaaNodes(typeIdField)
       assert(childTypeIdTbaaNode.index === 12)
       inside(childTypeIdTbaaNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === Some(parentTypeIdTbaaNode.numberedMetadata))
       }
-      
+
       val childGcStateTbaaNode = stringLikeClass.fieldTbaaNodes(gcStateField)
       assert(childGcStateTbaaNode.index === 13)
       inside(childGcStateTbaaNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === Some(parentGcStateTbaaNode.numberedMetadata))
       }
 
@@ -280,12 +280,12 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       val charCountNode = stringLikeClass.fieldTbaaNodes(charCountField)
       assert(charCountNode.index === 14)
       inside(charCountNode.metadataNode) {
-        case tbaaMetadata : llvmir.TbaaMetadata =>
+        case tbaaMetadata: llvmir.TbaaMetadata =>
           assert(tbaaMetadata.parentOpt === None)
       }
     }
   }
-  
+
   test("concrete and preconstructed tagged classes") {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
@@ -294,7 +294,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
       preconstructed cell Boolean : Datum {
       };
-      
+
       concrete cell Character : Datum {
       };
     """)
@@ -304,23 +304,23 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
     val datumClass = classes("Datum")
 
-    inside(classes("Boolean")) { case (booleanClass : TaggedCellClass) =>
+    inside(classes("Boolean")) { case (booleanClass: TaggedCellClass) =>
       assert(booleanClass.name === "Boolean")
       assert(booleanClass.visibility === CellClass.Public)
       assert(booleanClass.typeId === Some(1))
       assert(booleanClass.instanceType === CellClass.Preconstructed)
-      assert(booleanClass.parent === datumClass) 
+      assert(booleanClass.parent === datumClass)
     }
 
-    inside(classes("Character")) { case (characterClass : TaggedCellClass) =>
+    inside(classes("Character")) { case (characterClass: TaggedCellClass) =>
       assert(characterClass.name === "Character")
       assert(characterClass.visibility === CellClass.Public)
       assert(characterClass.typeId === Some(2))
       assert(characterClass.instanceType === CellClass.Concrete)
-      assert(characterClass.parent === datumClass) 
+      assert(characterClass.parent === datumClass)
     }
   }
-  
+
   test("tagged classes with variants") {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
@@ -330,7 +330,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       concrete cell String : Datum {
         uint32 byteLength;
       };
-        
+
       variant cell InlineString : String {
         uint8 inlineData[8];
       };
@@ -346,14 +346,14 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     val datumClass = classes("Datum")
 
     inside((classes("String"), classes("InlineString"), classes("HeapString"))) {
-      case (stringClass : TaggedCellClass, inlineVariant : VariantCellClass, heapVariant : VariantCellClass) =>
+      case (stringClass: TaggedCellClass, inlineVariant: VariantCellClass, heapVariant: VariantCellClass) =>
         assert(stringClass.name === "String")
         assert(stringClass.visibility === CellClass.Public)
         assert(stringClass.typeId === Some(1))
         assert(stringClass.instanceType === CellClass.Concrete)
-        assert(stringClass.parent === datumClass) 
+        assert(stringClass.parent === datumClass)
 
-        val List(byteLengthField) = stringClass.fields 
+        val List(byteLengthField) = stringClass.fields
         assert(byteLengthField.name === "byteLength")
 
         assert(inlineVariant.name === "InlineString")
@@ -371,7 +371,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         assert(heapDataField.name === "heapData")
     }
   }
-  
+
   test("inheriting from non-abstract tagged cell class fails") {
     intercept[InheritingNonAbstractCellClassException] {
       processString("""
@@ -381,13 +381,13 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
         preconstructed cell Boolean : Datum {
         };
-        
+
         concrete cell Character : Boolean {
         };
       """)
     }
   }
-  
+
   test("variant inheriting from abstact cell class fails") {
     intercept[InheritingAbstractCellClassException] {
       processString("""
@@ -400,7 +400,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
-  
+
   test("inheriting from variant cell class fails") {
     intercept[InheritingVariantCellClassException] {
       processString("""
@@ -410,7 +410,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
         concrete cell Character : Datum {
         };
-        
+
         variant cell InlineCharacter : Character {
         };
 

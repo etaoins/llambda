@@ -14,24 +14,24 @@ import llambda.compiler.TypeException
 
 object PlanLambdaPolymorph {
   private abstract class Argument {
-    val name : String
-    val tempValue : ps.TempValue
+    val name: String
+    val tempValue: ps.TempValue
   }
 
   private case class MandatoryArgument(
-      storageLoc : StorageLocation,
-      tempValue : ps.TempValue,
-      valueType : vt.ValueType
+      storageLoc: StorageLocation,
+      tempValue: ps.TempValue,
+      valueType: vt.ValueType
   ) extends Argument {
     val name = storageLoc.sourceName
   }
 
-  private case class VarArgument(name : String, tempValue : ps.TempValue) extends Argument
+  private case class VarArgument(name: String, tempValue: ps.TempValue) extends Argument
 
   private case class RetypedOptional(
-      storageLoc : StorageLocation,
-      schemeType : vt.SchemeType,
-      defaultExpr : et.Expr
+      storageLoc: StorageLocation,
+      schemeType: vt.SchemeType,
+      defaultExpr: et.Expr
   )
 
   /** Finds the last expression in a body that corresponds a user-produced expression
@@ -39,7 +39,7 @@ object PlanLambdaPolymorph {
     * This is used to source locate our return value-related steps
     */
   @tailrec
-  private def lastNonStructuralExpr(expr : et.Expr) : Option[et.Expr] = expr match {
+  private def lastNonStructuralExpr(expr: et.Expr): Option[et.Expr] = expr match {
     case et.Begin(Nil) =>
       None
 
@@ -54,9 +54,9 @@ object PlanLambdaPolymorph {
   }
 
   private def initLocationValue(
-      storageLoc : StorageLocation,
-      value : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : LocationValue = {
+      storageLoc: StorageLocation,
+      value: iv.IntermediateValue
+  )(implicit plan: PlanWriter): LocationValue = {
     if (plan.config.analysis.mutableVars.contains(storageLoc)) {
       // Init the mutable
       val mutableTemp = ps.RecordTemp()
@@ -77,10 +77,10 @@ object PlanLambdaPolymorph {
     }
   }
 
-  private def resolveOptionalArgs(state : PlannerState)(
-      varArgsListHead : iv.IntermediateValue,
-      arg : RetypedOptional
-  )(implicit plan : PlanWriter) : (iv.IntermediateValue, PlannerState) = arg match {
+  private def resolveOptionalArgs(state: PlannerState)(
+      varArgsListHead: iv.IntermediateValue,
+      arg: RetypedOptional
+  )(implicit plan: PlanWriter): (iv.IntermediateValue, PlannerState) = arg match {
     case RetypedOptional(storageLoc, schemeType, defaultExpr) =>
       val varArgsListHeadTemp = varArgsListHead.toBoxedValue().tempValue
       val isPairPred = ps.Temp(vt.Predicate)
@@ -130,20 +130,20 @@ object PlanLambdaPolymorph {
   }
 
   private def retypeFixedArg(
-      argLoc : StorageLocation,
-      retypeMapping : Map[StorageLocation, vt.SchemeType],
-      declType : vt.SchemeType
-  ) : vt.SchemeType = retypeMapping.get(argLoc) match {
+      argLoc: StorageLocation,
+      retypeMapping: Map[StorageLocation, vt.SchemeType],
+      declType: vt.SchemeType
+  ): vt.SchemeType = retypeMapping.get(argLoc) match {
     case Some(discoveredType) => discoveredType & declType
     case None => declType
   }
 
   def apply(
-      nativeSymbol : String,
-      manifest : LambdaManifest,
-      polymorphType : vt.ProcedureType,
-      isPrimaryPolymorph : Boolean
-  )(implicit parentPlan : PlanWriter) : PlannedFunction = {
+      nativeSymbol: String,
+      manifest: LambdaManifest,
+      polymorphType: vt.ProcedureType,
+      isPrimaryPolymorph: Boolean
+  )(implicit parentPlan: PlanWriter): PlannedFunction = {
     val lambdaExpr = manifest.lambdaExpr
     val body = lambdaExpr.body
 
@@ -192,7 +192,7 @@ object PlanLambdaPolymorph {
       restArgMemberTypeOpt=polymorphType.restArgMemberTypeOpt,
       returnType=compactReturnType,
       attributes=Set(ProcedureAttribute.FastCC)
-    ) : ProcedureSignature
+    ): ProcedureSignature
 
     // If we're recursive we can't deviate from our initial signature
     val canRefineSignature = !manifest.isRecursive
@@ -202,7 +202,7 @@ object PlanLambdaPolymorph {
     val initialState = PlannerState(values=Map(), inlineDepth=parentState.inlineDepth)
 
     val importedImmutablesState = manifest.closedVars.foldLeft(initialState)({
-      case (state, imported : ImportedImmutable) =>
+      case (state, imported: ImportedImmutable) =>
         state.withValue(imported.storageLoc -> ImmutableValue(imported.parentIntermediate))
 
       case (state, _) =>
@@ -255,7 +255,7 @@ object PlanLambdaPolymorph {
     val varArgValue = new iv.CellValue(
       schemeType=varArgType,
       boxedValue=BoxedValue(ct.ListElementCell, varArgTemp)
-    ) : iv.IntermediateValue
+    ): iv.IntermediateValue
 
     val (restValue, postOptionalState) = retypedOptionalArgs.foldLeft((varArgValue, postMandatoryState)) {
       case ((varArgValue, state), arg) =>

@@ -10,7 +10,7 @@ import llambda.compiler.{NativeLibrary, ProcedureSignature}
   * @param  library       Native library containing the type predicate
   * @param  nativesymbol  Native symbol for the type predicate
   */
-case class ExternalRecordTypePredicate(library : NativeLibrary, nativeSymbol : String)
+case class ExternalRecordTypePredicate(library: NativeLibrary, nativeSymbol: String)
 
 object ExternalRecordTypePredicate {
   val signature = ProcedureSignature(

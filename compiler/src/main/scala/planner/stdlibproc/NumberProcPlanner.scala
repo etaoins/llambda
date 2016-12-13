@@ -17,13 +17,13 @@ object NumberProcPlanner extends StdlibProcPlanner {
   private type StaticDoubleOp = (Double, Double) => Double
 
   private sealed abstract class CompareResult
-  private case class StaticCompare(result : Boolean) extends CompareResult
-  private case class DynamicCompare(nativePred : ps.TempValue) extends CompareResult
+  private case class StaticCompare(result: Boolean) extends CompareResult
+  private case class DynamicCompare(nativePred: ps.TempValue) extends CompareResult
   private case object UnplannableCompare extends CompareResult
 
   private def integerValue(
-      value : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      value: iv.IntermediateValue
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
       value match  {
         case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
           // Already an  int
@@ -46,8 +46,8 @@ object NumberProcPlanner extends StdlibProcPlanner {
   }
 
   private def flonumValue(
-      value : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      value: iv.IntermediateValue
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
       value match  {
         case knownFlonum if knownFlonum.hasDefiniteType(vt.FlonumType) =>
           // Already a flonum
@@ -71,18 +71,18 @@ object NumberProcPlanner extends StdlibProcPlanner {
   }
 
   private def compareArgs(
-      compareCond : ps.CompareCond,
-      staticIntCalc : IntegerCompartor,
-      staticFlonumCalc : DoubleCompartor,
-      val1 : iv.IntermediateValue,
-      val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : CompareResult = {
+      compareCond: ps.CompareCond,
+      staticIntCalc: IntegerCompartor,
+      staticFlonumCalc: DoubleCompartor,
+      val1: iv.IntermediateValue,
+      val2: iv.IntermediateValue
+  )(implicit plan: PlanWriter): CompareResult = {
     (val1, val2) match {
       case (iv.ConstantIntegerValue(constIntegerVal1), iv.ConstantIntegerValue(constIntegerVal2)) =>
         val compareResult = staticIntCalc(constIntegerVal1, constIntegerVal2)
         StaticCompare(compareResult)
 
-      case (constNum1 : iv.ConstantNumberValue, constNum2 : iv.ConstantNumberValue) =>
+      case (constNum1: iv.ConstantNumberValue, constNum2: iv.ConstantNumberValue) =>
         val compareResult = staticFlonumCalc(constNum1.doubleValue, constNum2.doubleValue)
         StaticCompare(compareResult)
 
@@ -121,11 +121,11 @@ object NumberProcPlanner extends StdlibProcPlanner {
   }
 
   private def compareArgList(
-      compareCond : ps.CompareCond,
-      staticIntCalc : IntegerCompartor,
-      staticFlonumCalc : DoubleCompartor,
-      args : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      compareCond: ps.CompareCond,
+      staticIntCalc: IntegerCompartor,
+      staticFlonumCalc: DoubleCompartor,
+      args: List[iv.IntermediateValue]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
@@ -150,7 +150,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
       case DynamicCompare(nativePred) =>
         Some(nativePred)
-    } : List[ps.TempValue]
+    }: List[ps.TempValue]
 
     if (pairwiseNativePreds.isEmpty) {
       // This is statically true
@@ -173,9 +173,9 @@ object NumberProcPlanner extends StdlibProcPlanner {
     Some(new iv.NativePredicateValue(resultPred))
   }
 
-  private def phiTypeForSelect(leftValue : iv.IntermediateValue, rightValue : iv.IntermediateValue) : vt.ValueType = {
+  private def phiTypeForSelect(leftValue: iv.IntermediateValue, rightValue: iv.IntermediateValue): vt.ValueType = {
     (leftValue, rightValue) match {
-      case (leftUnboxed : iv.NativeValue, rightUnboxed : iv.NativeValue)
+      case (leftUnboxed: iv.NativeValue, rightUnboxed: iv.NativeValue)
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         leftUnboxed.nativeType
 
@@ -185,11 +185,11 @@ object NumberProcPlanner extends StdlibProcPlanner {
   }
 
   private def selectArgList(
-      compareCond : ps.CompareCond,
-      staticIntCalc : IntegerCompartor,
-      staticFlonumCalc : DoubleCompartor,
-      args : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      compareCond: ps.CompareCond,
+      staticIntCalc: IntegerCompartor,
+      staticFlonumCalc: DoubleCompartor,
+      args: List[iv.IntermediateValue]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
@@ -233,10 +233,10 @@ object NumberProcPlanner extends StdlibProcPlanner {
     Some(definiteResult)
   }
 
-  override def planWithValue(state : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+  override def planWithValue(state: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
     case ("=", args) if args.length >= 2 =>
       compareArgList(ps.CompareCond.Equal, _ == _, _ == _, args.map(_._2))
 

@@ -9,16 +9,16 @@ import llambda.compiler.planner._
 
 /** Optionally replaces a call to a stdlib procedure with plan steps */
 abstract trait StdlibProcPlanner {
-  def planFromExprs(initialState : PlannerState)(
-      reportName : String,
-      args : List[et.Expr]
-  )(implicit plan : PlanWriter) : Option[PlanResult] =
+  def planFromExprs(initialState: PlannerState)(
+      reportName: String,
+      args: List[et.Expr]
+  )(implicit plan: PlanWriter): Option[PlanResult] =
     None
 
-  def planWithResult(initialState : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+  def planWithResult(initialState: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = {
     planWithValue(initialState)(reportName, args) map { value =>
       PlanResult(
         state=initialState,
@@ -27,10 +27,10 @@ abstract trait StdlibProcPlanner {
     }
   }
 
-  def planWithValue(initialState : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
+  def planWithValue(initialState: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] =
     None
 }
 
@@ -56,7 +56,7 @@ object StdlibProcPlanner {
     VectorProcPlanner
   )
 
-  def activePlanners(implicit plan : PlanWriter) =
+  def activePlanners(implicit plan: PlanWriter) =
     if (plan.config.optimise) {
       typingPlanners ++ optimisingPlanners
     }

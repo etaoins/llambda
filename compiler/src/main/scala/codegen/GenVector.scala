@@ -8,10 +8,10 @@ import llambda.compiler.planner.{step => ps}
 object GenVector {
   private val vectorDataTbaaNode = NumberedMetadata(5)
 
-  private def createUninitialised(state : GenerationState)(
-      worldPtrIr : IrValue,
-      lengthIr : IrValue
-  ) : (GenerationState, IrValue) = {
+  private def createUninitialised(state: GenerationState)(
+      worldPtrIr: IrValue,
+      lengthIr: IrValue
+  ): (GenerationState, IrValue) = {
     val func = state.currentBlock.function
     val module = func.module
 
@@ -36,10 +36,10 @@ object GenVector {
     }
   }
 
-  def init(state : GenerationState)(
-      worldPtrIr : IrValue,
-      elementTemps : Vector[ps.TempValue]
-  ) : (GenerationState, IrValue) = {
+  def init(state: GenerationState)(
+      worldPtrIr: IrValue,
+      elementTemps: Vector[ps.TempValue]
+  ): (GenerationState, IrValue) = {
     val lengthIr = IntegerConstant(ct.VectorCell.lengthIrType, elementTemps.length)
 
     val (newState, vectorCellIr) = createUninitialised(state)(worldPtrIr, lengthIr)
@@ -55,11 +55,11 @@ object GenVector {
     (newState, vectorCellIr)
   }
 
-  def initFilled(state : GenerationState)(
-      worldPtrIr : IrValue,
-      lengthIr : IrValue,
-      fillTemp : ps.TempValue
-  ) : (GenerationState, IrValue) = {
+  def initFilled(state: GenerationState)(
+      worldPtrIr: IrValue,
+      lengthIr: IrValue,
+      fillTemp: ps.TempValue
+  ): (GenerationState, IrValue) = {
     val (newState, vectorCellIr) = createUninitialised(state)(worldPtrIr, lengthIr)
     val dataIr = ct.VectorCell.genLoadFromElements(newState.currentBlock)(vectorCellIr)
 
@@ -106,7 +106,7 @@ object GenVector {
     (newState.copy(currentBlock=exitBlock), vectorCellIr)
   }
 
-  def loadElement(block : IrBlockBuilder)(dataIr : IrValue, indexIr : IrValue) : IrValue = {
+  def loadElement(block: IrBlockBuilder)(dataIr: IrValue, indexIr: IrValue): IrValue = {
     val elementPtrIr = block.getelementptr("elementPtr")(
       elementType=PointerType(ct.AnyCell.irType),
       basePointer=dataIr,
@@ -117,7 +117,7 @@ object GenVector {
     block.load("element")(elementPtrIr, metadata=Map("tbaa" -> vectorDataTbaaNode))
   }
 
-  def storeElement(block : IrBlockBuilder)(dataIr : IrValue, indexIr : IrValue, newValueIr : IrValue) : Unit = {
+  def storeElement(block: IrBlockBuilder)(dataIr: IrValue, indexIr: IrValue, newValueIr: IrValue): Unit = {
     val elementPtrIr = block.getelementptr("elementPtr")(
       elementType=PointerType(ct.AnyCell.irType),
       basePointer=dataIr,

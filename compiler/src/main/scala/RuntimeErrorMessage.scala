@@ -8,7 +8,7 @@ import io.llambda
   * @param  text      Human-readable error message
   */
 case class RuntimeErrorMessage(
-  category : ErrorCategory,
-  name : String,
-  text : String
+  category: ErrorCategory,
+  name: String,
+  text: String
 )

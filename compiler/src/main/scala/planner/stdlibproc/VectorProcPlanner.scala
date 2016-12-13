@@ -12,10 +12,10 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.valuetype.Implicits._
 
 object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers {
-  private def makeFilledVector(state : PlannerState)(
-      length : (ContextLocated, iv.IntermediateValue),
-      fillValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+  private def makeFilledVector(state: PlannerState)(
+      length: (ContextLocated, iv.IntermediateValue),
+      fillValue: iv.IntermediateValue
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     val lengthValue = length._2
 
     val knownLengthOpt = lengthValue match {
@@ -53,10 +53,10 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
     }
   }
 
-  override def planWithValue(state : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+  override def planWithValue(state: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
     case ("make-vector", List(length)) =>
       Some(makeFilledVector(state)(length, iv.UnitValue))
 
@@ -76,7 +76,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
 
       Some(new iv.KnownVectorCellValue(initialElements.length, vectorTemp))
 
-    case ("vector-length", List((_, knownVector : iv.KnownVector))) =>
+    case ("vector-length", List((_, knownVector: iv.KnownVector))) =>
       Some(iv.ConstantIntegerValue(knownVector.vectorLength))
 
     case ("vector-length", List((located, vectorValue))) =>
@@ -94,7 +94,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
 
       Some(elements(index.toInt))
 
-    case ("vector-ref", List((_, knownVector : iv.KnownVector), (_, constantInt : iv.ConstantIntegerValue))) =>
+    case ("vector-ref", List((_, knownVector: iv.KnownVector), (_, constantInt: iv.ConstantIntegerValue))) =>
       val index = constantInt.value
 
       assertIndexValid("(vector-ref)", knownVector.vectorLength, index)
@@ -114,8 +114,8 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       Some(TempValueToIntermediate(vt.AnySchemeType, resultTemp))
 
     case ("vector-set!", List(
-        (_, vectorCellValue : iv.KnownVectorCellValue),
-        (_, constantInt : iv.ConstantIntegerValue),
+        (_, vectorCellValue: iv.KnownVectorCellValue),
+        (_, constantInt: iv.ConstantIntegerValue),
         (_, objectValue)
     )) =>
       val index = constantInt.value
@@ -138,7 +138,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
 
       Some(iv.UnitValue)
 
-    case ("list->vector", List((_, knownList : iv.KnownListElement))) =>
+    case ("list->vector", List((_, knownList: iv.KnownListElement))) =>
       knownList.toValueListOpt map { initialElements =>
         val elementTemps = initialElements.map(_.toTempValue(vt.AnySchemeType)).toVector
 

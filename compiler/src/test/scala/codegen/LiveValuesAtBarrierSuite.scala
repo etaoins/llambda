@@ -39,7 +39,7 @@ class LiveValuesAtBarrierSuite extends FunSuite {
     attributes=Set(ProcedureAttribute.NoReturn)
   )
 
-  def namedTemp(valueType : vt.ValueType, name : String) : ps.TempValue =
+  def namedTemp(valueType: vt.ValueType, name: String): ps.TempValue =
     new ps.TempValue(valueType.isGcManaged) {
       override def toString = name
     }

@@ -9,7 +9,7 @@ import llambda.compiler.SchemeStringImplicits._
 class EvaluatorSuite extends FunSuite {
   private val targetPlatform = platform.DetectTargetPlatform()
 
-  private def testEvaluator() : Evaluator =
+  private def testEvaluator(): Evaluator =
     new Evaluator(targetPlatform)
 
   test("evaluating a trivial expression") {

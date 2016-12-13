@@ -4,11 +4,11 @@ import io.llambda.llvmir
 
 /** Converts a [[FieldType]] to an LLVM type */
 object FieldTypeToLlvm {
-  def apply(fieldType : FieldType) : llvmir.FirstClassType = {
+  def apply(fieldType: FieldType): llvmir.FirstClassType = {
     fieldType match {
       case PointerFieldType(pointeeType) =>
         llvmir.PointerType(apply(pointeeType))
-      
+
       case ReferenceFieldType(pointeeType) =>
         llvmir.PointerType(apply(pointeeType))
 
@@ -34,7 +34,7 @@ object FieldTypeToLlvm {
       case PrimitiveFieldType(_, llvmType, _) =>
         llvmType
 
-      case alias : FieldTypeAlias =>
+      case alias: FieldTypeAlias =>
         apply(alias.aliasedType)
     }
   }

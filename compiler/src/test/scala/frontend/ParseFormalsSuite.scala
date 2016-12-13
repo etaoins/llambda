@@ -8,7 +8,7 @@ import llambda.compiler.{valuetype => vt}
 
 class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   // sst.ScopedAnyList won't accept single data or empty lists as lists
-  private def destructureList(datum : sst.ScopedDatum) : (List[sst.ScopedDatum], sst.ScopedDatum) = datum match {
+  private def destructureList(datum: sst.ScopedDatum): (List[sst.ScopedDatum], sst.ScopedDatum) = datum match {
     case sst.ScopedPair(car, tail) =>
       destructureList(tail) match {
         case (tailMembers, terminator) =>
@@ -20,7 +20,7 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   }
 
 
-  private def formalsFor(scheme : String, allowOptionals : Boolean = false) : ParsedFormals = {
+  private def formalsFor(scheme: String, allowOptionals: Boolean = false): ParsedFormals = {
     val data = SchemeParser.parseStringAsData(scheme)
 
     destructureList(sst.ScopedDatum(typedLambdaScope, data.head)) match {

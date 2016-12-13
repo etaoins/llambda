@@ -10,7 +10,7 @@ object InterpretProgram {
     *
     * Only very trivial programs can be interpreted. The rest will raise an UninterpretableException
     */
-  def apply(program : PlannedProgram) : RunResult = {
+  def apply(program: PlannedProgram): RunResult = {
     val entryFunction = program.functions(LlambdaTopLevelSignature.nativeSymbol)
 
     val initialState = InterpreterState.Empty

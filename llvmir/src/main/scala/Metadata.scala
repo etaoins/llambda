@@ -3,7 +3,7 @@ package io.llambda.llvmir
 import scala.io.Codec
 
 trait MetadataOperand {
-  def toMetadataIr : String
+  def toMetadataIr: String
 }
 
 /** Represents a metadata value
@@ -14,29 +14,29 @@ sealed abstract class Metadata extends MetadataOperand with Irable {
   def toMetadataIr = toIr
 }
 
-case class MetadataString(stringBytes : Seq[Byte]) extends Metadata {
-  def toIr : String = {
+case class MetadataString(stringBytes: Seq[Byte]) extends Metadata {
+  def toIr: String = {
     "!" + BytesToIrString(stringBytes)
   }
 }
 
 object MetadataString {
-  def fromUtf8String(str : String) : MetadataString = {
+  def fromUtf8String(str: String): MetadataString = {
     MetadataString(Codec.toUTF8(str))
   }
 }
 
 abstract class MetadataNode extends Metadata {
-  val operandOpts : Seq[Option[MetadataOperand]]
+  val operandOpts: Seq[Option[MetadataOperand]]
 
-  private def operandOptToIr(operandOpt : Option[MetadataOperand]) =
+  private def operandOptToIr(operandOpt: Option[MetadataOperand]) =
     operandOpt.map(_.toMetadataIr).getOrElse("null")
 
-  def toIr : String = {
+  def toIr: String = {
     "!{" + operandOpts.map(operandOptToIr).mkString(", ") + "}"
   }
 
-  protected def listToNotNullMetadata(metadataList : List[Metadata]) : Metadata = {
+  protected def listToNotNullMetadata(metadataList: List[Metadata]): Metadata = {
     if (metadataList.isEmpty) {
       // Not sure why this is a thing
       UserDefinedMetadataNode(List(
@@ -50,8 +50,8 @@ abstract class MetadataNode extends Metadata {
 
 }
 
-case class UserDefinedMetadataNode(operandOpts : Seq[Option[MetadataOperand]]) extends MetadataNode
+case class UserDefinedMetadataNode(operandOpts: Seq[Option[MetadataOperand]]) extends MetadataNode
 
-case class NumberedMetadata(index : Long) extends Metadata {
+case class NumberedMetadata(index: Long) extends Metadata {
   def toIr = "!" + index.toString
 }

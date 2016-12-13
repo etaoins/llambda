@@ -4,13 +4,13 @@ import io.llambda.llvmir
 
 /** Verifies the sanity of the type tag field */
 object CheckTypeTagField {
-  def apply(rootCellClass : RootCellClass) {
+  def apply(rootCellClass: RootCellClass) {
     val typeTagField = rootCellClass.typeTagField
     val fieldType = typeTagField.fieldType
 
     // The type must be an alias with a C++ type so we can write an enum
     val fieldTypeAlias = fieldType match {
-      case alias : FieldTypeAlias => 
+      case alias: FieldTypeAlias =>
         alias
 
       case _ =>

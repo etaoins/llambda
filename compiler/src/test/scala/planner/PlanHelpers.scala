@@ -13,9 +13,9 @@ trait PlanHelpers extends FunSuite with Inside {
   val topLevelSymbol = codegen.LlambdaTopLevelSignature.nativeSymbol
 
   private def testPlanConfig(
-      data : List[ast.Datum],
-      optimise : Boolean,
-      includePath : IncludePath = IncludePath(Nil)
+      data: List[ast.Datum],
+      optimise: Boolean,
+      includePath: IncludePath = IncludePath(Nil)
   ) = {
     val compileConfig = CompileConfig(
       includePath=includePath,
@@ -42,15 +42,15 @@ trait PlanHelpers extends FunSuite with Inside {
 
   /** Returns a map of planned functions to the given Scheme data */
   protected def planForData(
-      data : List[ast.Datum],
-      optimise : Boolean,
-      includePath : IncludePath = IncludePath(Nil)
-  ) : Map[String, PlannedFunction] = {
+      data: List[ast.Datum],
+      optimise: Boolean,
+      includePath: IncludePath = IncludePath(Nil)
+  ): Map[String, PlannedFunction] = {
     val planConfig = testPlanConfig(data, optimise, includePath)
     planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig).functions
   }
 
-  protected def nativeLibrariesFor(scheme : String) : Set[NativeLibrary] = {
+  protected def nativeLibrariesFor(scheme: String): Set[NativeLibrary] = {
     val importDecl = datum"""(import (scheme base) (llambda nfi) (llambda typed) (scheme process-context))"""
 
     val data = importDecl :: SchemeParser.parseStringAsData(scheme)

@@ -13,10 +13,10 @@ object CharProcPlanner extends StdlibProcPlanner {
   private type CharComparator = (Int, Int) => Boolean
 
   private def compareArgList(
-      compareCond : ps.CompareCond,
-      staticCalc : CharComparator,
-      args : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+      compareCond: ps.CompareCond,
+      staticCalc: CharComparator,
+      args: List[iv.IntermediateValue]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
@@ -48,7 +48,7 @@ object CharProcPlanner extends StdlibProcPlanner {
         comparePlan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
 
         Some(predicateTemp)
-    } : List[ps.TempValue]
+    }: List[ps.TempValue]
 
     if (pairwiseNativePreds.isEmpty) {
       // This is statically true
@@ -71,10 +71,10 @@ object CharProcPlanner extends StdlibProcPlanner {
     Some(new iv.NativePredicateValue(resultPred))
   }
 
-  override def planWithValue(state : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+  override def planWithValue(state: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
     case ("char->integer", List((_, iv.ConstantCharValue(constantCharVal)))) =>
       Some(iv.ConstantIntegerValue(constantCharVal))
 

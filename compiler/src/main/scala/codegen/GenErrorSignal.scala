@@ -10,7 +10,7 @@ object GenErrorSignal {
   private val pathIrType = PointerType(IntegerType(8))
   private val lineNumberIrType = IntegerType(32)
 
-  private def defineConstantString(module : IrModuleBuilder)(constantName : String, text : String) : IrConstant = {
+  private def defineConstantString(module: IrModuleBuilder)(constantName: String, text: String): IrConstant = {
     val stringConstantVar = IrGlobalVariableDef(
       name=constantName,
       initializer=StringConstant.fromUtf8String(text),
@@ -31,11 +31,11 @@ object GenErrorSignal {
     )
   }
 
-  def apply(state : GenerationState)(
-      worldPtr : IrValue,
-      errorMessage : RuntimeErrorMessage,
-      evidence : Option[IrValue] = None, 
-      locatedOpt : Option[SourceLocated] = None 
+  def apply(state: GenerationState)(
+      worldPtr: IrValue,
+      errorMessage: RuntimeErrorMessage,
+      evidence: Option[IrValue] = None,
+      locatedOpt: Option[SourceLocated] = None
   ) = {
     val block = state.currentBlock
     val module = block.function.module

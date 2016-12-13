@@ -3,42 +3,42 @@ import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 
-/** Describes a target platform for code generation 
+/** Describes a target platform for code generation
   *
-  * This may differ from the current platform during cross compilation 
+  * This may differ from the current platform during cross compilation
   */
 trait TargetPlatform {
-  val pointerBits : Int
+  val pointerBits: Int
 
-  val shortType  : vt.IntType
-  val ushortType : vt.IntType
-  val intType    : vt.IntType
-  val uintType   : vt.IntType
-  val longType   : vt.IntType
+  val shortType:  vt.IntType
+  val ushortType: vt.IntType
+  val intType:    vt.IntType
+  val uintType:   vt.IntType
+  val longType:   vt.IntType
 
-  val sizeType  : vt.IntType
-  val wcharType : vt.IntType
+  val sizeType:  vt.IntType
+  val wcharType: vt.IntType
 
   /** Indicates if the platform uses natural alignment
     *
     * If true, native types be aligned to a multiple of their sizes. If a more complex alignment is used this should be
     * set to false to allow LLVM to handle data alignment.
     */
-  val usesNaturalAlignment : Boolean
+  val usesNaturalAlignment: Boolean
 
-  protected val dataModelFeature : String
-  protected val osFamilyFeature : String
-  protected val endianFeature : String
+  protected val dataModelFeature: String
+  protected val osFamilyFeature: String
+  protected val endianFeature: String
 
-  def platformFeatures : Set[String] =
+  def platformFeatures: Set[String] =
     Set(dataModelFeature, osFamilyFeature, endianFeature)
 
-  def bytesForType(valueType : vt.ValueType) = valueType match {
+  def bytesForType(valueType: vt.ValueType) = valueType match {
     // Use the + 7 to make sure we round up to the next byte boundary
-    case intLikeType : vt.IntLikeType => (intLikeType.bits + 7) / 8
+    case intLikeType: vt.IntLikeType => (intLikeType.bits + 7) / 8
     case vt.Float => 4
     case vt.Double => 8
-    case pointerType : vt.PointerType => pointerBits / 8
+    case pointerType: vt.PointerType => pointerBits / 8
   }
 }
 
@@ -51,7 +51,7 @@ trait AbstractILP32 extends TargetPlatform {
   val intType    = vt.Int32
   val uintType   = vt.UInt32
   val longType   = vt.Int32
-  
+
   val sizeType  = vt.UInt32
 
   val usesNaturalAlignment = true
@@ -62,7 +62,7 @@ trait AbstractILP32 extends TargetPlatform {
 /** Abstract 64bit platform */
 trait Abstract64 extends TargetPlatform {
   val pointerBits = 64
-  
+
   val shortType  = vt.Int16
   val ushortType = vt.UInt16
   val intType    = vt.Int32
@@ -70,7 +70,7 @@ trait Abstract64 extends TargetPlatform {
 
   // XXX: size_t is unsigned but we can't represent unsigned 64bit ints
   val sizeType  = vt.Int64
-  
+
   val usesNaturalAlignment = true
 }
 
@@ -84,11 +84,11 @@ trait AbstractLP64 extends Abstract64 {
 /** Abstract 64bit platform using the LLP64 data model */
 trait AbstractLLP64 extends Abstract64 {
   val longType   = vt.Int32
-  
+
   protected val dataModelFeature = "llp64"
 }
 
-/** Abstract modern POSIX platform 
+/** Abstract modern POSIX platform
   *
   * Recent MacOS X, FreeBSD and Linux versions are actively supported and tested.
   * Other POSIX platorms supported by LLVM will likely work.
@@ -107,7 +107,7 @@ trait AbstractPosix extends TargetPlatform {
 trait AbstractWindows extends TargetPlatform {
   // Windows uses 16 wchar_t for historical reasons
   val wcharType = vt.UInt16
-  
+
   protected val osFamilyFeature = "windows"
 }
 

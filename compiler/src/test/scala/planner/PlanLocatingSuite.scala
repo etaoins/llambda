@@ -9,22 +9,22 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
 class PlanLocatingSuite extends FunSuite with PlanHelpers {
-  private def assertPlanLocated(plannedFunctions : Map[String, planner.PlannedFunction], description : String) {
+  private def assertPlanLocated(plannedFunctions: Map[String, planner.PlannedFunction], description: String) {
     for((symbol, function) <- plannedFunctions if !function.isArtificial) {
       for(step <- function.steps) {
         step match {
-          case _ : ps.CastCellToTypeUnchecked =>
+          case _: ps.CastCellToTypeUnchecked =>
             // This doesn't generate any assembler code - allow this to be unlocated
             // Otherwise we'll blow up on the RefineArgumentTypes' magic to keep the original untyped argument temp alive
 
-          case _ : ps.AllocateCells =>
+          case _: ps.AllocateCells =>
             // This doesn't come from a particular source line - these are inserted by PlanCellAllocations
             //
-          case _ : ps.DisposeValues =>
+          case _: ps.DisposeValues =>
             // This doesn't come from a particular source line - these are inserted by DisposeValues
 
-          case ps.LoadRecordLikeData(_, _, _ : vt.ClosureType) |
-               ps.LoadRecordDataField(_, _, _ : vt.ClosureType, _) =>
+          case ps.LoadRecordLikeData(_, _, _: vt.ClosureType) |
+               ps.LoadRecordDataField(_, _, _: vt.ClosureType, _) =>
             // This is loading from a closure in a lambda prologue
 
           case ps.Return(None) if symbol == codegen.LlambdaTopLevelSignature.nativeSymbol =>

@@ -8,9 +8,9 @@ import io.llambda.llvmir
 class ProcessFieldTypesSuite extends FunSuite {
   // Only pull out the field type aliases
   // The predefined types are indirectly tested through their aliaes
-  def processString(str : String) : ListMap[String, FieldTypeAlias] = 
+  def processString(str: String) : ListMap[String, FieldTypeAlias] =
     ProcessFieldTypes(DefinitionParser.parseString(str)) collect {
-      case (name, (fieldTypeAlias : FieldTypeAlias)) =>
+      case (name, (fieldTypeAlias: FieldTypeAlias)) =>
         (name -> fieldTypeAlias)
     }
 
@@ -30,7 +30,7 @@ class ProcessFieldTypesSuite extends FunSuite {
     assert(customType.cppTypeName === None)
     assert(customType.needsDefinition === false)
   }
-  
+
   test("field type with C++ name") {
     val fieldTypes = processString("""
       fieldtype TypeId : uint8 {
@@ -48,7 +48,7 @@ class ProcessFieldTypesSuite extends FunSuite {
     assert(typeIdType.cppTypeName === Some("CellTypeId"))
     assert(typeIdType.needsDefinition === true)
   }
-  
+
   test("field type with extern C++ name") {
     val fieldTypes = processString("""
       fieldtype CustomType : int32 {
@@ -66,14 +66,14 @@ class ProcessFieldTypesSuite extends FunSuite {
     assert(customType.cppTypeName === Some("OtherType"))
     assert(customType.needsDefinition === false)
   }
-  
+
   test("field type aliasing pointer type") {
     val fieldTypes = processString("""
       fieldtype DoublePtr : double*;
     """)
 
     val customType = fieldTypes("DoublePtr")
-    
+
     assert(customType.aliasedType === PointerFieldType(
       PrimitiveFieldType(
         None,
@@ -84,7 +84,7 @@ class ProcessFieldTypesSuite extends FunSuite {
     assert(customType.cppTypeName === None)
     assert(customType.needsDefinition === false)
   }
-  
+
   test("field type aliasing unknown type") {
     intercept[UnknownTypeException] {
       processString("""
@@ -92,21 +92,21 @@ class ProcessFieldTypesSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("field type aliasing another user defined field type") {
     val fieldTypes = processString("""
       fieldtype DoublePtr : double*;
       fieldtype FlonumPtr : DoublePtr;
     """)
 
-    val doubleType = fieldTypes("DoublePtr") 
+    val doubleType = fieldTypes("DoublePtr")
 
     val flonumType = fieldTypes("FlonumPtr")
     assert(flonumType.aliasedType === doubleType)
     assert(flonumType.cppTypeName === None)
     assert(flonumType.needsDefinition === false)
   }
-  
+
   test("field type aliasing function pointer with forward declared cell types") {
     val fieldTypes = processString("""
       cell Datum;

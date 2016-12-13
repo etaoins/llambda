@@ -7,10 +7,10 @@ import llambda.compiler.{SourceLocated, BadSpecialFormException, Primitives}
 
 private[frontend] object ExtractExternalRecordType {
   def apply(
-      located : SourceLocated,
-      sourceNameOpt : Option[String],
-      constructorArgs : List[sst.ScopedDatum]
-  ) : vt.ExternalRecordType =
+      located: SourceLocated,
+      sourceNameOpt: Option[String],
+      constructorArgs: List[sst.ScopedDatum]
+  ): vt.ExternalRecordType =
     constructorArgs match {
       case Nil =>
         new vt.ExternalRecordType(sourceNameOpt, None)

@@ -13,33 +13,33 @@ import llambda.compiler.codegen.RuntimeFunctions
 import llambda.compiler.valuetype.Implicits._
 
 object EquivalenceProcPlanner extends StdlibProcPlanner {
-  private def allSubtypes(rootType : ct.CellType) : Set[ct.CellType] =
+  private def allSubtypes(rootType: ct.CellType): Set[ct.CellType] =
     rootType.directSubtypes ++ rootType.directSubtypes.flatMap(allSubtypes)
 
   private lazy val preconstructedTypes =
     allSubtypes(ct.AnyCell).collect {
-      case precons : ct.PreconstructedCellType =>
+      case precons: ct.PreconstructedCellType =>
         vt.SchemeTypeAtom(precons)
-    } : Set[vt.NonUnionSchemeType]
+    }: Set[vt.NonUnionSchemeType]
 
   // These can be tested for (equals?) with a simple pointer compare
   private lazy val ptrCompareEqualsTypes = preconstructedTypes ++ (Set(
     vt.ErrorObjectType,
     vt.PortType
-  ) : Set[vt.NonUnionSchemeType])
+  ): Set[vt.NonUnionSchemeType])
 
   // These can be tested for (eqv?) with a simple pointer compare
   private lazy val ptrCompareEqvTypes = (ptrCompareEqualsTypes ++ Set(
     vt.AnyPairType,
     vt.VectorType,
     vt.BytevectorType
-  )) : Set[vt.NonUnionSchemeType]
+  )): Set[vt.NonUnionSchemeType]
 
-  private def registerCond(state : PlannerState)(
-    conditionValue : iv.IntermediateValue,
-    subjectValue : iv.IntermediateValue,
-    comparedValueType : vt.SchemeType
-  ) : PlannerState = {
+  private def registerCond(state: PlannerState)(
+    conditionValue: iv.IntermediateValue,
+    subjectValue: iv.IntermediateValue,
+    comparedValueType: vt.SchemeType
+  ): PlannerState = {
     val falseContraint = if (comparedValueType.isInstanceOf[vt.LiteralValueType]) {
       // This is an exact value - we can safely subtract it
       ConstrainType.SubtractType(comparedValueType)
@@ -60,10 +60,10 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
   }
 
   private def directCompareAsType(
-      valueType : vt.ValueType,
-      val1 : iv.IntermediateValue,
-      val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      valueType: vt.ValueType,
+      val1: iv.IntermediateValue,
+      val2: iv.IntermediateValue
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     val val1Temp = val1.toTempValue(valueType, convertProcType=false)
     val val2Temp = val2.toTempValue(valueType, convertProcType=false)
 
@@ -76,9 +76,9 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
   }
 
   private def flonumCompare(
-      staticValue : Double,
-      dynamicValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
+      staticValue: Double,
+      dynamicValue: iv.IntermediateValue
+  )(implicit plan: PlanWriter): iv.IntermediateValue = {
     val resultPred = ps.Temp(vt.Predicate)
 
     if (staticValue.isNaN) {
@@ -106,10 +106,10 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
   }
 
   private def invokeCompare(
-      runtimeCompareSymbol : String,
-      val1 : iv.IntermediateValue,
-      val2 : iv.IntermediateValue)
-  (implicit plan : PlanWriter) : iv.IntermediateValue = {
+      runtimeCompareSymbol: String,
+      val1: iv.IntermediateValue,
+      val2: iv.IntermediateValue)
+  (implicit plan: PlanWriter): iv.IntermediateValue = {
     // (eqv?) etc don't invoke their arguments so we can skip the procedure type conversion
     val val1Temp = val1.toTempValue(vt.AnySchemeType, convertProcType=false)
     val val2Temp = val2.toTempValue(vt.AnySchemeType, convertProcType=false)
@@ -126,12 +126,12 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
     new iv.NativePredicateValue(resultTemp)
   }
 
-  private def planEquivalenceProc(state : PlannerState)(
-      ptrCompareTypes : Set[vt.NonUnionSchemeType],
-      runtimeCompareSymbol : String,
-      val1 : iv.IntermediateValue,
-      val2 : iv.IntermediateValue)
-  (implicit plan : PlanWriter) : PlanResult = {
+  private def planEquivalenceProc(state: PlannerState)(
+      ptrCompareTypes: Set[vt.NonUnionSchemeType],
+      runtimeCompareSymbol: String,
+      val1: iv.IntermediateValue,
+      val2: iv.IntermediateValue)
+  (implicit plan: PlanWriter): PlanResult = {
     val ptrCompareUnion = vt.UnionType(ptrCompareTypes)
 
     val resultValue = if (plan.config.optimise) {
@@ -144,7 +144,7 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
                val2.hasDefiniteType(vt.IntegerType)) {
         directCompareAsType(vt.Int64, val1, val2)
       }
-      else if (val1.hasDefiniteType(vt.CharType) && 
+      else if (val1.hasDefiniteType(vt.CharType) &&
                val2.hasDefiniteType(vt.CharType)) {
         directCompareAsType(vt.UnicodeChar, val1, val2)
       }
@@ -184,10 +184,10 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
     )
   }
 
-  override def planWithResult(state : PlannerState)(
-      reportName : String,
-      args : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
+  override def planWithResult(state: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = (reportName, args) match {
     case ("eqv?", List((_, val1), (_, val2))) =>
       StaticValueEqv.valuesAreEqv(val1, val2).map { staticResult =>
         PlanResult(

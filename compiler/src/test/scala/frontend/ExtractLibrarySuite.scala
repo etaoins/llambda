@@ -16,11 +16,11 @@ class ExtractLibrarySuite extends FunSuite with Inside {
 
   val exampleName = List("example", "lib")
 
-  def libraryFor(scheme : String) : Library = {
+  def libraryFor(scheme: String): Library = {
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
     ExtractLibrary(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
-  
+
   test("empty datum is invalid") {
     intercept[BadSpecialFormException] {
       libraryFor("()")
@@ -38,25 +38,25 @@ class ExtractLibrarySuite extends FunSuite with Inside {
       """(define-library (example lib)
            (import (llambda internal primitives))
            (export set! lambda))"""
-      ) === Library(exampleName, Map("set!" -> Primitives.Set, "lambda" -> Primitives.Lambda), Nil)) 
+      ) === Library(exampleName, Map("set!" -> Primitives.Set, "lambda" -> Primitives.Lambda), Nil))
   }
-  
+
   test("exporting internal symbol") {
     inside(libraryFor(
       """(define-library (example lib)
            (import (llambda internal primitives))
            (export number5)
-           (begin 
+           (begin
              (define number5 5)))"""
      )) {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
-            case storageLoc : StorageLocation =>
+            case storageLoc: StorageLocation =>
               assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
           }
      }
   }
-  
+
   test("top-level (cond-expand)") {
     inside(libraryFor(
       """(define-library (example lib)
@@ -67,12 +67,12 @@ class ExtractLibrarySuite extends FunSuite with Inside {
            (export number5)
 
            (cond-expand (test-feature
-             (begin 
+             (begin
                (define number5 5)))))"""
      )) {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
-            case storageLoc : StorageLocation =>
+            case storageLoc: StorageLocation =>
               assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
           }
      }
@@ -85,13 +85,13 @@ class ExtractLibrarySuite extends FunSuite with Inside {
              (export number5))""")
     }
   }
-  
+
   test("renaming exports") {
     assert(libraryFor(
       """(define-library (example lib)
            (import (llambda internal primitives))
            (export set! (rename lambda new-lambda)))"""
-      ) === Library(exampleName, Map("set!" -> Primitives.Set, "new-lambda" -> Primitives.Lambda), Nil)) 
+      ) === Library(exampleName, Map("set!" -> Primitives.Set, "new-lambda" -> Primitives.Lambda), Nil))
   }
 
   test("single body include") {
@@ -101,9 +101,9 @@ class ExtractLibrarySuite extends FunSuite with Inside {
              (include "includes/include1.scm"))"""
     )) {
        case Library(_, bindings, exprs) =>
-         assert(exprs === 
+         assert(exprs ===
             List(
-              et.Literal(ast.StringLiteral("include1-line1")), 
+              et.Literal(ast.StringLiteral("include1-line1")),
               et.Literal(ast.StringLiteral("include1-line2"))
             )
          )
@@ -117,11 +117,11 @@ class ExtractLibrarySuite extends FunSuite with Inside {
              (include "includes/include1.scm" "includes/include2.scm"))"""
     )) {
        case Library(_, bindings, exprs) =>
-         assert(exprs === 
+         assert(exprs ===
             List(
-              et.Literal(ast.StringLiteral("include1-line1")), 
+              et.Literal(ast.StringLiteral("include1-line1")),
               et.Literal(ast.StringLiteral("include1-line2")),
-              et.Literal(ast.StringLiteral("include2-line1")), 
+              et.Literal(ast.StringLiteral("include2-line1")),
               et.Literal(ast.StringLiteral("include2-line2"))
             )
          )
@@ -137,10 +137,10 @@ class ExtractLibrarySuite extends FunSuite with Inside {
     )) {
       case Library(_, bindings, exprs) =>
         inside(bindings("a")) {
-          case storageLocA : StorageLocation =>
+          case storageLocA: StorageLocation =>
             inside(bindings("b")) {
-              case storageLocB : StorageLocation =>
-                assert(exprs === 
+              case storageLocB: StorageLocation =>
+                assert(exprs ===
                   List(
                     et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
                     et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
@@ -152,7 +152,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
         }
     }
   }
-  
+
   test("library declaration include") {
     inside(libraryFor(
         """(define-library (example lib)
@@ -160,10 +160,10 @@ class ExtractLibrarySuite extends FunSuite with Inside {
     )) {
       case Library(_, bindings, exprs) =>
         inside(bindings("a")) {
-          case storageLocA : StorageLocation =>
+          case storageLocA: StorageLocation =>
             inside(bindings("b")) {
-              case storageLocB : StorageLocation =>
-                assert(exprs === 
+              case storageLocB: StorageLocation =>
+                assert(exprs ===
                   List(
                     et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
                     et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),

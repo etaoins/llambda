@@ -19,19 +19,19 @@ final class GcPointerIdentity
   * aliased values
   */
 case class LiveTemps(
-  tempValueToIr : Map[ps.TempValue, IrValue] = Map(),
-  pointerIdentities : Map[ps.TempValue, GcPointerIdentity]  = Map()
+  tempValueToIr: Map[ps.TempValue, IrValue] = Map(),
+  pointerIdentities: Map[ps.TempValue, GcPointerIdentity]  = Map()
 ) extends ((ps.TempValue) => IrValue) {
   /** Returns the IR value for a temp value */
-  def apply(tempValue : ps.TempValue) : IrValue =
+  def apply(tempValue: ps.TempValue): IrValue =
     tempValueToIr(tempValue)
 
-  def get(tempValue : ps.TempValue) : Option[IrValue] =
+  def get(tempValue: ps.TempValue): Option[IrValue] =
     tempValueToIr.get(tempValue)
 
   def keySet = tempValueToIr.keySet
 
-  def +(tempTuple : (ps.TempValue, IrValue)) = {
+  def +(tempTuple: (ps.TempValue, IrValue)) = {
     val tempValue = tempTuple._1
 
     val newPointerIdentities = if (tempValue.isGcManaged) {
@@ -46,33 +46,33 @@ case class LiveTemps(
       pointerIdentities=newPointerIdentities
     )
   }
-  
-  def ++(tempTuples : GenTraversableOnce[(ps.TempValue, IrValue)]) = {
+
+  def ++(tempTuples: GenTraversableOnce[(ps.TempValue, IrValue)]) = {
     tempTuples.foldLeft(this) { case (state, tempTuple) =>
       state + tempTuple
     }
   }
-  
-  def -(tempValue : ps.TempValue) = {
+
+  def -(tempValue: ps.TempValue) = {
     this.copy(
       tempValueToIr=tempValueToIr - tempValue,
       pointerIdentities=pointerIdentities - tempValue
     )
   }
 
-  def --(tempValues : GenTraversableOnce[ps.TempValue]) = {
+  def --(tempValues: GenTraversableOnce[ps.TempValue]) = {
     this.copy(
       tempValueToIr=tempValueToIr -- tempValues,
       pointerIdentities=pointerIdentities -- tempValues
     )
   }
 
-  def withUpdatedIrValues(updates : GenTraversableOnce[(ps.TempValue, IrValue)]) =
+  def withUpdatedIrValues(updates: GenTraversableOnce[(ps.TempValue, IrValue)]) =
     this.copy(
       tempValueToIr=tempValueToIr ++ updates
     )
 
-  def withAliasedTempValue(originalTemp : ps.TempValue, tempTuple : (ps.TempValue, IrValue)) =
+  def withAliasedTempValue(originalTemp: ps.TempValue, tempTuple: (ps.TempValue, IrValue)) =
     if (originalTemp.isGcManaged) {
       val aliasedTemp = tempTuple._1
       // Use the pointer identity from the original value

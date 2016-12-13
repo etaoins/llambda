@@ -3,7 +3,7 @@ package io.llambda.typegen
 import org.scalatest.FunSuite
 
 class CheckTypeTagFieldSuite extends FunSuite {
-  def checkString(str : String) : Unit = { 
+  def checkString(str: String) : Unit = {
     val defns = DefinitionParser.parseString(str)
     CheckTopLevelNamespace(defns)
 
@@ -22,7 +22,7 @@ class CheckTypeTagFieldSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("type tag alias without cppname fails") {
     intercept[TypeTagAliasMissingCppNameException] {
       checkString("""
@@ -34,7 +34,7 @@ class CheckTypeTagFieldSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("type tag alias with extern cppname fails") {
     intercept[TypeTagAliasExternallyDefinedException] {
       checkString("""
@@ -48,7 +48,7 @@ class CheckTypeTagFieldSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("type tag alias with non-integral type fails") {
     intercept[TypeTagAliasNonIntegralException] {
       checkString("""
@@ -62,7 +62,7 @@ class CheckTypeTagFieldSuite extends FunSuite {
       """)
     }
   }
-  
+
   test("type tag alias defined integral type succeeds") {
     checkString("""
       fieldtype TypeId : int32 {

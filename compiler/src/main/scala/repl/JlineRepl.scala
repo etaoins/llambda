@@ -9,8 +9,8 @@ import jline.console.{ConsoleReader, history, completer}
 import annotation.tailrec
 
 /** Tab completion based on the current scope */
-private class ScopeCompleter(scope : Scope) extends completer.Completer {
-  private def identifierStart(buffer : String, start : Int, end : Int) : Int = {
+private class ScopeCompleter(scope: Scope) extends completer.Completer {
+  private def identifierStart(buffer: String, start: Int, end: Int): Int = {
     if (start > 0) {
       val newStart = start - 1
       val testIdent = buffer.drop(newStart).take(end - newStart)
@@ -30,7 +30,7 @@ private class ScopeCompleter(scope : Scope) extends completer.Completer {
     }
   }
 
-  def complete(buffer : String, cursor : Int, candidates : java.util.List[CharSequence]) : Int = {
+  def complete(buffer: String, cursor: Int, candidates: java.util.List[CharSequence]): Int = {
     if (buffer == null) {
       candidates.addAll(scope.bindings.keys.toList.asJava)
       0
@@ -57,7 +57,7 @@ private class ScopeCompleter(scope : Scope) extends completer.Completer {
   }
 }
 
-class JlineRepl(targetPlatform : platform.TargetPlatform) {
+class JlineRepl(targetPlatform: platform.TargetPlatform) {
   // ANSI colour codes
   private val failureColour = 31
   private val successColour = 32
@@ -82,7 +82,7 @@ class JlineRepl(targetPlatform : platform.TargetPlatform) {
   // Don't expand events - ! is used frequently in Scheme identifiers
   reader.setExpandEvents(false)
 
-  private def setCompleter(newCompleter : completer.Completer) : Unit = {
+  private def setCompleter(newCompleter: completer.Completer): Unit = {
     for(completer <- reader.getCompleters.asScala) {
       reader.removeCompleter(completer)
     }
@@ -90,10 +90,10 @@ class JlineRepl(targetPlatform : platform.TargetPlatform) {
     reader.addCompleter(newCompleter)
   }
 
-  private def colourStr(str : String, colourCode : Int) =
+  private def colourStr(str: String, colourCode: Int) =
     s"\u001B[${colourCode}m${str}\u001B[0m"
 
-  def evaluate(userString : String) {
+  def evaluate(userString: String) {
     try {
       val data = SchemeParser.parseStringAsData(userString, Some("input"))
 
@@ -102,14 +102,14 @@ class JlineRepl(targetPlatform : platform.TargetPlatform) {
       }
     }
     catch {
-      case semantic : SemanticException =>
+      case semantic: SemanticException =>
         val colouredError = colourStr(semantic.semanticErrorType, failureColour)
         println(s"${colouredError}: ${semantic.getMessage}")
 
-      case parse : ParseErrorException =>
+      case parse: ParseErrorException =>
         println(colourStr("parse error: ", failureColour) + parse.getMessage)
 
-      case nonzero : ReplProcessNonZeroExitException  =>
+      case nonzero: ReplProcessNonZeroExitException  =>
         if (!nonzero.stdout.isEmpty) {
           println(s"${nonzero.stdout}")
         }
@@ -125,12 +125,12 @@ class JlineRepl(targetPlatform : platform.TargetPlatform) {
   }
 
   @tailrec
-  private def acceptInput()(implicit reader : ConsoleReader) {
+  private def acceptInput()(implicit reader: ConsoleReader) {
     val command = reader.readLine("llambda> ")
 
     // Flush the last command to our history file
     reader.getHistory match {
-      case flushable : history.PersistentHistory =>
+      case flushable: history.PersistentHistory =>
         flushable.flush()
     }
 

@@ -1,11 +1,11 @@
 package io.llambda.llvmir
 
 private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
-  def alloca(resultDest : ResultDestination)(
-      irType : IrType,
-      numElements : IrValue = IntegerConstant(IntegerType(32), 1),
-      alignment : Int = 0
-  ) : LocalVariable = {
+  def alloca(resultDest: ResultDestination)(
+      irType: IrType,
+      numElements: IrValue = IntegerConstant(IntegerType(32), 1),
+      alignment: Int = 0
+  ): LocalVariable = {
     val resultVar = resultDest.asLocalVariable(nameSource, PointerType(irType))
 
     val baseAlloc = s"${resultVar.toIr} = alloca ${irType.toIr}"
@@ -26,11 +26,11 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
 
     resultVar
   }
-  
-  private def pointeeTypeForAccess(irType : IrType) : FirstClassType = irType match {
-    case pointerType : PointerType =>
+
+  private def pointeeTypeForAccess(irType: IrType): FirstClassType = irType match {
+    case pointerType: PointerType =>
       pointerType.pointeeType match {
-        case firstClass : FirstClassType =>
+        case firstClass: FirstClassType =>
           firstClass
         case _ =>
           throw new InconsistentIrException("Attempted memory access with a pointer to a non-first class type")
@@ -39,7 +39,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       throw new InconsistentIrException("Attempted memory access from a non-pointer")
   }
 
-  def load(resultDest : ResultDestination)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, metadata : Map[String, Metadata] = Map()) : LocalVariable = {
+  def load(resultDest: ResultDestination)(from: IrValue, alignment: Int = 0, volatile: Boolean = false, metadata: Map[String, Metadata] = Map()): LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
@@ -56,13 +56,13 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     else {
       ""
     }
-    
+
     addInstruction(s"${resultVar.toIr} = load${volatileIr} ${resultType}, ${from.toIrWithType}${alignIr}", metadata)
 
     resultVar
   }
 
-  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false, metadata : Map[String, Metadata] = Map()) : Unit = {
+  def store(value: IrValue, to: IrValue, alignment: Int = 0, volatile: Boolean = false, metadata: Map[String, Metadata] = Map()): Unit = {
     val storedType = pointeeTypeForAccess(to.irType)
 
     if (storedType != value.irType) {
@@ -70,7 +70,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
                                         s"Value type: ${value.irType}\n" +
                                         s"Pointer type: ${storedType}")
     }
-    
+
     val volatileIr = if (volatile) {
       " volatile"
     }
@@ -84,11 +84,11 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     else {
       ""
     }
-    
+
     addInstruction(s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}", metadata)
   }
 
-  def getelementptr(resultDest : ResultDestination)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
+  def getelementptr(resultDest: ResultDestination)(elementType: FirstClassType, basePointer: IrValue, indices: Seq[IrValue], inbounds: Boolean = false): LocalVariable = {
     val resultVar = resultDest.asLocalVariable(nameSource, PointerType(elementType))
 
     val basePointeeType = basePointer.irType match {

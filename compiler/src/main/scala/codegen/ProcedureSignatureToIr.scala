@@ -9,11 +9,11 @@ import llambda.compiler.ast
 
 object ProcedureSignatureToIr {
   case class Result(
-      irSignature : IrSignature,
-      callMetadata : Map[String, Metadata]
+      irSignature: IrSignature,
+      callMetadata: Map[String, Metadata]
   )
 
-  private def paramSignednessToAttribs(signedness : Option[Boolean]) : Set[IrFunction.ParameterAttribute] = {
+  private def paramSignednessToAttribs(signedness: Option[Boolean]): Set[IrFunction.ParameterAttribute] = {
     signedness match {
       case Some(true) => Set(IrFunction.SignExt)
       case Some(false) => Set(IrFunction.ZeroExt)
@@ -21,7 +21,7 @@ object ProcedureSignatureToIr {
     }
   }
 
-  def apply(signature : ProcedureSignature) : Result = {
+  def apply(signature: ProcedureSignature): Result = {
     val worldArgs = if (signature.hasWorldArg) {
       List(IrFunction.Argument(PointerType(WorldValue.irType), Set()))
     }
@@ -69,13 +69,13 @@ object ProcedureSignatureToIr {
 
       case _ =>
         Map()
-    }) : Map[String, Metadata]
+    }): Map[String, Metadata]
 
     // Convert our internal attributes to LLVM IR ones if applicable
     val explicitAttributes = signature.attributes.collect {
       case ProcedureAttribute.NoReturn =>
         IrFunction.NoReturn
-    } : Set[IrFunction.FunctionAttribute]
+    }: Set[IrFunction.FunctionAttribute]
 
     val attributes = if (signature.hasWorldArg) {
       // World functions can throw exceptions

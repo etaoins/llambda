@@ -5,7 +5,7 @@ import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
 
 object GenFloatConversion {
-  def apply(block : IrBlockBuilder)(fromValue : IrValue, fpType : vt.FpType) : IrValue = fpType match {
+  def apply(block: IrBlockBuilder)(fromValue: IrValue, fpType: vt.FpType): IrValue = fpType match {
     // This works because we only have two FP types
     case vt.Double =>
       block.fpextTo("fpexted")(fromValue, DoubleType)

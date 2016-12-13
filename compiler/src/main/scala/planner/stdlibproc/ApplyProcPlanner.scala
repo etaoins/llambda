@@ -10,10 +10,10 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object ApplyProcPlanner extends StdlibProcPlanner {
-  override def planFromExprs(initialState : PlannerState)(
-      reportName : String,
-      args : List[et.Expr]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
+  override def planFromExprs(initialState: PlannerState)(
+      reportName: String,
+      args: List[et.Expr]
+  )(implicit plan: PlanWriter): Option[PlanResult] = (reportName, args) match {
     case ("apply", List(applyProcExpr)) =>
       Some(PlanApplication.planWithArgList(initialState)(applyProcExpr, iv.EmptyListValue))
 

@@ -9,15 +9,15 @@ import llambda.compiler.planner.{step => ps}
   * on generated code for non-GC managed values.
   */
 object DisposeValues {
-  private def disposeValuesToSteps(toDispose : Set[ps.TempValue]) : List[ps.Step] = if (toDispose.isEmpty) {
+  private def disposeValuesToSteps(toDispose: Set[ps.TempValue]): List[ps.Step] = if (toDispose.isEmpty) {
     Nil
   }
   else {
     List(ps.DisposeValues(toDispose))
   }
 
-  def innerOutputValuesForStep(step : ps.Step) : Set[ps.TempValue] = step match {
-    case nestingStep : ps.NestingStep =>
+  def innerOutputValuesForStep(step: ps.Step): Set[ps.TempValue] = step match {
+    case nestingStep: ps.NestingStep =>
       nestingStep.innerBranches.flatMap(_._1).flatMap(innerOutputValuesForStep).toSet
 
     case other =>
@@ -36,12 +36,12 @@ object DisposeValues {
     * @return  List of new branch steps in forward order
     */
   private def discardUnusedValues(
-      branchInputValues : Set[ps.TempValue],
-      reverseSteps : List[ps.Step],
-      usedValues : Set[ps.TempValue],
-      acc : List[ps.Step]
-  ) : List[ps.Step] = reverseSteps match {
-    case (nestingStep : ps.NestingStep) :: reverseTail =>
+      branchInputValues: Set[ps.TempValue],
+      reverseSteps: List[ps.Step],
+      usedValues: Set[ps.TempValue],
+      acc: List[ps.Step]
+  ): List[ps.Step] = reverseSteps match {
+    case (nestingStep: ps.NestingStep) :: reverseTail =>
       // Build a set of output values generated inside the branch. This is used to distinguish input values that come
       // from before the branch (and therefore need to be disposed) versus input values that come from within the branch
       val innerOutputValues = innerOutputValuesForStep(nestingStep)
@@ -81,10 +81,10 @@ object DisposeValues {
       // We can drop this step completely
       discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
 
-    case (inputDisposable : ps.InputDisposableStep) :: reverseTail =>
+    case (inputDisposable: ps.InputDisposableStep) :: reverseTail =>
       // If this is the last use of any of the input values they should be discarded as part of the step
       val inputDisposeSet = inputDisposable.inputValues -- usedValues
-      // Any unused output values should be discarded as normal 
+      // Any unused output values should be discarded as normal
       val outputDisposeSteps = disposeValuesToSteps(inputDisposable.outputValues -- usedValues)
 
       // All the input values are now used
@@ -95,7 +95,7 @@ object DisposeValues {
 
     case nonBranching :: reverseTail =>
       val allStepValues = nonBranching.inputValues ++ nonBranching.outputValues
-      val disposeList = disposeValuesToSteps(allStepValues -- usedValues) 
+      val disposeList = disposeValuesToSteps(allStepValues -- usedValues)
       val newUsedValues = usedValues ++ nonBranching.inputValues
 
       val newAcc = nonBranching :: (disposeList ++ acc)
@@ -104,12 +104,12 @@ object DisposeValues {
     case Nil =>
       // We've reached the top of the branch
       // Dispose all unused branch input values
-      val disposeList = disposeValuesToSteps(branchInputValues -- usedValues) 
+      val disposeList = disposeValuesToSteps(branchInputValues -- usedValues)
 
       disposeList ++ acc
   }
 
-  def apply(function : PlannedFunction) : PlannedFunction = {
+  def apply(function: PlannedFunction): PlannedFunction = {
     val branchInputValues = function.namedArguments.map(_._2).toSet
 
     val newSteps = discardUnusedValues(

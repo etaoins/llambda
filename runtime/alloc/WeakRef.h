@@ -13,7 +13,7 @@ namespace alloc
  * Holds a weaks reference to a GC managed cell
  *
  * Cells only referenced by weak references are eligible for garbage collection. However, if the cell is also reachable
- * through a strong reference any weak references will be updated in the event the cell is moved by the garbage 
+ * through a strong reference any weak references will be updated in the event the cell is moved by the garbage
  * collector.
  */
 template<class T>

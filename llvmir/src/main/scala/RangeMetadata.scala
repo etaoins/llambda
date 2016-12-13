@@ -7,7 +7,7 @@ import scala.annotation.tailrec
   * These are a series of [start, end) ranges of the possible values an integer loaded from memory. See the LLVM
   * documentation for more information.
   */
-case class RangeMetadata(integerType : IntegerType, ranges : (Long, Long)*) extends MetadataNode {
+case class RangeMetadata(integerType: IntegerType, ranges: (Long, Long)*) extends MetadataNode {
   val operandOpts = ranges flatMap { case (start, end) =>
     List(
       Some(IntegerConstant(integerType, start)),
@@ -19,10 +19,10 @@ case class RangeMetadata(integerType : IntegerType, ranges : (Long, Long)*) exte
 object RangeMetadata {
   @tailrec
   private def rangesFromSortedValues(
-      intBits : Int,
-      sortedValues : List[Long],
-      acc : List[(Long, Long)]
-  ) : List[(Long, Long)] = sortedValues match {
+      intBits: Int,
+      sortedValues: List[Long],
+      acc: List[(Long, Long)]
+  ): List[(Long, Long)] = sortedValues match {
     case Nil =>
       acc.reverse
 
@@ -45,7 +45,7 @@ object RangeMetadata {
     *
     * For example, (0, 2) (5, 10) (255, 0) will become (255, 2) (5, 10). This is the exact form required by LLVM.
     */
-  private def joinWrappedRanges(ranges : List[(Long, Long)]) : Option[List[(Long, Long)]] = {
+  private def joinWrappedRanges(ranges: List[(Long, Long)]): Option[List[(Long, Long)]] = {
     val firstRange = ranges.head
     val lastRange = ranges.last
 
@@ -70,7 +70,7 @@ object RangeMetadata {
     * If all possible values for the type are passed then None will be returned indicating range metadata should not be
     * emitted
     */
-  def fromPossibleValues(integerType : IntegerType, possibleValues : TraversableOnce[Long]) : Option[RangeMetadata] = {
+  def fromPossibleValues(integerType: IntegerType, possibleValues: TraversableOnce[Long]): Option[RangeMetadata] = {
     // Remove duplicates and sort
     val sortedValues = possibleValues.toSet.toList.sorted
 
@@ -83,7 +83,7 @@ object RangeMetadata {
     val joinedRangesOpt = joinWrappedRanges(ranges)
 
     joinedRangesOpt map { joinedRanges =>
-      RangeMetadata(integerType, joinedRanges.sortBy(_._2) : _*)
+      RangeMetadata(integerType, joinedRanges.sortBy(_._2): _*)
     }
   }
 }

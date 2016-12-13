@@ -3,12 +3,12 @@ package io.llambda.typegen.writer.runtime
 import io.llambda.typegen._
 
 object WriteCellRefs extends writer.OutputWriter {
-  def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
+  def apply(processedTypes: ProcessedTypes): Map[String, String] = {
     // Start our builder
     val incBuilder = new CppIncludeBuilder("_LLIBY_ALLOC_CELLREFTYPES_H")
 
     incBuilder.appendRaw(writer.GeneratedClikeFileComment)
-    
+
     incBuilder += "#include \"binding/" + processedTypes.rootCellClass.names.cppClassName + ".h\""
     incBuilder += "#include \"alloc/StrongRef.h\""
     incBuilder.sep()
@@ -26,7 +26,7 @@ object WriteCellRefs extends writer.OutputWriter {
     }
 
     incBuilder.sep()
-    
+
     incBuilder += "}"
     incBuilder += "}"
     incBuilder.sep()

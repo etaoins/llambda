@@ -7,5 +7,5 @@ import io.llambda
   */
 trait KnownVector extends IntermediateValue {
   /** Length of the vector */
-  val vectorLength : Long
+  val vectorLength: Long
 }

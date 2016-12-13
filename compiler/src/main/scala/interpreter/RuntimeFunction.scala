@@ -9,7 +9,7 @@ abstract class RuntimeFunction extends ((InterpreterState, List[LiveValue]) => (
 object RuntimeFunction {
   // llcore_write_stdout
   object LlcoreWriteStdout extends RuntimeFunction {
-    def apply(state : InterpreterState, args : List[LiveValue]) : (InterpreterState, Option[LiveValue]) = {
+    def apply(state: InterpreterState, args: List[LiveValue]): (InterpreterState, Option[LiveValue]) = {
       args match {
         case List(DatumCell(toWrite, ct.AnyCell)) =>
           val newState = state.copy(stdout=state.stdout + toWrite.toString)
@@ -22,7 +22,7 @@ object RuntimeFunction {
     }
   }
 
-  val functionForSymbol : PartialFunction[String, RuntimeFunction] = {
+  val functionForSymbol: PartialFunction[String, RuntimeFunction] = {
     case "llcore_write_stdout" =>
       LlcoreWriteStdout
   }

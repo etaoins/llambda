@@ -7,20 +7,20 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 
 object PlanValuePhi {
   case class Result(
-    leftTempValue : ps.TempValue,
-    rightTempValue : ps.TempValue,
-    resultTemp : ps.TempValue,
-    resultValue : iv.IntermediateValue
+    leftTempValue: ps.TempValue,
+    rightTempValue: ps.TempValue,
+    resultTemp: ps.TempValue,
+    resultValue: iv.IntermediateValue
   )
 
   def apply(
-      leftPlan : PlanWriter,
-      leftValue : iv.IntermediateValue,
-      rightPlan : PlanWriter,
-      rightValue : iv.IntermediateValue
-  ) : Result =
+      leftPlan: PlanWriter,
+      leftValue: iv.IntermediateValue,
+      rightPlan: PlanWriter,
+      rightValue: iv.IntermediateValue
+  ): Result =
     (leftValue, rightValue) match {
-      case (leftUnboxed : iv.UnboxedValue, rightUnboxed : iv.UnboxedValue)
+      case (leftUnboxed: iv.UnboxedValue, rightUnboxed: iv.UnboxedValue)
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType
         val phiResultTemp = ps.Temp(commonType)

@@ -19,7 +19,7 @@ class FindTailCallsSuite extends FunSuite {
     attributes=Set()
   )
 
-  def findTailCalls(steps : List[ps.Step]) : List[ps.Step] = {
+  def findTailCalls(steps: List[ps.Step]): List[ps.Step] = {
     FindTailCalls.conniveSteps(steps)
   }
 
@@ -54,7 +54,7 @@ class FindTailCallsSuite extends FunSuite {
       ps.TailCall(testSignature, entryTemp, Nil)
     ))
   }
-  
+
   test("tail call followed by futher steps can be converted to tail call") {
     val entryTemp = ps.EntryPointTemp()
     val retTemp = new ps.TempValue(false)
@@ -72,7 +72,7 @@ class FindTailCallsSuite extends FunSuite {
       ps.TailCall(testSignature, entryTemp, Nil)
     ))
   }
-  
+
   test("call with intervening step can't be converted to a tail call") {
     val entryTemp = ps.EntryPointTemp()
     val retTemp = new ps.TempValue(false)
@@ -87,7 +87,7 @@ class FindTailCallsSuite extends FunSuite {
 
     assert(findTailCalls(inputSteps) === inputSteps)
   }
-  
+
   test("return with other value cannot be converted to tail call") {
     val entryTemp = ps.EntryPointTemp()
     val retTemp = new ps.TempValue(false)

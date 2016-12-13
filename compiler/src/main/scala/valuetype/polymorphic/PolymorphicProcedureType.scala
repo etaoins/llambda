@@ -4,8 +4,8 @@ import io.llambda
 import llambda.compiler.valuetype._
 import llambda.compiler.SourceLocated
 
-case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : ProcedureType) {
-  private def instantiate(reconciled : ReconcileTypeVars.Result) : ProcedureType = {
+case class PolymorphicProcedureType(typeVars: Set[TypeVar], template: ProcedureType) {
+  private def instantiate(reconciled: ReconcileTypeVars.Result): ProcedureType = {
     template.copy(
       mandatoryArgTypes=template.mandatoryArgTypes.map(InstantiateType(reconciled, _)),
       optionalArgTypes=template.optionalArgTypes.map(InstantiateType(reconciled, _)),
@@ -14,7 +14,7 @@ case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : Procedur
     )
   }
 
-  def typeForArgs(args : List[SchemeType]) : ProcedureType = {
+  def typeForArgs(args: List[SchemeType]): ProcedureType = {
     if (typeVars.isEmpty) {
       // Skip!
       return template
@@ -44,7 +44,7 @@ case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : Procedur
     instantiate(reconciled)
   }
 
-  lazy val upperBound : ProcedureType = {
+  lazy val upperBound: ProcedureType = {
     // Use our upper type bounds for everything
     val reconciled = ReconcileTypeVars(typeVars)
     instantiate(reconciled)

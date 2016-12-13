@@ -12,23 +12,23 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 class PlanWriter(
-    val config : PlanConfig,
-    val plannedFunctions : mutable.Map[String, PlannedFunction],
-    val allocedSymbols : mutable.HashSet[String],
-    val plannedTypePredicates : mutable.Map[vt.SchemeType, String],
-    val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String],
-    val adapterProcTrampolines : mutable.Map[(ProcedureSignature, ProcedureSignature), String],
-    val polymorphInstances : mutable.Map[(LambdaManifest, vt.ProcedureType), String],
-    val requiredNativeLibraries : mutable.HashSet[NativeLibrary]
+    val config: PlanConfig,
+    val plannedFunctions: mutable.Map[String, PlannedFunction],
+    val allocedSymbols: mutable.HashSet[String],
+    val plannedTypePredicates: mutable.Map[vt.SchemeType, String],
+    val knownProcTrampolines: mutable.Map[(String, ProcedureSignature), String],
+    val adapterProcTrampolines: mutable.Map[(ProcedureSignature, ProcedureSignature), String],
+    val polymorphInstances: mutable.Map[(LambdaManifest, vt.ProcedureType), String],
+    val requiredNativeLibraries: mutable.HashSet[NativeLibrary]
 ) {
   private var contextLocStack: List[ContextLocated] = Nil
 
   private var planSealed = false
 
   class StepBuilder {
-    private val stepBuffer = new mutable.ListBuffer[ps.Step] 
+    private val stepBuffer = new mutable.ListBuffer[ps.Step]
 
-    def +=(step : ps.Step) {
+    def +=(step: ps.Step) {
       if (planSealed) {
         throw new InternalCompilerErrorException("Attempt to write to sealed plan")
       }
@@ -41,7 +41,7 @@ class PlanWriter(
       stepBuffer += step
     }
 
-    def ++=(other : PlanWriter#StepBuilder) = {
+    def ++=(other: PlanWriter#StepBuilder) = {
       if (planSealed) {
         throw new InternalCompilerErrorException("Attempt to write to sealed plan")
       }
@@ -50,7 +50,7 @@ class PlanWriter(
       stepBuffer ++= other.stepBuffer
     }
 
-    def toList : List[ps.Step] = 
+    def toList: List[ps.Step] =
       stepBuffer.toList
   }
 
@@ -60,7 +60,7 @@ class PlanWriter(
     *
     * This will implicitly locate any plan steps added while the block is being executed
     */
-  def withContextLocation[T](contextLoc : ContextLocated)(block : => T) : T = {
+  def withContextLocation[T](contextLoc: ContextLocated)(block: => T): T = {
     contextLocStack = contextLoc :: contextLocStack
 
     try {
@@ -75,7 +75,7 @@ class PlanWriter(
   def activeContextLocated =
     contextLocStack.headOption.getOrElse(NoContextLocation)
 
-  def withContextLocationOpt[T](contextLocatedOpt : Option[ContextLocated])(block : => T) : T = {
+  def withContextLocationOpt[T](contextLocatedOpt: Option[ContextLocated])(block: => T): T = {
     contextLocatedOpt match {
       case Some(contextLocated) =>
         withContextLocation(contextLocated)(block)
@@ -85,7 +85,7 @@ class PlanWriter(
     }
   }
 
-  private def findNextFreeSymbol(sourceName : String) : String = {
+  private def findNextFreeSymbol(sourceName: String): String = {
     val allKnownSymbols = plannedFunctions.keySet ++ allocedSymbols
 
     if (!allKnownSymbols.contains(sourceName)) {
@@ -99,23 +99,23 @@ class PlanWriter(
           return suffixedName
         }
       }
-      
+
       throw new InternalCompilerErrorException("Ran out of natural numbers")
     }
   }
 
   /** Allocates a unique name for a procedure or function
     *
-    * codegen expects a flat namespace for procedures but the same name can appear in multiple Scheme scopes 
+    * codegen expects a flat namespace for procedures but the same name can appear in multiple Scheme scopes
     */
-  def allocSymbol(sourceName : String) : String = {
+  def allocSymbol(sourceName: String): String = {
     val freeSymbol = findNextFreeSymbol(sourceName)
     allocedSymbols += freeSymbol
 
     freeSymbol
   }
 
-  def forkPlan() : PlanWriter = {
+  def forkPlan(): PlanWriter = {
     // All forks share their state except for steps
     val forkedPlan = new PlanWriter(
       config,
@@ -133,12 +133,12 @@ class PlanWriter(
     forkedPlan
   }
 
-  def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
+  def buildCondBranch(test: ps.TempValue, trueBuilder: (PlanWriter) => ps.TempValue, falseBuilder: (PlanWriter) => ps.TempValue): ps.TempValue = {
     // Seal ourselves to catch accidental writes to the parent branch
     this.planSealed = true
 
     val truePlan = forkPlan()
-    val trueValue = trueBuilder(truePlan) 
+    val trueValue = trueBuilder(truePlan)
 
     val falsePlan = forkPlan()
     val falseValue = falseBuilder(falsePlan)
@@ -157,11 +157,11 @@ class PlanWriter(
 }
 
 object PlanWriter {
-  def apply(planConfig : PlanConfig) =
+  def apply(planConfig: PlanConfig) =
     new PlanWriter(
       config=planConfig,
       plannedFunctions=new mutable.HashMap[String, PlannedFunction],
-      allocedSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
+      allocedSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq: _*),
       plannedTypePredicates=new mutable.HashMap[vt.SchemeType, String],
       knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String],
       adapterProcTrampolines=new mutable.HashMap[(ProcedureSignature, ProcedureSignature), String],

@@ -5,9 +5,9 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 
 object SatisfiesSignature {
-  private def satisfiesRepresentation(superType : vt.ValueType, derivedType : vt.ValueType) : Boolean = 
+  private def satisfiesRepresentation(superType: vt.ValueType, derivedType: vt.ValueType): Boolean =
     (superType, derivedType) match {
-      case (superScheme : vt.SchemeType, derivedScheme : vt.SchemeType) =>
+      case (superScheme: vt.SchemeType, derivedScheme: vt.SchemeType) =>
         // All Scheme types are boxed - do normal type derived
         vt.SatisfiesType(superScheme, derivedScheme) == Some(true)
 
@@ -34,7 +34,7 @@ object SatisfiesSignature {
     * @param  superSignature    Signature the derived signature must satisfy
     * @param  derivedSignature  Signature to test
     */
-  def apply(superSignature : ProcedureSignature, derivedSignature : ProcedureSignature) : Boolean = {
+  def apply(superSignature: ProcedureSignature, derivedSignature: ProcedureSignature): Boolean = {
     if (superSignature == derivedSignature) {
       // Fast path without a bunch of potentially expensive type checks
       return true
@@ -67,7 +67,7 @@ object SatisfiesSignature {
       return false
     }
 
-    def signatureHasVarArgs(signature : ProcedureSignature) =
+    def signatureHasVarArgs(signature: ProcedureSignature) =
       !signature.optionalArgTypes.isEmpty || signature.restArgMemberTypeOpt.isDefined
 
     if (signatureHasVarArgs(superSignature) != signatureHasVarArgs(derivedSignature)) {

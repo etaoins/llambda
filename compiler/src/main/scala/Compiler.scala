@@ -18,11 +18,11 @@ class ExternalCompilerException extends Exception
   * in a total of 6 entry functions.
   */
 object Compiler {
-  private lazy val platformClangFlags : Seq[String] =
+  private lazy val platformClangFlags: Seq[String] =
     RuntimeBuildFiles.clangFlags.split(";").filterNot(_.isEmpty)
 
   /** Returns a list of compiler flags to link the passed required libraries */
-  private def libraryClangFlags(nativeLibraries : Set[NativeLibrary]) : List[String] = {
+  private def libraryClangFlags(nativeLibraries: Set[NativeLibrary]): List[String] = {
     val systemFlags = List(RuntimeBuildFiles.llcorePath)
 
     // Note that order matters here. The core library needs to come after the stdlib libraries to satisfy their
@@ -38,11 +38,11 @@ object Compiler {
     * This is the most efficient way to invoke LLVM if intermediates aren't required
     */
   private def invokeLlvmCompiler(
-      irBytes : Array[Byte],
-      output : File,
-      optimiseLevel : Int,
-      nativeLibraries : Set[NativeLibrary]
-  ) : Boolean = {
+      irBytes: Array[Byte],
+      output: File,
+      optimiseLevel: Int,
+      nativeLibraries: Set[NativeLibrary]
+  ): Boolean = {
     val optimiseArg = s"-O${optimiseLevel}"
 
     // llc -O0 miscompiles on ARM32/LLVM 3.6.1 while it works correctly without any optimisation flags. As -O0 is
@@ -65,7 +65,7 @@ object Compiler {
       llcCmd #| clangCmd
     }
 
-    def dumpIrToStdin(stdinStream : OutputStream) {
+    def dumpIrToStdin(stdinStream: OutputStream) {
       stdinStream.write(irBytes)
       stdinStream.close()
     }
@@ -77,7 +77,7 @@ object Compiler {
   }
 
   /** Stub compile that write directly to the passed output file */
-  private def invokeFileSinkCompiler(irBytes : Array[Byte], output : File) {
+  private def invokeFileSinkCompiler(irBytes: Array[Byte], output: File) {
     // Write the IR directly to disk
     val outputStream = new FileOutputStream(output)
     outputStream.write(irBytes)
@@ -85,11 +85,11 @@ object Compiler {
 
   /** Creates an executable from the passed planned program */
   private def compilePlanToFile(
-      plannedProgram : PlannedProgram,
-      output : File,
-      config : CompileConfig,
-      entryFilenameOpt : Option[String] = None
-  ) : Unit = {
+      plannedProgram: PlannedProgram,
+      output: File,
+      config: CompileConfig,
+      entryFilenameOpt: Option[String] = None
+  ): Unit = {
     // Generate the LLVM IR
     val irString = codegen.GenProgram(
       functions=plannedProgram.functions,
@@ -113,23 +113,23 @@ object Compiler {
   }
 
   private def abstractCompile[T](
-      planInput : (T, CompileConfig) => PlannedProgram
-  )(input : T, output : File, config : CompileConfig, entryFilenameOpt : Option[String]) : Unit = {
+      planInput: (T, CompileConfig) => PlannedProgram
+  )(input: T, output: File, config: CompileConfig, entryFilenameOpt: Option[String]): Unit = {
     val plannedProgram = planInput(input, config)
 
     compilePlanToFile(plannedProgram, output, config, entryFilenameOpt)
   }
 
   private def abstractRun[T](
-      planInput : (T, CompileConfig) => PlannedProgram
-  )(input : T, config : CompileConfig, extraEnv : List[(String, String)] = Nil) : RunResult = {
+      planInput: (T, CompileConfig) => PlannedProgram
+  )(input: T, config: CompileConfig, extraEnv: List[(String, String)] = Nil): RunResult = {
     val plannedProgram = planInput(input, config)
 
     try {
       return interpreter.InterpretProgram(plannedProgram)
     }
     catch {
-      case _ : interpreter.UninterpretableException =>
+      case _: interpreter.UninterpretableException =>
     }
 
     val outputFile = File.createTempFile("llambda", null, null)
@@ -139,8 +139,8 @@ object Compiler {
       compilePlanToFile(plannedProgram, outputFile, config, None)
 
       // Create our output streams
-      var stdout : Option[InputStream] = None
-      var stderr : Option[InputStream] = None
+      var stdout: Option[InputStream] = None
+      var stderr: Option[InputStream] = None
 
       val outputIO = new ProcessIO(
         stdin  => Unit, // Don't care
@@ -152,7 +152,7 @@ object Compiler {
       val process = Process(
         command=outputFile.getAbsolutePath,
         cwd=None,
-        extraEnv=extraEnv : _*
+        extraEnv=extraEnv: _*
       ).run(outputIO)
 
       val exitValue = process.exitValue()
@@ -173,11 +173,11 @@ object Compiler {
   }
 
   /** Plans the specified input file */
-  def planFile(input : File, config : CompileConfig) : PlannedProgram =
+  def planFile(input: File, config: CompileConfig): PlannedProgram =
     planData(SchemeParser.parseFileAsData(input), config)
 
   /** Plans the specified input Scheme data */
-  def planData(data : List[ast.Datum], config : CompileConfig) : PlannedProgram = {
+  def planData(data: List[ast.Datum], config: CompileConfig): PlannedProgram = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
     val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents)
@@ -195,7 +195,7 @@ object Compiler {
   }
 
   /** Plans the specified input Scheme expressions */
-  def planExprs(exprs : List[et.Expr], config : CompileConfig) : PlannedProgram = {
+  def planExprs(exprs: List[et.Expr], config: CompileConfig): PlannedProgram = {
     // Analyse and drop unused top-level defines
     val analysis = analyser.AnalyseExprs(exprs)
 
@@ -220,7 +220,7 @@ object Compiler {
     * @param  ouput   Output file. This will be created if it does not exist
     * @param  config  Compile configuration
     */
-  def compileFile(input : File, output : File, config : CompileConfig) : Unit =
+  def compileFile(input: File, output: File, config: CompileConfig): Unit =
     abstractCompile(planFile)(input, output, config, Some(input.getPath))
 
   /** Compiles the specified input Scheme data to the specified output binary file */

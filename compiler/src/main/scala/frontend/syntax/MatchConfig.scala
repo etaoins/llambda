@@ -4,17 +4,17 @@ import io.llambda
 import llambda.compiler._
 
 private[syntax] case class MatchConfig(
-  ellipsisVariable : SyntaxVariable,
-  literals : Set[SyntaxVariable]
+  ellipsisVariable: SyntaxVariable,
+  literals: Set[SyntaxVariable]
 ) {
   val wildcardVariable = BoundSyntaxVariable(Primitives.Wildcard)
 
   /** Determines if the passed symbol should be treated as a zero or more match */
-  def isZeroOrMore(scopedSymbol : sst.ScopedSymbol) =
+  def isZeroOrMore(scopedSymbol: sst.ScopedSymbol) =
     !literals.contains(ellipsisVariable) && (SyntaxVariable.fromSymbol(scopedSymbol) == ellipsisVariable)
 
   /** Determines if the passed symbol should be treated as a wildcard match */
-  def isWildcard(scopedSymbol : sst.ScopedSymbol) =
+  def isWildcard(scopedSymbol: sst.ScopedSymbol) =
     !literals.contains(wildcardVariable) && (SyntaxVariable.fromSymbol(scopedSymbol) == wildcardVariable)
 
   def withoutZeroOrMoreAllowed =

@@ -5,7 +5,7 @@ import org.scalatest.{FunSuite,Inside}
 import llambda.compiler._
 
 class ExtractProgramSuite extends FunSuite with Inside {
-  def programFor(scheme : String) : List[et.Expr] = {
+  def programFor(scheme: String): List[et.Expr] = {
     val data = SchemeParser.parseStringAsData(scheme)
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(Nil),
@@ -20,18 +20,18 @@ class ExtractProgramSuite extends FunSuite with Inside {
       programFor("(quote a)")
     }
   }
-  
+
   test("import introduces bindings") {
     assert(programFor(
-      """(import (llambda internal primitives)) 
+      """(import (llambda internal primitives))
          (quote a)"""
       ) === List(et.Literal(ast.Symbol("a"))))
   }
-  
+
   test("multiple imports") {
     inside(programFor(
-      """(import (only (test singleexpr) a)) 
-         (import (rename (test singleexpr) (a b))) 
+      """(import (only (test singleexpr) a))
+         (import (rename (test singleexpr) (a b)))
          a
          b"""
     )) {

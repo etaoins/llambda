@@ -7,7 +7,7 @@ import llambda.compiler.{NoSourceLocation, SourceLocated}
 import llambda.compiler.TypeException
 
 object ReconcileTypeVars {
-  case class Result(values : Map[TypeVar, SchemeType] = Map())
+  case class Result(values: Map[TypeVar, SchemeType] = Map())
 
   /** Reconciles resolved type variables with their defined upper bounds
     *
@@ -22,12 +22,12 @@ object ReconcileTypeVars {
     *                         applicable type.
     */
   def apply(
-      typeVars : Set[TypeVar],
-      resolved : ResolveTypeVars.Result = ResolveTypeVars.Result(),
-      located : SourceLocated = NoSourceLocation,
-      strictBounds : Boolean = false,
-      fixApplicable : Boolean = false
-  ) : ReconcileTypeVars.Result = {
+      typeVars: Set[TypeVar],
+      resolved: ResolveTypeVars.Result = ResolveTypeVars.Result(),
+      located: SourceLocated = NoSourceLocation,
+      strictBounds: Boolean = false,
+      fixApplicable: Boolean = false
+  ): ReconcileTypeVars.Result = {
     val finalValues = typeVars.map({ typeVar =>
       val upperBound = typeVar.upperBound
 

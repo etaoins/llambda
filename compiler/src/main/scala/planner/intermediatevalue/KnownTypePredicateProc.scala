@@ -9,21 +9,21 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.InternalCompilerErrorException
 
-class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownProc(
+class KnownTypePredicateProc(testingType: vt.SchemeType) extends KnownProc(
   TypePredicateProcSignature.toPolymorphic,
   None
 ) {
-  def nativeSymbol(implicit plan : PlanWriter) : String =
+  def nativeSymbol(implicit plan: PlanWriter): String =
     SymbolForTypePredicateProc(plan, testingType)
-  
-  override def withSelfTemp(selfTemp : ps.TempValue) = {
+
+  override def withSelfTemp(selfTemp: ps.TempValue) = {
     // We have no self value so we don't need be to captured and therefore restored
     throw new InternalCompilerErrorException("Attempt to change the self value of a type predicate")
   }
 
-  override def attemptInlineApplication(state : PlannerState)(
-      args : List[(ContextLocated, IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] =
+  override def attemptInlineApplication(state: PlannerState)(
+      args: List[(ContextLocated, IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] =
     args match {
       case List((_, singleValue)) =>
         val checkResult = PlanTypeCheck(

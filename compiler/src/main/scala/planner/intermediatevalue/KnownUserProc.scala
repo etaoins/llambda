@@ -19,25 +19,25 @@ import llambda.compiler.codegen.RuntimeFunctions
   *                       optimisations in the planner.
   */
 class KnownUserProc(
-    polySignature : PolymorphicSignature,
-    plannedSymbol : String,
-    selfTempOpt : Option[ps.TempValue],
-    val stdlibNameOpt : Option[String] = None
+    polySignature: PolymorphicSignature,
+    plannedSymbol: String,
+    selfTempOpt: Option[ps.TempValue],
+    val stdlibNameOpt: Option[String] = None
 ) extends KnownProc(polySignature, selfTempOpt) {
-  def nativeSymbol(implicit plan : PlanWriter) : String =
+  def nativeSymbol(implicit plan: PlanWriter): String =
     plannedSymbol
 
-  def withStdlibName(newStdlibName : String) : KnownUserProc = {
+  def withStdlibName(newStdlibName: String): KnownUserProc = {
     new KnownUserProc(polySignature, plannedSymbol, selfTempOpt, Some(newStdlibName))
   }
 
-  override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc = {
+  override def withSelfTemp(selfTemp: ps.TempValue): KnownUserProc = {
     new KnownUserProc(polySignature, plannedSymbol, Some(selfTemp), stdlibNameOpt)
   }
 
-  override def attemptInlineApplication(state : PlannerState)(
-      args : List[(ContextLocated, IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+  override def attemptInlineApplication(state: PlannerState)(
+      args: List[(ContextLocated, IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = {
     val stdlibProcPlanners = StdlibProcPlanner.activePlanners
 
     // Find the first stdlib proc planner that knowns how to plan us
@@ -50,7 +50,7 @@ class KnownUserProc(
     None
   }
 
-  override def hasSideEffects(arity : Int) : Boolean =
+  override def hasSideEffects(arity: Int): Boolean =
     RuntimeFunctions.hasSideEffects(plannedSymbol, arity)
 }
 

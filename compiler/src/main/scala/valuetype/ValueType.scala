@@ -10,8 +10,8 @@ import llambda.compiler.valuetype.{polymorphic => pm}
   * representation. For example, Int32 and IntegerType are both integers but have different native representations.
   */
 sealed abstract class ValueType {
-  val schemeType : SchemeType
-  val isGcManaged : Boolean
+  val schemeType: SchemeType
+  val isGcManaged: Boolean
 
   override def toString = NameForType(this)
 }
@@ -27,7 +27,7 @@ sealed abstract trait PointerType extends ValueType
 
 /** Pointer to a garbage collected value cell */
 sealed abstract trait CellValueType extends PointerType {
-  val cellType : ct.CellType
+  val cellType: ct.CellType
 }
 
 /** Primitive types shared with C */
@@ -36,7 +36,7 @@ sealed abstract class NativeType extends ValueType with LeafType {
 }
 
 /** Type reperesented by a native integer */
-sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
+sealed abstract class IntLikeType(val bits: Int, val signed: Boolean) extends NativeType
 
 /** Native boolean value */
 case object Predicate extends IntLikeType(1, false) {
@@ -44,7 +44,7 @@ case object Predicate extends IntLikeType(1, false) {
 }
 
 /** Native integer type representing a Scheme integer */
-sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed) {
+sealed abstract class IntType(bits: Int, signed: Boolean) extends IntLikeType(bits, signed) {
   val schemeType = IntegerType
 
   def minIntValue = if (signed) {
@@ -77,7 +77,7 @@ sealed abstract class FpType extends NativeType {
   val schemeType = FlonumType
 }
 
-case object Float extends FpType 
+case object Float extends FpType
 case object Double extends FpType
 
 /** Native integer representing a Unicode code point */
@@ -90,17 +90,17 @@ case object UnicodeChar extends IntLikeType(32, true) {
   * This uniquely identifies a record type even if has the same name and internal structure as another type
   */
 class RecordType(
-    val sourceName : String,
-    val fields : List[RecordField],
-    val selfTypeVarOpt : Option[pm.TypeVar] = None,
-    val parentRecordOpt : Option[RecordType] = None
+    val sourceName: String,
+    val fields: List[RecordField],
+    val selfTypeVarOpt: Option[pm.TypeVar] = None,
+    val parentRecordOpt: Option[RecordType] = None
 ) extends CellValueType with NonRecursiveType with DerivedSchemeType with RecordLikeType {
   val cellType = ct.RecordCell
   val isGcManaged = true
   val parentType = SchemeTypeAtom(ct.RecordCell)
 
   /** Test if this type is equal to or a child of another type */
-  def isEqualToOrChildOf(other : RecordType) : Boolean = {
+  def isEqualToOrChildOf(other: RecordType): Boolean = {
     if (other eq this) {
       true
     }
@@ -115,7 +115,7 @@ class RecordType(
     }
   }
 
-  lazy val typeForField : Map[RecordField, ValueType] = fields.map({ field =>
+  lazy val typeForField: Map[RecordField, ValueType] = fields.map({ field =>
     val selfTypeVars = selfTypeVarOpt.map(_ -> this).toMap
     val reconciledVars = pm.ReconcileTypeVars.Result(selfTypeVars)
 
@@ -134,8 +134,8 @@ class RecordType(
   *                        supported.
   */
 class ExternalRecordType(
-    val sourceNameOpt : Option[String],
-    val predicateOpt : Option[ExternalRecordTypePredicate]
+    val sourceNameOpt: Option[String],
+    val predicateOpt: Option[ExternalRecordTypePredicate]
 ) extends CellValueType with NonRecursiveType with DerivedSchemeType {
   val cellType = ct.RecordCell
   val isGcManaged = true
@@ -144,8 +144,8 @@ class ExternalRecordType(
 
 /** Represents a hash map type */
 case class HashMapType(
-    keyType : SchemeType,
-    valueType : SchemeType
+    keyType: SchemeType,
+    valueType: SchemeType
 ) extends CellValueType with NonRecursiveType with DerivedSchemeType {
   val cellType = ct.HashMapCell
   val isGcManaged = true
@@ -159,7 +159,7 @@ sealed abstract trait SchemeType extends CellValueType {
   val schemeType = this
 
   /** Unrolls any recursive type references to ourselves */
-  def unrolled : SchemeType =
+  def unrolled: SchemeType =
     UnrollType.unrollType(this, this, 0)
 
   /** Unrolls one of our child types
@@ -167,32 +167,32 @@ sealed abstract trait SchemeType extends CellValueType {
     * Unrolling makes sure any recursive references to ourselves inside the unrolled type are replaced by a literal
     * copy of ourselves. This ensures that the resulting type is a valid standalone type
     */
-  def unrollChildType(childType : SchemeType) : SchemeType =
+  def unrollChildType(childType: SchemeType): SchemeType =
     UnrollType.unrollType(childType, this, 1)
 
   /** Unrolls a child type reference
     *
     * This is the same as unrollChildType except it operates on type references
     */
-  def unrollChildTypeRef(childTypeRef : SchemeTypeRef) : SchemeType =
+  def unrollChildTypeRef(childTypeRef: SchemeTypeRef): SchemeType =
     UnrollType.unrollTypeRef(childTypeRef, this, 0) match {
       case DirectSchemeTypeRef(directType) =>
         directType
 
       case _ =>
-        throw new InvalidSchemeTypeRef("Attempted to unroll invalid recursive type") 
+        throw new InvalidSchemeTypeRef("Attempted to unroll invalid recursive type")
     }
-  
+
   /** Shortcut for IntersectTypes(this, otherType) */
-  def &(otherType : SchemeType) : SchemeType =
+  def &(otherType: SchemeType): SchemeType =
     IntersectTypes(this, otherType)
 
   /** Shortcut for SubtractTypes(this, otherType) */
-  def -(otherType : SchemeType) : SchemeType =
+  def -(otherType: SchemeType): SchemeType =
     SubtractTypes(this, otherType)
 
   /** Creates a union of this type with another */
-  def +(otherType : SchemeType) : SchemeType =
+  def +(otherType: SchemeType): SchemeType =
     if (this == otherType) {
       this
     }
@@ -202,17 +202,17 @@ sealed abstract trait SchemeType extends CellValueType {
 
   /** Returns the applicable type for this type if one exists
     *
-    * Unions can only have a single applicable type at once. This will return that applicable type if it exists or None 
+    * Unions can only have a single applicable type at once. This will return that applicable type if it exists or None
     * if the union has no applicable type.
     */
-  def applicableTypeOpt : Option[ApplicableType] =
+  def applicableTypeOpt: Option[ApplicableType] =
     None
 
   /** Returns this type with a new applicable type
     *
     * If the previous type did not have a applicable type this will return the original type
     */
-   def replaceApplicableType(applicableType : ApplicableType) : SchemeType =
+   def replaceApplicableType(applicableType: ApplicableType): SchemeType =
      this
 }
 
@@ -224,34 +224,34 @@ sealed abstract trait LiteralValueType extends SchemeType with LeafType
   * This is to enforce that unions of unions have their member types flattened in to a single union.
   */
 sealed abstract trait NonUnionSchemeType extends SchemeType {
-  val cellType : ct.CellType
+  val cellType: ct.CellType
 }
 
 /** Utility type for Scheme types derived from other Scheme types */
 sealed abstract trait DerivedSchemeType extends NonUnionSchemeType {
-  val parentType : NonUnionSchemeType
+  val parentType: NonUnionSchemeType
 }
 
 /** Pointer to a garbage collected value cell containing an intrinsic type */
-case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionSchemeType with LeafType {
+case class SchemeTypeAtom(cellType: ct.ConcreteCellType) extends NonUnionSchemeType with LeafType {
   val isGcManaged = cellType match {
-    case preconstruct : ct.PreconstructedCellType =>
+    case preconstruct: ct.PreconstructedCellType =>
       // Only constant instances of this exist
       false
 
     case _ =>
       true
   }
-  
-  override def applicableTypeOpt : Option[ApplicableType] =
+
+  override def applicableTypeOpt: Option[ApplicableType] =
     if (cellType == ct.ProcedureCell) {
       Some(TopProcedureType)
     }
     else {
       None
     }
-   
-  override def replaceApplicableType(procType : ApplicableType) : SchemeType =
+
+  override def replaceApplicableType(procType: ApplicableType): SchemeType =
     if (cellType == ct.ProcedureCell) {
       procType
     }
@@ -261,14 +261,14 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
 }
 
 /** Literal boolean type */
-case class LiteralBooleanType(value : Boolean) extends DerivedSchemeType with LiteralValueType {
+case class LiteralBooleanType(value: Boolean) extends DerivedSchemeType with LiteralValueType {
   val cellType = ct.BooleanCell
   val parentType = BooleanType
   val isGcManaged = BooleanType.isGcManaged
 }
 
 /** Literal symbol types */
-case class LiteralSymbolType(value : String) extends DerivedSchemeType with LiteralValueType {
+case class LiteralSymbolType(value: String) extends DerivedSchemeType with LiteralValueType {
   val cellType = ct.SymbolCell
   val parentType = SymbolType
   val isGcManaged = SymbolType.isGcManaged
@@ -276,12 +276,12 @@ case class LiteralSymbolType(value : String) extends DerivedSchemeType with Lite
 
 /** Trait for pair types */
 sealed trait PairType extends NonUnionSchemeType {
-  val carTypeRef : SchemeTypeRef
-  val cdrTypeRef : SchemeTypeRef
+  val carTypeRef: SchemeTypeRef
+  val cdrTypeRef: SchemeTypeRef
 }
 
 /** Pair with specific types for its car and cdr */
-case class SpecificPairType(carTypeRef : SchemeTypeRef, cdrTypeRef : SchemeTypeRef) extends DerivedSchemeType with PairType {
+case class SpecificPairType(carTypeRef: SchemeTypeRef, cdrTypeRef: SchemeTypeRef) extends DerivedSchemeType with PairType {
   val cellType = ct.PairCell
   val parentType = SchemeTypeAtom(ct.PairCell)
   val isGcManaged = true
@@ -303,7 +303,7 @@ object PairType {
     * If both car and cdr are <any> then AnyPairType is returned. Otherwise, an appropriate instance of
     * SpecificPairType is constructed.
     */
-  def apply(carTypeRef : SchemeTypeRef, cdrTypeRef : SchemeTypeRef) : PairType = {
+  def apply(carTypeRef: SchemeTypeRef, cdrTypeRef: SchemeTypeRef): PairType = {
     (carTypeRef, cdrTypeRef) match {
       case (DirectSchemeTypeRef(AnySchemeType), DirectSchemeTypeRef(AnySchemeType)) =>
         AnyPairType
@@ -316,7 +316,7 @@ object PairType {
 
 object UniformProperListType {
   /** Constructs a recursive type representing a unsized proper list with a uniform member type */
-  def apply(memberType : SchemeType) : SchemeType = {
+  def apply(memberType: SchemeType): SchemeType = {
     UnionType(Set(
       EmptyListType,
       SpecificPairType(
@@ -330,12 +330,12 @@ object UniformProperListType {
 
 object SpecificProperListType {
   /** Constructs a recursive type representing a fixed length proper list with specific member types */
-  def apply(memberTypeRefs : Iterable[SchemeType]) : NonUnionSchemeType =
-    memberTypeRefs.foldRight(EmptyListType : NonUnionSchemeType) { case (memberTypeRef, cdrType) =>
+  def apply(memberTypeRefs: Iterable[SchemeType]): NonUnionSchemeType =
+    memberTypeRefs.foldRight(EmptyListType: NonUnionSchemeType) { case (memberTypeRef, cdrType) =>
       SpecificPairType(DirectSchemeTypeRef(memberTypeRef), DirectSchemeTypeRef(cdrType))
     }
 
-  def unapply(schemeType : SchemeType) : Option[List[SchemeTypeRef]] = schemeType match {
+  def unapply(schemeType: SchemeType): Option[List[SchemeTypeRef]] = schemeType match {
     case SpecificPairType(typeRef, DirectSchemeTypeRef(EmptyListType)) =>
       Some(List(typeRef))
 
@@ -349,16 +349,16 @@ object SpecificProperListType {
 }
 
 /** Union of multiple Scheme types */
-case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
+case class UnionType(memberTypes: Set[NonUnionSchemeType]) extends SchemeType {
   lazy val isGcManaged = memberTypes.exists(_.isGcManaged)
-  
-  private def cellTypesBySpecificity(rootType : ct.CellType) : List[ct.CellType] = {
+
+  private def cellTypesBySpecificity(rootType: ct.CellType): List[ct.CellType] = {
     rootType.directSubtypes.toList.flatMap(cellTypesBySpecificity) :+ rootType
   }
 
   /** Most specific cell type that is a superset all of our member types */
-  lazy val cellType : ct.CellType = {
-    val possibleCellTypes = memberTypes.flatMap(_.cellType.concreteTypes) : Set[ct.ConcreteCellType]
+  lazy val cellType: ct.CellType = {
+    val possibleCellTypes = memberTypes.flatMap(_.cellType.concreteTypes): Set[ct.ConcreteCellType]
 
     // Find the most specific cell type that will cover all of our member types
     (cellTypesBySpecificity(ct.AnyCell).find { candidateCellType =>
@@ -367,16 +367,16 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   }
 
   /** Cell type exactly matching our member types or None if no exact match exists */
-  private[valuetype] def exactCellTypeOpt : Option[ct.CellType] = {
+  private[valuetype] def exactCellTypeOpt: Option[ct.CellType] = {
     (cellTypesBySpecificity(ct.AnyCell).find { candidateCellType =>
-      SchemeType.fromCellType(candidateCellType) == this 
+      SchemeType.fromCellType(candidateCellType) == this
     })
   }
-  
-  override def applicableTypeOpt : Option[ApplicableType] =
+
+  override def applicableTypeOpt: Option[ApplicableType] =
     memberTypes.flatMap(_.applicableTypeOpt).headOption
-  
-  override def replaceApplicableType(procType : ApplicableType) : SchemeType = {
+
+  override def replaceApplicableType(procType: ApplicableType): SchemeType = {
     val (oldProcTypes, nonProcTypes) =  memberTypes.partition(_.isInstanceOf[ProcedureType])
 
     if (oldProcTypes.isEmpty) {
@@ -390,14 +390,14 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 }
 
 sealed abstract trait ApplicableType extends NonUnionSchemeType with NonRecursiveType {
-  def signatures : Seq[ProcedureType]
+  def signatures: Seq[ProcedureType]
 }
 
 case class ProcedureType(
-    mandatoryArgTypes : List[SchemeType],
-    optionalArgTypes : List[SchemeType],
-    restArgMemberTypeOpt : Option[SchemeType],
-    returnType : ReturnType.ReturnType[SchemeType]
+    mandatoryArgTypes: List[SchemeType],
+    optionalArgTypes: List[SchemeType],
+    restArgMemberTypeOpt: Option[SchemeType],
+    returnType: ReturnType.ReturnType[SchemeType]
 ) extends DerivedSchemeType with ApplicableType {
   val cellType = ct.ProcedureCell
   val isGcManaged = true
@@ -405,11 +405,11 @@ case class ProcedureType(
   val parentType = SchemeTypeAtom(ct.ProcedureCell)
 
   def signatures = List(this)
-  
-  override def applicableTypeOpt : Option[ApplicableType] =
+
+  override def applicableTypeOpt: Option[ApplicableType] =
     Some(this)
 
-  override def replaceApplicableType(applicableType : ApplicableType) =
+  override def replaceApplicableType(applicableType: ApplicableType) =
     applicableType
 
   def toPolymorphic =
@@ -417,7 +417,7 @@ case class ProcedureType(
 }
 
 case class CaseProcedureType(
-    clauseTypes : List[ProcedureType]
+    clauseTypes: List[ProcedureType]
 ) extends DerivedSchemeType with ApplicableType {
   val cellType = ct.ProcedureCell
   val isGcManaged = true
@@ -425,8 +425,8 @@ case class CaseProcedureType(
   val parentType = SchemeTypeAtom(ct.ProcedureCell)
 
   def signatures = clauseTypes
-  
-  override def applicableTypeOpt : Option[ApplicableType] =
+
+  override def applicableTypeOpt: Option[ApplicableType] =
     Some(this)
 }
 
@@ -452,9 +452,9 @@ object SchemeType {
     */
   type Stack = List[SchemeType]
 
-  def fromCellType(cellType : ct.CellType) : SchemeType = {
+  def fromCellType(cellType: ct.CellType): SchemeType = {
     cellType match {
-      case concrete : ct.ConcreteCellType =>
+      case concrete: ct.ConcreteCellType =>
         SchemeTypeAtom(concrete)
 
       case _ =>
@@ -464,14 +464,14 @@ object SchemeType {
     }
   }
 
-  private def simplifyApplicableTypes(nonUnionTypes : Set[NonUnionSchemeType]) : Set[NonUnionSchemeType] = 
+  private def simplifyApplicableTypes(nonUnionTypes: Set[NonUnionSchemeType]): Set[NonUnionSchemeType] =
     if (nonUnionTypes.count(_.isInstanceOf[ApplicableType]) > 1) {
       val (allApplicableTypes, nonApplicableTypes) = nonUnionTypes.partition(_.isInstanceOf[ApplicableType])
 
       // We can't distinguish procedure types at runtime
       // Try to combine them in to a single procedure type
       val superApplicableType = allApplicableTypes.reduceLeft({
-        (left : NonUnionSchemeType, right : NonUnionSchemeType) =>
+        (left: NonUnionSchemeType, right: NonUnionSchemeType) =>
           if (SatisfiesType(left, right) == Some(true)) {
             // Left type is more general
             left
@@ -492,12 +492,12 @@ object SchemeType {
       nonUnionTypes
     }
 
-  def fromTypeUnion(otherTypes : Iterable[SchemeType]) : SchemeType = {
+  def fromTypeUnion(otherTypes: Iterable[SchemeType]): SchemeType = {
     val nonUnionTypes = (otherTypes.flatMap {
-      case nonUnion : NonUnionSchemeType =>
+      case nonUnion: NonUnionSchemeType =>
         Set(nonUnion)
 
-      case union : UnionType =>
+      case union: UnionType =>
         // This is a bit tricky
         // We attempt to flatten any union types together in to the returned union. For example,
         // (U (U <integer> <flonum>) (U <symbol> <string>))

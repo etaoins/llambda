@@ -7,16 +7,16 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-abstract class KnownArtificialProc(polySignature : PolymorphicSignature) extends KnownProc(polySignature, None) {
-  private var plannedNativeSymbolOpt : Option[String] = None
+abstract class KnownArtificialProc(polySignature: PolymorphicSignature) extends KnownProc(polySignature, None) {
+  private var plannedNativeSymbolOpt: Option[String] = None
 
   /** Hint for the name of the symbol
     *
-    * If this name is already taken a unique name will be assigned 
+    * If this name is already taken a unique name will be assigned
     */
-  protected val symbolHint : String
+  protected val symbolHint: String
 
-  def nativeSymbol(implicit plan : PlanWriter) : String = {
+  def nativeSymbol(implicit plan: PlanWriter): String = {
     if (!plannedNativeSymbolOpt.isDefined) {
       val allocedSymbol = plan.allocSymbol(symbolHint)
       plan.plannedFunctions += (allocedSymbol -> planFunction(plan, allocedSymbol))
@@ -26,10 +26,10 @@ abstract class KnownArtificialProc(polySignature : PolymorphicSignature) extends
 
     plannedNativeSymbolOpt.get
   }
-  
-  protected def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction
 
-  override def withSelfTemp(selfTemp : ps.TempValue) = {
+  protected def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction
+
+  override def withSelfTemp(selfTemp: ps.TempValue) = {
     // We have no self value so we don't need be to captured and therefore restored
     throw new InternalCompilerErrorException("Attempt to change the self value of an artificial procedure")
   }

@@ -18,19 +18,19 @@ import llambda.compiler.valuetype.{polymorphic => pm}
   * @param  recursiveSelfLocOpt  For recursive procedures the storage location refering to the "self" value
   */
 private[planner] case class LambdaManifest(
-    parentState : PlannerState,
-    closureType : vt.ClosureType,
-    closedVars : List[ClosedVariable],
-    lambdaExpr : et.Lambda,
-    recursiveSelfLocOpt : Option[StorageLocation]
+    parentState: PlannerState,
+    closureType: vt.ClosureType,
+    closedVars: List[ClosedVariable],
+    lambdaExpr: et.Lambda,
+    recursiveSelfLocOpt: Option[StorageLocation]
 ) {
   /** Returns if this lambda is recursive */
   def isRecursive =
     recursiveSelfLocOpt.isDefined
 
   /** Returns a list of all captured variables in the lambda's closure */
-  lazy val capturedVars : List[CapturedVariable] =
+  lazy val capturedVars: List[CapturedVariable] =
     closedVars collect {
-      case captured : CapturedVariable => captured
+      case captured: CapturedVariable => captured
     }
 }

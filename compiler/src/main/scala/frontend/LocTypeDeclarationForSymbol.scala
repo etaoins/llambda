@@ -18,10 +18,10 @@ private[frontend] object LocTypeDeclarationForSymbol {
     * @param  defaultType      Default type to use if no type declaration can be found
     */
   def apply(
-      symbol : sst.ScopedSymbol,
-      providedDeclOpt : Option[LocTypeDeclaration] = None,
-      defaultType : vt.SchemeType = vt.AnySchemeType
-  ) : LocTypeDeclaration = {
+      symbol: sst.ScopedSymbol,
+      providedDeclOpt: Option[LocTypeDeclaration] = None,
+      defaultType: vt.SchemeType = vt.AnySchemeType
+  ): LocTypeDeclaration = {
     symbol.scope.typeDeclarations.get(symbol) match {
       case Some(declaredType) =>
         // Does the declared type match the provided type exactly?

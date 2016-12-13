@@ -13,11 +13,11 @@ import llambda.compiler.planner.{step => ps}
   */
 object UnboxEarly extends FunctionConniver {
   protected def moveUnboxingSteps(
-      reverseSteps : List[ps.Step],
-      movingSteps : ListMap[ps.TempValue, ps.UnboxValue],
-      acc : List[ps.Step]
-  ) : List[ps.Step] = reverseSteps match {
-    case (unboxing : ps.UnboxValue) :: reverseTail =>
+      reverseSteps: List[ps.Step],
+      movingSteps: ListMap[ps.TempValue, ps.UnboxValue],
+      acc: List[ps.Step]
+  ): List[ps.Step] = reverseSteps match {
+    case (unboxing: ps.UnboxValue) :: reverseTail =>
       // Remove this from the list of steps and place it inside movingSteps
       val newMovingSteps = movingSteps + (unboxing.boxed -> unboxing)
       moveUnboxingSteps(reverseTail, newMovingSteps, acc)
@@ -35,7 +35,7 @@ object UnboxEarly extends FunctionConniver {
 
       // Do we need to recurse down this step?
       val recursedStep = other match {
-        case nestingStep : ps.NestingStep =>
+        case nestingStep: ps.NestingStep =>
           nestingStep.mapInnerBranches { case (innerSteps, innerResultTemp) =>
             val newSteps = moveUnboxingSteps(innerSteps.reverse, ListMap(), Nil)
             (newSteps, innerResultTemp)
@@ -55,10 +55,10 @@ object UnboxEarly extends FunctionConniver {
       movingSteps.values.toList.reverse ++ acc
   }
 
-  protected[conniver] def conniveSteps(steps : List[ps.Step]) : List[ps.Step] =
+  protected[conniver] def conniveSteps(steps: List[ps.Step]): List[ps.Step] =
     moveUnboxingSteps(steps.reverse, ListMap(), Nil)
 
-  protected def conniveFunction(function : PlannedFunction) : PlannedFunction = {
+  protected def conniveFunction(function: PlannedFunction): PlannedFunction = {
     function.copy(
       steps=conniveSteps(function.steps)
     )

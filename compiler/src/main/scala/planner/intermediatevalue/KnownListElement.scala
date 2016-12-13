@@ -9,31 +9,31 @@ trait KnownListElement extends IntermediateValue {
     * If this element isn't part of a proper list or the length of the list can't be statically determined then this
     * will return None
     */
-  def listLengthOpt : Option[Long]
+  def listLengthOpt: Option[Long]
 
   /** Returns the members of this list as IntermediateValues
     *
     * This will only be defined for lists that have statically known members at compile time
     */
-  def toValueListOpt : Option[List[IntermediateValue]]
+  def toValueListOpt: Option[List[IntermediateValue]]
 }
 
 trait KnownPair extends KnownListElement {
-  val car : IntermediateValue
-  val cdr : IntermediateValue
-  
-  lazy val listLengthOpt : Option[Long] =
+  val car: IntermediateValue
+  val cdr: IntermediateValue
+
+  lazy val listLengthOpt: Option[Long] =
     cdr match {
-      case knownListElement : KnownListElement =>
+      case knownListElement: KnownListElement =>
         knownListElement.listLengthOpt.map(_ + 1)
 
       case _ =>
         None
     }
 
-  def toValueListOpt : Option[List[IntermediateValue]] = {
+  def toValueListOpt: Option[List[IntermediateValue]] = {
     cdr match {
-      case knownListElement : KnownListElement =>
+      case knownListElement: KnownListElement =>
         knownListElement.toValueListOpt.map(car :: _)
 
       case _ =>

@@ -15,18 +15,18 @@ object PlanCond {
     * 2) The value is the branch that wasn't #f is true-y
     * 3) Any additional actions based on the value of that branch being true should be applied
     *
-    * This might seem academic but (and) is implemented as (if cond1 cond2 #f). All three of the above inferences 
+    * This might seem academic but (and) is implemented as (if cond1 cond2 #f). All three of the above inferences
     * are required for (and) to interact properly with occurrence typing. Although only the case with #f being in
     * the false branch is used by (and) the other case is included for symmetry
     */
-  private def constrainIntermediateValues(resultState : PlannerState)(
-    testValue : iv.IntermediateValue,
-    trueState : PlannerState,
-    trueValue : iv.IntermediateValue,
-    falseState : PlannerState,
-    falseValue : iv.IntermediateValue,
-    resultValue : iv.IntermediateValue
-  ) : PlannerState = {
+  private def constrainIntermediateValues(resultState: PlannerState)(
+    testValue: iv.IntermediateValue,
+    trueState: PlannerState,
+    trueValue: iv.IntermediateValue,
+    falseState: PlannerState,
+    falseValue: iv.IntermediateValue,
+    resultValue: iv.IntermediateValue
+  ): PlannerState = {
     import ConstrainType._
 
     val condActions = if (vt.SatisfiesType(vt.LiteralBooleanType(false), trueValue.schemeType) == Some(true)) {
@@ -78,11 +78,11 @@ object PlanCond {
     }
   }
 
-  def apply(initialState : PlannerState)(
-      testExpr : et.Expr,
-      trueExpr : et.Expr,
-      falseExpr : et.Expr
-  )(implicit plan : PlanWriter) : PlanResult = {
+  def apply(initialState: PlannerState)(
+      testExpr: et.Expr,
+      trueExpr: et.Expr,
+      falseExpr: et.Expr
+  )(implicit plan: PlanWriter): PlanResult = {
     val testResult = PlanExpr(initialState)(testExpr)
     val testValue = testResult.value
 

@@ -16,29 +16,29 @@ import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
   * @param  boxedValue      BoxedValue containing the value's TempValue and cell type
   */
 class CellValue(
-    val schemeType : vt.SchemeType,
-    val boxedValue : BoxedValue
+    val schemeType: vt.SchemeType,
+    val boxedValue: BoxedValue
 ) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
 
-  override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
+  override def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
     // Find out if we're false
     val isFalseResult = typecheck.PlanTypeCheck(boxedValue, schemeType, vt.LiteralBooleanType(false))
     val isFalsePred = isFalseResult.toNativePred()
 
     // Invert the result
     val constantZeroPred = ps.Temp(vt.Predicate)
-    plan.steps += ps.CreateNativeInteger(constantZeroPred, 0, vt.Predicate.bits) 
+    plan.steps += ps.CreateNativeInteger(constantZeroPred, 0, vt.Predicate.bits)
 
     val truthyPred = ps.Temp(vt.Predicate)
     plan.steps += ps.IntegerCompare(truthyPred, ps.CompareCond.Equal, None, isFalsePred, constantZeroPred)
     truthyPred
   }
-  
-  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
+
+  def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =
     boxedValue
 
-  def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc =  {
+  def toInvokableProc()(implicit plan: PlanWriter): InvokableProc =  {
     schemeType.applicableTypeOpt match {
       case Some(procedureType) =>
         val boxedProcTemp = toProcedureTempValue(procedureType, None)
@@ -51,9 +51,9 @@ class CellValue(
   }
 
   def toProcedureTempValue(
-      targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter) : ps.TempValue = {
+      targetType: vt.ApplicableType,
+      errorMessageOpt: Option[RuntimeErrorMessage]
+  )(implicit plan: PlanWriter): ps.TempValue = {
     val applicableType = schemeType.applicableTypeOpt getOrElse {
       val message = errorMessageOpt.map(_.text) getOrElse {
         s"Unable to convert ${typeDescription} to ${targetType}"
@@ -105,9 +105,9 @@ class CellValue(
 
       trampolineSymbol
     })
-      
+
     val trampEntryPointTemp = ps.EntryPointTemp()
-    plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
+    plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol)
 
     // Create the adapter procedure cell
     val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
@@ -118,7 +118,7 @@ class CellValue(
     adapterProcTemp
   }
 
-  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
+  def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val boxedChar = toTempValue(vt.CharType)
       val unboxedTemp = ps.Temp(vt.UnicodeChar)
@@ -126,7 +126,7 @@ class CellValue(
 
       unboxedTemp
 
-    case intType : vt.IntType =>
+    case intType: vt.IntType =>
       val boxedInt = toTempValue(vt.IntegerType)
       val unboxedTemp = ps.Temp(vt.Int64)
       plan.steps += ps.UnboxInteger(unboxedTemp, boxedInt)
@@ -144,7 +144,7 @@ class CellValue(
         convTemp
       }
 
-    case fpType : vt.FpType =>
+    case fpType: vt.FpType =>
       if (vt.SatisfiesType(vt.FlonumType, schemeType) == Some(false)) {
         // Not possible
         impossibleConversion(s"Unable to convert non-flonum ${typeDescription} to ${vt.NameForType(fpType)}")
@@ -169,18 +169,18 @@ class CellValue(
     case vt.Predicate =>
       throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
   }
-  
-  override def withSchemeType(newType : vt.SchemeType) : IntermediateValue = newType match {
-    case literalType : vt.LiteralValueType =>
+
+  override def withSchemeType(newType: vt.SchemeType): IntermediateValue = newType match {
+    case literalType: vt.LiteralValueType =>
       IntermediateValue.fromLiteralType(literalType)
 
     case _ =>
       new CellValue(newType, boxedValue)
   }
-  
-  def preferredRepresentation : vt.ValueType =
+
+  def preferredRepresentation: vt.ValueType =
     schemeType
-  
+
   def needsClosureRepresentation =
     true
 }

@@ -5,7 +5,7 @@ import java.io.File
 import scala.io.Source
 import scala.util.parsing.input.Positional
 
-class ParseErrorException(message : String) extends Exception(message)
+class ParseErrorException(message: String) extends Exception(message)
 
 trait CommonParsers extends RegexParsers {
   // Be very strict about identifiers for now
@@ -19,7 +19,7 @@ trait CommonParsers extends RegexParsers {
 
   // Types are identifiers plus zero or more pointer indirections
   def nonArrayType = identifier ~ rep("""(\*|&)""".r) ^^ { case typeName ~ indirections =>
-    indirections.foldLeft(ParsedTypeName(typeName) : ParsedType) { case (innerType, indirection) =>
+    indirections.foldLeft(ParsedTypeName(typeName): ParsedType) { case (innerType, indirection) =>
       indirection match {
         case "*" => ParsedPointerType(innerType)
         case "&" => ParsedReferenceType(innerType)
@@ -30,7 +30,7 @@ trait CommonParsers extends RegexParsers {
   def arrayType = nonArrayType ~ arrayDimensions ^^ { case elementType ~ dimensions =>
     ParsedArrayType(dimensions, elementType)
   }
-  
+
   // Functions can return "void" in addition to an actual type
   def returnType = voidReturn | nonVoidReturn
   def voidReturn = "void" ^^^ None
@@ -52,9 +52,9 @@ trait FieldTypeAliasParser extends CommonParsers {
   })
 
   def fieldTypeBody = "{" ~> opt(cppNameDef) <~ "}"
-  
+
   def cppTypeName = """([a-zA-Z_][a-zA-Z0-9_<>]*::)*[a-zA-Z_][a-zA-Z0-9_<>]*""".r
-  def cppNameDef = opt("extern") ~ "cppname" ~ "=" ~ cppTypeName <~ ";" ^^ { case externOpt ~ _ ~ _ ~ name => 
+  def cppNameDef = opt("extern") ~ "cppname" ~ "=" ~ cppTypeName <~ ";" ^^ { case externOpt ~ _ ~ _ ~ name =>
     val needsDefinition = !externOpt.isDefined
     ParsedCppType(name, needsDefinition)
   }
@@ -79,7 +79,7 @@ trait CellDefinitionParser extends CommonParsers {
     case instanceType ~ visibility ~ typeName ~ inherits ~ fields =>
       ParsedTaggedClassDefinition(typeName, instanceType, inherits, fields, visibility.getOrElse(CellClass.Public))
   }
- 
+
   def variantCellDefinition = "variant" ~ "cell" ~> identifier ~ cellInheritence ~ fields <~ ";" ^^ { case typeName ~ inherits ~ fields =>
     ParsedVariantClassDefinition(typeName, inherits, fields)
   }
@@ -102,10 +102,10 @@ trait CellDefinitionParser extends CommonParsers {
 
   def field = positioned(arrayField | functionPointerField | valueField) <~ ";"
 
-  def valueField = nonArrayType ~ identifier ~ initializer ^^ { case fieldType ~ fieldName ~ fieldInitializer => 
+  def valueField = nonArrayType ~ identifier ~ initializer ^^ { case fieldType ~ fieldName ~ fieldInitializer =>
     new ParsedCellField(fieldName, fieldType, fieldInitializer)
   }
-  
+
   def initializer = opt("=" ~> """\d+""".r) ^^ { initializerOpt =>
     initializerOpt.map { initializer =>
       java.lang.Long.parseLong(initializer)
@@ -115,7 +115,7 @@ trait CellDefinitionParser extends CommonParsers {
   def arrayField = valueType ~ identifier ~ arrayDimensions ^^ { case elementType ~ fieldName ~ dimensions =>
     ParsedCellField(fieldName, ParsedArrayType(dimensions, elementType), None)
   }
-  
+
   def functionPointerField = returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" ^^ {
     case retType ~ _  ~ _ ~ fieldName ~ _ ~ _ ~ argTypes ~ _ =>
       ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), None)
@@ -123,7 +123,7 @@ trait CellDefinitionParser extends CommonParsers {
 }
 
 class DefinitionParser extends CellDeclarationParser with CellDefinitionParser with FieldTypeAliasParser {
-  def typeDefinitions : Parser[List[ParsedDefinition]] =
+  def typeDefinitions: Parser[List[ParsedDefinition]] =
     rep1(typeDefinition)
 
   def typeDefinition = cellDeclaration | cellDefinition | fieldTypeAlias
@@ -132,13 +132,13 @@ class DefinitionParser extends CellDeclarationParser with CellDefinitionParser w
 }
 
 object DefinitionParser {
-  def parseFile(input : File) : List[ParsedDefinition] = {
+  def parseFile(input: File): List[ParsedDefinition] = {
     val inputString = Source.fromFile(input, "UTF-8").mkString
 
     parseString(inputString)
   }
 
-  def parseString(input : String) : List[ParsedDefinition] = {
+  def parseString(input: String): List[ParsedDefinition] = {
     val parser = new DefinitionParser
 
     parser.parseAll(parser.typeDefinitions, input) match {

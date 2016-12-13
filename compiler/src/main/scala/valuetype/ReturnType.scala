@@ -10,13 +10,13 @@ object ReturnType {
       *
       * If no representation is required then the result is not defined
       */
-    def representationTypeOpt : Option[T]
+    def representationTypeOpt: Option[T]
 
     /** Returns the Scheme type of the return values
       *
       * This is useful for type checking or type arithmetic on return types
       */
-    def schemeType : SchemeType
+    def schemeType: SchemeType
 
     override def toString =
       NameForReturnType(this)
@@ -25,14 +25,14 @@ object ReturnType {
       *
       * This is only useful if T is set to ValueType
       */
-    def schemeReturnType : ReturnType[SchemeType]
+    def schemeReturnType: ReturnType[SchemeType]
   }
 
   /** Represents a single value returned from a procedure
     *
     * This is the normal case. Single values are represented by the their native type without any wrapping
     */
-   case class Reachable[+T >: SchemeType <: ValueType](valueType : T) extends ReturnType[T] {
+   case class Reachable[+T >: SchemeType <: ValueType](valueType: T) extends ReturnType[T] {
     def representationTypeOpt = valueType match {
       case UnitType =>
         None
@@ -41,9 +41,9 @@ object ReturnType {
         Some(otherType)
     }
 
-    def schemeType : SchemeType = valueType.schemeType
+    def schemeType: SchemeType = valueType.schemeType
 
-    def schemeReturnType : ReturnType[SchemeType] =
+    def schemeReturnType: ReturnType[SchemeType] =
       Reachable(valueType.schemeType)
   }
 
@@ -55,9 +55,9 @@ object ReturnType {
   object Unreachable extends ReturnType[SchemeType] {
     def representationTypeOpt = None
 
-    def schemeType : SchemeType = UnitType
+    def schemeType: SchemeType = UnitType
 
-    def schemeReturnType : ReturnType[SchemeType] =
+    def schemeReturnType: ReturnType[SchemeType] =
       this
   }
 }

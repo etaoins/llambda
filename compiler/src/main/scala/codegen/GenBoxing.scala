@@ -6,8 +6,8 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenBoxing {
-  def apply(state : GenerationState)(boxStep : ps.BoxValue, nativeValue : IrValue) : (GenerationState, IrValue) = boxStep match {
-    case _ : ps.BoxBoolean =>
+  def apply(state: GenerationState)(boxStep: ps.BoxValue, nativeValue: IrValue): (GenerationState, IrValue) = boxStep match {
+    case _: ps.BoxBoolean =>
       val irValue = state.currentBlock.select("boxedBool")(
         nativeValue,
         GlobalDefines.trueIrValue,
@@ -16,7 +16,7 @@ object GenBoxing {
 
       (state, irValue)
 
-    case _ : ps.BoxInteger =>
+    case _: ps.BoxInteger =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
@@ -29,7 +29,7 @@ object GenBoxing {
 
       (newState, boxedIntCons)
 
-    case _ : ps.BoxFlonum =>
+    case _: ps.BoxFlonum =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
@@ -42,7 +42,7 @@ object GenBoxing {
 
       (newState, boxedFlonumCons)
 
-    case _ : ps.BoxChar =>
+    case _: ps.BoxChar =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 

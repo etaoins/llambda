@@ -11,29 +11,29 @@ import llambda.compiler.{celltype => ct}
   * These can be invoked by loading the procedure's entry point and passing it the procedure cell.
   */
 class BoxedProcCell(
-    applicableType : vt.ApplicableType,
-    tempValue : ps.TempValue
+    applicableType: vt.ApplicableType,
+    tempValue: ps.TempValue
 ) extends CellValue(applicableType, BoxedValue(ct.ProcedureCell, tempValue)) with InvokableProc {
   val signature = ApplicableTypeToAdaptedSignature(applicableType)
   val polySignature = signature.toPolymorphic
 
-  def planSelf()(implicit plan : PlanWriter) : ps.TempValue =
+  def planSelf()(implicit plan: PlanWriter): ps.TempValue =
     tempValue
 
-  def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
+  def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, tempValue, signature)
 
     entryPointTemp
   }
 
-  def nativeSymbolOpt(implicit plan : PlanWriter) =
+  def nativeSymbolOpt(implicit plan: PlanWriter) =
     None
 
-  def withSelfTemp(selfTemp : ps.TempValue) =
+  def withSelfTemp(selfTemp: ps.TempValue) =
     new BoxedProcCell(applicableType, selfTemp)
 
-  override def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc =
+  override def toInvokableProc()(implicit plan: PlanWriter): InvokableProc =
     this
 }
 

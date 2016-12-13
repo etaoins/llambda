@@ -7,17 +7,17 @@ sealed trait ReturnableType extends IrType
 // This seems to be everything but void
 sealed abstract class FirstClassType extends IrType with ReturnableType
 
-sealed abstract class FloatingPointType(val bits : Int) extends FirstClassType
+sealed abstract class FloatingPointType(val bits: Int) extends FirstClassType
 
 sealed abstract class AggregateType extends FirstClassType
 
-case class UserDefinedType(name : String) extends FirstClassType {
+case class UserDefinedType(name: String) extends FirstClassType {
   private val escapedName = EscapeIdentifier(name)
 
   def toIr = s"%${escapedName}"
 }
 
-case class IntegerType(bits : Int) extends FirstClassType {
+case class IntegerType(bits: Int) extends FirstClassType {
   def toIr = s"i${bits}"
 }
 
@@ -33,12 +33,12 @@ case object VoidType extends IrType with ReturnableType {
   def toIr = "void"
 }
 
-case class ArrayType(elements : Int, innerType : FirstClassType) extends AggregateType {
+case class ArrayType(elements: Int, innerType: FirstClassType) extends AggregateType {
   def toIr = s"[$elements x $innerType]"
 }
 
-case class FunctionType(returnType : ReturnableType, parameterTypes : Seq[FirstClassType], hasVararg : Boolean = false) extends IrType {
-  def toIr : String = {
+case class FunctionType(returnType: ReturnableType, parameterTypes: Seq[FirstClassType], hasVararg: Boolean = false) extends IrType {
+  def toIr: String = {
     val parameterIrParts = parameterTypes.map(_.toIr) ++ (if (hasVararg) {
       List("...")
     }
@@ -50,11 +50,11 @@ case class FunctionType(returnType : ReturnableType, parameterTypes : Seq[FirstC
   }
 }
 
-case class StructureType(memberTypes : Seq[FirstClassType]) extends AggregateType {
+case class StructureType(memberTypes: Seq[FirstClassType]) extends AggregateType {
   def toIr = "{" + memberTypes.mkString(", ") + "}"
 }
 
-case class PointerType(pointeeType : IrType) extends FirstClassType {
+case class PointerType(pointeeType: IrType) extends FirstClassType {
   def toIr = pointeeType.toIr + "*"
 }
 

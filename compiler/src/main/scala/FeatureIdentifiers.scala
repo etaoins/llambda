@@ -21,6 +21,6 @@ object FeatureIdentifiers {
     compilerVersionIdentifier
   )
 
-  def apply(platform : TargetPlatform, extraIdents : Set[String] = Set()) =
+  def apply(platform: TargetPlatform, extraIdents: Set[String] = Set()) =
     commonFeatures ++ platform.platformFeatures ++ extraIdents
 }

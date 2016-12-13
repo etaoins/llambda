@@ -9,33 +9,33 @@ object GenCalcProperListLength {
   private val pairPtrType = PointerType(ct.PairCell.irType)
   private val emptyListPtrType = PointerType(ct.EmptyListCell.irType)
 
-  def apply(initialState : GenerationState)(listHead : IrValue) : (GenerationState, IrValue) = {
+  def apply(initialState: GenerationState)(listHead: IrValue): (GenerationState, IrValue) = {
     val prevBlock = initialState.currentBlock
     val function = prevBlock.function
-    
+
     // Build IR values for our phi
     val currentCounterIr = LocalVariable(
       name=function.nameSource.allocate("currentCounter"),
       irType=IntegerType(32)
     )
-    
+
     val incedCounterIr = LocalVariable(
       name=function.nameSource.allocate("incedCounter"),
       irType=IntegerType(32)
     )
-    
+
     val currentListElIr = LocalVariable(
       name=function.nameSource.allocate("currentListEl"),
       irType=listElementPtrType
     )
-    
+
     val nextListElIr = LocalVariable(
       name=function.nameSource.allocate("nextListEl"),
       irType=listElementPtrType
     )
 
     // Build our calc block
-    val countBlock = function.startChildBlock("lengthCount") 
+    val countBlock = function.startChildBlock("lengthCount")
 
     // Build our count continuation block
     val continueCountBlock = function.startChildBlock("lengthContinue")
@@ -59,17 +59,17 @@ object GenCalcProperListLength {
 
     // Compare the list element to the empty list
     val emptyListCastIr = countBlock.bitcastTo("emptyListCast")(currentListElIr, emptyListPtrType)
-    val isEmptyListIr = countBlock.icmp("isEmptyList")(IComparisonCond.Equal, None, emptyListCastIr, GlobalDefines.emptyListIrValue) 
+    val isEmptyListIr = countBlock.icmp("isEmptyList")(IComparisonCond.Equal, None, emptyListCastIr, GlobalDefines.emptyListIrValue)
 
     // Jump to the exit if we've reached the end
     countBlock.condBranch(isEmptyListIr, countDoneBlock, continueCountBlock)
 
     // In the continue block load the car
-    val pairCastIr = continueCountBlock.bitcastTo("pairCast")(currentListElIr, pairPtrType) 
+    val pairCastIr = continueCountBlock.bitcastTo("pairCast")(currentListElIr, pairPtrType)
     val cdrIr = ct.PairCell.genLoadFromCdr(continueCountBlock)(pairCastIr)
 
     // And increment our count
-    val wrapBehaviour = Set(WrapBehaviour.NoSignedWrap, WrapBehaviour.NoUnsignedWrap) : Set[WrapBehaviour]
+    val wrapBehaviour = Set(WrapBehaviour.NoSignedWrap, WrapBehaviour.NoUnsignedWrap): Set[WrapBehaviour]
     continueCountBlock.add(incedCounterIr)(wrapBehaviour, currentCounterIr, IntegerConstant(IntegerType(32), 1))
 
     // Cast it to a list element

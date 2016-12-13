@@ -11,13 +11,13 @@ import llambda.compiler.ProcedureSignature
 import llambda.compiler.{TypeException, ArityException, InternalCompilerErrorException}
 
 trait IntermediateValueHelpers {
-  def typeDescription : String
+  def typeDescription: String
 
   /** Helper for signalling impossible conversions */
   protected def impossibleConversion(
-      message : String,
-      errorCategory : ErrorCategory = ErrorCategory.Default
-  )(implicit plan : PlanWriter) = errorCategory match {
+      message: String,
+      errorCategory: ErrorCategory = ErrorCategory.Default
+  )(implicit plan: PlanWriter) = errorCategory match {
     case ErrorCategory.Arity =>
       throw new ArityException(plan.activeContextLocated, message)
 
@@ -26,10 +26,10 @@ trait IntermediateValueHelpers {
   }
 
   protected def impossibleConversionToType(
-      targetType : vt.SchemeType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
-  )(implicit plan : PlanWriter) = {
+      targetType: vt.SchemeType,
+      errorMessageOpt: Option[RuntimeErrorMessage],
+      staticCheck: Boolean = false
+  )(implicit plan: PlanWriter) = {
     val errorCategory = errorMessageOpt.map(_.category).getOrElse(ErrorCategory.Type)
 
     if (staticCheck) {
@@ -50,24 +50,24 @@ trait IntermediateValueHelpers {
 }
 
 abstract class IntermediateValue extends IntermediateValueHelpers {
-  val schemeType : vt.SchemeType
+  val schemeType: vt.SchemeType
 
   /** Provides a human-readable description of the value's type */
-  def typeDescription : String
+  def typeDescription: String
 
   /** Returns true is this value definitely has the passed type */
-  def hasDefiniteType(otherType : vt.SchemeType) : Boolean =
+  def hasDefiniteType(otherType: vt.SchemeType): Boolean =
     vt.SatisfiesType(otherType, schemeType) == Some(true)
 
-  def isDefiniteProperList : Boolean =
+  def isDefiniteProperList: Boolean =
     vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), schemeType) == Some(true)
 
   /** Returns our exact procedure signature */
-  def procedureSignatureOpt : Option[ProcedureSignature] =
+  def procedureSignatureOpt: Option[ProcedureSignature] =
     schemeType.applicableTypeOpt.map(ApplicableTypeToAdaptedSignature)
 
-  protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
-  protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
+  protected def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue
+  protected def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
     plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1)
 
@@ -75,20 +75,20 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   }
 
   protected[intermediatevalue] def toProcedureTempValue(
-      targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter) : ps.TempValue
+      targetType: vt.ApplicableType,
+      errorMessageOpt: Option[RuntimeErrorMessage]
+  )(implicit plan: PlanWriter): ps.TempValue
 
   private def toProcedureTypeUnionTempValue(
-      targetType : vt.SchemeType,
-      targetApplicableType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter) : ps.TempValue = {
+      targetType: vt.SchemeType,
+      targetApplicableType: vt.ApplicableType,
+      errorMessageOpt: Option[RuntimeErrorMessage]
+  )(implicit plan: PlanWriter): ps.TempValue = {
     // This is a union containing different procedure types
     val resultCellType = targetType.cellType
     val procTypeAtom = vt.SchemeTypeAtom(ct.ProcedureCell)
 
-    val createProcTemp = { isProcPlan : PlanWriter =>
+    val createProcTemp = { isProcPlan: PlanWriter =>
       val knownType = schemeType & procTypeAtom
       val retypedThis = this.withSchemeType(knownType)
 
@@ -102,7 +102,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       castTemp
     }
 
-    val createNonProcTemp = { isNotProcPlan : PlanWriter =>
+    val createNonProcTemp = { isNotProcPlan: PlanWriter =>
       val knownType = schemeType - procTypeAtom
       val retypedThis = this.withSchemeType(knownType)
 
@@ -134,9 +134,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   }
 
   protected def toNonProcedureTempValue(
-      targetType : vt.SchemeType,
-      errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter) : ps.TempValue = {
+      targetType: vt.SchemeType,
+      errorMessageOpt: Option[RuntimeErrorMessage]
+  )(implicit plan: PlanWriter): ps.TempValue = {
     // Are our possible concrete types a subset of the target types?
     vt.SatisfiesType(targetType, schemeType) match {
       case Some(true) =>
@@ -171,9 +171,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     *
     * This is primarily used to interface with the type checking system which works on boxed values only
     */
-  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue
+  def toBoxedValue()(implicit plan: PlanWriter): BoxedValue
 
-  def toInvokableProc()(implicit plan : PlanWriter) : InvokableProc
+  def toInvokableProc()(implicit plan: PlanWriter): InvokableProc
 
   /** Converts this intermediate value to a TempValue of the specified type
     *
@@ -187,10 +187,10 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     *                          be skipped.
     */
   def toTempValue(
-      targetType : vt.ValueType,
-      errorMessageOpt : Option[RuntimeErrorMessage] = None,
-      convertProcType : Boolean = true
-  )(implicit plan : PlanWriter) : ps.TempValue = targetType match {
+      targetType: vt.ValueType,
+      errorMessageOpt: Option[RuntimeErrorMessage] = None,
+      convertProcType: Boolean = true
+  )(implicit plan: PlanWriter): ps.TempValue = targetType match {
     case vt.UnitType =>
       val constantTemp = ps.CellTemp(ct.UnitCell, knownConstant=true)
       plan.steps += ps.CreateUnitCell(constantTemp)
@@ -199,13 +199,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case vt.Predicate =>
       toTruthyPredicate()
 
-    case nativeType : vt.NativeType =>
+    case nativeType: vt.NativeType =>
       toNativeTempValue(nativeType, errorMessageOpt)
 
-    case procedureType : vt.ProcedureType if convertProcType  =>
+    case procedureType: vt.ProcedureType if convertProcType  =>
       toProcedureTempValue(procedureType, errorMessageOpt)
 
-    case targetSchemeType : vt.SchemeType =>
+    case targetSchemeType: vt.SchemeType =>
       for(ourSignature <- procedureSignatureOpt;
           targetProcType <- targetSchemeType.applicableTypeOpt) {
         val targetSignature = ApplicableTypeToAdaptedSignature(targetProcType)
@@ -232,10 +232,10 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     *                          be  generated for possible but not definite type conversions.
     */
   def castToSchemeType(
-      targetType : vt.SchemeType,
-      errorMessageOpt : Option[RuntimeErrorMessage] = None,
-      staticCheck : Boolean = false
-  )(implicit plan : PlanWriter) : IntermediateValue = {
+      targetType: vt.SchemeType,
+      errorMessageOpt: Option[RuntimeErrorMessage] = None,
+      staticCheck: Boolean = false
+  )(implicit plan: PlanWriter): IntermediateValue = {
     vt.ConvertibleToType(targetType, schemeType) match {
       case Some(true) =>
         // We don't need to do anything
@@ -262,8 +262,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * This may not have an affect on all values. This is merely a type checking and optimisation hint to feed type
     * information the planner discovers back in to the value
     */
-  def withSchemeType(newType : vt.SchemeType) : IntermediateValue = newType match {
-    case literalType : vt.LiteralValueType =>
+  def withSchemeType(newType: vt.SchemeType): IntermediateValue = newType match {
+    case literalType: vt.LiteralValueType =>
       IntermediateValue.fromLiteralType(literalType)
 
     case _ =>
@@ -276,21 +276,21 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * procedures this will be the type that can specifically represent the value with the minimum of boxing and
     * conversion.
     */
-  def preferredRepresentation : vt.ValueType
+  def preferredRepresentation: vt.ValueType
 
   /** Indicates if this values need to be stored inside a closure
     *
     * If false is returned the value does not need to be captured and can instead be used directly without storing any
     * data in the closure.
     */
-  def needsClosureRepresentation : Boolean
+  def needsClosureRepresentation: Boolean
 
   /** Restores this value from a closure's ps.TempValue
     *
     * This can be overridden to carry value-specific metadata that isn't contained in the value's type alone. This can
     * include things like procedure signature, value ranges, etc.
     */
-  def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
+  def restoreFromClosure(valueType: vt.ValueType, varTemp: ps.TempValue)(planConfig: PlanConfig): IntermediateValue = {
     TempValueToIntermediate(valueType, varTemp)
   }
 
@@ -299,7 +299,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * This is usually the identity function. It's overridden by KnownCaseLambdaProc and KnownSchemeProc to implement
     * polymorphism.
     */
-  def toApplicableValueForArgs(args : List[vt.SchemeType])(implicit plan : PlanWriter) : IntermediateValue =
+  def toApplicableValueForArgs(args: List[vt.SchemeType])(implicit plan: PlanWriter): IntermediateValue =
     this
 
   /** Converts this intermediate value to a TempValue for the specified return type
@@ -307,8 +307,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * If no value needs to be returned this will return None
     */
   final def toReturnTempValueOpt(
-      returnType : vt.ReturnType.ReturnType[vt.ValueType]
-  )(implicit plan : PlanWriter) : Option[ps.TempValue] = returnType match {
+      returnType: vt.ReturnType.ReturnType[vt.ValueType]
+  )(implicit plan: PlanWriter): Option[ps.TempValue] = returnType match {
     case vt.ReturnType.Reachable(vt.UnitType) | vt.ReturnType.Unreachable =>
       None
 
@@ -321,7 +321,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 }
 
 object IntermediateValue {
-  def fromLiteralType(literalType : vt.LiteralValueType) : ConstantValue = literalType match {
+  def fromLiteralType(literalType: vt.LiteralValueType): ConstantValue = literalType match {
     case vt.LiteralBooleanType(boolVal) =>
       ConstantBooleanValue(boolVal)
 
