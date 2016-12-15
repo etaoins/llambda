@@ -230,6 +230,10 @@
   (assert-false (equal? '(1 2 3 . 4) '(1 2 3 . 5)))
   (assert-true (equal? '(a (b) c) '(a (b) c)))))
 
+(define-test "dynamic pair (equal?)" (expect-success
+  (assert-true  (equal? '(1 . 2) (cons 1 (typed-dynamic 2 <integer>))))
+  (assert-false (equal? '(1 . 2) (cons 1 (typed-dynamic 1 <integer>))))))
+
 (define-test "constant strings are equal" (expect-static-success
   (assert-true (equal? "abc" "abc"))))
 
