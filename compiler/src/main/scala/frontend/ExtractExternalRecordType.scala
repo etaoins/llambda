@@ -15,7 +15,7 @@ private[frontend] object ExtractExternalRecordType {
       case Nil =>
         new vt.ExternalRecordType(sourceNameOpt, None)
 
-      case List(predicateDef @ sst.ScopedProperList(sst.ResolvedSymbol(Primitives.NativeFunction) :: predicateArgs)) =>
+      case List(predicateDef @ sst.ProperList(sst.ResolvedSymbol(Primitives.NativeFunction) :: predicateArgs)) =>
         val predicateFunction = ExtractNativeFunction(predicateDef, hasWorldArg=false, predicateArgs)
 
         if (predicateFunction.polySignature != vt.ExternalRecordTypePredicate.signature.toPolymorphic) {

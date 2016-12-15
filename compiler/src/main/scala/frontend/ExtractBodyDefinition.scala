@@ -21,25 +21,25 @@ private object FindBodyDefines {
       data: List[sst.ScopedDatum],
       definesAcc: List[ExtractedVarDefine] = Nil
   )(implicit context: FrontendContext): Result = data match {
-    case (pairDatum @ sst.ScopedPair(appliedSymbol: sst.ScopedSymbol, cdr)) :: restData =>
+    case (pairDatum @ sst.Pair(appliedSymbol: sst.Symbol, cdr)) :: restData =>
       (appliedSymbol.resolveOpt, cdr) match {
         case (Some(syntax: BoundSyntax), _) =>
           // This is a macro - expand it
           val expandedDatum = ExpandMacro(syntax, cdr, pairDatum, trace=context.config.traceMacroExpansion)
           apply(expandedDatum :: restData, definesAcc)
 
-        case (Some(Primitives.Begin), sst.ScopedProperList(innerExprData)) =>
+        case (Some(Primitives.Begin), sst.ProperList(innerExprData)) =>
           // This is a (begin) - flatten it
           apply(innerExprData ++ restData, definesAcc)
 
-        case (Some(Primitives.Include), sst.ScopedProperList(includeNameData)) =>
+        case (Some(Primitives.Include), sst.ProperList(includeNameData)) =>
           val unscopedIncludeNames = includeNameData.map(_.unscope)
           val includeData = ResolveIncludeList(appliedSymbol, unscopedIncludeNames)(context.config.includePath)
 
           val scopedData = includeData.map(sst.ScopedDatum(appliedSymbol.scope, _))
           apply(scopedData ++ restData, definesAcc)
 
-        case (Some(definePrimitive: PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>
+        case (Some(definePrimitive: PrimitiveDefineExpr), sst.ProperList(operands)) =>
           val extractedDefines = ExtractDefine(pairDatum, definePrimitive, operands)
           apply(restData, extractedDefines ++ definesAcc)
 
@@ -67,7 +67,7 @@ private[frontend] object ExtractBodyDefinition {
     * @return Expression representing the body
     */
   def apply(
-      args: List[(sst.ScopedSymbol, BoundValue)],
+      args: List[(sst.Symbol, BoundValue)],
       definition: List[sst.ScopedDatum]
   )(implicit context: FrontendContext): et.Expr = {
     // Find all the scopes in the definition

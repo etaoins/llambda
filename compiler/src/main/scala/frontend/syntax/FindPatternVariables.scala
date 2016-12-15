@@ -6,7 +6,7 @@ import llambda.compiler._
 private[syntax] object FindPatternVariables {
   private def vectorElementsPatternVariables(elements: List[sst.ScopedDatum])(implicit matchConfig: MatchConfig): PatternVariables = {
     elements match {
-      case subpatternDatum :: (ellipsisSymbol: sst.ScopedSymbol) :: tailPattern
+      case subpatternDatum :: (ellipsisSymbol: sst.Symbol) :: tailPattern
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         val subpattern = apply(subpatternDatum)
 
@@ -24,7 +24,7 @@ private[syntax] object FindPatternVariables {
   }
 
   def apply(pattern: sst.ScopedDatum)(implicit matchConfig: MatchConfig): PatternVariables = pattern match {
-    case symbol: sst.ScopedSymbol  =>
+    case symbol: sst.Symbol  =>
       val patternVariable = SyntaxVariable.fromSymbol(symbol)
 
       if (matchConfig.literals.contains(patternVariable)) {
@@ -42,7 +42,7 @@ private[syntax] object FindPatternVariables {
         )
       }
 
-    case sst.ScopedPair(subpatternDatum, sst.ScopedPair(ellipsisSymbol: sst.ScopedSymbol, cdr))
+    case sst.Pair(subpatternDatum, sst.Pair(ellipsisSymbol: sst.Symbol, cdr))
         if matchConfig.isZeroOrMore(ellipsisSymbol) =>
       // Ignore the ... and increase our depth
       val subpattern = apply(subpatternDatum)
@@ -51,10 +51,10 @@ private[syntax] object FindPatternVariables {
         subpatterns=Vector(subpattern)
       )
 
-    case sst.ScopedPair(car, cdr) =>
+    case sst.Pair(car, cdr) =>
       apply(car) ++ apply(cdr)
 
-    case sst.ScopedVectorLiteral(innerPattern) =>
+    case sst.Vector(innerPattern) =>
       vectorElementsPatternVariables(innerPattern.toList)
 
     case _: sst.NonSymbolLeaf =>

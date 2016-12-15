@@ -139,7 +139,7 @@ case class BoundSyntax(
 ) extends BoundValue
 
 object SyntaxVariable {
-  def fromSymbol(scopedSymbol: sst.ScopedSymbol): SyntaxVariable = {
+  def fromSymbol(scopedSymbol: sst.Symbol): SyntaxVariable = {
     scopedSymbol.resolveOpt match {
       case Some(boundValue) =>
         BoundSyntaxVariable(boundValue).assignLocationFrom(scopedSymbol)
@@ -153,7 +153,7 @@ case class BoundType(valueType: vt.ValueType) extends BoundValue
 
 /** Scope can look up bindings by name and return a list of all identifiers  */
 sealed class Scope(val bindings: collection.mutable.Map[String, BoundValue], parent: Option[Scope] = None) {
-  val typeDeclarations = new collection.mutable.HashMap[sst.ScopedSymbol, LocTypeDeclaration]
+  val typeDeclarations = new collection.mutable.HashMap[sst.Symbol, LocTypeDeclaration]
 
   def get(name: String): Option[BoundValue] =
     bindings.get(name).orElse {
@@ -189,7 +189,7 @@ object Scope {
     * scope. The mapping of parent scope to child scope is then returned. This can be passed to
     * [[sst.ScopedDatum.rescope]] to moved scoped data in to the new scopes.
     */
-  def mappingForBoundValues(boundValues: Seq[(sst.ScopedSymbol, BoundValue)]): Map[Scope, Scope] = {
+  def mappingForBoundValues(boundValues: Seq[(sst.Symbol, BoundValue)]): Map[Scope, Scope] = {
     val varsForScope = boundValues groupBy(_._1.scope)
 
     varsForScope map { case (oldScope, scopeVars) =>

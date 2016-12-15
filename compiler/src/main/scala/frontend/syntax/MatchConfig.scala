@@ -10,11 +10,11 @@ private[syntax] case class MatchConfig(
   val wildcardVariable = BoundSyntaxVariable(Primitives.Wildcard)
 
   /** Determines if the passed symbol should be treated as a zero or more match */
-  def isZeroOrMore(scopedSymbol: sst.ScopedSymbol) =
+  def isZeroOrMore(scopedSymbol: sst.Symbol) =
     !literals.contains(ellipsisVariable) && (SyntaxVariable.fromSymbol(scopedSymbol) == ellipsisVariable)
 
   /** Determines if the passed symbol should be treated as a wildcard match */
-  def isWildcard(scopedSymbol: sst.ScopedSymbol) =
+  def isWildcard(scopedSymbol: sst.Symbol) =
     !literals.contains(wildcardVariable) && (SyntaxVariable.fromSymbol(scopedSymbol) == wildcardVariable)
 
   def withoutZeroOrMoreAllowed =

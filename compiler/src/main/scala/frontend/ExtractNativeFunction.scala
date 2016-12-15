@@ -66,21 +66,21 @@ object ExtractNativeFunction {
       procTypeDatum: sst.ScopedDatum,
       attributeData: List[sst.ScopedDatum]
   ): PolymorphicSignature = procTypeDatum match {
-    case sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args) =>
+    case sst.ProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args) =>
       extractMonoSignature(hasWorldArg, args, procTypeDatum, attributeData).toPolymorphic
 
     // Long form
-    case sst.ScopedProperList(List(
+    case sst.ProperList(List(
       sst.ResolvedSymbol(Primitives.PolymorphicType),
-      sst.ScopedProperList(typeVarData),
-      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
+      sst.ProperList(typeVarData),
+      sst.ProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
     )) =>
       extractPolySignature(hasWorldArg, typeVarData, args, procTypeDatum, attributeData)
 
     // Shorthand
-    case sst.ScopedProperList(
+    case sst.ProperList(
       sst.ResolvedSymbol(Primitives.PolymorphicType) ::
-      sst.ScopedProperList(typeVarData) ::
+      sst.ProperList(typeVarData) ::
       args
     ) =>
       extractPolySignature(hasWorldArg, typeVarData, args, procTypeDatum, attributeData)
@@ -94,7 +94,7 @@ object ExtractNativeFunction {
       hasWorldArg: Boolean,
       args: List[sst.ScopedDatum]
   ): et.NativeFunction = args match {
-    case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: procTypeDatum :: attributeData =>
+    case libraryDatum :: sst.NonSymbolLeaf(ast.String(nativeSymbol)) :: procTypeDatum :: attributeData =>
       val nativeLibrary = ExtractNativeLibrary(libraryDatum)
 
       val polySignature = extractSignature(hasWorldArg, procTypeDatum, attributeData)

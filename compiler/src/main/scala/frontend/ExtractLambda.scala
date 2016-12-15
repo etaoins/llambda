@@ -9,9 +9,9 @@ import llambda.compiler.valuetype.Implicits._
 
 object ExtractLambda {
   private case class ReconciledTypes(
-    mandatoryArgTypes: List[(sst.ScopedSymbol, vt.SchemeType)],
-    optionalArgTypes: List[(sst.ScopedSymbol, vt.SchemeType)],
-    restArgMemberTypeOpt: Option[(sst.ScopedSymbol, vt.SchemeType)],
+    mandatoryArgTypes: List[(sst.Symbol, vt.SchemeType)],
+    optionalArgTypes: List[(sst.Symbol, vt.SchemeType)],
+    restArgMemberTypeOpt: Option[(sst.Symbol, vt.SchemeType)],
     returnType: vt.ReturnType.ReturnType[vt.SchemeType],
     polymorphicType: pm.PolymorphicProcedureType
   )
@@ -71,7 +71,7 @@ object ExtractLambda {
           declRestArg=restArgAnnOpt.isDefined
         )
 
-        def combineArgTypes(symbol: sst.ScopedSymbol, signatureType: vt.SchemeType, annType: vt.SchemeType): vt.SchemeType = {
+        def combineArgTypes(symbol: sst.Symbol, signatureType: vt.SchemeType, annType: vt.SchemeType): vt.SchemeType = {
           val combinedType = signatureType & annType
 
           if (combinedType == vt.EmptySchemeType) {
@@ -94,7 +94,7 @@ object ExtractLambda {
 
         val combinedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
           symbol -> combineArgTypes(symbol, signatureType, restArgAnnOpt.get)
-        }: Option[(sst.ScopedSymbol, vt.SchemeType)]
+        }: Option[(sst.Symbol, vt.SchemeType)]
 
         val polyType = vt.ProcedureType(
           mandatoryArgTypes=combinedMandatoryArgs.map(_._2),
@@ -123,7 +123,7 @@ object ExtractLambda {
           declRestArg=restArgAnnOpt.isDefined
         )
 
-        def checkForArgTypes(symbol: sst.ScopedSymbol, signatureType: vt.SchemeType, annType: vt.SchemeType): vt.SchemeType = {
+        def checkForArgTypes(symbol: sst.Symbol, signatureType: vt.SchemeType, annType: vt.SchemeType): vt.SchemeType = {
           if (signatureType != vt.AnySchemeType) {
             throw new BadSpecialFormException(symbol, s"Polymorphic type declarations cannot be mixed with argument type annotations")
           }
@@ -143,7 +143,7 @@ object ExtractLambda {
 
         val checkedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
           symbol -> checkForArgTypes(symbol, signatureType, restArgAnnOpt.get)
-        }: Option[(sst.ScopedSymbol, vt.SchemeType)]
+        }: Option[(sst.Symbol, vt.SchemeType)]
 
         ReconciledTypes(checkedMandatoryArgs, checkedOptionalArgs, checkedRestArgOpt, returnTypeAnn, polyType)
 
@@ -184,7 +184,7 @@ object ExtractLambda {
     }
 
     val typedOptionalArgs = (reconciledTypes.optionalArgTypes zip parsedFormals.optionalArgs)
-    val boundOptionalArgs = typedOptionalArgs.foldLeft(List[(sst.ScopedSymbol, et.OptionalArg)]()) {
+    val boundOptionalArgs = typedOptionalArgs.foldLeft(List[(sst.Symbol, et.OptionalArg)]()) {
       case (boundOptionalArgs, ((symbol, finalType), ParsedOptional(_, _, defaultDatum))) =>
         val args = boundMandatoryArgs ++ boundOptionalArgs.map { case (symbol, et.OptionalArg(storageLoc, _)) =>
           symbol -> storageLoc

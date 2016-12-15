@@ -37,23 +37,23 @@ object ExtractModuleBody {
   private def extractOutermostExpr(
       datum: sst.ScopedDatum
   )(implicit context: FrontendContext): List[et.Expr] = datum match {
-    case sst.ScopedPair(appliedSymbol: sst.ScopedSymbol, cdr) =>
+    case sst.Pair(appliedSymbol: sst.Symbol, cdr) =>
       (appliedSymbol.resolve, cdr) match {
         case (syntax: BoundSyntax, _) =>
           // This is a macro - expand it
           val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=context.config.traceMacroExpansion)
           extractOutermostExpr(expandedDatum)
 
-        case (Primitives.Begin, sst.ScopedProperList(innerExprData)) =>
+        case (Primitives.Begin, sst.ProperList(innerExprData)) =>
           // This is a (begin) - flatten it
           innerExprData.flatMap(extractOutermostExpr)
 
-        case (Primitives.Include, sst.ScopedProperList(includeNames)) =>
+        case (Primitives.Include, sst.ProperList(includeNames)) =>
           // We need the scope from the (include) to rescope the included file
           val scope = appliedSymbol.scope
           extractInclude(appliedSymbol, scope, includeNames)
 
-        case (definePrimitive: PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
+        case (definePrimitive: PrimitiveDefineExpr, sst.ProperList(operands)) =>
           ExtractDefine(datum, definePrimitive, operands).flatMap { define =>
             handleExtractedDefine(datum, define)
           }

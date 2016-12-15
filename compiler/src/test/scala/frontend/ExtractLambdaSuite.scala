@@ -392,7 +392,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         ).toPolymorphic)
 
-        assert(body === et.Literal(ast.BooleanLiteral(true)))
+        assert(body === et.Literal(ast.Boolean(true)))
     }
 
     inside(exprFor("(lambda (x) x)")) {
@@ -445,9 +445,9 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
 
   test("untyped optionals lambdas") {
     val expectedDefault = et.Cond(
-      et.Literal(ast.BooleanLiteral(true)),
-      et.Literal(ast.IntegerLiteral(1)),
-      et.Literal(ast.IntegerLiteral(2))
+      et.Literal(ast.Boolean(true)),
+      et.Literal(ast.Integer(1)),
+      et.Literal(ast.Integer(2))
     )
 
     inside(exprFor("(lambda ([x (if #t 1 2)]) #t)")) {
@@ -460,7 +460,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.AnySchemeType)
-        assert(body === et.Literal(ast.BooleanLiteral(true)))
+        assert(body === et.Literal(ast.Boolean(true)))
     }
   }
 
@@ -514,7 +514,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
   }
 
   test("typed optionals lambdas") {
-    val expectedDefault = et.Literal(ast.StringLiteral("default"))
+    val expectedDefault = et.Literal(ast.String("default"))
 
     inside(exprFor("(lambda ([x : <string> \"default\"]) #t)")(nfiScope)) {
       case et.Lambda(polyType, Nil, List(et.OptionalArg(argX, `expectedDefault`)), None, body, _) =>
@@ -526,7 +526,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         ).toPolymorphic)
 
         assert(argX.schemeType === vt.StringType)
-        assert(body === et.Literal(ast.BooleanLiteral(true)))
+        assert(body === et.Literal(ast.Boolean(true)))
     }
   }
 
@@ -541,7 +541,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         ).toPolymorphic)
 
         assert(body === et.VarRef(argX))
-        assert(value === et.Literal(ast.IntegerLiteral(1)))
+        assert(value === et.Literal(ast.Integer(1)))
     }
   }
 
@@ -557,9 +557,9 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           et.Binding(barLoc, et.Lambda(_, List(aLoc, bLoc), Nil, None, barExpr, _))
         ), bodyExpr), _) =>
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
-          assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnitValue())))
+          assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.Unit())))
 
-          assert(bodyExpr === et.Apply(et.VarRef(fooLoc), et.Literal(ast.BooleanLiteral(true)) :: Nil))
+          assert(bodyExpr === et.Apply(et.VarRef(fooLoc), et.Literal(ast.Boolean(true)) :: Nil))
     }
   }
 
@@ -579,7 +579,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
           returnType=vt.ReturnType.Reachable(vt.AnySchemeType)
         ).toPolymorphic)
 
-        assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
+        assert(bodyExpr === et.Literal(ast.Boolean(true)))
     }
 
     inside(scope.get("return-true").value) {
@@ -605,7 +605,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.AnySchemeType)
-        assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
+        assert(bodyExpr === et.Literal(ast.Boolean(true)))
     }
 
     inside(scope.get("return-true").value) {
@@ -620,7 +620,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     val expr = exprFor("(define (return-true [unused-param #t]) #t)")(scope)
     val procLoc = scope.get("return-true").value
 
-    val expectedDefault = et.Literal(ast.BooleanLiteral(true))
+    val expectedDefault = et.Literal(ast.Boolean(true))
 
     inside(expr) {
       case et.TopLevelDefine(et.Binding(storageLoc,
@@ -634,7 +634,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         ).toPolymorphic)
 
         assert(fixedArg.schemeType === vt.AnySchemeType)
-        assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
+        assert(bodyExpr === et.Literal(ast.Boolean(true)))
     }
 
     inside(scope.get("return-true").value) {
@@ -682,7 +682,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         assert(fixedArg.schemeType === vt.AnySchemeType)
         assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
-        assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
+        assert(bodyExpr === et.Literal(ast.Boolean(false)))
     }
 
     inside(scope.get("return-false").value) {
@@ -774,7 +774,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         ).toPolymorphic)
 
         assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
-        assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
+        assert(bodyExpr === et.Literal(ast.Integer(6)))
     }
 
     inside(scope.get("return-six").value) {

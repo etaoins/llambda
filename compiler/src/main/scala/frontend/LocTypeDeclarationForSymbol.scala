@@ -18,7 +18,7 @@ private[frontend] object LocTypeDeclarationForSymbol {
     * @param  defaultType      Default type to use if no type declaration can be found
     */
   def apply(
-      symbol: sst.ScopedSymbol,
+      symbol: sst.Symbol,
       providedDeclOpt: Option[LocTypeDeclaration] = None,
       defaultType: vt.SchemeType = vt.AnySchemeType
   ): LocTypeDeclaration = {

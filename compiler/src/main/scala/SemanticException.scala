@@ -93,6 +93,6 @@ class IntegerOverflowException(located: SourceLocated, message: String) extends 
 
 class DefinitionOutsideTopLevelException(located: SourceLocated) extends BadSpecialFormException(located, "Definitions can only be introduced in at the outermost level or at the beginning of a body") 
 
-class DuplicateDefinitionException(val symbol: sst.ScopedSymbol) extends SemanticException(symbol, s"Duplicate definition for ${symbol.name}") {
+class DuplicateDefinitionException(val symbol: sst.Symbol) extends SemanticException(symbol, s"Duplicate definition for ${symbol.name}") {
   val semanticErrorType = "duplicate define"
 }

@@ -22,7 +22,7 @@ object ExtractType {
     }
   }
 
-  private def resolveTypeConstructor(scopedSymbol: sst.ScopedSymbol): TypeConstructor = scopedSymbol.resolve match {
+  private def resolveTypeConstructor(scopedSymbol: sst.Symbol): TypeConstructor = scopedSymbol.resolve match {
     case typeConstructor: TypeConstructor =>
       typeConstructor
 
@@ -57,10 +57,10 @@ object ExtractType {
       args: List[sst.ScopedDatum]
   ): vt.ProcedureType = args match {
     case List(
-      sst.ScopedProperList(mandatoryArgData),
-      sst.ScopedProperList(optionalArgData),
+      sst.ProperList(mandatoryArgData),
+      sst.ProperList(optionalArgData),
       restArgMemberDatum,
-      sst.ScopedSymbol(_, "*"),
+      sst.Symbol(_, "*"),
       returnDatum
     ) =>
       val mandatoryArgTypes = mandatoryArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
@@ -70,7 +70,7 @@ object ExtractType {
 
       vt.ProcedureType(mandatoryArgTypes, optionalArgTypes, Some(restArgMemberType), returnType)
 
-    case List(sst.ScopedProperList(mandatoryArgData), sst.ScopedProperList(optionalArgData), returnDatum) =>
+    case List(sst.ProperList(mandatoryArgData), sst.ProperList(optionalArgData), returnDatum) =>
       val mandatoryArgTypes = mandatoryArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
       val optionalArgTypes = optionalArgData.map(extractNonEmptySchemeType(_ , RecursiveVars()))
       val returnType = extractReturnSchemeType(returnDatum)
@@ -101,7 +101,7 @@ object ExtractType {
     case _: ast.EmptyList =>
       vt.EmptyListType
 
-    case ast.BooleanLiteral(value) =>
+    case ast.Boolean(value) =>
       vt.LiteralBooleanType(value)
 
     case ast.Symbol(name) =>
@@ -111,7 +111,7 @@ object ExtractType {
       throw new BadSpecialFormException(value, s"Literal types for ${value.schemeType} are unsupported")
   }
 
-  private def applyTypeConstructor(constructorName: sst.ScopedSymbol, args: List[sst.ScopedDatum], recursiveVars: RecursiveVars): vt.SchemeType = {
+  private def applyTypeConstructor(constructorName: sst.Symbol, args: List[sst.ScopedDatum], recursiveVars: RecursiveVars): vt.SchemeType = {
     resolveTypeConstructor(constructorName) match {
       case UserDefinedTypeConstructor(typeVars, definition) =>
         if (args.length != typeVars.length) {
@@ -170,7 +170,7 @@ object ExtractType {
 
       case Primitives.RecType =>
         args match {
-          case List(sst.ScopedSymbol(_, varName), innerTypeDatum) =>
+          case List(sst.Symbol(_, varName), innerTypeDatum) =>
             val newRecursiveVars = recursiveVars.copy(
               variables=recursiveVars.variables + (varName -> 0)
             )
@@ -226,7 +226,7 @@ object ExtractType {
       datum: sst.ScopedDatum,
       recursiveVars: RecursiveVars
   ): vt.SchemeTypeRef = datum match {
-    case sst.ScopedSymbol(_, varName) if recursiveVars.variables.contains(varName) =>
+    case sst.Symbol(_, varName) if recursiveVars.variables.contains(varName) =>
       vt.RecursiveSchemeTypeRef(recursiveVars.variables(varName))
 
     case nonRecursive =>
@@ -296,10 +296,10 @@ object ExtractType {
       datum: sst.ScopedDatum,
       recursiveVars: RecursiveVars = RecursiveVars()
   ): vt.ValueType = datum match {
-    case sst.ScopedSymbol(_, varName) if recursiveVars.variables.contains(varName) =>
+    case sst.Symbol(_, varName) if recursiveVars.variables.contains(varName) =>
       throw new BadSpecialFormException(datum, "Recursive type variable used where concrete type is expected")
 
-    case symbol: sst.ScopedSymbol =>
+    case symbol: sst.Symbol =>
       symbol.resolve match {
         case BoundType(schemeType) => schemeType
 
@@ -310,10 +310,10 @@ object ExtractType {
           throw new BadSpecialFormException(symbol, "Non-type value used as type")
       }
 
-    case sst.ScopedProperList((constructorName: sst.ScopedSymbol) :: argData) =>
+    case sst.ProperList((constructorName: sst.Symbol) :: argData) =>
       applyTypeConstructor(constructorName, argData, recursiveVars)
 
-    case sst.NonSymbolLeaf(ast.BooleanLiteral(value)) =>
+    case sst.NonSymbolLeaf(ast.Boolean(value)) =>
       vt.LiteralBooleanType(value)
 
     case nonsymbol =>
@@ -336,18 +336,18 @@ object ExtractType {
     }
 
   def extractLocTypeDeclaration(datum: sst.ScopedDatum): LocTypeDeclaration = datum match {
-    case sst.ScopedProperList(List(
+    case sst.ProperList(List(
       sst.ResolvedSymbol(Primitives.PolymorphicType),
-      sst.ScopedProperList(typeVarData),
-      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
+      sst.ProperList(typeVarData),
+      sst.ProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
     )) =>
       val polyProcType = extractPolymorphicProcedure(datum, typeVarData, args, applyProcedureTypeConstructor)
       PolymorphicProcedureDeclaration(polyProcType)
 
-    case sst.ScopedProperList(List(
+    case sst.ProperList(List(
       sst.ResolvedSymbol(Primitives.PolymorphicType),
-      sst.ScopedProperList(typeVarData),
-      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.OptionalProcedureType) :: args)
+      sst.ProperList(typeVarData),
+      sst.ProperList(sst.ResolvedSymbol(Primitives.OptionalProcedureType) :: args)
     )) =>
       val polyProcType = extractPolymorphicProcedure(datum, typeVarData, args, applyOptionalProcedureTypeConstructor)
       PolymorphicProcedureDeclaration(polyProcType)

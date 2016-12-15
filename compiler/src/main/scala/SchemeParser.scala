@@ -200,7 +200,7 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   }
 
   def RealDatum = rule {
-    (Rational | ExponentiatedInteger | PositiveInfinity | NegativeInfinity | NaN) ~> (ast.FlonumLiteral(_))
+    (Rational | ExponentiatedInteger | PositiveInfinity | NegativeInfinity | NaN) ~> (ast.Flonum(_))
   }
 
   def Rational = rule {
@@ -240,7 +240,7 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   }
 
   def IntegerDatum = rule {
-    UnradixedInteger ~> (ast.IntegerLiteral(_))
+    UnradixedInteger ~> (ast.Integer(_))
   }
 
   def UnradixedInteger = rule {
@@ -255,7 +255,7 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   }
 
   def RadixedNonDecimal = rule {
-    RadixedInteger ~> (ast.IntegerLiteral(_))
+    RadixedInteger ~> (ast.Integer(_))
   }
 
   def RadixedInteger = rule {
@@ -287,13 +287,13 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   // Vectors
   def VectorDatum = rule {
     "#(" ~ zeroOrMore(Datum) ~ ")" ~> ({ elements =>
-      ast.VectorLiteral(elements.toVector)
+      ast.Vector(elements.toVector)
     })
   }
 
   // Unit
   def UnitDatum = rule {
-    "#!unit" ~ push(ast.UnitValue())
+    "#!unit" ~ push(ast.Unit())
   }
 
   // Booleans
@@ -302,11 +302,11 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   }
 
   def BooleanTrue =  rule {
-    ("#true" | "#t")  ~ push(ast.BooleanLiteral(true))
+    ("#true" | "#t")  ~ push(ast.Boolean(true))
   }
 
   def BooleanFalse =
-    rule { ("#false" | "#f") ~ push(ast.BooleanLiteral(false)) }
+    rule { ("#false" | "#f") ~ push(ast.Boolean(false)) }
 
   // All backslash escaped chars
   def EscapedChar = rule {
@@ -349,7 +349,7 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
 
   // Strings
   def StringDatum = rule {
-    '"' ~ clearSB() ~ zeroOrMore(StringChar) ~ '"' ~ Whitespace ~ push(ast.StringLiteral(sb.toString))
+    '"' ~ clearSB() ~ zeroOrMore(StringChar) ~ '"' ~ Whitespace ~ push(ast.String(sb.toString))
   }
 
   def StringChar = rule {
@@ -373,21 +373,21 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   }
 
   def CharBody = rule {
-    """alarm"""     ~ push(ast.CharLiteral(0x07)) |
-    """backspace""" ~ push(ast.CharLiteral(0x08)) |
-    """delete"""    ~ push(ast.CharLiteral(0x7f)) |
-    """escape"""    ~ push(ast.CharLiteral(0x1b)) |
-    """newline"""   ~ push(ast.CharLiteral('\n')) |
-    """null"""      ~ push(ast.CharLiteral(0x00)) |
-    """return"""    ~ push(ast.CharLiteral(0x0d)) |
-    """space"""     ~ push(ast.CharLiteral(' ')) |
-    """tab"""       ~ push(ast.CharLiteral(0x09)) |
+    """alarm"""     ~ push(ast.Char(0x07)) |
+    """backspace""" ~ push(ast.Char(0x08)) |
+    """delete"""    ~ push(ast.Char(0x7f)) |
+    """escape"""    ~ push(ast.Char(0x1b)) |
+    """newline"""   ~ push(ast.Char('\n')) |
+    """null"""      ~ push(ast.Char(0x00)) |
+    """return"""    ~ push(ast.Char(0x0d)) |
+    """space"""     ~ push(ast.Char(' ')) |
+    """tab"""       ~ push(ast.Char(0x09)) |
     HexCharBody |
     capture(Digit) ~ Whitespace ~> ({ literalCharString =>
-      ast.CharLiteral(literalCharString.charAt(0))
+      ast.Char(literalCharString.charAt(0))
     }) |
     capture(ANY) ~ !UnenclosedSymbol ~ Whitespace ~> ({ literalCharString =>
-      ast.CharLiteral(literalCharString.charAt(0))
+      ast.Char(literalCharString.charAt(0))
     })
   }
 
@@ -395,7 +395,7 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
     "x" ~ capture(oneOrMore(HexDigit)) ~ Whitespace ~> { hexCode =>
       val codePoint = Integer.parseInt(hexCode, 16)
 
-      test(codePoint <= ast.CharLiteral.lastCodePoint) ~ push(ast.CharLiteral(codePoint))
+      test(codePoint <= ast.Char.lastCodePoint) ~ push(ast.Char(codePoint))
     }
   }
 

@@ -20,7 +20,7 @@ object GenUnboxing {
       val block = state.currentBlock
 
       val int32Type = IntegerType(32)
-      val rangeMetadata = RangeMetadata(int32Type, (ast.CharLiteral.firstCodePoint, ast.CharLiteral.lastCodePoint + 1))
+      val rangeMetadata = RangeMetadata(int32Type, (ast.Char.firstCodePoint, ast.Char.lastCodePoint + 1))
       val loadMetadata = Map("range" -> rangeMetadata)
 
       ct.CharCell.genLoadFromUnicodeChar(block)(boxedValue, metadata=loadMetadata)

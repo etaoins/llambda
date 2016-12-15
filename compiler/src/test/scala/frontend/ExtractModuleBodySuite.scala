@@ -27,13 +27,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(exprFor("'a") === et.Literal(ast.Symbol("a")))
 
     assert(exprFor("'#(a b c)") === et.Literal(
-      ast.VectorLiteral(Vector(ast.Symbol("a"), ast.Symbol("b"), ast.Symbol("c")))
+      ast.Vector(Vector(ast.Symbol("a"), ast.Symbol("b"), ast.Symbol("c")))
     ))
 
     assert(exprFor("'()") === et.Literal(ast.EmptyList()))
 
     assert(exprFor("'(+ 1 2)") === et.Literal(
-      ast.ProperList(List(ast.Symbol("+"), ast.IntegerLiteral(1), ast.IntegerLiteral(2)))
+      ast.ProperList(List(ast.Symbol("+"), ast.Integer(1), ast.Integer(2)))
     ))
 
     assert(exprFor("'(quote a)") === et.Literal(
@@ -45,27 +45,27 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     ))
 
     assert(exprFor("'145932") === et.Literal(
-      ast.IntegerLiteral(145932)
+      ast.Integer(145932)
     ))
 
     assert(exprFor("145932") === et.Literal(
-      ast.IntegerLiteral(145932)
+      ast.Integer(145932)
     ))
 
     assert(exprFor("'\"" + "abc" + "\"") === et.Literal(
-      ast.StringLiteral("abc")
+      ast.String("abc")
     ))
 
     assert(exprFor("\"" + "abc" + "\"") === et.Literal(
-      ast.StringLiteral("abc")
+      ast.String("abc")
     ))
 
     assert(exprFor("'#(a 10)") === et.Literal(
-      ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
+      ast.Vector(Vector(ast.Symbol("a"), ast.Integer(10)))
     ))
 
     assert(exprFor("#(a 10)") === et.Literal(
-      ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
+      ast.Vector(Vector(ast.Symbol("a"), ast.Integer(10)))
     ))
 
     assert(exprFor("'#u8(64 65)") === et.Literal(
@@ -77,15 +77,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     ))
 
     assert(exprFor("'#t") === et.Literal(
-      ast.BooleanLiteral(true)
+      ast.Boolean(true)
     ))
 
     assert(exprFor("#t") === et.Literal(
-      ast.BooleanLiteral(true)
+      ast.Boolean(true)
     ))
 
     assert(exprFor("#!unit") === et.Literal(
-      ast.UnitValue()
+      ast.Unit()
     ))
   }
 
@@ -93,8 +93,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(exprFor("(+ 3 4)")(plusScope) === et.Apply(
       et.VarRef(plusLoc),
       List(
-        et.Literal(ast.IntegerLiteral(3)),
-        et.Literal(ast.IntegerLiteral(4))
+        et.Literal(ast.Integer(3)),
+        et.Literal(ast.Integer(4))
       )
     ))
 
@@ -116,8 +116,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("(begin) in top-level context") {
     assert(bodyFor("(begin 1 2)")(primitiveScope) === List(
-      et.Literal(ast.IntegerLiteral(1)),
-      et.Literal(ast.IntegerLiteral(2))
+      et.Literal(ast.Integer(1)),
+      et.Literal(ast.Integer(2))
     ))
   }
 
@@ -126,8 +126,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       case et.Apply(
         et.VarRef(plusLoc),
         List(et.Begin(List(
-          et.Literal(ast.IntegerLiteral(1)),
-          et.Literal(ast.IntegerLiteral(2))
+          et.Literal(ast.Integer(1)),
+          et.Literal(ast.Integer(2))
         )))
       ) =>
     }
@@ -140,7 +140,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(exprFor("(set! a 1)")(varScope) === et.MutateVar(
       storageLoc,
-      et.Literal(ast.IntegerLiteral(1))
+      et.Literal(ast.Integer(1))
     ))
 
     intercept[UnboundVariableException] {
@@ -154,15 +154,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("conditionals") {
     assert(exprFor("(if #t 'yes 'no)") === et.Cond(
-      et.Literal(ast.BooleanLiteral(true)),
+      et.Literal(ast.Boolean(true)),
       et.Literal(ast.Symbol("yes")),
       et.Literal(ast.Symbol("no"))
     ))
 
     assert(exprFor("(if #f 'yes)") === et.Cond(
-      et.Literal(ast.BooleanLiteral(false)),
+      et.Literal(ast.Boolean(false)),
       et.Literal(ast.Symbol("yes")),
-      et.Literal(ast.UnitValue())
+      et.Literal(ast.Unit())
     ))
   }
 
@@ -173,7 +173,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc: StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(2))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -189,7 +189,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc: StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(2))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -207,7 +207,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc: StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(2))))
         ))
 
         assert(storageLoc.schemeType === vt.IntegerType)
@@ -224,7 +224,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc: StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(2))))
         ))
 
         assert(storageLoc.schemeType === vt.IntegerType)
@@ -274,7 +274,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside((scope.get("a").value, scope.get("b").value)) {
       case (storageLocA: StorageLocation, storageLocB: StorageLocation) =>
         assert(expressions === List(
-          et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.Integer(2)))),
           et.TopLevelDefine(et.Binding(storageLocB, et.VarRef(storageLocA)))
         ))
     }
@@ -287,7 +287,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc: StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(2)))),
           et.VarRef(storageLoc)
         ))
     }
@@ -448,7 +448,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.TopLevelDefine(et.Binding(loc, et.Lambda(_, Nil, Nil, None, et.Literal(ast.BooleanLiteral(false)), _))) =>
+      case et.TopLevelDefine(et.Binding(loc, et.Lambda(_, Nil, Nil, None, et.Literal(ast.Boolean(false)), _))) =>
         assert(loc === listBinding)
     }
 
@@ -462,8 +462,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     // Simple include should return an et.Begin with the contents of the file
     assert(bodyFor("""(include "includes/include1.scm")""")(primitiveScope) ===
       List(
-        et.Literal(ast.StringLiteral("include1-line1")),
-        et.Literal(ast.StringLiteral("include1-line2"))
+        et.Literal(ast.String("include1-line1")),
+        et.Literal(ast.String("include1-line2"))
       )
     )
   }
@@ -473,10 +473,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     // in a single et.Begin
     assert(bodyFor("""(include "includes/include1.scm" "includes/include2.scm")""")(primitiveScope) ===
       List(
-        et.Literal(ast.StringLiteral("include1-line1")),
-        et.Literal(ast.StringLiteral("include1-line2")),
-        et.Literal(ast.StringLiteral("include2-line1")),
-        et.Literal(ast.StringLiteral("include2-line2"))
+        et.Literal(ast.String("include1-line1")),
+        et.Literal(ast.String("include1-line2")),
+        et.Literal(ast.String("include2-line1")),
+        et.Literal(ast.String("include2-line2"))
       )
     )
   }
@@ -492,8 +492,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           case storageLocB: StorageLocation =>
             assert(expressions ===
               List(
-                et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
-                et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
+                et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.Integer(1)))),
+                et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.Integer(2)))),
                 et.VarRef(storageLocA),
                 et.VarRef(storageLocB)
               )
@@ -507,9 +507,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.Lambda(_, Nil, Nil, None, et.InternalDefine(List(
-          et.Binding(bindLocC, et.Literal(ast.IntegerLiteral(3))),
-          et.Binding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
-          et.Binding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
+          et.Binding(bindLocC, et.Literal(ast.Integer(3))),
+          et.Binding(bindLocA, et.Literal(ast.Integer(1))),
+          et.Binding(bindLocB, et.Literal(ast.Integer(2)))
         ),
         et.Begin(List(
           et.VarRef(refLocA),
@@ -529,8 +529,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(et.Binding(_, et.InternalDefine(List(
-          et.Binding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
-          et.Binding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
+          et.Binding(bindLocA, et.Literal(ast.Integer(1))),
+          et.Binding(bindLocB, et.Literal(ast.Integer(2)))
         ),
         et.Begin(List(
           et.VarRef(refLocA),
@@ -544,7 +544,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("cast expression types") {
     assert(exprFor("(cast #t <boolean>)")(nfiScope) ===
-      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, false)
+      et.Cast(et.Literal(ast.Boolean(true)), vt.BooleanType, false)
     )
 
     intercept[BadSpecialFormException] {
@@ -570,7 +570,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("annotation expression types") {
     assert(exprFor("(ann #t <boolean>)")(nfiScope) ===
-      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, true)
+      et.Cast(et.Literal(ast.Boolean(true)), vt.BooleanType, true)
     )
 
     intercept[BadSpecialFormException] {
@@ -604,9 +604,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("cond-expand with one true clause") {
     assert(bodyFor("""(cond-expand ((library (scheme base)) 1 2 3))""")(primitiveScope) ===
       List(
-        et.Literal(ast.IntegerLiteral(1)),
-        et.Literal(ast.IntegerLiteral(2)),
-        et.Literal(ast.IntegerLiteral(3))
+        et.Literal(ast.Integer(1)),
+        et.Literal(ast.Integer(2)),
+        et.Literal(ast.Integer(3))
       )
     )
   }
@@ -619,9 +619,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("cond-expand with one false with else") {
     assert(bodyFor("""(cond-expand ((not llambda) 1 2 3) (else 4 5 6))""")(primitiveScope) ===
       List(
-        et.Literal(ast.IntegerLiteral(4)),
-        et.Literal(ast.IntegerLiteral(5)),
-        et.Literal(ast.IntegerLiteral(6))
+        et.Literal(ast.Integer(4)),
+        et.Literal(ast.Integer(5)),
+        et.Literal(ast.Integer(6))
       )
     )
   }
@@ -642,7 +642,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(exprFor("""(parameterize () #t)""") ===
       et.Parameterize(
         Nil,
-        et.Literal(ast.BooleanLiteral(true))
+        et.Literal(ast.Boolean(true))
       )
     )
   }
@@ -654,7 +654,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           (et.Literal(ast.Symbol("param1")), et.Literal(ast.Symbol("value1"))),
           (et.Literal(ast.Symbol("param2")), et.Literal(ast.Symbol("value2")))
         ),
-        et.Literal(ast.BooleanLiteral(true))
+        et.Literal(ast.Boolean(true))
       )
     )
   }
@@ -666,9 +666,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           (et.Literal(ast.Symbol("param1")), et.Literal(ast.Symbol("value1")))
         ),
         et.Begin(List(
-          et.Literal(ast.IntegerLiteral(1)),
-          et.Literal(ast.IntegerLiteral(2)),
-          et.Literal(ast.IntegerLiteral(3))
+          et.Literal(ast.Integer(1)),
+          et.Literal(ast.Integer(2)),
+          et.Literal(ast.Integer(3))
         ))
       )
     )

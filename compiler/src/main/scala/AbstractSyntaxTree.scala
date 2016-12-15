@@ -6,6 +6,13 @@ import llambda.compiler.SourceLocated
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
+import java.lang.{String => ScalaString}
+import scala.{Long => ScalaLong}
+import scala.{Double => ScalaDouble}
+import scala.{Boolean => ScalaBoolean}
+import scala.collection.immutable.{Vector => ScalaVector}
+
+
 sealed abstract class Datum extends SourceLocated {
   /** Scheme type for this datum */
   val schemeType: vt.NonUnionSchemeType
@@ -16,12 +23,12 @@ sealed abstract class Leaf extends Datum
 // This helps out ScopedSyntaxTree by grouping all the types that have scope or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Leaf
 
-case class UnitValue() extends NonSymbolLeaf {
+case class Unit() extends NonSymbolLeaf {
   val schemeType = vt.UnitType
   override def toString = "#!unit"
 }
 
-case class StringLiteral(content: String) extends NonSymbolLeaf {
+case class String(content: ScalaString) extends NonSymbolLeaf {
   val schemeType = vt.StringType
 
   private def escapedContent =
@@ -32,7 +39,7 @@ case class StringLiteral(content: String) extends NonSymbolLeaf {
     '"' + escapedContent + '"'
 }
 
-case class BooleanLiteral(value: Boolean) extends NonSymbolLeaf {
+case class Boolean(value: ScalaBoolean) extends NonSymbolLeaf {
   val schemeType = vt.LiteralBooleanType(value)
 
   override def toString = value match {
@@ -41,21 +48,21 @@ case class BooleanLiteral(value: Boolean) extends NonSymbolLeaf {
   }
 }
 
-sealed abstract class NumberLiteral extends NonSymbolLeaf
+sealed abstract class Number extends NonSymbolLeaf
 
-case class IntegerLiteral(value: Long) extends NumberLiteral {
+case class Integer(value: ScalaLong) extends Number {
   val schemeType = vt.IntegerType
 
   override def toString = value.toString
 }
 
-case class FlonumLiteral(value: Double) extends NumberLiteral {
+case class Flonum(value: ScalaDouble) extends Number {
   val schemeType = vt.FlonumType
 
   // Consider all NaN literals to be equal
   // This is different from numeric equality which indeed doesn't make sense for NaNs
-  override def equals(other: Any): Boolean = other match {
-    case FlonumLiteral(otherValue) =>
+  override def equals(other: Any): ScalaBoolean = other match {
+    case Flonum(otherValue) =>
       if (otherValue.isNaN) {
         value.isNaN
       }
@@ -71,23 +78,23 @@ case class FlonumLiteral(value: Double) extends NumberLiteral {
     case Double.PositiveInfinity => "+inf.0"
     case Double.NegativeInfinity => "-inf.0"
     case nan if nan.isNaN        => "+nan.0"
-    case _ => String.format("%f", Double.box(value))
+    case _ => ScalaString.format("%f", ScalaDouble.box(value))
   }
 }
 
-object PositiveInfinityLiteral {
-  def apply() = FlonumLiteral(Double.PositiveInfinity)
+object PositiveInfinity {
+  def apply() = Flonum(ScalaDouble.PositiveInfinity)
 }
 
-object NegativeInfinityLiteral {
-  def apply() = FlonumLiteral(Double.NegativeInfinity)
+object NegativeInfinity {
+  def apply() = Flonum(ScalaDouble.NegativeInfinity)
 }
 
-object NaNLiteral {
-  def apply() =  FlonumLiteral(Double.NaN)
+object NaN {
+  def apply() = Flonum(ScalaDouble.NaN)
 }
 
-case class Symbol(name: String) extends Leaf {
+case class Symbol(name: ScalaString) extends Leaf {
   val schemeType = vt.LiteralSymbolType(name)
 
   override def toString = if (SchemeParser.isValidIdentifier(name)) {
@@ -162,21 +169,21 @@ object ProperList {
     data.foldRight(EmptyList(): Datum) { (car, cdr) => Pair(car, cdr) }
 }
 
-case class VectorLiteral(elements: Vector[Datum]) extends Datum {
+case class Vector(elements: ScalaVector[Datum]) extends Datum {
   val schemeType = vt.VectorType
 
   override def toString =
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class Bytevector(elements: Vector[Short]) extends NonSymbolLeaf {
+case class Bytevector(elements: ScalaVector[Short]) extends NonSymbolLeaf {
   val schemeType = vt.BytevectorType
 
   override def toString =
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class CharLiteral(codePoint: Int) extends NonSymbolLeaf {
+case class Char(codePoint: Int) extends NonSymbolLeaf {
   val schemeType = vt.CharType
 
   override def toString = codePoint match {
@@ -192,7 +199,7 @@ case class CharLiteral(codePoint: Int) extends NonSymbolLeaf {
   }
 }
 
-object CharLiteral {
+object Char {
   val firstCodePoint = 0
   val lastCodePoint = 0x10FFFF
 }

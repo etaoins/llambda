@@ -64,7 +64,7 @@ object ProcedureSignatureToIr {
         val int32Type = IntegerType(32)
 
         Map(
-          "range" -> RangeMetadata(int32Type, (ast.CharLiteral.firstCodePoint, ast.CharLiteral.lastCodePoint + 1))
+          "range" -> RangeMetadata(int32Type, (ast.Char.firstCodePoint, ast.Char.lastCodePoint + 1))
         )
 
       case _ =>

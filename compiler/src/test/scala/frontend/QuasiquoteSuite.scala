@@ -46,9 +46,9 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
     assert(exprFor("`(1 2 3)") ===
       et.Literal(
         ast.ProperList(List(
-          ast.IntegerLiteral(1),
-          ast.IntegerLiteral(2),
-          ast.IntegerLiteral(3)
+          ast.Integer(1),
+          ast.Integer(2),
+          ast.Integer(3)
         ))
       )
     )
@@ -57,12 +57,12 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
   test("quasiquote list with non-splicing unquoting") {
     assert(exprFor("`(1 ,(+ 2 3) 4)") ===
       et.Apply(listProc, List(
-        et.Literal(ast.IntegerLiteral(1)),
+        et.Literal(ast.Integer(1)),
         et.Apply(plusProc, List(
-          et.Literal(ast.IntegerLiteral(2)),
-          et.Literal(ast.IntegerLiteral(3))
+          et.Literal(ast.Integer(2)),
+          et.Literal(ast.Integer(3))
         )),
-        et.Literal(ast.IntegerLiteral(4))
+        et.Literal(ast.Integer(4))
       ))
     )
   }
@@ -71,14 +71,14 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
     assert(exprFor("`(1 ,@(list 2 3) 4)") ===
       et.Apply(appendProc, List(
         et.Literal(ast.ProperList(List(
-          ast.IntegerLiteral(1)
+          ast.Integer(1)
         ))),
         et.Apply(listProc, List(
-          et.Literal(ast.IntegerLiteral(2)),
-          et.Literal(ast.IntegerLiteral(3))
+          et.Literal(ast.Integer(2)),
+          et.Literal(ast.Integer(3))
         )),
         et.Literal(ast.ProperList(List(
-          ast.IntegerLiteral(4)
+          ast.Integer(4)
         )))
       ))
     )
@@ -88,11 +88,11 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
     assert(exprFor("`(1 ,@(list 2 3))") ===
       et.Apply(appendProc, List(
         et.Literal(ast.ProperList(List(
-          ast.IntegerLiteral(1)
+          ast.Integer(1)
         ))),
         et.Apply(listProc, List(
-          et.Literal(ast.IntegerLiteral(2)),
-          et.Literal(ast.IntegerLiteral(3))
+          et.Literal(ast.Integer(2)),
+          et.Literal(ast.Integer(3))
         ))
       ))
     )
@@ -102,19 +102,19 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
     assert(exprFor("`(1 2 ,@(list 3 4) ,(+ 2 3) 6)") ===
       et.Apply(appendProc, List(
         et.Literal(ast.ProperList(List(
-          ast.IntegerLiteral(1),
-          ast.IntegerLiteral(2)
+          ast.Integer(1),
+          ast.Integer(2)
         ))),
         et.Apply(listProc, List(
-          et.Literal(ast.IntegerLiteral(3)),
-          et.Literal(ast.IntegerLiteral(4))
+          et.Literal(ast.Integer(3)),
+          et.Literal(ast.Integer(4))
         )),
         et.Apply(listProc, List(
           et.Apply(plusProc, List(
-            et.Literal(ast.IntegerLiteral(2)),
-            et.Literal(ast.IntegerLiteral(3))
+            et.Literal(ast.Integer(2)),
+            et.Literal(ast.Integer(3))
           )),
-          et.Literal(ast.IntegerLiteral(6))
+          et.Literal(ast.Integer(6))
         ))
       ))
     )
@@ -122,16 +122,16 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
 
   test("empty quasiquote vector") {
     assert(exprFor("`#()") ===
-      et.Literal(ast.VectorLiteral(Vector()))
+      et.Literal(ast.Vector(Vector()))
     )
   }
 
   test("quasiquote vector without unquoting") {
     assert(exprFor("`#(1 2 3)") ===
-      et.Literal(ast.VectorLiteral(Vector(
-        ast.IntegerLiteral(1),
-        ast.IntegerLiteral(2),
-        ast.IntegerLiteral(3)
+      et.Literal(ast.Vector(Vector(
+        ast.Integer(1),
+        ast.Integer(2),
+        ast.Integer(3)
       )))
     )
   }
@@ -139,12 +139,12 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
   test("quasiquote vector with non-splicing unquoting") {
     assert(exprFor("`#(1 ,(+ 2 3) 4)") ===
       et.Apply(vectorProc, List(
-        et.Literal(ast.IntegerLiteral(1)),
+        et.Literal(ast.Integer(1)),
         et.Apply(plusProc, List(
-          et.Literal(ast.IntegerLiteral(2)),
-          et.Literal(ast.IntegerLiteral(3))
+          et.Literal(ast.Integer(2)),
+          et.Literal(ast.Integer(3))
         )),
-        et.Literal(ast.IntegerLiteral(4))
+        et.Literal(ast.Integer(4))
       ))
     )
   }
@@ -154,14 +154,14 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
       et.Apply(listToVectorProc, List(
         et.Apply(appendProc, List(
           et.Literal(ast.ProperList(List(
-            ast.IntegerLiteral(1)
+            ast.Integer(1)
           ))),
           et.Apply(listProc, List(
-            et.Literal(ast.IntegerLiteral(2)),
-            et.Literal(ast.IntegerLiteral(3))
+            et.Literal(ast.Integer(2)),
+            et.Literal(ast.Integer(3))
           )),
           et.Literal(ast.ProperList(List(
-            ast.IntegerLiteral(4)
+            ast.Integer(4)
           )))
         ))
       ))
@@ -173,11 +173,11 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
       et.Apply(listToVectorProc, List(
         et.Apply(appendProc, List(
           et.Literal(ast.ProperList(List(
-            ast.IntegerLiteral(1)
+            ast.Integer(1)
           ))),
           et.Apply(listProc, List(
-            et.Literal(ast.IntegerLiteral(2)),
-            et.Literal(ast.IntegerLiteral(3))
+            et.Literal(ast.Integer(2)),
+            et.Literal(ast.Integer(3))
           ))
         ))
       ))
@@ -189,19 +189,19 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
       et.Apply(listToVectorProc, List(
         et.Apply(appendProc, List(
           et.Literal(ast.ProperList(List(
-            ast.IntegerLiteral(1),
-            ast.IntegerLiteral(2)
+            ast.Integer(1),
+            ast.Integer(2)
           ))),
           et.Apply(listProc, List(
-            et.Literal(ast.IntegerLiteral(3)),
-            et.Literal(ast.IntegerLiteral(4))
+            et.Literal(ast.Integer(3)),
+            et.Literal(ast.Integer(4))
           )),
           et.Apply(listProc, List(
             et.Apply(plusProc, List(
-              et.Literal(ast.IntegerLiteral(2)),
-              et.Literal(ast.IntegerLiteral(3))
+              et.Literal(ast.Integer(2)),
+              et.Literal(ast.Integer(3))
             )),
-            et.Literal(ast.IntegerLiteral(6))
+            et.Literal(ast.Integer(6))
           ))
         ))
       ))

@@ -17,7 +17,7 @@ object InterpretStep {
 
   def apply(state: InterpreterState, step: ps.Step): InterpreterState = step match {
     case ps.CreateUnitCell(resultTemp) =>
-      val datumCell = DatumCell(ast.UnitValue(), ct.UnitCell)
+      val datumCell = DatumCell(ast.Unit(), ct.UnitCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateEmptyListCell(resultTemp) =>
@@ -29,23 +29,23 @@ object InterpretStep {
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateStringCell(resultTemp, value) =>
-      val datumCell = DatumCell(ast.StringLiteral(value), ct.StringCell)
+      val datumCell = DatumCell(ast.String(value), ct.StringCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateBooleanCell(resultTemp, value) =>
-      val datumCell = DatumCell(ast.BooleanLiteral(value), ct.BooleanCell)
+      val datumCell = DatumCell(ast.Boolean(value), ct.BooleanCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateIntegerCell(resultTemp, value) =>
-      val datumCell = DatumCell(ast.IntegerLiteral(value), ct.IntegerCell)
+      val datumCell = DatumCell(ast.Integer(value), ct.IntegerCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateFlonumCell(resultTemp, value) =>
-      val datumCell = DatumCell(ast.FlonumLiteral(value), ct.FlonumCell)
+      val datumCell = DatumCell(ast.Flonum(value), ct.FlonumCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateCharCell(resultTemp, value) =>
-      val datumCell = DatumCell(ast.CharLiteral(value), ct.CharCell)
+      val datumCell = DatumCell(ast.Char(value), ct.CharCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateBytevectorCell(resultTemp, elements) =>
@@ -62,7 +62,7 @@ object InterpretStep {
     case ps.CreateVectorCell(resultTemp, elementTemps) =>
       val elementValues = elementTemps.map(tempToAstDatum(state))
 
-      val datumCell = DatumCell(ast.VectorLiteral(elementValues), ct.VectorCell)
+      val datumCell = DatumCell(ast.Vector(elementValues), ct.VectorCell)
       state.copy(state.liveTemps + (resultTemp -> datumCell))
 
     case ps.CreateNamedEntryPoint(resultTemp, _, nativeSymbol) =>

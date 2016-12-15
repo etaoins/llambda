@@ -86,7 +86,7 @@ abstract class SchemeFunctionalTestRunner(
 
     for(singleTest <- expandedTests) {
       singleTest match {
-        case ast.ProperList(ast.Symbol("define-test") :: ast.StringLiteral(name) :: condition :: Nil) =>
+        case ast.ProperList(ast.Symbol("define-test") :: ast.String(name) :: condition :: Nil) =>
           // Start a nested test
           test(s"$name (-O ${optimiseLevel})") {
             runSingleCondition(condition, optimiseLevel)
@@ -156,7 +156,7 @@ abstract class SchemeFunctionalTestRunner(
 
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
 
-      case ast.ProperList(ast.Symbol("expect-exit-value") :: ast.IntegerLiteral(exitValue) :: program) if !program.isEmpty =>
+      case ast.ProperList(ast.Symbol("expect-exit-value") :: ast.Integer(exitValue) :: program) if !program.isEmpty =>
         val result = executeProgram(program, optimiseLevel)
         assert(result.exitValue == exitValue)
 

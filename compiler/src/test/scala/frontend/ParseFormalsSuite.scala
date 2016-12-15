@@ -7,9 +7,9 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
-  // sst.ScopedAnyList won't accept single data or empty lists as lists
+  // sst.AnyList won't accept single data or empty lists as lists
   private def destructureList(datum: sst.ScopedDatum): (List[sst.ScopedDatum], sst.ScopedDatum) = datum match {
-    case sst.ScopedPair(car, tail) =>
+    case sst.Pair(car, tail) =>
       destructureList(tail) match {
         case (tailMembers, terminator) =>
           (car :: tailMembers, terminator)
@@ -39,8 +39,8 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
     inside(formalsFor("(fixed1 fixed2)")) {
       case ParsedFormals(
         List(
-          (sst.ScopedSymbol(_, "fixed1"), None),
-          (sst.ScopedSymbol(_, "fixed2"), None)
+          (sst.Symbol(_, "fixed1"), None),
+          (sst.Symbol(_, "fixed2"), None)
         ),
         Nil,
         None
@@ -53,7 +53,7 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
       case ParsedFormals(
         Nil,
         Nil,
-        Some((sst.ScopedSymbol(_, "rest"), None))
+        Some((sst.Symbol(_, "rest"), None))
       ) =>
     }
   }
@@ -62,8 +62,8 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
     inside(formalsFor("([fixed1 : <integer>] fixed2)")) {
       case ParsedFormals(
         List(
-          (sst.ScopedSymbol(_, "fixed1"), Some(vt.IntegerType)),
-          (sst.ScopedSymbol(_, "fixed2"), None)
+          (sst.Symbol(_, "fixed1"), Some(vt.IntegerType)),
+          (sst.Symbol(_, "fixed2"), None)
         ),
         Nil,
         None
@@ -75,11 +75,11 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
     inside(formalsFor("(fixed1 fixed2 rest : <flonum> *)")) {
       case ParsedFormals(
         List(
-          (sst.ScopedSymbol(_, "fixed1"), None),
-          (sst.ScopedSymbol(_, "fixed2"), None)
+          (sst.Symbol(_, "fixed1"), None),
+          (sst.Symbol(_, "fixed2"), None)
         ),
         Nil,
-        Some((sst.ScopedSymbol(_, "rest"), Some(vt.FlonumType)))
+        Some((sst.Symbol(_, "rest"), Some(vt.FlonumType)))
       ) =>
     }
   }
@@ -90,14 +90,14 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
         Nil,
         List(
           ParsedOptional(
-            sst.ScopedSymbol(_, "fixed1"),
+            sst.Symbol(_, "fixed1"),
             None,
-            sst.NonSymbolLeaf(ast.IntegerLiteral(1))
+            sst.NonSymbolLeaf(ast.Integer(1))
           ),
           ParsedOptional(
-            sst.ScopedSymbol(_, "fixed2"),
+            sst.Symbol(_, "fixed2"),
             None,
-            sst.NonSymbolLeaf(ast.IntegerLiteral(2))
+            sst.NonSymbolLeaf(ast.Integer(2))
           )
         ),
         None
@@ -111,14 +111,14 @@ class ParseFormalsSuite extends FunSuite with Inside with testutil.ExprHelpers {
         Nil,
         List(
           ParsedOptional(
-            sst.ScopedSymbol(_, "fixed1"),
+            sst.Symbol(_, "fixed1"),
             Some(vt.IntegerType),
-            sst.NonSymbolLeaf(ast.IntegerLiteral(1))
+            sst.NonSymbolLeaf(ast.Integer(1))
           ),
           ParsedOptional(
-            sst.ScopedSymbol(_, "fixed2"),
+            sst.Symbol(_, "fixed2"),
             Some(vt.SymbolType),
-            sst.ScopedSymbol(_, "val")
+            sst.Symbol(_, "val")
           )
         ),
         None

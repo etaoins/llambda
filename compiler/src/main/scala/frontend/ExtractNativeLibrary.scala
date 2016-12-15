@@ -6,7 +6,7 @@ import llambda.compiler.BadSpecialFormException
 
 object ExtractNativeLibrary {
   def apply(datum: sst.ScopedDatum): NativeLibrary = datum match {
-    case symbol: sst.ScopedSymbol =>
+    case symbol: sst.Symbol =>
       symbol.resolve match {
         case nativeLibrary: NativeLibrary =>
           nativeLibrary
@@ -15,9 +15,9 @@ object ExtractNativeLibrary {
           throw new BadSpecialFormException(symbol, "Other value used where native library expected")
       }
 
-    case sst.ScopedProperList(List(
+    case sst.ProperList(List(
         sst.ResolvedSymbol(Primitives.StaticLibrary),
-        sst.NonSymbolLeaf(ast.StringLiteral(libraryName))
+        sst.NonSymbolLeaf(ast.String(libraryName))
     )) =>
       NativeStaticLibrary(libraryName)
 

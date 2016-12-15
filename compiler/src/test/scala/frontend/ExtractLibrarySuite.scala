@@ -52,7 +52,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
             case storageLoc: StorageLocation =>
-              assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
+              assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(5))))))
           }
      }
   }
@@ -73,7 +73,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
             case storageLoc: StorageLocation =>
-              assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.IntegerLiteral(5))))))
+              assert(exprs === List(et.TopLevelDefine(et.Binding(storageLoc, et.Literal(ast.Integer(5))))))
           }
      }
   }
@@ -103,8 +103,8 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
          assert(exprs ===
             List(
-              et.Literal(ast.StringLiteral("include1-line1")),
-              et.Literal(ast.StringLiteral("include1-line2"))
+              et.Literal(ast.String("include1-line1")),
+              et.Literal(ast.String("include1-line2"))
             )
          )
     }
@@ -119,10 +119,10 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
          assert(exprs ===
             List(
-              et.Literal(ast.StringLiteral("include1-line1")),
-              et.Literal(ast.StringLiteral("include1-line2")),
-              et.Literal(ast.StringLiteral("include2-line1")),
-              et.Literal(ast.StringLiteral("include2-line2"))
+              et.Literal(ast.String("include1-line1")),
+              et.Literal(ast.String("include1-line2")),
+              et.Literal(ast.String("include2-line1")),
+              et.Literal(ast.String("include2-line2"))
             )
          )
     }
@@ -142,8 +142,8 @@ class ExtractLibrarySuite extends FunSuite with Inside {
               case storageLocB: StorageLocation =>
                 assert(exprs ===
                   List(
-                    et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
-                    et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
+                    et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.Integer(1)))),
+                    et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.Integer(2)))),
                     et.VarRef(storageLocA),
                     et.VarRef(storageLocB)
                   )
@@ -165,8 +165,8 @@ class ExtractLibrarySuite extends FunSuite with Inside {
               case storageLocB: StorageLocation =>
                 assert(exprs ===
                   List(
-                    et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.IntegerLiteral(1)))),
-                    et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.IntegerLiteral(2)))),
+                    et.TopLevelDefine(et.Binding(storageLocA, et.Literal(ast.Integer(1)))),
+                    et.TopLevelDefine(et.Binding(storageLocB, et.Literal(ast.Integer(2)))),
                     et.VarRef(storageLocA),
                     et.VarRef(storageLocB)
                   )

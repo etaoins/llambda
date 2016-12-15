@@ -15,7 +15,7 @@ import llambda.compiler.frontend.syntax.ParseSyntaxDefine
   *                                (define-stdlib-procedure) which constructs specially annotated storage locations
   */
 case class ValueTarget(
-    definedSymbol: sst.ScopedSymbol,
+    definedSymbol: sst.Symbol,
     providedTypeOpt: Option[vt.SchemeType],
     storageLocConstructor: (String, vt.SchemeType) => StorageLocation = (new StorageLocation(_, _))
 ) {
@@ -41,7 +41,7 @@ case class ExtractedVarDefine(
 )
 
 object ExtractDefine {
-  private def bindValue(symbol: sst.ScopedSymbol, value: BoundValue): Unit = {
+  private def bindValue(symbol: sst.Symbol, value: BoundValue): Unit = {
     if (symbol.scope.bindings.contains(symbol.name)) {
       throw new DuplicateDefinitionException(symbol)
     }
@@ -62,7 +62,7 @@ object ExtractDefine {
       operands: List[sst.ScopedDatum]
   )(implicit context: FrontendContext): List[ExtractedVarDefine] =
     (primitiveDefine, operands) match {
-      case (Primitives.Define, List(symbol: sst.ScopedSymbol, value)) =>
+      case (Primitives.Define, List(symbol: sst.Symbol, value)) =>
         val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=None)
 
         List(ExtractedVarDefine(valueTarget, () => {
@@ -70,7 +70,7 @@ object ExtractDefine {
         }))
 
       case (Primitives.Define, List(
-          symbol: sst.ScopedSymbol,
+          symbol: sst.Symbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
           typeDatum,
           value
@@ -82,7 +82,7 @@ object ExtractDefine {
           ExtractExpr(value)
         }))
 
-      case (Primitives.Define, sst.ScopedAnyList((symbol: sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
+      case (Primitives.Define, sst.AnyList((symbol: sst.Symbol) :: fixedArgs, restArgDatum) :: body) =>
         val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=None)
 
         List(ExtractedVarDefine(valueTarget, () => {
@@ -123,7 +123,7 @@ object ExtractDefine {
             }
         }
 
-      case (Primitives.DefineType, (typeAlias: sst.ScopedSymbol) :: typeDatum :: Nil) =>
+      case (Primitives.DefineType, (typeAlias: sst.Symbol) :: typeDatum :: Nil) =>
         // Allow the type's new name to be a recursion marker inside the definition
         val recursiveVars = ExtractType.RecursiveVars(Map(typeAlias.name -> 0))
         val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars)
@@ -131,12 +131,12 @@ object ExtractDefine {
         bindValue(typeAlias, BoundType(extractedType))
         Nil
 
-      case (Primitives.DefineType, sst.ScopedProperList((constructorName: sst.ScopedSymbol) :: args) :: definition :: Nil) =>
+      case (Primitives.DefineType, sst.ProperList((constructorName: sst.Symbol) :: args) :: definition :: Nil) =>
         val typeConstructor = ExtractUserDefinedTypeConstructor(args, definition)
         bindValue(constructorName, typeConstructor)
         Nil
 
-      case (Primitives.DefineStdlibProcedure, List(symbol: sst.ScopedSymbol, definitionData)) =>
+      case (Primitives.DefineStdlibProcedure, List(symbol: sst.Symbol, definitionData)) =>
         val valueTarget = ValueTarget(
           definedSymbol=symbol,
           providedTypeOpt=None,
@@ -148,7 +148,7 @@ object ExtractDefine {
           }
         ))
 
-      case (Primitives.DefineStdlibProcedure, sst.ScopedAnyList((symbol: sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
+      case (Primitives.DefineStdlibProcedure, sst.AnyList((symbol: sst.Symbol) :: fixedArgs, restArgDatum) :: body) =>
         val valueTarget = ValueTarget(
           definedSymbol=symbol,
           providedTypeOpt=None,
@@ -169,11 +169,11 @@ object ExtractDefine {
           }
         ))
 
-      case (Primitives.DefineNativeLibrary, List(libAlias: sst.ScopedSymbol, libDatum)) =>
+      case (Primitives.DefineNativeLibrary, List(libAlias: sst.Symbol, libDatum)) =>
         bindValue(libAlias, ExtractNativeLibrary(libDatum))
         Nil
 
-      case (Primitives.AnnotateStorageLocType, List(declaredSymbol: sst.ScopedSymbol, typeDatum)) =>
+      case (Primitives.AnnotateStorageLocType, List(declaredSymbol: sst.Symbol, typeDatum)) =>
         val declarationType = ExtractType.extractLocTypeDeclaration(typeDatum)
 
         declaredSymbol.scope.bindings.get(declaredSymbol.name) match {

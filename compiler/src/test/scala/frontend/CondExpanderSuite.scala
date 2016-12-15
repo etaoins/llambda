@@ -70,7 +70,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
+    assert(data === List(4, 5, 6).map(ast.Integer(_)))
   }
 
   test("non-terminal else clause fails") {
@@ -97,7 +97,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("first matching clause is expanded") {
@@ -112,7 +112,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("trivial fallback feature identifier expansion") {
@@ -126,7 +126,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
+    assert(data === List(4, 5, 6).map(ast.Integer(_)))
   }
 
   test("trivial existing library expansion") {
@@ -139,7 +139,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("non-existing library expansion") {
@@ -153,7 +153,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
+    assert(data === List(4, 5, 6).map(ast.Integer(_)))
   }
 
   test("empty (and) condition is true") {
@@ -166,7 +166,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("(and) with two true requirements") {
@@ -180,7 +180,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("(and) with one true and one false requirement") {
@@ -220,7 +220,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("(or) with one true and one false requirement") {
@@ -233,7 +233,7 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("empty (not) fails") {
@@ -270,7 +270,7 @@ class CondExpanderSuite extends FunSuite {
       Set()
     )
 
-    assert(data === List(1, 2, 3).map(ast.IntegerLiteral(_)))
+    assert(data === List(1, 2, 3).map(ast.Integer(_)))
   }
 
   test("nested conditionals") {
@@ -285,6 +285,6 @@ class CondExpanderSuite extends FunSuite {
       )
     )
 
-    assert(data === List(4, 5, 6).map(ast.IntegerLiteral(_)))
+    assert(data === List(4, 5, 6).map(ast.Integer(_)))
   }
 }

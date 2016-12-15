@@ -20,7 +20,7 @@ private[frontend] object ExtractExpr {
 
   private def extractNonDefineApplication(
       boundValue: BoundValue,
-      appliedSymbol: sst.ScopedSymbol,
+      appliedSymbol: sst.Symbol,
       operands: List[sst.ScopedDatum]
   )(implicit context: FrontendContext): et.Expr = {
     (boundValue, operands) match {
@@ -46,10 +46,10 @@ private[frontend] object ExtractExpr {
         et.Cond(
           ExtractExpr(test),
           ExtractExpr(trueExpr),
-          et.Literal(ast.UnitValue()).assignLocationAndContextFrom(appliedSymbol, context.debugContext)
+          et.Literal(ast.Unit()).assignLocationAndContextFrom(appliedSymbol, context.debugContext)
         )
 
-      case (Primitives.Set, (mutatingSymbol: sst.ScopedSymbol) :: value :: Nil) =>
+      case (Primitives.Set, (mutatingSymbol: sst.Symbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
           case storageLoc: StorageLocation =>
             if (storageLoc.forceImmutable) {
@@ -63,7 +63,7 @@ private[frontend] object ExtractExpr {
             throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}")
         }
 
-      case (Primitives.Lambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
+      case (Primitives.Lambda, sst.ListOrDatum(fixedArgData, restArgDatum) :: definition) =>
         ExtractLambda(
           located=appliedSymbol,
           argList=fixedArgData,
@@ -77,7 +77,7 @@ private[frontend] object ExtractExpr {
           clauseData=clauseData
         )
 
-      case (Primitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
+      case (Primitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.String(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
 
       case (Primitives.Include, includeNames) =>
@@ -91,11 +91,11 @@ private[frontend] object ExtractExpr {
       case (Primitives.WorldFunction, _) =>
         ExtractNativeFunction(appliedSymbol, true, operands)
 
-      case (Primitives.Quasiquote, sst.ScopedProperList(listData) :: Nil) =>
+      case (Primitives.Quasiquote, sst.ProperList(listData) :: Nil) =>
         val schemeBase = context.libraryLoader.loadSchemeBase(context.config)
         (new ListQuasiquotationExpander(ExtractExpr.apply, schemeBase))(listData)
 
-      case (Primitives.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) =>
+      case (Primitives.Quasiquote, sst.Vector(elements) :: Nil) =>
         val schemeBase = context.libraryLoader.loadSchemeBase(context.config)
         (new VectorQuasiquotationExpander(ExtractExpr.apply, schemeBase))(elements.toList)
 
@@ -116,10 +116,10 @@ private[frontend] object ExtractExpr {
 
         et.Begin(expandedData.map(ExtractExpr.apply))
 
-      case (Primitives.Parameterize, sst.ScopedProperList(parameterData) :: bodyData) =>
+      case (Primitives.Parameterize, sst.ProperList(parameterData) :: bodyData) =>
         val parameters = parameterData map { parameterDatum =>
           parameterDatum match {
-            case sst.ScopedProperList(List(parameter, value)) =>
+            case sst.ProperList(List(parameter, value)) =>
               (ExtractExpr(parameter), ExtractExpr(value))
 
             case _ =>
@@ -160,7 +160,7 @@ private[frontend] object ExtractExpr {
     */
   private def extractApplication(
       boundValue: BoundValue,
-      appliedSymbol: sst.ScopedSymbol,
+      appliedSymbol: sst.Symbol,
       operands: List[sst.ScopedDatum]
   )(implicit context: FrontendContext): et.Expr = boundValue match {
     case primitiveDefine: PrimitiveDefineExpr =>
@@ -178,7 +178,7 @@ private[frontend] object ExtractExpr {
     * If definitions are allowed in this level they should be handled before calling this method
     */
   def apply(datum: sst.ScopedDatum)(implicit context: FrontendContext): et.Expr = (datum match {
-    case sst.ScopedPair(appliedSymbol: sst.ScopedSymbol, cdr) =>
+    case sst.Pair(appliedSymbol: sst.Symbol, cdr) =>
       appliedSymbol.resolve match {
         case syntax: BoundSyntax =>
           // This is a macro - expand it
@@ -204,7 +204,7 @@ private[frontend] object ExtractExpr {
           // Make sure the operands are a proper list
           // XXX: Does R7RS only allow macros to be applied as an improper list?
           cdr match {
-            case sst.ScopedProperList(operands) =>
+            case sst.ProperList(operands) =>
               extractApplication(otherBoundValue, appliedSymbol, operands)
 
             case improperList =>
@@ -212,12 +212,12 @@ private[frontend] object ExtractExpr {
           }
       }
 
-    case sst.ScopedProperList(procedure :: args) =>
+    case sst.ProperList(procedure :: args) =>
       // Apply the result of the inner expression
       val procedureExpr = ExtractExpr(procedure)
       et.Apply(procedureExpr, args.map(ExtractExpr.apply))
 
-    case scopedSymbol: sst.ScopedSymbol =>
+    case scopedSymbol: sst.Symbol =>
       scopedSymbol.resolve match {
         case storageLoc: StorageLocation =>
           et.VarRef(storageLoc)
@@ -239,21 +239,21 @@ private[frontend] object ExtractExpr {
       }
 
     // These all evaluate to themselves. See R7RS section 4.1.2
-    case literal: sst.ScopedVectorLiteral =>
+    case literal: sst.Vector =>
       et.Literal(literal.unscope)
-    case sst.NonSymbolLeaf(literal: ast.NumberLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.Number) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal: ast.StringLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.String) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal: ast.CharLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.Char) =>
       et.Literal(literal)
     case sst.NonSymbolLeaf(literal: ast.Bytevector) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal: ast.BooleanLiteral) =>
+    case sst.NonSymbolLeaf(literal: ast.Boolean) =>
       et.Literal(literal)
 
     // Additionally treat #!unit as self-evaluating
-    case sst.NonSymbolLeaf(literal: ast.UnitValue) =>
+    case sst.NonSymbolLeaf(literal: ast.Unit) =>
       et.Literal(literal)
 
     case malformed =>

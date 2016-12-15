@@ -34,7 +34,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #f
          )))
          (false-literal)"""
-    ) === et.Literal(ast.BooleanLiteral(false)))
+    ) === et.Literal(ast.Boolean(false)))
   }
 
   test("redefine syntax fails in llambda") {
@@ -80,7 +80,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #f
          )))
          (false-literal)"""
-    ) === et.Literal(ast.BooleanLiteral(false)))
+    ) === et.Literal(ast.Boolean(false)))
   }
 
   test("simple expansion") {
@@ -93,7 +93,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                foo
          )))
          (return-single 6)"""
-    ) === et.Literal(ast.IntegerLiteral(6)))
+    ) === et.Literal(ast.Integer(6)))
   }
 
   test("expansion with lambdas") {
@@ -142,7 +142,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(a . b)
          )))
          (return-two #t #f)"""
-    ) === et.Literal(ast.Pair(ast.BooleanLiteral(true), ast.BooleanLiteral(false))))
+    ) === et.Literal(ast.Pair(ast.Boolean(true), ast.Boolean(false))))
   }
 
   test("literals must exactly match") {
@@ -218,7 +218,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((arg-count _ _) 2)
          ))
          (arg-count 1.0)"""
-    ) === et.Literal(ast.IntegerLiteral(1)))
+    ) === et.Literal(ast.Integer(1)))
   }
 
   test("recursive expansion") {
@@ -231,7 +231,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((recurse _) (recurse))
          ))
          (recurse 'a)"""
-    ) === et.Literal(ast.IntegerLiteral(7)))
+    ) === et.Literal(ast.Integer(7)))
   }
 
   test("proper list matching") {
@@ -244,7 +244,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(second . after))
          ))
          (second-element (a b c) 4)"""
-    ) === et.Literal(ast.Pair(ast.Symbol("b"), ast.IntegerLiteral(4))))
+    ) === et.Literal(ast.Pair(ast.Symbol("b"), ast.Integer(4))))
   }
 
   test("exact improper list matching") {
@@ -347,7 +347,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(#f var2 ... #t))
          ))
          (vector-mid #(a b c d))"""
-    ) === et.Literal(ast.ProperList(List(ast.BooleanLiteral(false), ast.Symbol("b"), ast.Symbol("c"), ast.BooleanLiteral(true)))))
+    ) === et.Literal(ast.ProperList(List(ast.Boolean(false), ast.Symbol("b"), ast.Symbol("c"), ast.Boolean(true)))))
   }
 
   test("constant matching") {
@@ -422,7 +422,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((return-one foobar) 1)
              ((return-one foobaz) 2)))
          (return-one #t)"""
-    ) === et.Literal(ast.IntegerLiteral(1)))
+    ) === et.Literal(ast.Integer(1)))
   }
 
   test("terminal zero or more match") {
@@ -435,7 +435,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ...)
          )))
          (return-all 1 2 3)"""
-    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3)))))
+    ) === et.Literal(ast.ProperList(List(ast.Integer(1), ast.Integer(2), ast.Integer(3)))))
   }
 
   test("zero or more match with zero matches") {
@@ -461,7 +461,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ...)
          )))
          (return-all-but-first-last 1 2 3 4 5)"""
-    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.IntegerLiteral(4)))))
+    ) === et.Literal(ast.ProperList(List(ast.Integer(2), ast.Integer(3), ast.Integer(4)))))
 
     // This requires at least two datums
     intercept[NoSyntaxRuleException] {
@@ -479,7 +479,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ... #f)
          )))
          (append-false 1 2)"""
-    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.BooleanLiteral(false)))))
+    ) === et.Literal(ast.ProperList(List(ast.Integer(1), ast.Integer(2), ast.Boolean(false)))))
   }
 
   test("splice to middle of improper list") {
@@ -492,7 +492,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ... . #f)
          )))
          (append-improper-false 1 2)"""
-    ) === et.Literal(ast.AnyList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.BooleanLiteral(false))))
+    ) === et.Literal(ast.AnyList(List(ast.Integer(1), ast.Integer(2)), ast.Boolean(false))))
   }
 
   test("splice to middle of vector") {
@@ -505,7 +505,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #(values ... #f)
          )))
          (append-vector-false 1 2)"""
-    ) === et.Literal(ast.VectorLiteral(Vector(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.BooleanLiteral(false)))))
+    ) === et.Literal(ast.Vector(Vector(ast.Integer(1), ast.Integer(2), ast.Boolean(false)))))
   }
 
   test("custom ellipsis identifier") {
@@ -518,8 +518,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #(values my-ellipsis #f)
          )))
          (append-vector-false 1 2 3)"""
-    ) === et.Literal(ast.VectorLiteral(Vector(
-      ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.BooleanLiteral(false)
+    ) === et.Literal(ast.Vector(Vector(
+      ast.Integer(1), ast.Integer(2), ast.Integer(3), ast.Boolean(false)
     ))))
   }
 
@@ -567,7 +567,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
       case storageLoc: StorageLocation =>
         assert(exprs == List(
           et.TopLevelDefine(
-            et.Binding(`storageLoc`, et.Literal(ast.IntegerLiteral(2)))
+            et.Binding(`storageLoc`, et.Literal(ast.Integer(2)))
           )
         ))
     }
@@ -588,7 +588,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     inside(exprs) {
       case List(et.Lambda(_, Nil, Nil, None,
             et.InternalDefine(List(
-              et.Binding(_, et.Literal(ast.IntegerLiteral(2)))
+              et.Binding(_, et.Literal(ast.Integer(2)))
             ), et.Begin(Nil)),
           _)) =>
     }
@@ -645,8 +645,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     inside(expr) {
       case et.Apply(et.Lambda(_, List(arg1, arg2), Nil, None, body, _), List(argVal1, argVal2)) =>
         assert(body === et.Begin(List(et.VarRef(arg1), et.VarRef(arg2))))
-        assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
-        assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
+        assert(argVal1 === et.Literal(ast.Integer(1)))
+        assert(argVal2 === et.Literal(ast.Integer(2)))
     }
   }
 
@@ -660,10 +660,10 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                       #((rest ... second first) ...))))
 
           (nested-subpatterns (1 2 3 4) (5 6 7) (8 9))"""
-    ) === et.Literal(ast.VectorLiteral(Vector(
-        ast.ProperList(List(3, 4, 2, 1).map(ast.IntegerLiteral(_))),
-        ast.ProperList(List(7, 6, 5).map(ast.IntegerLiteral(_))),
-        ast.ProperList(List(9, 8).map(ast.IntegerLiteral(_)))
+    ) === et.Literal(ast.Vector(Vector(
+        ast.ProperList(List(3, 4, 2, 1).map(ast.Integer(_))),
+        ast.ProperList(List(7, 6, 5).map(ast.Integer(_))),
+        ast.ProperList(List(9, 8).map(ast.Integer(_)))
       )))
     )
   }
@@ -690,8 +690,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
 
     inside(expr) {
       case et.Apply(et.Lambda(_, List(arg), Nil, None, bodyExpr, _), List(argVal)) =>
-        assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
-        assert(argVal === et.Literal(ast.IntegerLiteral(1)))
+        assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.Integer(2))))
+        assert(argVal === et.Literal(ast.Integer(1)))
     }
   }
 
@@ -718,8 +718,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
 
     inside(expr) {
       case et.Apply(et.Lambda(_, List(arg), Nil, None, bodyExpr, _), List(argVal)) =>
-        assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
-        assert(argVal === et.Literal(ast.IntegerLiteral(1)))
+        assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.Integer(2))))
+        assert(argVal === et.Literal(ast.Integer(1)))
     }
   }
 
@@ -755,7 +755,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(... (first values ...))
          )))
          (ignore-ellipsis 1 2 3)"""
-    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.Symbol("values"), ast.Symbol("...")))))
+    ) === et.Literal(ast.ProperList(List(ast.Integer(1), ast.Symbol("values"), ast.Symbol("...")))))
   }
 }
 

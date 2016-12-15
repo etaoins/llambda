@@ -10,22 +10,22 @@ object CondExpander {
   private lazy val dummyScope = new Scope(collection.mutable.Map())
 
   private def requirementSatisfied(requirement: sst.ScopedDatum)(implicit libraryLoader: LibraryLoader, frontendConfig: FrontendConfig): Boolean = requirement match {
-    case sst.ScopedSymbol(_, name) =>
+    case sst.Symbol(_, name) =>
       frontendConfig.featureIdentifiers.contains(name)
 
-    case sst.ScopedProperList(List(sst.ScopedSymbol(_, "library"), libraryNameDatum)) =>
+    case sst.ProperList(List(sst.Symbol(_, "library"), libraryNameDatum)) =>
       val parsedLibName = ParseLibraryName(libraryNameDatum.unscope)
       libraryLoader.exists(parsedLibName)
 
-    case sst.ScopedProperList(List(sst.ScopedSymbol(_, "not"), innerRequirement)) =>
+    case sst.ProperList(List(sst.Symbol(_, "not"), innerRequirement)) =>
       !requirementSatisfied(innerRequirement)
 
-    case sst.ScopedProperList(sst.ScopedSymbol(_, "and") :: innerRequirements) =>
+    case sst.ProperList(sst.Symbol(_, "and") :: innerRequirements) =>
       innerRequirements.foldLeft(true) { (accumulator, innerRequirement) =>
         accumulator && requirementSatisfied(innerRequirement)
       }
 
-    case sst.ScopedProperList(sst.ScopedSymbol(_, "or") :: innerRequirements) =>
+    case sst.ProperList(sst.Symbol(_, "or") :: innerRequirements) =>
       innerRequirements.foldLeft(false) { (accumulator, innerRequirement) =>
         accumulator || requirementSatisfied(innerRequirement)
       }
@@ -50,7 +50,7 @@ object CondExpander {
       // in an et.Begin which seems sane.
       Nil
 
-    case sst.ScopedProperList((elseSymbol @ sst.ScopedSymbol(_, "else")) :: expandResult) :: tailClauses =>
+    case sst.ProperList((elseSymbol @ sst.Symbol(_, "else")) :: expandResult) :: tailClauses =>
       if (tailClauses.isEmpty) {
         // We hit an else clause as our last clause
         // Expand the else
@@ -62,7 +62,7 @@ object CondExpander {
         throw new BadSpecialFormException(elseSymbol, "The else clause must be the last (cond-expand) clause")
       }
 
-    case sst.ScopedProperList(requirement :: expandResult) :: tailClauses =>
+    case sst.ProperList(requirement :: expandResult) :: tailClauses =>
       if (requirementSatisfied(requirement)) {
         // Requirement satisfied!
         expandResult

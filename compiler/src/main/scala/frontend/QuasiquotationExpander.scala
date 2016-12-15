@@ -62,7 +62,7 @@ abstract class QuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, s
       val restSegments = buildQuasiquotationSegments(rest)
 
       head match {
-        case sst.ScopedProperList((unquote: sst.ScopedSymbol) :: unquotedDatum :: Nil)
+        case sst.ProperList((unquote: sst.Symbol) :: unquotedDatum :: Nil)
             if unquote.resolveOpt == Some(Primitives.Unquote) =>
 
           val appendingExpr = extractExpr(unquotedDatum)
@@ -81,7 +81,7 @@ abstract class QuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, s
               DynamicSegment(appendingExpr :: Nil) :: other
           }
 
-        case sst.ScopedProperList((unquoteSplicing: sst.ScopedSymbol) :: unquotedDatum :: Nil)
+        case sst.ProperList((unquoteSplicing: sst.Symbol) :: unquotedDatum :: Nil)
             if unquoteSplicing.resolveOpt == Some(Primitives.UnquoteSplicing) =>
           // This is always a new segement
           SplicedSegment(extractExpr(unquotedDatum)) :: restSegments
@@ -155,7 +155,7 @@ class VectorQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, sche
   private val vectorProc = schemeBaseProcedure("vector")
 
   protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum =
-    ast.VectorLiteral(elements.toVector)
+    ast.Vector(elements.toVector)
 
   protected def createFromList(list: et.Expr): et.Expr =
     // Use (list->vector)

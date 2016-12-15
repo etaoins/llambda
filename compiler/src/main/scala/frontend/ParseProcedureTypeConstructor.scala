@@ -13,7 +13,7 @@ private[frontend] object ParseProcedureTypeConstructor {
   /** Parses a procedure type constructor in to its components without resolving its types */
   def apply(located: SourceLocated, args: List[sst.ScopedDatum]): Result = {
     args.reverse match {
-      case returnDatum :: sst.ScopedSymbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
+      case returnDatum :: sst.Symbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
         Result(reverseFixedArgData.reverse, Some(restArgMemberDatum), returnDatum)
 
       case returnDatum :: reverseFixedArgData =>

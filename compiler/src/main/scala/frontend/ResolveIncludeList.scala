@@ -32,7 +32,7 @@ private[frontend] object ResolveIncludeList {
 
     // All include names must be strings
     includeNameData flatMap {
-      case includeLiteral @ ast.StringLiteral(includeName) =>
+      case includeLiteral @ ast.String(includeName) =>
         IncludeLoader(allSearchRoots, includeName) match {
           case Some(result) => result
           case _ =>

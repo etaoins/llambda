@@ -12,7 +12,7 @@ private[frontend] object SchemeTypeForSymbol {
     * declarations.
     */
   def apply(
-      symbol: sst.ScopedSymbol,
+      symbol: sst.Symbol,
       providedTypeOpt: Option[vt.SchemeType] = None,
       defaultType: vt.SchemeType = vt.AnySchemeType
   ): vt.SchemeType =

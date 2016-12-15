@@ -86,7 +86,7 @@ object CharProcPlanner extends StdlibProcPlanner {
       Some(new iv.NativeIntegerValue(int32Temp, vt.Int32))
 
     case ("integer->char", List((intLocated, iv.ConstantIntegerValue(constantIntVal)))) =>
-      if ((constantIntVal < ast.CharLiteral.firstCodePoint) || (constantIntVal > ast.CharLiteral.lastCodePoint)) {
+      if ((constantIntVal < ast.Char.firstCodePoint) || (constantIntVal > ast.Char.lastCodePoint)) {
         throw new RangeException(intLocated, "(integer->char) with invalid Unicode code point")
       }
 

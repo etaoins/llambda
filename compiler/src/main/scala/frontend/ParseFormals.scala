@@ -5,21 +5,21 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 case class ParsedOptional(
-    symbol: sst.ScopedSymbol,
+    symbol: sst.Symbol,
     schemeTypeOpt: Option[vt.SchemeType],
     defaultDatum: sst.ScopedDatum
 )
 
 
 case class ParsedFormals(
-    mandatoryArgs: List[(sst.ScopedSymbol, Option[vt.SchemeType])],
+    mandatoryArgs: List[(sst.Symbol, Option[vt.SchemeType])],
     optionalArgs: List[ParsedOptional],
-    restArgOpt: Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
+    restArgOpt: Option[(sst.Symbol, Option[vt.SchemeType])]
 )
 
 object ParseFormals {
   private case class ParsedFixed(
-      symbol: sst.ScopedSymbol,
+      symbol: sst.Symbol,
       schemeTypeOpt: Option[vt.SchemeType],
       defaultDatumOpt: Option[sst.ScopedDatum]
   )
@@ -33,17 +33,17 @@ object ParseFormals {
       (argList.reverse, argTerminator) match {
         // This looks for a terminal rest arg in the form: name: <type> *
         case (
-            sst.ScopedSymbol(_, "*") ::
+            sst.Symbol(_, "*") ::
             (restArgType: sst.ScopedDatum) ::
             sst.ResolvedSymbol(Primitives.AnnotateStorageLocType) ::
-            (restArgName: sst.ScopedSymbol) ::
+            (restArgName: sst.Symbol) ::
             reverseFixedArgs
           , sst.NonSymbolLeaf(ast.EmptyList())
         ) =>
           // This is a typed rest argument
           (reverseFixedArgs.reverse, Some(restArgName), Some(ExtractType.extractNonEmptySchemeType(restArgType)))
 
-        case (_, restArgSymbol: sst.ScopedSymbol) =>
+        case (_, restArgSymbol: sst.Symbol) =>
           // This has an untyped rest argument
           (argList, Some(restArgSymbol), None)
 
@@ -57,8 +57,8 @@ object ParseFormals {
 
     // Find the types in our signature
     val fixedArgs = fixedArgData.map {
-      case sst.ScopedProperList(List(
-          scopedSymbol: sst.ScopedSymbol,
+      case sst.ProperList(List(
+          scopedSymbol: sst.Symbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
           typeDatum,
           defaultDatum
@@ -69,8 +69,8 @@ object ParseFormals {
           defaultDatumOpt=Some(defaultDatum)
         )
 
-      case sst.ScopedProperList(List(
-          scopedSymbol: sst.ScopedSymbol,
+      case sst.ProperList(List(
+          scopedSymbol: sst.Symbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
           typeDatum
       )) =>
@@ -80,14 +80,14 @@ object ParseFormals {
           defaultDatumOpt=None
         )
 
-      case sst.ScopedProperList(List(scopedSymbol: sst.ScopedSymbol, defaultDatum)) if allowOptionals =>
+      case sst.ProperList(List(scopedSymbol: sst.Symbol, defaultDatum)) if allowOptionals =>
         ParsedFixed(
           symbol=scopedSymbol,
           schemeTypeOpt=None,
           defaultDatumOpt=Some(defaultDatum)
         )
 
-      case scopedSymbol: sst.ScopedSymbol =>
+      case scopedSymbol: sst.Symbol =>
         ParsedFixed(
           symbol=scopedSymbol,
           schemeTypeOpt=None,
@@ -121,7 +121,7 @@ object ParseFormals {
 
     val restArgOpt = restArgNameOpt map { restArgName =>
       restArgName -> restArgMemberTypeOpt
-    }: Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
+    }: Option[(sst.Symbol, Option[vt.SchemeType])]
 
     ParsedFormals(
       mandatoryArgs=mandatoryArgs,

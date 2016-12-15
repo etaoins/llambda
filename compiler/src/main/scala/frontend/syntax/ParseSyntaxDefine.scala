@@ -25,14 +25,14 @@ private[frontend] object ParseSyntaxDefine {
   }
 
   private def parseTransformers(
-      definedSymbol: sst.ScopedSymbol,
+      definedSymbol: sst.Symbol,
       ellipsisVariable: SyntaxVariable,
       literalData: List[sst.ScopedDatum],
       rulesData: List[sst.ScopedDatum],
       debugContext: debug.SourceContext
-  ): (sst.ScopedSymbol, BoundSyntax) = {
+  ): (sst.Symbol, BoundSyntax) = {
     val literals = (literalData.map {
-      case symbol @ sst.ScopedSymbol(_, identifier) =>
+      case symbol @ sst.Symbol(_, identifier) =>
         SyntaxVariable.fromSymbol(symbol)
 
       case nonSymbol =>
@@ -40,7 +40,7 @@ private[frontend] object ParseSyntaxDefine {
     }).toSet
 
     val parsedRules = rulesData map {
-      case sst.ScopedProperList(sst.ScopedPair(_, patternDatum) :: template :: Nil) =>
+      case sst.ProperList(sst.Pair(_, patternDatum) :: template :: Nil) =>
         // Find all of our pattern variables
         val matchConfig = MatchConfig(
           ellipsisVariable=ellipsisVariable,
@@ -74,18 +74,18 @@ private[frontend] object ParseSyntaxDefine {
       located: SourceLocated,
       operands: List[sst.ScopedDatum],
       debugContext: debug.SourceContext
-  ): (sst.ScopedSymbol, BoundSyntax) = operands match {
-    case List((definedSymbol: sst.ScopedSymbol),
-             sst.ScopedProperList(
-               sst.ResolvedSymbol(Primitives.SyntaxRules) :: sst.ScopedProperList(literalData) :: rulesData
+  ): (sst.Symbol, BoundSyntax) = operands match {
+    case List((definedSymbol: sst.Symbol),
+             sst.ProperList(
+               sst.ResolvedSymbol(Primitives.SyntaxRules) :: sst.ProperList(literalData) :: rulesData
              )) =>
       parseTransformers(definedSymbol, BoundSyntaxVariable(Primitives.Ellipsis), literalData, rulesData, debugContext)
 
-    case List((definedSymbol: sst.ScopedSymbol),
-             sst.ScopedProperList(
+    case List((definedSymbol: sst.Symbol),
+             sst.ProperList(
                sst.ResolvedSymbol(Primitives.SyntaxRules) ::
-               (ellipsisSymbol: sst.ScopedSymbol) ::
-               sst.ScopedProperList(literalData) ::
+               (ellipsisSymbol: sst.Symbol) ::
+               sst.ProperList(literalData) ::
                rulesData
              )) =>
       parseTransformers(definedSymbol, SyntaxVariable.fromSymbol(ellipsisSymbol), literalData, rulesData, debugContext)
