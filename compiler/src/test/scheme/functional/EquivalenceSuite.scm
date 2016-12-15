@@ -300,6 +300,7 @@
   (import (llambda typed))
 
   (define-record-type <constant-empty> (constant-empty) constant-empty?)
+  (define-record-type <constant-child> <constant-empty> (constant-child) constant-child?)
 
   (define-record-type <constant-inline> (constant-inline field1) constant-inline?
                       ([field1 : <flonum>] constant-inline-field1))
@@ -320,7 +321,9 @@
   (assert-true  (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 2 3.0 #(4))))
   (assert-false (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 2 3.0 #(5))))
   (assert-false (equal? (constant-ool 1.0 2 +nan.0 #(4)) (constant-ool 1.0 2 3.0 #(4))))
-  (assert-false (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 3 3.0 #(4))))))
+  (assert-false (equal? (constant-ool 1.0 2 3.0 #(4)) (constant-ool 1.0 3 3.0 #(4))))
+
+  (assert-false (equal? (constant-empty) (constant-child)))))
 
 (define-test "dynamic record (equal?)" (expect-success
   (import (llambda typed))
