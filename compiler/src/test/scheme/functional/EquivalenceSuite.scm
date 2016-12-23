@@ -126,7 +126,7 @@
   (assert-false (eqv? +nan.0 (typed-dynamic 0.0 <flonum>)))
 
   (assert-false (eqv? 0.0 (typed-dynamic -0.0 <flonum>)))
-  (assert-false (eqv? -0.0 (typed-dynamic 0.0 <flonum>)))
+  (assert-false (eqv? (typed-dynamic 0.0 <flonum>) -0.0))
   (assert-false (eqv? (typed-dynamic 0.0 <flonum>) (typed-dynamic -0.0 <flonum>)))
 
   ; This is undefined by R7RS
