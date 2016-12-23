@@ -13,6 +13,9 @@ private[planner] object PlanBind {
     case et.VarRef(`storageLoc`) =>
       true
 
+    case et.MutateVar(`storageLoc`, _) =>
+      true
+
     case nonVarRef =>
       nonVarRef.subexprs.exists(storageLocRefedByExpr(storageLoc, _))
   }

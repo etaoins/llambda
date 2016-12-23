@@ -164,6 +164,9 @@
   (set! num 15.0)
   num))
 
+(define-test "mutating typed top-level define within initialiser fails" (expect-error undefined-variable-error?
+  (define x (set! x 1))))
+
 (define-test "typed top-level define with incompatible initialiser fails" (expect-error type-error?
   (import (llambda typed))
   (define num : <number> "not a number")))

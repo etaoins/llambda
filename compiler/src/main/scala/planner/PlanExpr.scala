@@ -86,8 +86,8 @@ private[planner] object PlanExpr {
 
       case et.MutateVar(storageLoc, valueExpr) =>
         val mutableValue = initialState.values(storageLoc) match {
-          case mutable: MutableValue  =>
-            mutable
+          case mutableValue: MutableValue  =>
+            mutableValue
 
           case _ =>
             throw new InternalCompilerErrorException(s"Attempted to mutate non-mutable: ${storageLoc}")
@@ -100,6 +100,18 @@ private[planner] object PlanExpr {
         val newValueResult = apply(initialState)(valueExpr)
         val newValueIntermediate = newValueResult.value
         val newValueTemp = newValueIntermediate.toTempValue(mutableType.innerType)
+
+        // Prevent mutating variables that have not been initialised
+        // This is harmless at runtime but is unlikely to be expected behaviour
+        if (mutableValue.needsUndefCheck) {
+          val errorMessage = RuntimeErrorMessage(
+            category=ErrorCategory.UndefinedVariable,
+            name="mutateUndefined",
+            text="Recursively defined value mutated before its initialization"
+          )
+
+          plan.steps += ps.AssertRecordLikeDefined(mutableTemp, mutableType, errorMessage)
+        }
 
         // Load our data pointer
         val recordDataTemp = ps.RecordLikeDataTemp()
