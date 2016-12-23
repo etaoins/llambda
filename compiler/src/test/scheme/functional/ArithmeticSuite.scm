@@ -38,7 +38,8 @@
 
 (define-test "dynamic (*)" (expect-success
   (assert-equal 10 (* (typed-dynamic 5 <integer>) 1 2))
-  (assert-equal 10.0 (* (typed-dynamic 5.0 <flonum>) 1.0 2.0))))
+  (assert-equal 10.0 (* (typed-dynamic 5.0 <flonum>) 1.0 2.0))
+  (assert-equal 200.0 (* (typed-dynamic 10 <integer>) 10 2.0))))
 
 (define-test "multiplying single string fails" (expect-error type-error?
   (* "Hello!")))
