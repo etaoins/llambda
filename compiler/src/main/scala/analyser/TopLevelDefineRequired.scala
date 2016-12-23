@@ -9,9 +9,9 @@ object TopLevelDefineRequired {
   def apply(storageLoc: StorageLocation, initialiser: et.Expr, analysis: AnalysedExprs): Boolean =
     // Is this value used anywhere?
     analysis.varUses.contains(storageLoc) ||
-      // Do we need to keep ths around for a later mutable set operation?
+      // Do we need to keep this around for a later mutable set operation?
       analysis.mutableVars.contains(storageLoc) ||
-      // Is it not known if the initialiser satifies the type for the storage loc
+      // Is it not known if the initialiser satisfies the type for the storage loc
       (vt.SatisfiesType(storageLoc.schemeType, initialiser.schemeType) != Some(true)) ||
       // Does the initialiser have side effects
       ExprHasSideEffects(initialiser)
