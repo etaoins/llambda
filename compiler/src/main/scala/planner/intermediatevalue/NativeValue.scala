@@ -20,9 +20,6 @@ sealed abstract class NativeValue(
   protected def planCastToNativeTempValue(targetType: vt.NativeType)(implicit plan: PlanWriter): ps.TempValue =
     impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${vt.NameForType(targetType)} or any other native type")
 
-  protected def planCastToSchemeTempValue(targetType: vt.SchemeType)(implicit plan: PlanWriter): ps.TempValue  =
-    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${vt.NameForType(targetType)} or any other Scheme type except ${cellType.schemeName}")
-
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue
 
   def toNativeTempValue(targetType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue =
@@ -62,21 +59,6 @@ class NativeIntegerValue(tempValue: ps.TempValue, nativeType: vt.IntType) extend
 
     case _ =>
       impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(targetType)}")
-  }
-
-  override def planCastToSchemeTempValue(targetType: vt.SchemeType)(implicit plan: PlanWriter): ps.TempValue = {
-    // Will a flonum make this conversion happy?
-    if (vt.SatisfiesType(targetType, vt.FlonumType) == Some(true)) {
-      // Convert us to double and box
-      val boxedTemp = ps.CellTemp(ct.FlonumCell)
-
-      plan.steps += ps.BoxFlonum(boxedTemp, toTempValue(vt.Double))
-
-      BoxedValue(ct.FlonumCell, boxedTemp).castToCellTempValue(targetType.cellType)
-    }
-    else {
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric cell type ${cellType.schemeName}")
-    }
   }
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
