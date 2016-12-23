@@ -59,9 +59,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def hasDefiniteType(otherType: vt.SchemeType): Boolean =
     vt.SatisfiesType(otherType, schemeType) == Some(true)
 
-  def isDefiniteProperList: Boolean =
-    vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), schemeType) == Some(true)
-
   /** Returns our exact procedure signature */
   def procedureSignatureOpt: Option[ProcedureSignature] =
     schemeType.applicableTypeOpt.map(ApplicableTypeToAdaptedSignature)
