@@ -149,6 +149,23 @@
 
   (double-binary-op plus 4)))
 
+(define-test "unions containing procedure types can be converted to other unions" (expect-success
+  (import (llambda typed))
+
+  (define false-or-proc : (U #f (-> <integer> * <integer>)) #f)
+  (set! false-or-proc +)
+  (assert-equal 5 (false-or-proc 2 3))
+
+  (define false-or-other-proc : (U #f (-> <integer> <integer> <integer>)) #f)
+  (set! false-or-other-proc false-or-proc)
+  (assert-equal 5 (false-or-other-proc 2 3))
+
+  (set! false-or-proc #f)
+  (assert-equal #f false-or-proc)
+
+  (set! false-or-other-proc false-or-proc)
+  (assert-equal #f false-or-other-proc)))
+
 (define-test "applying datum cells with too many arguments fails" (expect-error arity-error?
   ((typeless-cell integer?) 80 20)))
 
