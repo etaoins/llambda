@@ -9,16 +9,6 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 private[planner] object RetypeLambdaArgs {
-  private case class AppliedProcData(
-    fixedArgTypes: List[vt.SchemeType],
-    hasRestArg: Boolean,
-    canTerminate: Boolean
-  ) {
-    def compatibleArity(argCount: Int) =
-      (argCount == fixedArgTypes.length) ||
-        ((argCount > fixedArgTypes.length) && hasRestArg)
-  }
-
   private type ArgTypes = Map[StorageLocation, vt.SchemeType]
 
   private class CollectionAborted(val argTypes: ArgTypes) extends Exception
