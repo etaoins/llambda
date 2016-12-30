@@ -64,8 +64,6 @@ public:
 			m_allocNext = newAllocNext;
 		}
 
-		// GarbageState::AllocatedCell is 0 so we don't need to set it explicitly
-
 		return allocation;
 	}
 
