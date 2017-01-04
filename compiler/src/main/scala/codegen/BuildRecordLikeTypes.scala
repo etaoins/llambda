@@ -56,8 +56,8 @@ object BuildRecordLikeTypes {
       case recordStep: ps.RecordLikeStep =>
         typeAndAllParents(recordStep.recordLikeType)
 
-      case nestingStep: ps.NestingStep =>
-        nestingStep.innerBranches.flatMap({ case (steps, _) =>
+      case condBranch: ps.CondBranch =>
+        condBranch.innerBranches.flatMap({ case (steps, _) =>
           findAllRecordTypes(steps).toSeq
         })
 

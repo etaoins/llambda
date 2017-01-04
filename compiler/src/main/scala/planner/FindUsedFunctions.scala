@@ -19,8 +19,8 @@ object FindUsedFunctions {
             usedFunctions
           }
 
-        case nestingStep: ps.NestingStep =>
-          val allInnerSteps = nestingStep.innerBranches.flatMap(_._1)
+        case condBranch: ps.CondBranch =>
+          val allInnerSteps = condBranch.innerBranches.flatMap(_._1)
           usedFunctionsForSteps(plannedFunctions, allInnerSteps, usedFunctions)
 
         case _ =>

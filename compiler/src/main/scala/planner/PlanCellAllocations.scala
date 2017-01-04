@@ -30,8 +30,8 @@ object PlanCellAllocations {
     * This is used for ignoring branches that don't use GC when aggregating cell allocations
     */
   private def stepConsumesOrAllocates(step: ps.Step): Boolean = step match {
-    case nestingStep: ps.NestingStep =>
-      nestingStep.innerBranches.exists { case (steps, _) =>
+    case condBranch: ps.CondBranch =>
+      condBranch.innerBranches.exists { case (steps, _) =>
         steps.exists(stepConsumesOrAllocates)
       }
 
@@ -46,14 +46,14 @@ object PlanCellAllocations {
       val newAcc = barrierStep :: prependAllocStep(requiredCells, acc)
       placeCellAllocations(reverseTail, 0, newAcc)
 
-    case (nestingStep: ps.NestingStep) :: reverseTail if stepConsumesOrAllocates(nestingStep) =>
+    case (condBranch: ps.CondBranch) :: reverseTail if stepConsumesOrAllocates(condBranch) =>
       // Recurse down each of the step's branches
-      val newNestingStep = nestingStep.mapInnerBranches { (branchSteps, resultTemp) =>
+      val newCondBranch = condBranch.mapInnerBranches { (branchSteps, resultTemp) =>
         (placeCellAllocations(branchSteps.reverse, 0, Nil), resultTemp)
       }
 
       // Treat this as a GC barrier for now
-      val newAcc = newNestingStep :: prependAllocStep(requiredCells, acc)
+      val newAcc = newCondBranch :: prependAllocStep(requiredCells, acc)
       placeCellAllocations(reverseTail, 0, newAcc)
 
     case otherStep :: reverseTail =>

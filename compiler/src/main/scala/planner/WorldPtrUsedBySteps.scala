@@ -5,10 +5,10 @@ import llambda.compiler.planner.{step => ps}
 
 object WorldPtrUsedBySteps {
   private def worldPtrUsedByStep(step: ps.Step): Boolean = step match {
-    case nestingStep: ps.NestingStep =>
+    case condBranch: ps.CondBranch =>
       // Recurse down each side
-      nestingStep.outerInputValues.contains(ps.WorldPtrValue) ||
-        nestingStep.innerBranches.flatMap(_._1).exists(worldPtrUsedByStep)
+      condBranch.outerInputValues.contains(ps.WorldPtrValue) ||
+        condBranch.innerBranches.flatMap(_._1).exists(worldPtrUsedByStep)
 
     case otherStep =>
       // This sucks - there are no explicit allocation steps until PlanCellAllocations runs which is the last phase of

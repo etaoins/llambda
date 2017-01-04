@@ -35,8 +35,8 @@ object UnboxEarly extends FunctionConniver {
 
       // Do we need to recurse down this step?
       val recursedStep = other match {
-        case nestingStep: ps.NestingStep =>
-          nestingStep.mapInnerBranches { case (innerSteps, innerResultTemp) =>
+        case condBranch: ps.CondBranch =>
+          condBranch.mapInnerBranches { case (innerSteps, innerResultTemp) =>
             val newSteps = moveUnboxingSteps(innerSteps.reverse, ListMap(), Nil)
             (newSteps, innerResultTemp)
           }

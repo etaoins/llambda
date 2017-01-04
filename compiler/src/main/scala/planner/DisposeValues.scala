@@ -17,8 +17,8 @@ object DisposeValues {
   }
 
   def innerOutputValuesForStep(step: ps.Step): Set[ps.TempValue] = step match {
-    case nestingStep: ps.NestingStep =>
-      nestingStep.innerBranches.flatMap(_._1).flatMap(innerOutputValuesForStep).toSet
+    case condBranch: ps.CondBranch =>
+      condBranch.innerBranches.flatMap(_._1).flatMap(innerOutputValuesForStep).toSet
 
     case other =>
       other.outputValues
@@ -41,28 +41,28 @@ object DisposeValues {
       usedValues: Set[ps.TempValue],
       acc: List[ps.Step]
   ): List[ps.Step] = reverseSteps match {
-    case (nestingStep: ps.NestingStep) :: reverseTail =>
+    case (condBranch: ps.CondBranch) :: reverseTail =>
       // Build a set of output values generated inside the branch. This is used to distinguish input values that come
       // from before the branch (and therefore need to be disposed) versus input values that come from within the branch
-      val innerOutputValues = innerOutputValuesForStep(nestingStep)
+      val innerOutputValues = innerOutputValuesForStep(condBranch)
 
       // Determine which input values come from outside the branch
-      val externalInputValues = nestingStep.inputValues -- innerOutputValues
+      val externalInputValues = condBranch.inputValues -- innerOutputValues
       val unusedExternalInputValues = externalInputValues.filter(!usedValues.contains(_))
 
       // Step to dispose the result outputs if they're unused
       // This will be placed after the step itself
-      val unusedOutputValues = nestingStep.outputValues.filter(!usedValues.contains(_))
+      val unusedOutputValues = condBranch.outputValues.filter(!usedValues.contains(_))
 
       // Which branch results are from outside the branch and are no longer used?
-      val unusedBranchResults = nestingStep.innerBranches.flatMap(_._2).filter({ branchResult =>
+      val unusedBranchResults = condBranch.innerBranches.flatMap(_._2).filter({ branchResult =>
         !usedValues.contains(branchResult) && !innerOutputValues.contains(branchResult)
       }).toSet
 
       val disposeSteps = disposeValuesToSteps(unusedOutputValues ++ unusedBranchResults)
 
       // Recurse down the branches
-      val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValues) =>
+      val newStep = condBranch.mapInnerBranches { (branchSteps, outputValues) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
         val nestedInputValues = unusedExternalInputValues

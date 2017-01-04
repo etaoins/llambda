@@ -73,28 +73,6 @@ sealed trait Step extends ContextLocated {
   def requiredHeapCells: Int = 0
 }
 
-sealed trait NestingStep extends Step {
-  /** Input values used by the nesting step itself
-    *
-    * This excludes any input values used by the inner branches
-    */
-  def outerInputValues: Set[TempValue]
-
-  /** List of inner branches
-    *
-    * Branches are a tuple of (steps, outputValues)
-    */
-  def innerBranches: List[(List[Step], Set[TempValue])]
-
-  /** Rewrites this step with new inner branches */
-  def mapInnerBranches(mapper: (List[Step], List[TempValue]) => (List[Step], List[TempValue])): NestingStep
-
-  lazy val inputValues =
-    outerInputValues ++
-    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
-    innerBranches.flatMap(_._2)
-}
-
 /** Step that dispose its input values as part of the step
   *
   * This is typically used for steps that are GC barriers so they can avoid rooting input values that will be unused
@@ -257,7 +235,7 @@ case class ValuePhi(result: TempValue, trueValue: TempValue, falseValue: TempVal
   * @param falseSteps  steps to perform if the condition is false
   * @param valuePhis    values to phi from the branches
   */
-case class CondBranch(test: TempValue, trueSteps: List[Step], falseSteps: List[Step], valuePhis: List[ValuePhi]) extends NestingStep {
+case class CondBranch(test: TempValue, trueSteps: List[Step], falseSteps: List[Step], valuePhis: List[ValuePhi]) extends Step {
   lazy val outerInputValues = Set(test)
   lazy val innerBranches = List(
     (trueSteps, valuePhis.map(_.trueValue).toSet),
@@ -265,6 +243,11 @@ case class CondBranch(test: TempValue, trueSteps: List[Step], falseSteps: List[S
   )
 
   lazy val outputValues = valuePhis.map(_.result).toSet
+
+  lazy val inputValues =
+    outerInputValues ++
+    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
+    innerBranches.flatMap(_._2)
 
   def mapInnerBranches(mapper: (List[Step], List[TempValue]) => (List[Step], List[TempValue])) = {
     val (mappedTrueSteps, mappedTrueValues) = mapper(trueSteps, valuePhis.map(_.trueValue))

@@ -65,11 +65,11 @@ object CostForPlanSteps {
       // Constant just create additional .data in the resulting executable and have a good chance of being merged
       constantCellCost
 
-    case nestingStep: ps.NestingStep =>
+    case condBranch: ps.CondBranch =>
       // The branch might force a GC barrier
       // Also, if the branch actually makes it to the assembler it can be fairly expensive
       (gcBarrierCost / 2) + trivialInstrCost +
-        nestingStep.innerBranches.flatMap(_._1).map(costForStep).sum
+        condBranch.innerBranches.flatMap(_._1).map(costForStep).sum
 
     case _: ps.CalcProperListLength =>
       // Assume lists have an average length of 5

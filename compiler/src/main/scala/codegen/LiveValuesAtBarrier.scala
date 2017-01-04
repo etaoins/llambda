@@ -37,8 +37,8 @@ object LiveValuesAtBarrier {
       case ps.DisposeValues(toDispose) :: tail =>
         LiveValuesAtBarrier(tail, initialValues -- toDispose)
 
-      case (nestingStep: ps.NestingStep) :: tail =>
-        val nestedResults = nestingStep.innerBranches.map { case (nestedSteps, _) =>
+      case (condBranch: ps.CondBranch) :: tail =>
+        val nestedResults = condBranch.innerBranches.map { case (nestedSteps, _) =>
           LiveValuesAtBarrier(nestedSteps, initialValues)
         }
 
