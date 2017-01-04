@@ -103,8 +103,6 @@ public:
 	}
 
 	void finalizeBytevector();
-
-protected:
 };
 
 }
