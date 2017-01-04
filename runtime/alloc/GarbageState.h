@@ -9,11 +9,11 @@ namespace lliby
 enum class GarbageState : std::uint8_t
 {
 	/**
-	 * Cells allocated dynamically from the garbage collector
+	 * Cells allocated dynamically from the garbage collector's heap
 	 *
 	 * Allocated cells may be unreferenced; only a garbage collection can determine if a cell is reachable.
 	 */
-	AllocatedCell = 0,
+	HeapAllocatedCell = 0,
 
 	/**
 	 * Cells compiled in to the executables' read-only data at compile time
@@ -24,12 +24,20 @@ enum class GarbageState : std::uint8_t
 	GlobalConstant = 1,
 
 	/**
+	 * Cells allocated dynamically from the program's stack
+	 *
+	 * The lifetime of these cells are managed carefully by the compiler to not outlast their enclosing function. They
+	 * are not subject to garbage collection.
+	 */
+	StackAllocatedCell = 2,
+
+	/**
 	 * Cells that have been relocated during garbage collection
 	 *
 	 * The forwarding cell will contain a pointer to the new location. These cells are used internally by the garbage
 	 * collector and are not visible when the GC is not running.
 	 */
-	ForwardingCell = 2,
+	ForwardingCell = 3,
 
 	/**
 	 * Cell to terminate a heap segment
@@ -38,7 +46,7 @@ enum class GarbageState : std::uint8_t
 	 *
 	 * These aren't actual cells; they're only used internally by the allocator
 	 */
-	SegmentTerminator = 3,
+	SegmentTerminator = 4,
 
 	/**
 	 * Cell to terminate a heap
@@ -48,7 +56,7 @@ enum class GarbageState : std::uint8_t
 	 *
 	 * These aren't actual cells; they're only used internally by the allocator
 	 */
-	HeapTerminator = 4,
+	HeapTerminator = 5,
 
 	MaximumGarbageState = HeapTerminator
 };

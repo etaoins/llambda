@@ -46,7 +46,7 @@ public:
 	 * Returns true if the other cell is equivalent to this one in the sense of eqv?
 	 */
 	bool isEqv(const AnyCell *other) const;
-	
+
 	/**
 	 * Returns true if the other cell is equal to this one in the sense of equal?
 	 */
@@ -55,7 +55,7 @@ public:
 	void finalize();
 
 protected:
-	AnyCell(CellTypeId typeId, GarbageState gcState = GarbageState::AllocatedCell) :
+	AnyCell(CellTypeId typeId, GarbageState gcState = GarbageState::HeapAllocatedCell) :
 		m_typeId(typeId),
 		m_gcState(gcState)
 	{

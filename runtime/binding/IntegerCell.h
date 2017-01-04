@@ -13,7 +13,7 @@ class IntegerCell : public NumberCell
 {
 #include "generated/IntegerCellMembers.h"
 public:
-	explicit IntegerCell(std::int64_t value, GarbageState gcState = GarbageState::AllocatedCell) :
+	explicit IntegerCell(std::int64_t value, GarbageState gcState = GarbageState::HeapAllocatedCell) :
 		NumberCell(CellTypeId::Integer, gcState),
 		m_value(value)
 	{

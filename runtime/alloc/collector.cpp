@@ -79,13 +79,14 @@ size_t collect(World &world, Heap &newHeap)
 	auto rootVisitor = [&] (AnyCell **cellRef) -> bool
 	{
 		AnyCell *oldCellLocation = *cellRef;
+		GarbageState gcState = oldCellLocation->gcState();
 
-		if (oldCellLocation->gcState() == GarbageState::GlobalConstant)
+		if ((gcState == GarbageState::GlobalConstant) || (gcState == GarbageState::StackAllocatedCell))
 		{
-			// This is a constant; don't visit it or its children
+			// This is managed by the compiler; don't visit it or its children
 			return false;
 		}
-		else if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
+		else if (gcState == GarbageState::ForwardingCell)
 		{
 			// This has already been moved to the new semi-space
 			// Update the reference and stop visiting
@@ -94,8 +95,8 @@ size_t collect(World &world, Heap &newHeap)
 		}
 		else
 		{
-			// It must be AllocatedCell otherwise we have memory corruption
-			assert(oldCellLocation->gcState() == GarbageState::AllocatedCell);
+			// It must be HeapAllocatedCell otherwise we have memory corruption
+			assert(gcState == GarbageState::HeapAllocatedCell);
 		}
 
 		// Move the cell to the new location

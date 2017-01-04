@@ -18,7 +18,7 @@ public:
 	long double toLongDouble() const;
 
 protected:
-	explicit NumberCell(CellTypeId typeId, GarbageState gcState = GarbageState::AllocatedCell) :
+	explicit NumberCell(CellTypeId typeId, GarbageState gcState = GarbageState::HeapAllocatedCell) :
 		AnyCell(typeId, gcState)
 	{
 	}
