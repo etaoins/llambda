@@ -30,22 +30,16 @@ object PlanCellAllocations {
     * This is used for ignoring branches that don't use GC when aggregating cell allocations
     */
   private def stepConsumesOrAllocates(step: ps.Step): Boolean = step match {
-    case consumer: ps.CellConsumer =>
-      true
     case nestingStep: ps.NestingStep =>
       nestingStep.innerBranches.exists { case (steps, _) =>
         steps.exists(stepConsumesOrAllocates)
       }
+
     case otherStep =>
-      otherStep.canAllocate
+      (otherStep.requiredHeapCells > 0) || otherStep.canAllocate
   }
 
   private def placeCellAllocations(reverseSteps: List[ps.Step], requiredCells: Int, acc: List[ps.Step]): List[ps.Step] = reverseSteps match {
-    case (consumer: ps.CellConsumer) :: reverseTail =>
-      // Increment the cell count and keep processing
-      val newAcc = consumer :: acc
-      placeCellAllocations(reverseTail, requiredCells + 1, newAcc)
-
     case barrierStep :: reverseTail if barrierStep.canAllocate =>
       // This is a GC barrier - allocations can't cross this
       // Make our allocation step and then keep processing after resetting our required cell count accumulator
@@ -63,10 +57,8 @@ object PlanCellAllocations {
       placeCellAllocations(reverseTail, 0, newAcc)
 
     case otherStep :: reverseTail =>
-     // This step is neither a GC barrier nor consume cells
-     // Just tail recurse
      val newAcc = otherStep :: acc
-     placeCellAllocations(reverseTail, requiredCells, newAcc)
+     placeCellAllocations(reverseTail, requiredCells + otherStep.requiredHeapCells, newAcc)
 
     case Nil =>
       // We've reached the top of the branch - allocate any cells we need and terminate

@@ -68,6 +68,9 @@ sealed trait Step extends ContextLocated {
 
   /** Indicates if this step always terminates */
   def alwaysTerminates: Boolean = false
+
+  /** Indicates the number of heap allocated cells this step requires */
+  def requiredHeapCells: Int = 0
 }
 
 sealed trait NestingStep extends Step {
@@ -91,9 +94,6 @@ sealed trait NestingStep extends Step {
     innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
     innerBranches.flatMap(_._2)
 }
-
-/** Step requiring a cell from a temporary allocation */
-sealed trait CellConsumer extends Step
 
 /** Step that dispose its input values as part of the step
   *
@@ -773,22 +773,25 @@ case class BoxBoolean(result: TempValue, unboxed: TempValue) extends BoxValue {
     BoxBoolean(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxInteger(result: TempValue, unboxed: TempValue) extends BoxValue with CellConsumer {
+case class BoxInteger(result: TempValue, unboxed: TempValue) extends BoxValue {
   lazy val inputValues = Set(unboxed)
+  override def requiredHeapCells = 1
 
   def renamed(f: (TempValue) => TempValue) =
     BoxInteger(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxFlonum(result: TempValue, unboxed: TempValue) extends BoxValue with CellConsumer {
+case class BoxFlonum(result: TempValue, unboxed: TempValue) extends BoxValue {
   lazy val inputValues = Set(unboxed)
+  override def requiredHeapCells = 1
 
   def renamed(f: (TempValue) => TempValue) =
     BoxFlonum(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxChar(result: TempValue, unboxed: TempValue) extends BoxValue with CellConsumer {
+case class BoxChar(result: TempValue, unboxed: TempValue) extends BoxValue {
   lazy val inputValues = Set(unboxed)
+  override def requiredHeapCells = 1
 
   def renamed(f: (TempValue) => TempValue) =
     BoxChar(f(result), f(unboxed)).assignLocationFrom(this)
@@ -811,16 +814,19 @@ case class InitPair(
     carValue: TempValue,
     cdrValue: TempValue,
     listLengthOpt: Option[Long] = None
-) extends DiscardableStep with MergeableStep with CellConsumer {
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(carValue, cdrValue)
   lazy val outputValues = Set(result)
+  override def requiredHeapCells = 1
 
   def renamed(f: (TempValue) => TempValue) =
     InitPair(f(result), f(carValue), f(cdrValue), listLengthOpt).assignLocationFrom(this)
 }
 
 /** Step creating a record-like cell */
-sealed trait InitRecordLikeStep extends RecordLikeStep with CellConsumer with DiscardableStep {
+sealed trait InitRecordLikeStep extends RecordLikeStep with DiscardableStep {
+  override def requiredHeapCells = 1
+
   /** Resulting record-like cell */
   val result: TempValue
 
