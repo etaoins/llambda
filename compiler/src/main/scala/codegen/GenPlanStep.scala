@@ -35,7 +35,7 @@ object GenPlanStep {
   }
 
   def apply(state: GenerationState, genGlobals: GenGlobals)(step: ps.Step): GenResult = step match {
-    case ps.AllocateCells(count) =>
+    case ps.AllocateHeapCells(count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation won't be fully initialized
         throw new InternalCompilerErrorException("Attempted cell allocation without fully consuming previous allocation")
@@ -43,7 +43,7 @@ object GenPlanStep {
 
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
 
-      val (allocState, allocation) = GenCellAllocation.genAllocation(state)(worldPtrIr, count)
+      val (allocState, allocation) = GenHeapAllocation.genAllocation(state)(worldPtrIr, count)
       allocState.copy(currentAllocation=allocation)
 
     case createConstantStep: ps.CreateConstant =>

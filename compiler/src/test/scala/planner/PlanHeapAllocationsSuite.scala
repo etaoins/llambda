@@ -7,7 +7,7 @@ import llambda.compiler.planner.{step => ps}
 
 import org.scalatest.FunSuite
 
-class PlanCellAllocationsSuite extends FunSuite {
+class PlanHeapAllocationsSuite extends FunSuite {
   val testSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=false,
@@ -33,7 +33,7 @@ class PlanCellAllocationsSuite extends FunSuite {
 
     val expectedSteps = Nil
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("single non-consuming step") {
@@ -48,7 +48,7 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.CreateNativeInteger(nativeResult, 25, 64)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("single consuming step") {
@@ -63,12 +63,12 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List(
-      ps.AllocateCells(1),
+      ps.AllocateHeapCells(1),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("allocations happen after dispose") {
@@ -86,12 +86,12 @@ class PlanCellAllocationsSuite extends FunSuite {
 
     val expectedSteps = List(
       ps.DisposeValues(Set(disposingTemp)),
-      ps.AllocateCells(1),
+      ps.AllocateHeapCells(1),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("multiple consuming steps are merged") {
@@ -108,14 +108,14 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List(
-      ps.AllocateCells(3),
+      ps.AllocateHeapCells(3),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("cell allocations can not be merged across GC barrier") {
@@ -133,16 +133,16 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List(
-      ps.AllocateCells(2),
+      ps.AllocateHeapCells(2),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.InitVector(boxedResult, Vector()),
-      ps.AllocateCells(1),
+      ps.AllocateHeapCells(1),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("cell allocations are not affected by empty branch") {
@@ -162,7 +162,7 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List(
-      ps.AllocateCells(3),
+      ps.AllocateHeapCells(3),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.BoxInteger(boxedResult, nativeResult),
@@ -170,7 +170,7 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
   test("cell allocations with allocating branch") {
@@ -199,26 +199,26 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
 
     val expectedTrueSteps = List(
-      ps.AllocateCells(2),
+      ps.AllocateHeapCells(2),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
     val expectedFalseSteps = List(
-      ps.AllocateCells(1),
+      ps.AllocateHeapCells(1),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
     val expectedSteps = List(
-      ps.AllocateCells(2),
+      ps.AllocateHeapCells(2),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.BoxInteger(boxedResult, nativeResult),
       ps.CondBranch(boxedResult, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
-      ps.AllocateCells(1),
+      ps.AllocateHeapCells(1),
       ps.BoxInteger(boxedResult, nativeResult)
     )
 
-    assert(PlanCellAllocations(testFunction).steps === expectedSteps)
+    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 }

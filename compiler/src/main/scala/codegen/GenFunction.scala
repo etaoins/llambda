@@ -79,7 +79,7 @@ private[codegen] object GenFunction {
     val startState = GenerationState(
       gcSlotsOpt=gcSlotsOpt,
       currentBlock=procStartBlock,
-      currentAllocation=EmptyCellAllocation(),
+      currentAllocation=EmptyHeapAllocation(),
       gcCleanUpBlockOpt=gcCleanUpBlockOpt,
       liveTemps=argTemps,
       gcState=GcState()

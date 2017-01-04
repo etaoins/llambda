@@ -4,14 +4,14 @@ import io.llambda
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
 
-object GenCellAllocation {
+object GenHeapAllocation {
   private val cellType = UserDefinedType("cell")
 
-  def genAllocation(initialState: GenerationState)(worldPtrIr: IrValue, count: Int): (GenerationState, CellAllocation)  = {
+  def genAllocation(initialState: GenerationState)(worldPtrIr: IrValue, count: Int): (GenerationState, HeapAllocation)  = {
     val startBlock = initialState.currentBlock
 
     if (count == 0) {
-      val allocation = EmptyCellAllocation()
+      val allocation = EmptyHeapAllocation()
       return (initialState, allocation)
     }
 
@@ -83,7 +83,7 @@ object GenCellAllocation {
         (restoreToTemp -> (phiedGcRoot: IrValue))
     }
 
-    val allocation = new CellAllocation(allocResultValue, 0, count)
+    val allocation = new HeapAllocation(allocResultValue, 0, count)
 
     // Note we don't update gcRootedTemps here because it happens in a branch
     (initialState.copy(

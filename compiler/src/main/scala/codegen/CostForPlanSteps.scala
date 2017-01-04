@@ -96,7 +96,7 @@ object CostForPlanSteps {
       // This requires an allocation plus a store of the boxed value
       cellConsumptionCost + storeCost
 
-    case allocateCells: ps.AllocateCells =>
+    case allocateCells: ps.AllocateHeapCells =>
       gcBarrierCost
 
     case _: ps.AssertPredicate | _: ps.AssertRecordLikeDefined =>

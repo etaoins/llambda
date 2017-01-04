@@ -11,7 +11,7 @@ sealed abstract class GenResult {
 case class GenerationState(
   gcSlotsOpt: Option[GcSlotGenerator],
   currentBlock: IrBlockBuilder,
-  currentAllocation: CellAllocation,
+  currentAllocation: HeapAllocation,
   gcCleanUpBlockOpt: Option[IrBranchTarget],
   liveTemps: LiveTemps,
   gcState: GcState

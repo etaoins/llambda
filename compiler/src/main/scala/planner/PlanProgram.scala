@@ -52,7 +52,7 @@ object PlanProgram {
     val finalUsedFunctions = FindUsedFunctions(disposedFunctions, LlambdaTopLevelSignature.nativeSymbol)
 
     // Plan our cell allocations after all optimisations have been done
-    val allocatedFunctions = finalUsedFunctions.mapValues(PlanCellAllocations(_))
+    val allocatedFunctions = finalUsedFunctions.mapValues(PlanHeapAllocations(_))
 
     PlannedProgram(allocatedFunctions, plan.requiredNativeLibraries.toSet)
   }

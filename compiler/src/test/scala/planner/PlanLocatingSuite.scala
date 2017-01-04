@@ -17,8 +17,8 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
             // This doesn't generate any assembler code - allow this to be unlocated
             // Otherwise we'll blow up on the RefineArgumentTypes' magic to keep the original untyped argument temp alive
 
-          case _: ps.AllocateCells =>
-            // This doesn't come from a particular source line - these are inserted by PlanCellAllocations
+          case _: ps.AllocateHeapCells =>
+            // This doesn't come from a particular source line - these are inserted by PlanHeapAllocations
             //
           case _: ps.DisposeValues =>
             // This doesn't come from a particular source line - these are inserted by DisposeValues

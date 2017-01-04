@@ -3,14 +3,14 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 
-/** Inserts AllocateCell steps to satisfy the allocations for cell consumers
+/** Inserts AllocateHeapCells steps to satisfy the allocations for cell consumers
   *
   * This should be the very final pass after planning and conniving
   */
-object PlanCellAllocations {
+object PlanHeapAllocations {
   /** Prepends an allocation step to the front of the accumulator step
     *
-    * This takes care to allow a DisposeValues step to happen before the AllocateCells to reduce GC pressure
+    * This takes care to allow a DisposeValues step to happen before the AllocateHeapCells to reduce GC pressure
     */
   private def prependAllocStep(requiredCells: Int, acc: List[ps.Step]) = acc match {
     case _ if requiredCells == 0 =>
@@ -19,10 +19,10 @@ object PlanCellAllocations {
 
     case (disposeStep: ps.DisposeValues) :: accTail =>
       // Dispose values before allocating so we don't need to root them across the allocation
-      disposeStep :: ps.AllocateCells(requiredCells) :: accTail
+      disposeStep :: ps.AllocateHeapCells(requiredCells) :: accTail
 
     case otherAcc =>
-      ps.AllocateCells(requiredCells) :: otherAcc
+      ps.AllocateHeapCells(requiredCells) :: otherAcc
   }
 
   /** Returns true if a step can either consume or allocate cells
@@ -39,26 +39,26 @@ object PlanCellAllocations {
       (otherStep.requiredHeapCells > 0) || otherStep.canAllocate
   }
 
-  private def placeCellAllocations(reverseSteps: List[ps.Step], requiredCells: Int, acc: List[ps.Step]): List[ps.Step] = reverseSteps match {
+  private def placeHeapAllocations(reverseSteps: List[ps.Step], requiredCells: Int, acc: List[ps.Step]): List[ps.Step] = reverseSteps match {
     case barrierStep :: reverseTail if barrierStep.canAllocate =>
       // This is a GC barrier - allocations can't cross this
       // Make our allocation step and then keep processing after resetting our required cell count accumulator
       val newAcc = barrierStep :: prependAllocStep(requiredCells, acc)
-      placeCellAllocations(reverseTail, 0, newAcc)
+      placeHeapAllocations(reverseTail, 0, newAcc)
 
     case (condBranch: ps.CondBranch) :: reverseTail if stepConsumesOrAllocates(condBranch) =>
       // Recurse down each of the step's branches
       val newCondBranch = condBranch.mapInnerBranches { (branchSteps, resultTemp) =>
-        (placeCellAllocations(branchSteps.reverse, 0, Nil), resultTemp)
+        (placeHeapAllocations(branchSteps.reverse, 0, Nil), resultTemp)
       }
 
       // Treat this as a GC barrier for now
       val newAcc = newCondBranch :: prependAllocStep(requiredCells, acc)
-      placeCellAllocations(reverseTail, 0, newAcc)
+      placeHeapAllocations(reverseTail, 0, newAcc)
 
     case otherStep :: reverseTail =>
      val newAcc = otherStep :: acc
-     placeCellAllocations(reverseTail, requiredCells + otherStep.requiredHeapCells, newAcc)
+     placeHeapAllocations(reverseTail, requiredCells + otherStep.requiredHeapCells, newAcc)
 
     case Nil =>
       // We've reached the top of the branch - allocate any cells we need and terminate
@@ -68,7 +68,7 @@ object PlanCellAllocations {
   def apply(function: PlannedFunction): PlannedFunction =
     if (function.signature.hasWorldArg) {
       function.copy(
-        steps=placeCellAllocations(function.steps.reverse, 0, Nil)
+        steps=placeHeapAllocations(function.steps.reverse, 0, Nil)
       )
     }
     else {

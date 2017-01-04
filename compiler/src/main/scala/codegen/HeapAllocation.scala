@@ -5,7 +5,7 @@ import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
 
-class CellAllocation(basePointer: IrValue, currentOffset: Int, totalSize: Int) {
+class HeapAllocation(basePointer: IrValue, currentOffset: Int, totalSize: Int) {
   private val cellType = UserDefinedType("cell")
 
   // Returns true if this allocation is empty
@@ -15,7 +15,7 @@ class CellAllocation(basePointer: IrValue, currentOffset: Int, totalSize: Int) {
   def remainingCells: Int =
     totalSize - currentOffset
 
-  def consumeCells(block: IrBlockBuilder)(count: Int, asType: ct.ConcreteCellType): (CellAllocation, IrValue) = {
+  def consumeCells(block: IrBlockBuilder)(count: Int, asType: ct.ConcreteCellType): (HeapAllocation, IrValue) = {
     if ((currentOffset + count) > totalSize) {
       throw new InternalCompilerErrorException("Attempted to access cell past end of allocation")
     }
@@ -37,15 +37,15 @@ class CellAllocation(basePointer: IrValue, currentOffset: Int, totalSize: Int) {
     asType.genStoreToTypeId(block)(typeId, typedPointer)
 
     // Return the typed pointer and new allocation
-    val newAllocation = new CellAllocation(basePointer, currentOffset + count, totalSize)
+    val newAllocation = new HeapAllocation(basePointer, currentOffset + count, totalSize)
 
     (newAllocation, typedPointer)
   }
 }
 
-object EmptyCellAllocation {
-  def apply(): CellAllocation = {
+object EmptyHeapAllocation {
+  def apply(): HeapAllocation = {
     // Any attempt to use this will immediately fail
-    new CellAllocation(NullPointerConstant(PointerType(ct.AnyCell.irType)), 0, 0)
+    new HeapAllocation(NullPointerConstant(PointerType(ct.AnyCell.irType)), 0, 0)
   }
 }

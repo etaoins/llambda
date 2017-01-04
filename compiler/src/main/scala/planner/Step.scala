@@ -191,11 +191,11 @@ case class TailCall(signature: ProcedureSignature, entryPoint: TempValue, argume
   override def alwaysTerminates = true
 }
 
-/** Allocates a given number of cells at runtime
+/** Allocates a given number of cells from the GC heap at runtime
  *
- * This should only be inserted in to the plan by PlanCellAllocations
+ * This should only be inserted in to the plan by PlanHeapAllocations
  */
-case class AllocateCells(count: Int) extends Step {
+case class AllocateHeapCells(count: Int) extends Step {
   val inputValues = Set[TempValue](WorldPtrValue)
   val outputValues = Set[TempValue]()
 
