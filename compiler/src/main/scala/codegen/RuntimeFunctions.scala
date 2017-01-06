@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -110,7 +110,7 @@ object RuntimeFunctions {
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.Reachable(vt.Predicate),
-    attributes=Set()
+    attributes=Set(ProcedureAttribute.NoCapture)
   )
 
   val symbolIsEqvSymbol = "llcore_symbol_is_eqv"
@@ -122,7 +122,7 @@ object RuntimeFunctions {
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.Reachable(vt.Predicate),
-    attributes=Set()
+    attributes=Set(ProcedureAttribute.NoCapture)
   )
 
   val valueForParameterSignature = ProcedureSignature(

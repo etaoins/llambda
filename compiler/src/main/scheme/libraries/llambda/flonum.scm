@@ -9,8 +9,8 @@
   (begin
     (define-native-library llflonum (static-library "ll_llambda_flonum"))
 
-    (define-stdlib finite? (native-function llflonum "llflonum_is_finite" (-> <number> <native-bool>)))
-    (define-stdlib infinite? (native-function llflonum "llflonum_is_infinite" (-> <number> <native-bool>)))
+    (define-stdlib finite? (native-function llflonum "llflonum_is_finite" (-> <number> <native-bool>) nocapture))
+    (define-stdlib infinite? (native-function llflonum "llflonum_is_infinite" (-> <number> <native-bool>) nocapture))
 
     (define-stdlib (nan? [n : <number>])
       (eqv? n +nan.0))

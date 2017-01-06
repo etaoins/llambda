@@ -77,6 +77,7 @@ class LibraryLoader(targetPlatform: platform.TargetPlatform) {
           ("native-function" -> Primitives.NativeFunction) +
           ("world-function" -> Primitives.WorldFunction) +
           ("noreturn" -> Primitives.NoReturnAttr) +
+          ("nocapture" -> Primitives.NoCaptureAttr) +
           ("system-library" -> NativeSystemLibrary) +
           ("All" -> Primitives.PolymorphicType) +
           ("ExternalRecord" -> Primitives.ExternalRecordType)

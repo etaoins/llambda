@@ -11,11 +11,18 @@ object ProcedureAttribute {
     */
   case object NoReturn extends ProcedureAttribute
 
-  /** Indicates that a fast, potentially non-interoperable calling convention should be used for this procedure 
+  /** Indicates that a fast, potentially non-interoperable calling convention should be used for this procedure
     *
     * This must not be used for procedures that can be directly invoked from C++ such as trampolines
-   */
+    */
   case object FastCC extends ProcedureAttribute
+
+  /** Indicates that the procedure captures none of its pointer arguments
+    *
+    * This means it cannot save, return, raise, or place the pointer inside another argument. This applies recursively;
+    * any pointers inside the argument must not be captured.
+    */
+  case object NoCapture extends ProcedureAttribute
 }
 
 /** Describes the signature of an invokable function

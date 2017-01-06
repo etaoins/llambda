@@ -23,6 +23,9 @@ object ExtractNativeFunction {
       case sst.ResolvedSymbol(Primitives.NoReturnAttr) =>
         ProcedureAttribute.NoReturn
 
+      case sst.ResolvedSymbol(Primitives.NoCaptureAttr) =>
+        ProcedureAttribute.NoCapture
+
       case other =>
         throw new BadSpecialFormException(other, "Non-attribute used where procedure attribute expected")
     })(breakOut): Set[ProcedureAttribute]

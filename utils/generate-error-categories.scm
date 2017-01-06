@@ -142,7 +142,7 @@
   (display "\n")
 
   (newline)
-  (display "sealed abstract class ErrorCategory(val runtimeId : Int)\n")
+  (display "sealed abstract class ErrorCategory(val runtimeId: Int)\n")
   (newline)
   (display "object ErrorCategory {\n")
 
@@ -158,7 +158,7 @@
   ) indexed-categories)
 
   (newline)
-  (display "  def fromPredicate : PartialFunction[String, ErrorCategory] = {\n")
+  (display "  def fromPredicate: PartialFunction[String, ErrorCategory] = {\n")
 
   (for-each (lambda (indexed-category)
     (define index (car indexed-category))
@@ -209,7 +209,7 @@
       (define pred-func-name (error-category-pred-function cat))
 
       (display "    ")
-      (write `(define ,pred-symbol ,`(native-function llerror ,pred-func-name (-> <any> <native-bool>))))
+      (write `(define ,pred-symbol ,`(native-function llerror ,pred-func-name (-> <any> <native-bool>) nocapture)))
       (display "\n"))
 
     (unless (equal? default-error-category cat)

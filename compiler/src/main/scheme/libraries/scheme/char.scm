@@ -21,11 +21,11 @@
     (define-stdlib string-foldcase (world-function llchar "llchar_string_foldcase" (-> <string> <string>)))
     (define-stdlib digit-value (world-function llchar "llchar_digit_value" (-> <native-unicode-char> (U #f <integer>))))
 
-    (define-stdlib string-ci=? (native-function llchar "llchar_string_ci_equal" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string-ci<? (native-function llchar "llchar_string_ci_lt" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string-ci>? (native-function llchar "llchar_string_ci_gt" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string-ci<=? (native-function llchar "llchar_string_ci_lte" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string-ci>=? (native-function llchar "llchar_string_ci_gte" (-> <string> <string> <string> * <native-bool>)))
+    (define-stdlib string-ci=? (native-function llchar "llchar_string_ci_equal" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string-ci<? (native-function llchar "llchar_string_ci_lt" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string-ci>? (native-function llchar "llchar_string_ci_gt" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string-ci<=? (native-function llchar "llchar_string_ci_lte" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string-ci>=? (native-function llchar "llchar_string_ci_gte" (-> <string> <string> <string> * <native-bool>) nocapture))
 
     (define-stdlib char-ci=? (native-function llchar "llchar_char_ci_equal" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
     (define-stdlib char-ci<? (native-function llchar "llchar_char_ci_lt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))

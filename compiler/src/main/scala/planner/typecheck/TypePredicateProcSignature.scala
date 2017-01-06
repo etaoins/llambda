@@ -12,5 +12,5 @@ object TypePredicateProcSignature extends ProcedureSignature(
     optionalArgTypes=Nil,
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.Reachable(vt.Predicate),
-    attributes=Set(ProcedureAttribute.FastCC)
+    attributes=Set(ProcedureAttribute.FastCC, ProcedureAttribute.NoCapture)
 )

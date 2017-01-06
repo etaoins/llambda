@@ -32,7 +32,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     }
   }
 
-  test("void native functioni with noreturn attribute") {
+  test("void native function with noreturn attribute") {
     val expectedFunction = et.NativeFunction(
       NativeSystemLibrary,
       ProcedureSignature(
@@ -52,7 +52,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     }
   }
 
-  test("function taking world pointer") {
+  test("function taking world pointer with nocapture attribute") {
     val expectedFunction = et.NativeFunction(
       NativeSystemLibrary,
       ProcedureSignature(
@@ -62,13 +62,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
         optionalArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.Reachable(vt.UnitType),
-        attributes=Set()
+        attributes=Set(ProcedureAttribute.NoCapture)
       ).toPolymorphic,
       "lliby_newline"
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(world-function system-library "lliby_newline" (-> <unit>))""")
+      exprFor("""(world-function system-library "lliby_newline" (-> <unit>) nocapture)""")
     }
   }
 

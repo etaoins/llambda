@@ -166,15 +166,15 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     assert(result === expected)
   }
 
-  test("function taking world, self, two numbers, rest arg returning unicode char") {
+  test("function taking world, self, two numbers, rest arg returning unicode char with nocapture") {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      mandatoryArgTypes=List(vt.NumberType, vt.NumberType),
+      mandatoryArgTypes=List(vt.NumberType, vt.Int64),
       optionalArgTypes=Nil,
       restArgMemberTypeOpt=Some(vt.IntegerType),
       returnType=vt.ReturnType.Reachable(vt.UnicodeChar),
-      attributes=Set()
+      attributes=Set(ProcedureAttribute.NoCapture)
     )
 
     val result = ProcedureSignatureToIr(procSignature)
@@ -183,11 +183,11 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       irSignature=IrSignature(
         result=Result(IntegerType(32), Set(SignExt)),
         arguments=List(
-          Argument(PointerType(WorldValue.irType)),
-          Argument(PointerType(ct.ProcedureCell.irType)),
-          Argument(PointerType(ct.NumberCell.irType)),
-          Argument(PointerType(ct.NumberCell.irType)),
-          Argument(PointerType(ct.ListElementCell.irType))
+          Argument(PointerType(WorldValue.irType), Set(NoCapture)),
+          Argument(PointerType(ct.ProcedureCell.irType), Set(NoCapture)),
+          Argument(PointerType(ct.NumberCell.irType), Set(NoCapture)),
+          Argument(IntegerType(64), Set(SignExt)),
+          Argument(PointerType(ct.ListElementCell.irType), Set(NoCapture))
         )
       ),
       callMetadata=Map(

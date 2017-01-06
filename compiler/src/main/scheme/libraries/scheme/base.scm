@@ -221,16 +221,16 @@
     (define-native-library llbase (static-library "ll_scheme_base"))
 
     ; Define the length accessors for slicing values
-    (define-stdlib vector-length (native-function llbase "llbase_vector_length" (-> <vector> <native-int64>)))
-    (define-stdlib bytevector-length (native-function llbase "llbase_bytevector_length" (-> <bytevector> <native-int64>)))
-    (define-stdlib string-length (native-function llbase "llbase_string_length" (-> <string> <native-uint32>)))
+    (define-stdlib vector-length (native-function llbase "llbase_vector_length" (-> <vector> <native-int64>) nocapture))
+    (define-stdlib bytevector-length (native-function llbase "llbase_bytevector_length" (-> <bytevector> <native-int64>) nocapture))
+    (define-stdlib string-length (native-function llbase "llbase_string_length" (-> <string> <native-uint32>) nocapture))
 
-    (define-stdlib eqv? (native-function system-library "llcore_is_eqv" (-> <any> <any> <native-bool>)))
-    (define-stdlib equal? (native-function system-library "llcore_is_equal" (-> <any> <any> <native-bool>)))
+    (define-stdlib eqv? (native-function system-library "llcore_is_eqv" (-> <any> <any> <native-bool>) nocapture))
+    (define-stdlib equal? (native-function system-library "llcore_is_equal" (-> <any> <any> <native-bool>) nocapture))
 
     (define-stdlib boolean? (make-predicate <boolean>))
     (define-stdlib not (make-predicate #f))
-    (define-stdlib boolean=? (native-function llbase "llbase_boolean_equal" (-> <boolean> <boolean> <boolean> * <native-bool>)))
+    (define-stdlib boolean=? (native-function llbase "llbase_boolean_equal" (-> <boolean> <boolean> <boolean> * <native-bool>) nocapture))
 
     (define-stdlib procedure? (make-predicate <procedure>))
     (define-stdlib apply (world-function llbase "llbase_apply" (-> <procedure> <any> * <any>)))
@@ -239,13 +239,13 @@
     (define-stdlib flonum? (make-predicate <flonum>))
     (define-stdlib integer? (make-predicate <integer>))
 
-    (define-stdlib rational? (native-function llbase "llbase_is_rational" (-> <any> <native-bool>)))
+    (define-stdlib rational? (native-function llbase "llbase_is_rational" (-> <any> <native-bool>) nocapture))
 
-    (define-stdlib = (native-function llbase "llbase_numeric_equal" (-> <number> <number> <number> * <native-bool>)))
-    (define-stdlib < (native-function llbase "llbase_numeric_lt" (-> <number> <number> <number> * <native-bool>)))
-    (define-stdlib > (native-function llbase "llbase_numeric_gt" (-> <number> <number> <number> * <native-bool>)))
-    (define-stdlib <= (native-function llbase "llbase_numeric_lte" (-> <number> <number> <number> * <native-bool>)))
-    (define-stdlib >= (native-function llbase "llbase_numeric_gte" (-> <number> <number> <number> * <native-bool>)))
+    (define-stdlib = (native-function llbase "llbase_numeric_equal" (-> <number> <number> <number> * <native-bool>) nocapture))
+    (define-stdlib < (native-function llbase "llbase_numeric_lt" (-> <number> <number> <number> * <native-bool>) nocapture))
+    (define-stdlib > (native-function llbase "llbase_numeric_gt" (-> <number> <number> <number> * <native-bool>) nocapture))
+    (define-stdlib <= (native-function llbase "llbase_numeric_lte" (-> <number> <number> <number> * <native-bool>) nocapture))
+    (define-stdlib >= (native-function llbase "llbase_numeric_gte" (-> <number> <number> <number> * <native-bool>) nocapture))
 
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
     (define-stdlib (zero? [n : <number>])
@@ -278,7 +278,7 @@
       (if (integer? n) n (native-round n)))
 
     (define-stdlib integer (world-function llbase "llbase_integer" (-> <number> <native-int64>)))
-    (define-stdlib flonum (native-function llbase "llbase_flonum" (-> <number> <native-double>)))
+    (define-stdlib flonum (native-function llbase "llbase_flonum" (-> <number> <native-double>) nocapture))
 
     (define-stdlib + (world-function llbase "llbase_add" (All ([N : <number>]) N * N)))
     (define-stdlib - (world-function llbase "llbase_sub" (All ([N : <number>]) N N * N)))
@@ -351,7 +351,7 @@
     (define-stdlib null? (make-predicate <empty-list>))
     (define-stdlib list? (make-predicate <list>))
 
-    (define-stdlib length (native-function llbase "llbase_length" (-> <list> <native-uint32>)))
+    (define-stdlib length (native-function llbase "llbase_length" (-> <list> <native-uint32>) nocapture))
 
     (define-stdlib cons (world-function llbase "llbase_cons" (All (A B) A B (Pairof A B))))
     (define-stdlib car (native-function llbase "llbase_car" (All (A) (Pairof A <any>) A)))
@@ -388,18 +388,18 @@
       (native-make-list len fill))
 
     (define-stdlib symbol? (make-predicate <symbol>))
-    (define-stdlib symbol=? (native-function llbase "llbase_symbol_equal" (-> <symbol> <symbol> <symbol> * <native-bool>)))
+    (define-stdlib symbol=? (native-function llbase "llbase_symbol_equal" (-> <symbol> <symbol> <symbol> * <native-bool>) nocapture))
     (define-stdlib symbol->string (world-function llbase "llbase_symbol_to_string" (-> <symbol> <string>)))
     (define-stdlib string->symbol (world-function llbase "llbase_string_to_symbol" (-> <string> <symbol>)))
 
     (define-stdlib char? (make-predicate <char>))
     (define-stdlib char->integer (native-function llbase "llbase_char_to_integer" (-> <native-unicode-char> <native-int32>)))
     (define-stdlib integer->char (world-function llbase "llbase_integer_to_char" (-> <native-int64> <native-unicode-char>)))
-    (define-stdlib char=? (native-function llbase "llbase_char_equal" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char<? (native-function llbase "llbase_char_lt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char>? (native-function llbase "llbase_char_gt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char<=? (native-function llbase "llbase_char_lte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char>=? (native-function llbase "llbase_char_gte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
+    (define-stdlib char=? (native-function llbase "llbase_char_equal" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char<? (native-function llbase "llbase_char_lt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char>? (native-function llbase "llbase_char_gt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char<=? (native-function llbase "llbase_char_lte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char>=? (native-function llbase "llbase_char_gte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
 
     (define-stdlib vector? (make-predicate <vector>))
     (define-stdlib vector (world-function llbase "llbase_vector" (-> <any> * <vector>)))
@@ -478,11 +478,11 @@
     (define-stdlib (string-fill! [target : <string>] [fill : <char>] [start : <integer> 0] [end : <integer> (string-length target)])
       (native-string-fill! target fill start end))
 
-    (define-stdlib string=? (native-function llbase "llbase_string_equal" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string<? (native-function llbase "llbase_string_lt" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string>? (native-function llbase "llbase_string_gt" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string<=? (native-function llbase "llbase_string_lte" (-> <string> <string> <string> * <native-bool>)))
-    (define-stdlib string>=? (native-function llbase "llbase_string_gte" (-> <string> <string> <string> * <native-bool>)))
+    (define-stdlib string=? (native-function llbase "llbase_string_equal" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string<? (native-function llbase "llbase_string_lt" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string>? (native-function llbase "llbase_string_gt" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string<=? (native-function llbase "llbase_string_lte" (-> <string> <string> <string> * <native-bool>) nocapture))
+    (define-stdlib string>=? (native-function llbase "llbase_string_gte" (-> <string> <string> <string> * <native-bool>) nocapture))
 
     (define-stdlib vector-map (world-function llbase "llbase_vector_map" (-> (-> <any> <any> * <any>) <vector> <vector> * <vector>)))
     (define-stdlib vector-for-each (world-function llbase "llbase_vector_for_each" (-> (-> <any> <any> * <unit>) <vector> <vector> * <unit>)))
@@ -497,13 +497,13 @@
 
     ; Port support
     (define-stdlib port? (make-predicate <port>))
-    (define-stdlib input-port? (native-function llbase "llbase_is_input_port" (-> <any> <native-bool>)))
-    (define-stdlib output-port? (native-function llbase "llbase_is_output_port" (-> <any> <native-bool>)))
+    (define-stdlib input-port? (native-function llbase "llbase_is_input_port" (-> <any> <native-bool>) nocapture))
+    (define-stdlib output-port? (native-function llbase "llbase_is_output_port" (-> <any> <native-bool>) nocapture))
     (define-stdlib textual-port? port?)
     (define-stdlib binary-port? port?)
-    (define-stdlib input-port-open? (native-function llbase "llbase_is_input_port_open" (-> <port> <native-bool>)))
-    (define-stdlib output-port-open? (native-function llbase "llbase_is_output_port_open" (-> <port> <native-bool>)))
-    (define-stdlib close-port (native-function llbase "llbase_close_port" (-> <port> <unit>)))
+    (define-stdlib input-port-open? (native-function llbase "llbase_is_input_port_open" (-> <port> <native-bool>) nocapture))
+    (define-stdlib output-port-open? (native-function llbase "llbase_is_output_port_open" (-> <port> <native-bool>) nocapture))
+    (define-stdlib close-port (native-function llbase "llbase_close_port" (-> <port> <unit>) nocapture))
     (define-stdlib close-input-port (world-function llbase "llbase_close_input_port" (-> <port> <unit>)))
     (define-stdlib close-output-port (world-function llbase "llbase_close_output_port" (-> <port> <unit>)))
     (define-stdlib open-output-string (world-function llbase "llbase_open_output_string" (-> <port>)))
@@ -583,8 +583,8 @@
     (define-stdlib error-object? (make-predicate <error-object>))
     (define-stdlib error-object-message (native-function llbase "llbase_error_object_message" (-> <error-object> <string>)))
     (define-stdlib error-object-irritants (native-function llbase "llbase_error_object_irritants" (-> <error-object> <list>)))
-    (define-stdlib file-error? (native-function llbase "llbase_is_file_error" (-> <any> <native-bool>)))
-    (define-stdlib read-error? (native-function llbase "llbase_is_read_error" (-> <any> <native-bool>)))
+    (define-stdlib file-error? (native-function llbase "llbase_is_file_error" (-> <any> <native-bool>) nocapture))
+    (define-stdlib read-error? (native-function llbase "llbase_is_read_error" (-> <any> <native-bool>) nocapture))
 
     #| This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient native
        native code implementation |#

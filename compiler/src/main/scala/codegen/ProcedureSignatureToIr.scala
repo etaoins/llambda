@@ -22,27 +22,38 @@ object ProcedureSignatureToIr {
   }
 
   def apply(signature: ProcedureSignature): Result = {
+    val pointerAttrs: Set[IrFunction.ParameterAttribute] =
+      if (signature.attributes.contains(ProcedureAttribute.NoCapture)) {
+        Set(IrFunction.NoCapture)
+      }
+      else {
+        Set()
+      }
+
     val worldArgs = if (signature.hasWorldArg) {
-      List(IrFunction.Argument(PointerType(WorldValue.irType), Set()))
+      List(IrFunction.Argument(PointerType(WorldValue.irType), pointerAttrs))
     }
     else {
       Nil
     }
 
     val selfArgs = if (signature.hasSelfArg) {
-      List(IrFunction.Argument(PointerType(ct.ProcedureCell.irType), Set()))
+      List(IrFunction.Argument(PointerType(ct.ProcedureCell.irType), pointerAttrs))
     }
     else {
       Nil
     }
 
     val mandatoryArgs = signature.mandatoryArgTypes map (ValueTypeToIr(_)) map {
+      case SignedFirstClassType(pointerType: PointerType, signedness) =>
+        IrFunction.Argument(pointerType, pointerAttrs)
+
       case SignedFirstClassType(irType, signedness) =>
         IrFunction.Argument(irType, paramSignednessToAttribs(signedness))
     }
 
     val varArgs = if ((signature.optionalArgTypes.length > 0) || signature.restArgMemberTypeOpt.isDefined) {
-      List(IrFunction.Argument(PointerType(ct.ListElementCell.irType), Set()))
+      List(IrFunction.Argument(PointerType(ct.ListElementCell.irType), pointerAttrs))
     }
     else {
       Nil

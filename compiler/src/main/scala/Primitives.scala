@@ -37,6 +37,7 @@ object Primitives {
   object NativeFunction extends PrimitiveExpr
   object WorldFunction extends PrimitiveExpr
   object NoReturnAttr extends PrimitiveExpr
+  object NoCaptureAttr extends PrimitiveExpr
 
   object UnionType extends PrimitiveTypeConstructor
   object PairofType extends PrimitiveTypeConstructor
@@ -85,6 +86,7 @@ object Primitives {
       "native-function" -> NativeFunction,
       "world-function" -> WorldFunction,
       "noreturn" -> NoReturnAttr,
+      "nocapture" -> NoCaptureAttr,
 
       "U" -> UnionType,
       "Pairof" -> PairofType,

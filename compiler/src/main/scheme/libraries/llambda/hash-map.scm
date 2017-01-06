@@ -21,8 +21,8 @@
     (define hash-map-assoc (world-function llhashmap "llhashmap_hash_map_assoc" (All (K V) (HashMap K V) K V (HashMap K V))))
     (define hash-map-delete (world-function llhashmap "llhashmap_hash_map_delete" (All (K V) (HashMap K V) <any> (HashMap K V))))
 
-    (define hash-map-size (native-function llhashmap "llhashmap_hash_map_size" (-> AnyHashMap <native-int64>)))
-    (define hash-map-exists? (native-function llhashmap "llhashmap_hash_map_exists" (-> AnyHashMap <any> <native-bool>)))
+    (define hash-map-size (native-function llhashmap "llhashmap_hash_map_size" (-> AnyHashMap <native-int64>) nocapture))
+    (define hash-map-exists? (native-function llhashmap "llhashmap_hash_map_exists" (-> AnyHashMap <any> <native-bool>) nocapture))
     (define hash-map-ref/default (native-function llhashmap "llhashmap_hash_map_ref_default" (All (V) (HashMap <any> V) <any> V V)))
 
     (define native-hash-map-ref (world-function llhashmap "llhashmap_hash_map_ref" (All (V) (HashMap <any> V) <any> (-> V) V)))
@@ -39,6 +39,6 @@
     (define hash-map-fold (world-function llhashmap "llhashmap_hash_map_fold" (All (A) (-> <any> <any> <any> A) A AnyHashMap A)))
     (define hash-map-merge (world-function llhashmap "llhashmap_hash_map_merge" (All (K V) (-> (HashMap K V) (HashMap K V) (HashMap K V)))))
 
-    (define native-hash (native-function llhashmap "llhashmap_hash" (-> <any> <native-int64> <native-uint32>)))
+    (define native-hash (native-function llhashmap "llhashmap_hash" (-> <any> <native-int64> <native-uint32>) nocapture))
     (define (hash value [bound : <integer> (expt 2 32)])
       (native-hash value bound))))

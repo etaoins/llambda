@@ -8,7 +8,7 @@
   (begin
     (define-native-library llfile (static-library "ll_scheme_file"))
 
-    (define-stdlib file-exists? (native-function llfile "llfile_file_exists" (-> <string> <native-bool>)))
+    (define-stdlib file-exists? (native-function llfile "llfile_file_exists" (-> <string> <native-bool>) nocapture))
 
     (define-stdlib open-input-file (world-function llfile "llfile_open_input_file" (-> <string> <port>)))
     (define-stdlib open-binary-input-file open-input-file)
