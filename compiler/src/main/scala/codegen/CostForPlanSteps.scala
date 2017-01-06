@@ -24,7 +24,7 @@ object CostForPlanSteps {
   private def costForStep(step: ps.Step): Long = step match {
     case _: ps.DisposeValues | _: ps.ConvertNativeInteger | _: ps.CreateNamedEntryPoint | _: ps.CreateBooleanCell |
          _: ps.CreateEmptyListCell | _: ps.CreateUnitCell | _: ps.CastCellToTypeUnchecked =>
-      // These typically don't generate any asembler
+      // These typically don't generate any assembler
       0L
 
     case _: ps.CreateNativeConstant =>
@@ -78,8 +78,8 @@ object CostForPlanSteps {
       (loadCost + (trivialInstrCost * 2)) * 5
 
     case _: ps.InitPair =>
-      // This requires an allocation and a store to the cell type
-      cellConsumptionCost
+      // This requires an allocation and a store to the car and cdr
+      cellConsumptionCost + (storeCost * 2)
 
     case ps.InitVector(_, elements) =>
       cellConsumptionCost + (elements.length * storeCost)

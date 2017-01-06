@@ -791,7 +791,7 @@ case class Return(returnValue: Option[TempValue]) extends Step {
   override def alwaysTerminates = true
 }
 
-/** Initialises a new pair with an undefined car and cdr */
+/** Initialises a new pair with a defined car and cdr */
 case class InitPair(
     result: TempValue,
     carValue: TempValue,
