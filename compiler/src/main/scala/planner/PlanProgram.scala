@@ -14,7 +14,11 @@ object PlanProgram {
   private val conniverPasses = List[conniver.Conniver](
     conniver.MergeIdenticalSteps,
     conniver.UnboxEarly,
-    conniver.FindTailCalls
+    conniver.FindTailCalls,
+    // This must happen after FindTailCalls for correctneess
+    // Tail calls take over the stack of the calling function and cannot take stack allocated values. FindTailCalls is
+    // not aware of this while AnalyseEscapes is.
+    conniver.AnalyseEscapes
   )
 
   def apply(exprs: List[et.Expr])(planConfig: PlanConfig): PlannedProgram = {

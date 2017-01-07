@@ -14,6 +14,12 @@ private object ArrayElementsForIrType {
   }
 }
 
+object GarbageState {
+  val HeapAllocatedCell = 0
+  val GlobalConstant = 1
+  val StackAllocatedCell = 2
+}
+
 object SymbolCellConstants {
   /** Value that inlineByteLength takes when the symbol is stored on the heap */
   val heapSymbolInlineByteLength = 255

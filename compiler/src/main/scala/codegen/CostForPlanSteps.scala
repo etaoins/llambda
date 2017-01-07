@@ -14,8 +14,10 @@ object CostForPlanSteps {
   private val floatMathCost = 2L
   /** Cost of constant cell in the .data segment */
   private val constantCellCost = 2L
-  /** Cost of consuming a single cell */
-  private val cellConsumptionCost = 10L
+  /** Cost of consuming a single cell from the stack */
+  private val stackCellConsumptionCost = 5L
+  /** Cost of consuming a single cell from the GC heap */
+  private val heapCellConsumptionCost = 10L
   /** Cost of a garbage collector barrier */
   private val gcBarrierCost = 10L
   /** Cost of a function call */
@@ -79,22 +81,27 @@ object CostForPlanSteps {
 
     case _: ps.InitPair =>
       // This requires an allocation and a store to the car and cdr
-      cellConsumptionCost + (storeCost * 2)
+      heapCellConsumptionCost + (storeCost * 2)
 
     case ps.InitVector(_, elements) =>
-      cellConsumptionCost + (elements.length * storeCost)
+      heapCellConsumptionCost + (elements.length * storeCost)
 
     case _: ps.InitFilledVector =>
       // Assume the average vector is 8 elements long
-      cellConsumptionCost + (8 * storeCost)
+      heapCellConsumptionCost + (8 * storeCost)
 
     case initRecordLike: ps.InitRecordLikeStep =>
       // This requires an allocation and then a store for each field
-      cellConsumptionCost + (initRecordLike.fieldValues.size * storeCost)
+      heapCellConsumptionCost + (initRecordLike.fieldValues.size * storeCost)
 
-    case _: ps.BoxValue =>
+    case _: ps.BoxBoolean =>
+      // This selects a constant value based on a predicate
+      trivialInstrCost
+
+    case allocating: ps.AllocatingBoxValue =>
       // This requires an allocation plus a store of the boxed value
-      cellConsumptionCost + storeCost
+      val allocCost = if (allocating.stackAllocate) stackCellConsumptionCost else heapCellConsumptionCost
+      allocCost + storeCost
 
     case allocateCells: ps.AllocateHeapCells =>
       gcBarrierCost

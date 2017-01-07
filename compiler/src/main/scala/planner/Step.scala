@@ -129,6 +129,13 @@ sealed trait AssertStep extends MergeableStep {
   val result = MergeableStep.PlaceholderResultTemp
 }
 
+/** Step that can be converted to using stack allocations for uncaptured values */
+sealed trait StackAllocableStep extends Step {
+  val result: TempValue
+
+  def asStackAllocated: StackAllocableStep
+}
+
 /** Step using a record-like type
   *
   * This is used by codegen to find all referenced types from a given plan
@@ -546,20 +553,22 @@ case class UnboxChar(result: TempValue, boxed: TempValue) extends UnboxValue {
 
 // These aren't quite an unboxing because there's two values per boxed value
 
-/** Loads the car of the passed PairCell as a AnyCell */
-case class LoadPairCar(result: TempValue, boxed: TempValue) extends DiscardableStep with MergeableStep {
+sealed trait LoadPairValue extends DiscardableStep with MergeableStep {
+  val result: TempValue
+  val boxed: TempValue
+
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
+}
 
+/** Loads the car of the passed PairCell as a AnyCell */
+case class LoadPairCar(result: TempValue, boxed: TempValue) extends LoadPairValue {
   def renamed(f: (TempValue) => TempValue) =
     LoadPairCar(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 /** Loads the cdr of the passed PairCell as a AnyCell */
-case class LoadPairCdr(result: TempValue, boxed: TempValue) extends DiscardableStep with MergeableStep {
-  lazy val inputValues = Set(boxed)
-  lazy val outputValues = Set(result)
-
+case class LoadPairCdr(result: TempValue, boxed: TempValue) extends LoadPairValue {
   def renamed(f: (TempValue) => TempValue) =
     LoadPairCdr(f(result), f(boxed)).assignLocationFrom(this)
 }
@@ -748,6 +757,10 @@ sealed trait BoxValue extends DiscardableStep with MergeableStep {
   lazy val outputValues = Set(result)
 }
 
+sealed trait AllocatingBoxValue extends BoxValue with StackAllocableStep {
+  val stackAllocate: Boolean
+}
+
 /** Boxes an i8 that's either 0 or 1 as a boolean */
 case class BoxBoolean(result: TempValue, unboxed: TempValue) extends BoxValue {
   lazy val inputValues = Set(unboxed)
@@ -756,25 +769,43 @@ case class BoxBoolean(result: TempValue, unboxed: TempValue) extends BoxValue {
     BoxBoolean(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxInteger(result: TempValue, unboxed: TempValue) extends BoxValue {
+case class BoxInteger(
+    result: TempValue,
+    unboxed: TempValue,
+    stackAllocate: Boolean = false
+) extends AllocatingBoxValue {
   lazy val inputValues = Set(unboxed)
-  override def requiredHeapCells = 1
+  override def requiredHeapCells = if (stackAllocate) 0 else 1
+
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
     BoxInteger(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxFlonum(result: TempValue, unboxed: TempValue) extends BoxValue {
+case class BoxFlonum(
+    result: TempValue,
+    unboxed: TempValue,
+    stackAllocate: Boolean = false
+) extends AllocatingBoxValue {
   lazy val inputValues = Set(unboxed)
-  override def requiredHeapCells = 1
+  override def requiredHeapCells = if (stackAllocate) 0 else 1
+
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
     BoxFlonum(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxChar(result: TempValue, unboxed: TempValue) extends BoxValue {
+case class BoxChar(
+    result: TempValue,
+    unboxed: TempValue,
+    stackAllocate: Boolean = false
+) extends AllocatingBoxValue {
   lazy val inputValues = Set(unboxed)
-  override def requiredHeapCells = 1
+  override def requiredHeapCells = if (stackAllocate) 0 else 1
+
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
     BoxChar(f(result), f(unboxed)).assignLocationFrom(this)

@@ -29,7 +29,7 @@ class HeapAllocation(basePointer: IrValue, currentOffset: Int, totalSize: Int) {
     val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
 
     // Set its garbage state
-    val garbageState = IntegerConstant(ct.AnyCell.gcStateIrType, 0)
+    val garbageState = IntegerConstant(ct.AnyCell.gcStateIrType, ct.GarbageState.HeapAllocatedCell)
     asType.genStoreToGcState(block)(garbageState, typedPointer)
 
     // Set its type
