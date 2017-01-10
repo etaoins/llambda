@@ -280,12 +280,12 @@
     (define-stdlib integer (world-function llbase "llbase_integer" (-> <number> <native-int64>)))
     (define-stdlib flonum (native-function llbase "llbase_flonum" (-> <number> <native-double>) nocapture))
 
-    (define-stdlib + (world-function llbase "llbase_add" (All ([N : <number>]) N * N)))
-    (define-stdlib - (world-function llbase "llbase_sub" (All ([N : <number>]) N N * N)))
-    (define-stdlib * (world-function llbase "llbase_mul" (All ([N : <number>]) N * N)))
+    (define-stdlib + (world-function llbase "llbase_add" (All ([N : <number>]) N * N) nocapture))
+    (define-stdlib - (world-function llbase "llbase_sub" (All ([N : <number>]) N N * N) nocapture))
+    (define-stdlib * (world-function llbase "llbase_mul" (All ([N : <number>]) N * N) nocapture))
     (define-stdlib / (world-function llbase "llbase_div" (-> <number> <number> * <number>)))
 
-    (define-stdlib expt (world-function llbase "llbase_expt" (All ([N : <number>]) (-> N N N))))
+    (define-stdlib expt (world-function llbase "llbase_expt" (All ([N : <number>]) (-> N N N)) nocapture))
 
     (: square (All ([N : <number>]) (-> N N)))
     (define-stdlib (square num)
