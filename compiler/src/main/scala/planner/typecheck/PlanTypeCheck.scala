@@ -6,6 +6,7 @@ import llambda.compiler.planner.{PlanWriter, BoxedValue, PlanSymbolEquality}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.codegen.RuntimeFunctions
+import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{InternalCompilerErrorException, TypeException}
 
 object PlanTypeCheck {
@@ -348,5 +349,32 @@ object PlanTypeCheck {
     }).toMap
 
     branchOnType(plan, checkValue, valueType, testType, mustInline=selfSymbolOpt.isDefined)
+  }
+
+  def withIntermediateValue(
+      checkValue: iv.IntermediateValue,
+      testType: vt.SchemeType,
+      selfSymbolOpt: Option[String] = None
+  )(implicit plan: PlanWriter): CheckResult = (checkValue, testType) match {
+    case (nativePredValue: iv.NativePredicateValue, vt.LiteralBooleanType(boolValue)) =>
+      // Avoid boxing the native predicate
+      val nativePredTemp = nativePredValue.toTempValue(vt.Predicate)
+
+      val expectedInt = if (boolValue) 1L else 0L
+      val expectedTemp = ps.Temp(vt.Predicate)
+      plan.steps += ps.CreateNativeInteger(expectedTemp, expectedInt, bits=1)
+
+      val valueMatchedPred = ps.Temp(vt.Predicate)
+      plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, nativePredTemp, expectedTemp)
+
+      DynamicResult(valueMatchedPred)
+
+    case _ =>
+      apply(
+        checkValue={checkValue.toBoxedValue()},
+        valueType=checkValue.schemeType,
+        testType=testType,
+        selfSymbolOpt=selfSymbolOpt
+      )
   }
 }

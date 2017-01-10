@@ -26,9 +26,8 @@ class KnownTypePredicateProc(testingType: vt.SchemeType) extends KnownProc(
   )(implicit plan: PlanWriter): Option[PlanResult] =
     args match {
       case List((_, singleValue)) =>
-        val checkResult = PlanTypeCheck(
-          checkValue={singleValue.toBoxedValue()},
-          valueType=singleValue.schemeType,
+        val checkResult = PlanTypeCheck.withIntermediateValue(
+          checkValue=singleValue,
           testType=testingType
         )
 
