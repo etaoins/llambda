@@ -3,12 +3,13 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{RuntimeErrorMessage, ErrorCategory}
+import llambda.compiler.{RuntimeErrorMessage, ErrorCategory, IntervalSet}
 
 object AssertIntInRange {
   /** Plans a runtime assertion that a native integer value can fit within the given target integer type
     *
-    * If the target type can represent all of the values of the source type then no assertions will be generated.
+    * If all possible values of the source integer can be represented by the target type then no assertions will be
+    * generated.
     *
     * @param  tempValue    Value of fromType to be converted to the target type
     * @param  fromType     Type of the tempValue
@@ -20,8 +21,12 @@ object AssertIntInRange {
       fromType: vt.IntType,
       toType: vt.IntType,
       evidenceOpt: Option[ps.TempValue] = None
-  )(implicit plan: PlanWriter): Unit = {
-    if (fromType.minIntValue < toType.minIntValue) {
+  )
+  (possibleValues: IntervalSet = IntervalSet(fromType.valueInterval))
+  (implicit plan: PlanWriter): Unit = {
+    val enclosingValueInterval = possibleValues.enclosingInterval.get
+
+    if (enclosingValueInterval.start < toType.minIntValue) {
       val lowerRangeTemp = ps.Temp(toType)
       plan.steps += ps.CreateNativeInteger(lowerRangeTemp, toType.minIntValue, fromType.bits)
 
@@ -43,7 +48,7 @@ object AssertIntInRange {
       plan.steps += ps.AssertPredicate(withinLowerRangeTemp, errorMessage, evidenceOpt)
     }
 
-    if (fromType.maxIntValue > toType.maxIntValue) {
+    if (enclosingValueInterval.end > toType.maxIntValue) {
       val upperRangeTemp = ps.Temp(toType)
       plan.steps += ps.CreateNativeInteger(upperRangeTemp, toType.maxIntValue, fromType.bits)
 

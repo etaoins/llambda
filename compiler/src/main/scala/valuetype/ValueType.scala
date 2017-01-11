@@ -1,6 +1,7 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
+import llambda.compiler.Interval
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.valuetype.{polymorphic => pm}
 
@@ -60,6 +61,9 @@ sealed abstract class IntType(bits: Int, signed: Boolean) extends IntLikeType(bi
   else {
     (1L << bits) - 1
   }
+
+  def valueInterval: Interval =
+    Interval(minIntValue, maxIntValue)
 }
 
 case object Int8 extends IntType(8, true)

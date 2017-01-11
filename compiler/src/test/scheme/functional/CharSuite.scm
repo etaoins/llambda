@@ -125,7 +125,11 @@
   (assert-equal #\x1f3c2 (integer->char #x1f3c2))))
 
 (define-test "dynamic (integer->char)" (expect-success
-  (assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <integer>)))))
+  (assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <integer>)))
+
+  ; Possible value analysis should determine this can be performed without range checks
+  (define ranged-int (if (dynamic-true) #x41 #x55))
+  (assert-equal #\x41 (integer->char ranged-int))))
 
 (define-test "(integer->char) with negative code point fails" (expect-error range-error?
   (integer->char -1)))

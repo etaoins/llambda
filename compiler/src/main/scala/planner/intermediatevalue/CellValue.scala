@@ -136,7 +136,7 @@ class CellValue(
         unboxedTemp
       }
       else {
-        AssertIntInRange(unboxedTemp, vt.Int64, intType, evidenceOpt=Some(boxedInt))
+        AssertIntInRange(unboxedTemp, vt.Int64, intType, evidenceOpt=Some(boxedInt))()
 
         // Convert to the right width
         val convTemp = ps.Temp(intType)

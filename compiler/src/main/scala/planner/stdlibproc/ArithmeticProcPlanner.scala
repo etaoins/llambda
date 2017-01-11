@@ -118,7 +118,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
 
           inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
 
-          TypedOperand(new iv.NativeIntegerValue(resultTemp, vt.Int64), KnownInt)
+          TypedOperand(new iv.NativeIntegerValue(resultTemp, vt.Int64)(), KnownInt)
         }
         else {
           // At least one is a double
@@ -224,21 +224,25 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
         val resultValue = staticCalc(constantNumerVal, constantDenomVal)
         Some(iv.ConstantIntegerValue(resultValue.toLong))
 
-      // We need a known denominator so we can ensure it won't cause divide-by-zero or overflow. These will be handled
-      // properly by the runtime
-      case ((numerLoc, dynamicNumer),
-            (_, constantDenom @ iv.ConstantIntegerValue(constantDenomVal)))
-          if (constantDenomVal != 0) && (constantDenomVal != -1) =>
-        val numerTemp = plan.withContextLocation(numerLoc) {
-          dynamicNumer.toTempValue(vt.Int64)
+      case ((numerLoc, dynamicNumer), (_, knownDenom: iv.KnownInteger)) =>
+        val possibleDenomValues = knownDenom.possibleValues
+
+        if (possibleDenomValues.contains(0) || possibleDenomValues.contains(-1)) {
+          // This could cause a divide-by-zero or overflow at runtime. Punt to the runtime implementation.
+          None
         }
+        else {
+          val numerTemp = plan.withContextLocation(numerLoc) {
+            dynamicNumer.toTempValue(vt.Int64)
+          }
 
-        val denomTemp = constantDenom.toTempValue(vt.Int64)
+          val denomTemp = knownDenom.toTempValue(vt.Int64)
 
-        val resultTemp = ps.Temp(vt.Int64)
-        plan.steps += instr(resultTemp, numerTemp, denomTemp)
+          val resultTemp = ps.Temp(vt.Int64)
+          plan.steps += instr(resultTemp, numerTemp, denomTemp)
 
-        Some(new iv.NativeIntegerValue(resultTemp, vt.Int64))
+          Some(new iv.NativeIntegerValue(resultTemp, vt.Int64)())
+        }
 
       case _ =>
         None

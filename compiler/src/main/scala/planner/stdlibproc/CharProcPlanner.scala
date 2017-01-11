@@ -7,10 +7,12 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 import llambda.compiler.ast
+import llambda.compiler.{Interval, IntervalSet}
 import llambda.compiler.RangeException
 
 object CharProcPlanner extends StdlibProcPlanner {
   private type CharComparator = (Int, Int) => Boolean
+  private val charValueInterval = Interval(ast.Char.firstCodePoint, ast.Char.lastCodePoint)
 
   private def compareArgList(
       compareCond: ps.CompareCond,
@@ -83,7 +85,7 @@ object CharProcPlanner extends StdlibProcPlanner {
         charValue.toTempValue(vt.UnicodeChar)
       }
 
-      Some(new iv.NativeIntegerValue(int32Temp, vt.Int32))
+      Some(new iv.NativeIntegerValue(int32Temp, vt.Int32)(IntervalSet(charValueInterval)))
 
     case ("integer->char", List((intLocated, iv.ConstantIntegerValue(constantIntVal)))) =>
       if ((constantIntVal < ast.Char.firstCodePoint) || (constantIntVal > ast.Char.lastCodePoint)) {
@@ -91,6 +93,17 @@ object CharProcPlanner extends StdlibProcPlanner {
       }
 
       Some(iv.ConstantCharValue(constantIntVal.toInt))
+
+    case ("integer->char", List((intLocated, knownIntVal: iv.KnownInteger))) =>
+      val possibleIntValues = knownIntVal.possibleValues
+
+      if (possibleIntValues.enclosingInterval.get.subsetOf(charValueInterval)) {
+        val int32Temp = knownIntVal.toTempValue(vt.Int32)
+        Some(new iv.NativeCharValue(int32Temp))
+      }
+      else {
+        None
+      }
 
     case ("char=?", args) if args.length >= 2 =>
       compareArgList(ps.CompareCond.Equal, _ == _, args.map(_._2))

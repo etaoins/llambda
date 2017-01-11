@@ -20,6 +20,29 @@ object PlanValuePhi {
       rightValue: iv.IntermediateValue
   ): Result =
     (leftValue, rightValue) match {
+      case (leftInteger: iv.KnownInteger, rightInteger: iv.KnownInteger) =>
+        val targetType = if (leftInteger.nativeType == rightInteger.nativeType) {
+          leftInteger.nativeType
+        }
+        else {
+          vt.Int64
+        }
+
+        val leftTempValue = leftInteger.toTempValue(targetType)(leftPlan)
+        val rightTempValue = rightInteger.toTempValue(targetType)(rightPlan)
+
+        val phiResultTemp = ps.Temp(targetType)
+        val phiPossibleValues = leftInteger.possibleValues ++ rightInteger.possibleValues
+
+        val resultValue = new iv.NativeIntegerValue(phiResultTemp, targetType)(phiPossibleValues)
+
+        Result(
+          leftTempValue=leftTempValue,
+          rightTempValue=rightTempValue,
+          resultTemp=phiResultTemp,
+          resultValue=resultValue
+        )
+
       case (leftUnboxed: iv.UnboxedValue, rightUnboxed: iv.UnboxedValue)
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType

@@ -5,7 +5,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, BoxedValue, AssertIntInRange}
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{RuntimeErrorMessage, IntervalSet}
 
 sealed abstract class NativeValue(
     val nativeType: vt.NativeType,
@@ -47,10 +47,16 @@ class NativePredicateValue(tempValue: ps.TempValue) extends NativeValue(vt.Predi
   }
 }
 
-class NativeIntegerValue(tempValue: ps.TempValue, nativeType: vt.IntType) extends NativeValue(nativeType, ct.IntegerCell, tempValue) {
+class NativeIntegerValue(
+    tempValue: ps.TempValue,
+    override val nativeType: vt.IntType
+)
+(
+    val possibleValues: IntervalSet = IntervalSet(nativeType.valueInterval)
+) extends NativeValue(nativeType, ct.IntegerCell, tempValue) with KnownInteger {
   override def planCastToNativeTempValue(targetType: vt.NativeType)(implicit plan: PlanWriter): ps.TempValue = targetType match {
     case intType: vt.IntType =>
-      AssertIntInRange(tempValue, nativeType, intType)
+      AssertIntInRange(tempValue, nativeType, intType)(possibleValues)
 
       val convTemp = ps.Temp(nativeType)
       plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, intType.signed)

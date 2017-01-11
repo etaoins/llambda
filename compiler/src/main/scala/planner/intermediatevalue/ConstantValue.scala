@@ -6,7 +6,8 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, BoxedValue}
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{RuntimeErrorMessage, IntervalSet}
+
 
 sealed abstract class ConstantValue(val cellType: ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
   val schemeType: vt.SchemeType = vt.SchemeTypeAtom(cellType)
@@ -41,7 +42,7 @@ trait ConstantNumberValue extends ConstantValue with UnboxedValue {
   def doubleValue: Double
 }
 
-case class ConstantIntegerValue(value: Long) extends TrivialConstantValue(ct.IntegerCell, value, ps.CreateIntegerCell.apply) with ConstantNumberValue {
+case class ConstantIntegerValue(value: Long) extends TrivialConstantValue(ct.IntegerCell, value, ps.CreateIntegerCell.apply) with ConstantNumberValue with KnownInteger {
   val typeDescription = "constant integer"
   val nativeType = vt.Int64
 
@@ -65,6 +66,8 @@ case class ConstantIntegerValue(value: Long) extends TrivialConstantValue(ct.Int
 
   def doubleValue: Double =
     value.toDouble
+
+  val possibleValues: IntervalSet = IntervalSet(value)
 }
 
 case class ConstantFlonumValue(value: Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) with ConstantNumberValue {
