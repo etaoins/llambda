@@ -3,6 +3,16 @@
   (assert-true (eqv? #f #f))
   (assert-false (eqv? #f #t))))
 
+(define-test "dynamic boolean (eqv?)" (expect-success
+  ; This is a native predicate value
+  (define native-false (input-port? #f))
+
+  (assert-false (eqv? #t native-false))
+  (assert-false (eqv? native-false #t))
+  (assert-true  (eqv? #f native-false))
+  (assert-true  (eqv? native-false #f))
+  (assert-true  (eqv? native-false native-false))))
+
 (define-test "static symbol (eqv?)" (expect-static-success
   (assert-true (eqv? 'test 'test))
   (assert-false (eqv? 'one 'two))

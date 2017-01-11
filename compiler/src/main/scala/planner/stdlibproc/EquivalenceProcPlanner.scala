@@ -135,38 +135,42 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
     val ptrCompareUnion = vt.UnionType(ptrCompareTypes)
 
     val resultValue = if (plan.config.optimise) {
-      if ((vt.SatisfiesType(ptrCompareUnion, val1.schemeType) == Some(true)) ||
-          (vt.SatisfiesType(ptrCompareUnion, val2.schemeType) == Some(true))) {
-        // We can fast path this; the possible types for either value consist entirely of fast path types
-        directCompareAsType(vt.AnySchemeType, val1, val2)
-      }
-      else if (val1.hasDefiniteType(vt.IntegerType) &&
-               val2.hasDefiniteType(vt.IntegerType)) {
-        directCompareAsType(vt.Int64, val1, val2)
-      }
-      else if (val1.hasDefiniteType(vt.CharType) &&
-               val2.hasDefiniteType(vt.CharType)) {
-        directCompareAsType(vt.UnicodeChar, val1, val2)
-      }
-      else if (val1.hasDefiniteType(vt.SymbolType) &&
-               val2.hasDefiniteType(vt.SymbolType)) {
-        val resultPred = PlanSymbolEquality.compareDynamic(val1, val2)
+      (val1, val2) match {
+        case (pred: iv.NativePredicateValue, iv.ConstantBooleanValue(true)) =>
+          pred
 
-        new iv.NativePredicateValue(resultPred)
-      }
-      else {
-        // Due to NaN we can only do double comparisons if one value is known
-        (val1, val2) match {
-          case (iv.ConstantFlonumValue(staticVal1), dynamic2) if dynamic2.hasDefiniteType(vt.FlonumType) =>
-            flonumCompare(staticVal1, dynamic2)
+        case (iv.ConstantBooleanValue(true), pred: iv.NativePredicateValue) =>
+          pred
 
-          case (dynamic1, iv.ConstantFlonumValue(staticVal2)) if dynamic1.hasDefiniteType(vt.FlonumType) =>
-            flonumCompare(staticVal2, dynamic1)
+        case (_: iv.NativePredicateValue, _: iv.NativePredicateValue) |
+             (_: iv.ConstantBooleanValue, _: iv.NativePredicateValue) |
+             (_: iv.NativePredicateValue, _: iv.ConstantBooleanValue) =>
+          directCompareAsType(vt.Predicate, val1, val2)
 
-          case _ =>
-            // We need to invoke the runtime
-            invokeCompare(runtimeCompareSymbol, val1, val2)
-        }
+        case _ if (vt.SatisfiesType(ptrCompareUnion, val1.schemeType) == Some(true)) ||
+                  (vt.SatisfiesType(ptrCompareUnion, val2.schemeType) == Some(true)) =>
+          // We can fast path this; the possible types for either value consist entirely of fast path types
+          directCompareAsType(vt.AnySchemeType, val1, val2)
+
+        case _ if val1.hasDefiniteType(vt.IntegerType) && val2.hasDefiniteType(vt.IntegerType) =>
+          directCompareAsType(vt.Int64, val1, val2)
+
+        case _ if val1.hasDefiniteType(vt.CharType) && val2.hasDefiniteType(vt.CharType) =>
+          directCompareAsType(vt.UnicodeChar, val1, val2)
+
+        case _ if (val1.hasDefiniteType(vt.SymbolType) && val2.hasDefiniteType(vt.SymbolType)) =>
+          val resultPred = PlanSymbolEquality.compareDynamic(val1, val2)
+          new iv.NativePredicateValue(resultPred)
+
+        case (iv.ConstantFlonumValue(staticVal1), dynamic2) if dynamic2.hasDefiniteType(vt.FlonumType) =>
+          flonumCompare(staticVal1, dynamic2)
+
+        case (dynamic1, iv.ConstantFlonumValue(staticVal2)) if dynamic1.hasDefiniteType(vt.FlonumType) =>
+          flonumCompare(staticVal2, dynamic1)
+
+        case _ =>
+          // We need to invoke the runtime
+          invokeCompare(runtimeCompareSymbol, val1, val2)
       }
     }
     else {
