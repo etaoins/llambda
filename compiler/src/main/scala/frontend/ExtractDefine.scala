@@ -7,7 +7,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler._
 import llambda.compiler.frontend.syntax.ParseSyntaxDefine
 
-/** Target for a value in a multiple value define
+/** Target for a value in a define
   *
   * @param  definedSymbol          Symbol being defined
   * @param  providedTypeOpt        Optional type annotation for the defined variable

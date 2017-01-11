@@ -272,7 +272,6 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
     case ("truncate/", List(numerator, denominator)) =>
-      // Handle this here because it produces multiple values
       val inlinePlan = plan.forkPlan()
 
       val quotientValueOpt = performIntegerDivide(numerator, denominator)
