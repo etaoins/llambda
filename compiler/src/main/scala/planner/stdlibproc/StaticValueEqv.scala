@@ -5,6 +5,8 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 private[stdlibproc] object StaticValueEqv {
+  type EqvFunction = (iv.IntermediateValue, iv.IntermediateValue) => Option[Boolean]
+
   private def elementsAreEqual(elems1: Seq[iv.IntermediateValue], elems2: Seq[iv.IntermediateValue]): Option[Boolean] = {
     if (elems1.length != elems2.length) {
       // Nope
@@ -28,8 +30,6 @@ private[stdlibproc] object StaticValueEqv {
       None
     }
   }
-
-  type EqvFunction = (iv.IntermediateValue, iv.IntermediateValue) => Option[Boolean]
 
   def valuesAreEqv(val1: iv.IntermediateValue, val2: iv.IntermediateValue): Option[Boolean] = {
     if (val1 eq val2) {
