@@ -12,6 +12,9 @@ import llambda.compiler.{RuntimeErrorMessage, IntervalSet}
 sealed abstract class ConstantValue(val cellType: ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
   val schemeType: vt.SchemeType = vt.SchemeTypeAtom(cellType)
 
+  def isEqv(other: ConstantValue): Boolean =
+    (this == other)
+
   def preferredRepresentation: vt.ValueType =
     schemeType
 
@@ -89,6 +92,15 @@ case class ConstantFlonumValue(value: Double) extends TrivialConstantValue(ct.Fl
 
   def doubleValue: Double =
     value
+
+  override def isEqv(other: ConstantValue) = other match {
+    case ConstantFlonumValue(otherValue) =>
+      // This is needed to handle NaN
+      (this.value equals otherValue)
+
+    case _ =>
+      false
+  }
 }
 
 case class ConstantCharValue(value: Int) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) with UnboxedValue {

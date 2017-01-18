@@ -130,17 +130,11 @@ object PlanCond {
           val planPhiResult = PlanValuePhi(trueWriter, trueValue, falseWriter, falseValue)
           val resultValue = planPhiResult.resultValue
 
-          val valuesPhi = ps.ValuePhi(
-            planPhiResult.resultTemp,
-            planPhiResult.leftTempValue,
-            planPhiResult.rightTempValue
-          )
-
           plan.steps += ps.CondBranch(
             truthyPred,
             trueWriter.steps.toList,
             falseWriter.steps.toList,
-            List(valuesPhi)
+            planPhiResult.planStepPhis
           )
 
           val constrainedState = constrainIntermediateValues(testResult.state)(

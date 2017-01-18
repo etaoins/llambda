@@ -6,12 +6,24 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 object PlanValuePhi {
-  case class Result(
+  trait Result {
+    val resultValue: iv.IntermediateValue
+    def planStepPhis: List[ps.ValuePhi]
+  }
+
+  private class DynamicResult(
     leftTempValue: ps.TempValue,
     rightTempValue: ps.TempValue,
     resultTemp: ps.TempValue,
-    resultValue: iv.IntermediateValue
-  )
+    val resultValue: iv.IntermediateValue
+  ) extends Result {
+    def planStepPhis: List[ps.ValuePhi] =
+      List(ps.ValuePhi(resultTemp, leftTempValue, rightTempValue))
+  }
+
+  private class StaticResult(val resultValue: iv.IntermediateValue) extends Result {
+    def planStepPhis: List[ps.ValuePhi] = Nil
+  }
 
   def apply(
       leftPlan: PlanWriter,
@@ -20,6 +32,9 @@ object PlanValuePhi {
       rightValue: iv.IntermediateValue
   ): Result =
     (leftValue, rightValue) match {
+      case (leftValue: iv.ConstantValue, rightValue: iv.ConstantValue) if leftValue.isEqv(rightValue) =>
+        new StaticResult(leftValue)
+
       case (leftInteger: iv.KnownInteger, rightInteger: iv.KnownInteger) =>
         val targetType = if (leftInteger.nativeType == rightInteger.nativeType) {
           leftInteger.nativeType
@@ -36,7 +51,7 @@ object PlanValuePhi {
 
         val resultValue = new iv.NativeIntegerValue(phiResultTemp, targetType)(phiPossibleValues)
 
-        Result(
+        new DynamicResult(
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
@@ -54,7 +69,7 @@ object PlanValuePhi {
         val resultValue = TempValueToIntermediate(commonType, phiResultTemp)
 
         // Our types exactly match - no conversion needed!
-        Result(
+        new DynamicResult(
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
@@ -74,7 +89,7 @@ object PlanValuePhi {
 
         val boxedValue = BoxedValue(phiSchemeType.cellType, phiResultTemp)
 
-        Result(
+        new DynamicResult(
           leftTempValue=leftTempValue,
           rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,

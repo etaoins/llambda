@@ -126,13 +126,11 @@ private[planner] object PlanCaseLambda {
         // Now phi them together
         val phiResult = PlanValuePhi(truePlan, trueValues, falsePlan, falseValues)
 
-        val valuePhis = List(ps.ValuePhi(phiResult.resultTemp, phiResult.leftTempValue, phiResult.rightTempValue))
-
         entryPlan.steps += ps.CondBranch(
           test=matchesPred,
           trueSteps=truePlan.steps.toList,
           falseSteps=falsePlan.steps.toList,
-          valuePhis=valuePhis
+          valuePhis=phiResult.planStepPhis
         )
 
         phiResult.resultValue

@@ -116,10 +116,7 @@ object PlanLambdaPolymorph {
         rightValue=iv.EmptyListValue
       )
 
-      val valuePhis = List(
-        ps.ValuePhi(valuePhiResult.resultTemp, valuePhiResult.leftTempValue, valuePhiResult.rightTempValue),
-        ps.ValuePhi(listHeadPhiResult.resultTemp, listHeadPhiResult.leftTempValue, listHeadPhiResult.rightTempValue)
-      )
+      val valuePhis = valuePhiResult.planStepPhis ++ listHeadPhiResult.planStepPhis
 
       plan.steps += ps.CondBranch(isPairPred, providedValuePlan.steps.toList, defaultValuePlan.steps.toList, valuePhis)
 

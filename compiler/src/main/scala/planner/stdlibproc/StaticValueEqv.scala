@@ -43,12 +43,8 @@ private[stdlibproc] object StaticValueEqv {
     }
 
     (val1, val2) match {
-      case (iv.ConstantFlonumValue(val1), iv.ConstantFlonumValue(val2)) =>
-        // This needs to be special to deal with NaN
-        Some(val1.equals(val2))
-
       case (constVal1: iv.ConstantValue, constVal2: iv.ConstantValue) =>
-        Some(constVal1 == constVal2)
+        Some(constVal1.isEqv(constVal2))
 
       case _ =>
         None
