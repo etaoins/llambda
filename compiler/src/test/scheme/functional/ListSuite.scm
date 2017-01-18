@@ -88,11 +88,31 @@
 (define-test "(append) with non-terminal improper list fails" (expect-error type-error?
   (append '(1 2) '(3 . 4) '(5 6))))
 
-(define-test "(memv)" (expect-static-success
+(define-test "static (memv)" (expect-static-success
   (assert-equal '(a b c) (memv 'a '(a b c)))
   (assert-equal '(b c) (memv 'b '(a b c)))
   (assert-equal '(101 102) (memv 101 '(100 101 102)))
   (assert-false (memv 'a '(b c d)))))
+
+(define-test "dynamic (memv)" (expect-success
+  (import (llambda typed))
+
+  (define dynamic-float-1 (typed-dynamic 1.0 <flonum>))
+  (define dynamic-int-1 (typed-dynamic 1 <integer>))
+  (define dynamic-list (typed-dynamic '(1 2 3) (Listof <integer>)))
+
+  ; Make sure the optimiser isn't lazy and returns the known matching sublist - it needs to make sure there isn't an
+  ; earlier list
+  (assert-equal '(1 1 2 3) (memv 1 (list dynamic-int-1 1 2 3)))
+
+  (assert-equal '(1 1 2 3) (memv 1 (cons 1 dynamic-list)))
+  (assert-equal '(1 2 3) (memv 1 (cons 1.0 dynamic-list)))
+
+  (assert-equal '(1 2 3) (memv 1 (list dynamic-float-1 1 2 3)))
+  (assert-equal '(1 2 3) (memv 1 dynamic-list))
+  (assert-equal '(1 2 3) (memv dynamic-int-1 dynamic-list))
+  (assert-equal #f (memv 1.0 dynamic-list))
+  (assert-equal #f (memv dynamic-float-1 dynamic-list))))
 
 (define-test "(member) is recursive" (expect-static-success
   (assert-equal '((a) c) (member (list 'a) '(b (a) c)))))

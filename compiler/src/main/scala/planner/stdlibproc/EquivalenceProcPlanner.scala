@@ -18,7 +18,7 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
           value=iv.ConstantBooleanValue(staticResult)
         )
       } orElse {
-        Some(DynamicValueEqv.valuesAreEqv(state)(val1, val2))
+        Some(DynamicValueEqv.valuesAreEqv(state)(val1, val2)(plan))
       }
 
     case ("equal?", List((_, val1), (_, val2))) =>
@@ -28,7 +28,7 @@ object EquivalenceProcPlanner extends StdlibProcPlanner {
           value=iv.ConstantBooleanValue(staticResult)
         )
       } orElse {
-        Some(DynamicValueEqv.valuesAreEqual(state)(val1, val2))
+        Some(DynamicValueEqv.valuesAreEqual(state)(val1, val2)(plan))
       }
 
     case _ =>

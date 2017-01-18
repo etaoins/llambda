@@ -12,33 +12,88 @@ import llambda.compiler.planner._
 import scala.annotation.tailrec
 
 object ListProcPlanner extends StdlibProcPlanner {
-  private def staticMemberSearch(
+  private case class SearchListItem(
+      value: iv.IntermediateValue,
+      sublist: iv.IntermediateValue,
+      staticMatch: Boolean
+  )
+
+  @tailrec
+  private def listToSearchItems(
       compareFunc: StaticValueEqv.EqvFunction,
       needleValue: iv.IntermediateValue,
-      listValue: iv.IntermediateValue
-  ): Option[iv.IntermediateValue] = listValue match {
+      listValue: iv.IntermediateValue,
+      acc: List[SearchListItem] = Nil
+  ): Option[List[SearchListItem]] = listValue match {
     case knownPair: iv.KnownPair =>
       compareFunc(needleValue, knownPair.car) match {
         case Some(true) =>
-          // Found it!
-          Some(knownPair)
+          // Must match; don't iterate the tail in case this list become unknown later
+          val searchItem = SearchListItem(knownPair.car, knownPair, true)
+          Some((searchItem :: acc).reverse)
 
         case Some(false) =>
-          // definitely not a match - keep looking
-          staticMemberSearch(compareFunc, needleValue, knownPair.cdr)
+          // Must not match; don't bother tracking this
+          listToSearchItems(compareFunc, needleValue, knownPair.cdr, acc)
 
         case None =>
-          // Can't statically determine this
-          None
+          // This requires a dynamic check
+          val searchItem = SearchListItem(knownPair.car, knownPair, false)
+          listToSearchItems(compareFunc, needleValue, knownPair.cdr, searchItem :: acc)
       }
 
     case iv.EmptyListValue =>
-      // Doesn't exist in the list
-      Some(iv.ConstantBooleanValue(false))
+      Some(acc.reverse)
 
     case _ =>
-      // Not a constant list
       None
+  }
+
+  private def planListSearch(state: PlannerState)(
+      dynamicCompareFunc: DynamicValueEqv.EqvFunction,
+      needleValue: iv.IntermediateValue,
+      searchItems: List[SearchListItem]
+  )(implicit plan: PlanWriter): iv.IntermediateValue = searchItems match {
+    case SearchListItem(_, sublist, true) :: _ =>
+      // Known match
+      sublist
+
+    case SearchListItem(haystackValue, sublist, false) :: tail =>
+      val matchesResult = dynamicCompareFunc(state)(haystackValue, needleValue)(plan)
+      val matchesPred = matchesResult.value.toTempValue(vt.Predicate)
+
+      val truePlan = plan.forkPlan()
+      val falsePlan = plan.forkPlan()
+
+      val falseValue = planListSearch(state)(dynamicCompareFunc, needleValue, tail)(falsePlan)
+
+      val phiResult = PlanValuePhi(truePlan, sublist, falsePlan, falseValue)
+      val valuePhi = ps.ValuePhi(phiResult.resultTemp, phiResult.leftTempValue, phiResult.rightTempValue)
+
+      plan.steps += ps.CondBranch(matchesPred, truePlan.steps.toList, falsePlan.steps.toList, List(valuePhi))
+
+      phiResult.resultValue
+
+    case Nil =>
+      iv.ConstantBooleanValue(false)
+  }
+
+  private def memberSearch(state: PlannerState)(
+      staticCompareFunc: StaticValueEqv.EqvFunction,
+      dynamicCompareFunc: DynamicValueEqv.EqvFunction,
+      needleValue: iv.IntermediateValue,
+      listValue: iv.IntermediateValue
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
+    val searchItems = listToSearchItems(staticCompareFunc, needleValue, listValue).getOrElse {
+      return None
+    }
+
+    if (searchItems.length > 4) {
+      // Too complex; punt to the runtime
+      return None
+    }
+
+    Some(planListSearch(state)(dynamicCompareFunc, needleValue, searchItems))
   }
 
   @tailrec
@@ -91,10 +146,10 @@ object ListProcPlanner extends StdlibProcPlanner {
       Some(ValuesToList(headValues, terminator))
 
     case ("memv", List((_, needleValue), (_, listValue))) =>
-      staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)
+      memberSearch(initialState)(StaticValueEqv.valuesAreEqv, DynamicValueEqv.valuesAreEqv, needleValue, listValue)
 
     case ("member", List((_, needleValue), (_, listValue))) =>
-      staticMemberSearch(StaticValueEqv.valuesAreEqual, needleValue, listValue)
+      memberSearch(initialState)(StaticValueEqv.valuesAreEqual, DynamicValueEqv.valuesAreEqual, needleValue, listValue)
 
     case ("list-tail", List((_, listValue), (_, indexValue))) =>
       (listValue, indexValue) match {

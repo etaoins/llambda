@@ -10,7 +10,7 @@ import llambda.compiler.codegen.RuntimeFunctions
 
 
 private[stdlibproc] object DynamicValueEqv {
-  type EqvFunction = (PlannerState) => (iv.IntermediateValue, iv.IntermediateValue) => PlanResult
+  type EqvFunction = (PlannerState) => (iv.IntermediateValue, iv.IntermediateValue) => (PlanWriter) => PlanResult
 
   private def allSubtypes(rootType: ct.CellType): Set[ct.CellType] =
     rootType.directSubtypes ++ rootType.directSubtypes.flatMap(allSubtypes)
@@ -190,12 +190,12 @@ private[stdlibproc] object DynamicValueEqv {
   def valuesAreEqv(state: PlannerState)(
       val1: iv.IntermediateValue,
       val2: iv.IntermediateValue
-  )(implicit plan: PlanWriter): PlanResult =
-    planEquivalenceProc(state)(ptrCompareEqvTypes, RuntimeFunctions.isEqvSymbol, val1, val2)
+  )(plan: PlanWriter): PlanResult =
+    planEquivalenceProc(state)(ptrCompareEqvTypes, RuntimeFunctions.isEqvSymbol, val1, val2)(plan)
 
   def valuesAreEqual(state: PlannerState)(
       val1: iv.IntermediateValue,
       val2: iv.IntermediateValue
-  )(implicit plan: PlanWriter): PlanResult =
-    planEquivalenceProc(state)(ptrCompareEqualsTypes, RuntimeFunctions.isEqualSymbol, val1, val2)
+  )(plan: PlanWriter): PlanResult =
+    planEquivalenceProc(state)(ptrCompareEqualsTypes, RuntimeFunctions.isEqualSymbol, val1, val2)(plan)
 }
