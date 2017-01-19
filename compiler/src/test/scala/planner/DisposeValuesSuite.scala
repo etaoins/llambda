@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, RuntimeErrorMessage, ErrorCategory}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
@@ -26,6 +26,12 @@ class DisposeValuesSuite extends FunSuite {
   val selfTemp = namedTemp(vt.TopProcedureType, "self")
   val fixedArgTemp = namedTemp(vt.IntegerType, "fixedArg")
   val restArgTemp = namedTemp(vt.ListElementType, "restArg")
+
+  val runtimeErrorMessage = RuntimeErrorMessage(
+    category=ErrorCategory.Arity,
+    name="name",
+    text="text"
+  )
 
   def functionForSteps(steps: List[ps.Step]): PlannedFunction =
     PlannedFunction(
@@ -132,24 +138,32 @@ class DisposeValuesSuite extends FunSuite {
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
 
-  test("condition with unused result value discards result immediately after") {
+  test("condition with unused result value discards phi") {
     val condResult = namedTemp(vt.Int64, "condResult")
 
     val valuePhi = ps.ValuePhi(condResult, fixedArgTemp, fixedArgTemp)
+    val trueSteps = List(
+      ps.AssertPredicate(restArgTemp, runtimeErrorMessage)
+    )
+
     val testSteps = List(
-      ps.CondBranch(restArgTemp, Nil, Nil, List(valuePhi))
+      ps.CondBranch(restArgTemp, trueSteps, Nil, List(valuePhi))
     )
 
     val testFunction = functionForSteps(testSteps)
 
-    val expectedBranchSteps = List(
+    val expectedTrueSteps = List(
+      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
+      ps.DisposeValues(Set(restArgTemp))
+    )
+
+    val expectedFalseSteps = List(
       ps.DisposeValues(Set(restArgTemp))
     )
 
     val expectedSteps = List(
-      ps.DisposeValues(Set(selfTemp)),
-      ps.CondBranch(restArgTemp, expectedBranchSteps, expectedBranchSteps, List(valuePhi)),
-      ps.DisposeValues(Set(condResult, fixedArgTemp))
+      ps.DisposeValues(Set(selfTemp, fixedArgTemp)),
+      ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, Nil)
     )
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
@@ -167,7 +181,8 @@ class DisposeValuesSuite extends FunSuite {
 
     val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
     val testSteps = List(
-      ps.CondBranch(restArgTemp, trueSteps, Nil, List(valuePhi))
+      ps.CondBranch(restArgTemp, trueSteps, Nil, List(valuePhi)),
+      ps.Return(Some(condResult))
     )
 
     val testFunction = functionForSteps(testSteps)
@@ -185,7 +200,9 @@ class DisposeValuesSuite extends FunSuite {
     val expectedSteps = List(
       ps.DisposeValues(Set(selfTemp)),
       ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
-      ps.DisposeValues(Set(condResult, fixedArgTemp))
+      ps.DisposeValues(Set(fixedArgTemp)),
+      ps.Return(Some(condResult)),
+      ps.DisposeValues(Set(condResult))
     )
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
@@ -213,7 +230,8 @@ class DisposeValuesSuite extends FunSuite {
     val valuePhi = ps.ValuePhi(condResult, trueResult, falseResult)
     val testSteps = List(
       ps.CreateIntegerCell(outerValue, 50),
-      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
+      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi)),
+      ps.Return(Some(condResult))
     )
 
     val testFunction = functionForSteps(testSteps)
@@ -237,7 +255,65 @@ class DisposeValuesSuite extends FunSuite {
       ps.DisposeValues(Set(selfTemp, fixedArgTemp)),
       ps.CreateIntegerCell(outerValue, 50),
       ps.CondBranch(restArgTemp, expectedTrueSteps, expectedFalseSteps, List(valuePhi)),
+      ps.Return(Some(condResult)),
       ps.DisposeValues(Set(condResult))
+    )
+
+    assert(DisposeValues(testFunction).steps === expectedSteps)
+  }
+
+  test("unused condition is completely removed") {
+    val condResult = namedTemp(vt.IntegerType, "condResult")
+
+    val trueResult = namedTemp(vt.IntegerType, "trueResult")
+    val trueSteps = List(
+      ps.CreateIntegerCell(trueResult, 25)
+    )
+
+    val falseSteps = Nil
+
+    val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
+    val testSteps = List(
+      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
+    )
+
+    val testFunction = functionForSteps(testSteps)
+
+    val expectedSteps = List(
+      ps.DisposeValues(Set(selfTemp, restArgTemp, fixedArgTemp))
+    )
+
+    assert(DisposeValues(testFunction).steps === expectedSteps)
+  }
+
+  test("condition with identical branches is simplified") {
+    val condResult = namedTemp(vt.IntegerType, "condResult")
+
+    val trueResult = namedTemp(vt.IntegerType, "trueResult")
+    val trueSteps = List(
+      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
+      ps.CreateIntegerCell(trueResult, 25),
+      ps.AssertPredicate(fixedArgTemp, runtimeErrorMessage)
+    )
+
+    val falseSteps = List(
+      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
+      ps.AssertPredicate(fixedArgTemp, runtimeErrorMessage)
+    )
+
+    val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
+    val testSteps = List(
+      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
+    )
+
+    val testFunction = functionForSteps(testSteps)
+
+    val expectedSteps = List(
+      ps.DisposeValues(Set(selfTemp)),
+      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
+      ps.DisposeValues(Set(restArgTemp)),
+      ps.AssertPredicate(fixedArgTemp, runtimeErrorMessage),
+      ps.DisposeValues(Set(fixedArgTemp))
     )
 
     assert(DisposeValues(testFunction).steps === expectedSteps)

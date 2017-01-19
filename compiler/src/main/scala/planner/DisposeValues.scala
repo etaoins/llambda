@@ -42,27 +42,23 @@ object DisposeValues {
       acc: List[ps.Step]
   ): List[ps.Step] = reverseSteps match {
     case (condBranch: ps.CondBranch) :: reverseTail =>
+      // Remove any value phis where the result is unused
+      val usedValuePhis = condBranch.valuePhis.filter { valuePhi =>
+        usedValues.contains(valuePhi.result)
+      }
+
+      val dephiedCondBranch = condBranch.copy(valuePhis=usedValuePhis).assignLocationFrom(condBranch)
+
       // Build a set of output values generated inside the branch. This is used to distinguish input values that come
       // from before the branch (and therefore need to be disposed) versus input values that come from within the branch
-      val innerOutputValues = innerOutputValuesForStep(condBranch)
+      val innerOutputValues = innerOutputValuesForStep(dephiedCondBranch)
 
       // Determine which input values come from outside the branch
-      val externalInputValues = condBranch.inputValues -- innerOutputValues
+      val externalInputValues = dephiedCondBranch.inputValues -- innerOutputValues
       val unusedExternalInputValues = externalInputValues.filter(!usedValues.contains(_))
 
-      // Step to dispose the result outputs if they're unused
-      // This will be placed after the step itself
-      val unusedOutputValues = condBranch.outputValues.filter(!usedValues.contains(_))
-
-      // Which branch results are from outside the branch and are no longer used?
-      val unusedBranchResults = condBranch.innerBranches.flatMap(_._2).filter({ branchResult =>
-        !usedValues.contains(branchResult) && !innerOutputValues.contains(branchResult)
-      }).toSet
-
-      val disposeSteps = disposeValuesToSteps(unusedOutputValues ++ unusedBranchResults)
-
       // Recurse down the branches
-      val newStep = condBranch.mapInnerBranches { (branchSteps, outputValues) =>
+      val newStep = dephiedCondBranch.mapInnerBranches { (branchSteps, outputValues) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
         val nestedInputValues = unusedExternalInputValues
@@ -71,10 +67,29 @@ object DisposeValues {
         (discardUnusedValues(nestedInputValues, branchSteps.reverse, nestedUsedValues, Nil), outputValues)
       }
 
-      val newUsedValues = externalInputValues ++ usedValues
+      newStep match {
+        case ps.CondBranch(_, trueSteps, falseSteps, Nil) if trueSteps == falseSteps =>
+          // This CondBranch can be simplified away. Use the original steps from an arbitrary branch so we don't need to
+          // remove the DisposeValues steps.
+          //
+          // This is arguably out-of-scope for the DisposeValues pass, but:
+          // - A CondBranch may only become identical after disposing values
+          // - This allows the branch condition to become unused and possibly disposed
+          discardUnusedValues(branchInputValues, condBranch.trueSteps.reverse ++ reverseTail, usedValues, acc)
 
-      val newAcc = newStep :: (disposeSteps ++ acc)
-      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+        case _ =>
+          val newUsedValues = externalInputValues ++ usedValues
+
+          // Dispose of any values used by phis that come from outside the branches and are no longer used
+          val externalPhiInputValues = usedValuePhis.flatMap { usedPhi =>
+            List(usedPhi.trueValue, usedPhi.falseValue)
+          }.toSet & externalInputValues
+
+          val disposeList = disposeValuesToSteps(externalPhiInputValues -- usedValues)
+          val newAcc = newStep :: (disposeList ++ acc)
+
+          discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+      }
 
     case discardableStep :: reverseTail
         if discardableStep.discardable && (usedValues & discardableStep.outputValues).isEmpty =>
