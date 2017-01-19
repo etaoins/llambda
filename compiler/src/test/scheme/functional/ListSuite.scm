@@ -112,7 +112,11 @@
   (assert-equal '(1 2 3) (memv 1 dynamic-list))
   (assert-equal '(1 2 3) (memv dynamic-int-1 dynamic-list))
   (assert-equal #f (memv 1.0 dynamic-list))
-  (assert-equal #f (memv dynamic-float-1 dynamic-list))))
+  (assert-equal #f (memv dynamic-float-1 dynamic-list))
+
+  (define dynamic-symbol (typed-dynamic 'green (U 'red 'green 'blue)))
+
+  (assert-equal '(green blue) (memv dynamic-symbol '(red green blue)))))
 
 (define-test "(member) is recursive" (expect-static-success
   (assert-equal '((a) c) (member (list 'a) '(b (a) c)))))

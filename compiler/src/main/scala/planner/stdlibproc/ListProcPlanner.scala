@@ -13,7 +13,8 @@ import scala.annotation.tailrec
 
 object ListProcPlanner extends StdlibProcPlanner {
   private case class SearchListItem(
-      value: iv.IntermediateValue,
+      needleValue: iv.IntermediateValue,
+      haystackValue: iv.IntermediateValue,
       sublist: iv.IntermediateValue,
       staticMatch: Boolean
   )
@@ -29,7 +30,7 @@ object ListProcPlanner extends StdlibProcPlanner {
       compareFunc(needleValue, knownPair.car) match {
         case Some(true) =>
           // Must match; don't iterate the tail in case this list become unknown later
-          val searchItem = SearchListItem(knownPair.car, knownPair, true)
+          val searchItem = SearchListItem(needleValue, knownPair.car, knownPair, true)
           Some((searchItem :: acc).reverse)
 
         case Some(false) =>
@@ -38,8 +39,18 @@ object ListProcPlanner extends StdlibProcPlanner {
 
         case None =>
           // This requires a dynamic check
-          val searchItem = SearchListItem(knownPair.car, knownPair, false)
-          listToSearchItems(compareFunc, needleValue, knownPair.cdr, searchItem :: acc)
+          val searchItem = SearchListItem(needleValue, knownPair.car, knownPair, false)
+
+          // Constrain the type of the needle for the rest of the comparisons
+          val newNeedleValue = knownPair.car.schemeType match {
+            case literalValueType: vt.LiteralValueType =>
+              needleValue.withSchemeType(needleValue.schemeType - literalValueType)
+
+            case _ =>
+              needleValue
+          }
+
+          listToSearchItems(compareFunc, newNeedleValue, knownPair.cdr, searchItem :: acc)
       }
 
     case iv.EmptyListValue =>
@@ -51,21 +62,20 @@ object ListProcPlanner extends StdlibProcPlanner {
 
   private def planListSearch(state: PlannerState)(
       dynamicCompareFunc: DynamicValueEqv.EqvFunction,
-      needleValue: iv.IntermediateValue,
       searchItems: List[SearchListItem]
   )(implicit plan: PlanWriter): iv.IntermediateValue = searchItems match {
-    case SearchListItem(_, sublist, true) :: _ =>
+    case SearchListItem(_, _, sublist, true) :: _ =>
       // Known match
       sublist
 
-    case SearchListItem(haystackValue, sublist, false) :: tail =>
+    case SearchListItem(needleValue, haystackValue, sublist, false) :: tail =>
       val matchesResult = dynamicCompareFunc(state)(haystackValue, needleValue)(plan)
       val matchesPred = matchesResult.value.toTempValue(vt.Predicate)
 
       val truePlan = plan.forkPlan()
       val falsePlan = plan.forkPlan()
 
-      val falseValue = planListSearch(state)(dynamicCompareFunc, needleValue, tail)(falsePlan)
+      val falseValue = planListSearch(state)(dynamicCompareFunc, tail)(falsePlan)
 
       val phiResult = PlanValuePhi(truePlan, sublist, falsePlan, falseValue)
       val valuePhis = phiResult.planStepPhis
@@ -93,7 +103,7 @@ object ListProcPlanner extends StdlibProcPlanner {
       return None
     }
 
-    Some(planListSearch(state)(dynamicCompareFunc, needleValue, searchItems))
+    Some(planListSearch(state)(dynamicCompareFunc, searchItems))
   }
 
   @tailrec
