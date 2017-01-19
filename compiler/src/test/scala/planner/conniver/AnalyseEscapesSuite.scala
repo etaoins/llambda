@@ -221,17 +221,20 @@ class AnalyseEscapesSuite extends FunSuite {
     assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
   }
 
-  test("InitPair captures even if the pair itself is not captured") {
+  test("InitPair does not capture if the pair itself is not captured") {
     val unboxedTemp = ps.Temp(vt.Int64)
     val boxedTemp = ps.Temp(vt.IntegerType)
     val pairTemp = ps.Temp(vt.AnyPairType)
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
-      ps.InitPair(pairTemp, boxedTemp, boxedTemp, None)
+      ps.InitPair(pairTemp, boxedTemp, boxedTemp, None, false)
     )
 
-    val expectedSteps = inputSteps
+    val expectedSteps = List(
+      ps.BoxInteger(boxedTemp, unboxedTemp, true),
+      ps.InitPair(pairTemp, boxedTemp, boxedTemp, None, true)
+    )
 
     assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
   }
@@ -243,7 +246,7 @@ class AnalyseEscapesSuite extends FunSuite {
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
-      ps.InitPair(pairTemp, boxedTemp, boxedTemp, None),
+      ps.InitPair(pairTemp, boxedTemp, boxedTemp, None, false),
       ps.Return(Some(pairTemp))
     )
 

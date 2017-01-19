@@ -23,6 +23,9 @@ object CostForPlanSteps {
   /** Cost of a function call */
   private val functionCallCost = 10L
 
+  private def allocCostForStackAllocable(step: ps.StackAllocableStep) =
+    if (step.stackAllocate) stackCellConsumptionCost else heapCellConsumptionCost
+
   private def costForStep(step: ps.Step): Long = step match {
     case _: ps.DisposeValues | _: ps.ConvertNativeInteger | _: ps.CreateNamedEntryPoint | _: ps.CreateBooleanCell |
          _: ps.CreateEmptyListCell | _: ps.CreateUnitCell | _: ps.CastCellToTypeUnchecked =>
@@ -79,9 +82,10 @@ object CostForPlanSteps {
       // Add an additional instruction for dealing with looping
       (loadCost + (trivialInstrCost * 2)) * 5
 
-    case _: ps.InitPair =>
+    case initPair: ps.InitPair =>
       // This requires an allocation and a store to the car and cdr
-      heapCellConsumptionCost + (storeCost * 2)
+      val allocCost = allocCostForStackAllocable(initPair)
+      allocCost + (storeCost * 2)
 
     case ps.InitVector(_, elements) =>
       heapCellConsumptionCost + (elements.length * storeCost)
@@ -100,7 +104,7 @@ object CostForPlanSteps {
 
     case allocating: ps.AllocatingBoxValue =>
       // This requires an allocation plus a store of the boxed value
-      val allocCost = if (allocating.stackAllocate) stackCellConsumptionCost else heapCellConsumptionCost
+      val allocCost = allocCostForStackAllocable(allocating)
       allocCost + storeCost
 
     case allocateCells: ps.AllocateHeapCells =>

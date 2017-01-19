@@ -7,7 +7,16 @@ import llambda.compiler.ProcedureAttribute
 
 /** Performs escape analysis on planned functions
   *
-  * This will convert garbage collected heap allocations to stack allocations where possible.
+  * This will convert garbage collected heap allocations to stack allocations where possible. Escape is defined in the
+  * following ways:
+  *
+  * 1) The value (or one of its subvalues) is returned
+  * 2) The value is referenced by another value that is captured
+  * 3) The value is passed as an argument to another function that may capture it
+  * 4) The value is thrown as part of a signalled exception
+  * 5) The value is referenced by a heap allocated value and the reference is not reset before the function returns.
+  *    This is because the garbage collector will attempt the trace the object graph and must not following pointers
+  *    to stale heap allocated space.
   */
 object AnalyseEscapes extends FunctionConniver {
   private def convertToStack(
@@ -16,15 +25,16 @@ object AnalyseEscapes extends FunctionConniver {
       acc: List[ps.Step]
   ): (List[ps.Step], Set[ps.TempValue]) = reverseSteps match {
     case (stackAllocable: ps.StackAllocableStep) :: reverseTail =>
-      val newStep = if (!capturedValues.contains(stackAllocable.result)) {
+      val (newStep, newCapturedValues) = if (!capturedValues.contains(stackAllocable.result)) {
         // Our output isn't captured; allocate on the stack
-        stackAllocable.asStackAllocated
+        (stackAllocable.asStackAllocated, capturedValues)
       }
       else {
-        stackAllocable
+        // Because our result is captured our inputs are also captured
+        (stackAllocable, capturedValues ++ stackAllocable.inputValues)
       }
 
-      convertToStack(reverseTail, capturedValues, newStep :: acc)
+      convertToStack(reverseTail, newCapturedValues, newStep :: acc)
 
     case (cond: ps.CondBranch) :: reverseTail =>
       // We can use the same values in the true and false branch; it doesn't matter if values not used in that branch
@@ -46,20 +56,20 @@ object AnalyseEscapes extends FunctionConniver {
 
       convertToStack(reverseTail, newCapturedValues, newCond :: acc)
 
-    case (cast: ps.CastCellToTypeUnchecked) :: reverseTail =>
-      // This captures only if the result is captured
-      val newCapturedValues = if (capturedValues.contains(cast.result)) {
-        capturedValues ++ cast.inputValues
-      }
-      else {
+    case (transferring @ (_: ps.CastCellToTypeUnchecked | _: ps.LoadPairValue)) :: reverseTail =>
+      // This captures only if one of its outputs is captured
+      val newCapturedValues = if ((capturedValues & transferring.outputValues).isEmpty) {
         capturedValues
       }
+      else {
+        capturedValues ++ transferring.inputValues
+      }
 
-      convertToStack(reverseTail, newCapturedValues, cast :: acc)
+      convertToStack(reverseTail, newCapturedValues, transferring :: acc)
 
-    case (other @ (_: ps.UnboxValue | _: ps.TestCellType)) :: reverseTail =>
+    case (nonCapturing @ (_: ps.UnboxValue | _: ps.TestCellType | _: ps.CalcProperListLength)) :: reverseTail =>
       // These do not capture
-      convertToStack(reverseTail, capturedValues, other :: acc)
+      convertToStack(reverseTail, capturedValues, nonCapturing :: acc)
 
     // Note that we *cannot* convert tail calls - they take over our stack so they cannot accept stack allocated values
     case (invoke: ps.Invoke) :: reverseTail =>

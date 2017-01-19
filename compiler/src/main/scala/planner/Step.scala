@@ -132,6 +132,7 @@ sealed trait AssertStep extends MergeableStep {
 /** Step that can be converted to using stack allocations for uncaptured values */
 sealed trait StackAllocableStep extends Step {
   val result: TempValue
+  val stackAllocate: Boolean
 
   def asStackAllocated: StackAllocableStep
 }
@@ -757,9 +758,7 @@ sealed trait BoxValue extends DiscardableStep with MergeableStep {
   lazy val outputValues = Set(result)
 }
 
-sealed trait AllocatingBoxValue extends BoxValue with StackAllocableStep {
-  val stackAllocate: Boolean
-}
+sealed trait AllocatingBoxValue extends BoxValue with StackAllocableStep
 
 /** Boxes an i8 that's either 0 or 1 as a boolean */
 case class BoxBoolean(result: TempValue, unboxed: TempValue) extends BoxValue {
@@ -827,11 +826,14 @@ case class InitPair(
     result: TempValue,
     carValue: TempValue,
     cdrValue: TempValue,
-    listLengthOpt: Option[Long] = None
-) extends DiscardableStep with MergeableStep {
+    listLengthOpt: Option[Long] = None,
+    stackAllocate: Boolean = false
+) extends DiscardableStep with MergeableStep with StackAllocableStep {
   lazy val inputValues = Set(carValue, cdrValue)
   lazy val outputValues = Set(result)
-  override def requiredHeapCells = 1
+  override def requiredHeapCells = if (stackAllocate) 0 else 1
+
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
     InitPair(f(result), f(carValue), f(cdrValue), listLengthOpt).assignLocationFrom(this)

@@ -81,7 +81,7 @@ size_t collect(World &world, Heap &newHeap)
 		AnyCell *oldCellLocation = *cellRef;
 		GarbageState gcState = oldCellLocation->gcState();
 
-		if ((gcState == GarbageState::GlobalConstant) || (gcState == GarbageState::StackAllocatedCell))
+		if (gcState == GarbageState::GlobalConstant)
 		{
 			// This is managed by the compiler; don't visit it or its children
 			return false;
@@ -93,11 +93,15 @@ size_t collect(World &world, Heap &newHeap)
 			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation();
 			return false;
 		}
-		else
+		else if (gcState == GarbageState::StackAllocatedCell)
 		{
-			// It must be HeapAllocatedCell otherwise we have memory corruption
-			assert(gcState == GarbageState::HeapAllocatedCell);
+			// Stack allocated cells may reference heap allocated cells but they must not be relocated themselves.
+			// Visit our children but skip the below relocation logic.
+			return true;
 		}
+
+		// It must be HeapAllocatedCell otherwise we have memory corruption
+		assert(gcState == GarbageState::HeapAllocatedCell);
 
 		// Move the cell to the new location
 		AnyCell *newCellLocation = static_cast<AnyCell*>(newHeap.allocate(1));

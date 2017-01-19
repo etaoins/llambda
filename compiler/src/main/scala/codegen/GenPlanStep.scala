@@ -558,11 +558,16 @@ object GenPlanStep {
       val resultIr = block.icmp("compResult")(IComparisonCond.Equal, None, val1IntCastIr, val2IntCastIr)
       state.withTempValue(resultTemp -> resultIr)
 
-    case ps.InitPair(resultTemp, carValueTemp, cdrValueTemp, listLengthOpt) =>
+    case ps.InitPair(resultTemp, carValueTemp, cdrValueTemp, listLengthOpt, stackAllocate) =>
       val block = state.currentBlock
       val allocation = state.currentAllocation
 
-      val (newAllocation, resultIr) = allocation.consumeCells(block)(1, ct.PairCell)
+      val (newAllocation, resultIr) = if (stackAllocate) {
+        (allocation, GenStackAllocation(block)(ct.PairCell))
+      }
+      else {
+        allocation.consumeCells(block)(1, ct.PairCell)
+      }
 
       // List length of zero means unknown
       val listLengthToStore = listLengthOpt.getOrElse(0L)

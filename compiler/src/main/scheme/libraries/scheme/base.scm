@@ -325,13 +325,13 @@
     (define-stdlib max (native-function llbase "llbase_max" (All ([N : <number>]) N N * N)))
     (define-stdlib min (native-function llbase "llbase_min" (All ([N : <number>]) N N * N)))
 
-    (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <integer> * <native-int64>)))
+    (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <integer> * <native-int64>) nocapture))
     (define-stdlib gcd (case-lambda
                        (() 0)
                        (([single : <integer>]) (abs single))
                        (rest (apply native-gcd rest))))
 
-    (define native-lcm (native-function llbase "llbase_lcm" (-> <native-int64> <native-int64> <integer> * <native-int64>)))
+    (define native-lcm (native-function llbase "llbase_lcm" (-> <native-int64> <native-int64> <integer> * <native-int64>) nocapture))
     (define-stdlib lcm (case-lambda
                        (() 1)
                        (([single : <integer>]) (abs single))
@@ -453,9 +453,9 @@
 
     (define-stdlib string? (make-predicate <string>))
     (define-stdlib make-string (world-function llbase "llbase_make_string" (-> <native-int64> <native-unicode-char> <string>)))
-    (define-stdlib string (world-function llbase "llbase_string" (-> <char> * <string>)))
+    (define-stdlib string (world-function llbase "llbase_string" (-> <char> * <string>) nocapture))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
-    (define-stdlib list->string (world-function llbase "llbase_string" (-> (Listof <char>) <string>)))
+    (define-stdlib list->string (world-function llbase "llbase_string" (-> (Listof <char>) <string>) nocapture))
     (define-stdlib string-ref (world-function llbase "llbase_string_ref" (-> <string> <native-int64> <native-unicode-char>)))
     (define-stdlib string-set! (world-function llbase "llbase_string_set" (-> <string> <native-int64> <native-unicode-char> <unit>)))
     (define-stdlib string-append (world-function llbase "llbase_string_append" (-> <string> * <string>)))

@@ -27,8 +27,8 @@
     (define-stdlib string-ci<=? (native-function llchar "llchar_string_ci_lte" (-> <string> <string> <string> * <native-bool>) nocapture))
     (define-stdlib string-ci>=? (native-function llchar "llchar_string_ci_gte" (-> <string> <string> <string> * <native-bool>) nocapture))
 
-    (define-stdlib char-ci=? (native-function llchar "llchar_char_ci_equal" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char-ci<? (native-function llchar "llchar_char_ci_lt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char-ci>? (native-function llchar "llchar_char_ci_gt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char-ci<=? (native-function llchar "llchar_char_ci_lte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
-    (define-stdlib char-ci>=? (native-function llchar "llchar_char_ci_gte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))))
+    (define-stdlib char-ci=? (native-function llchar "llchar_char_ci_equal" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char-ci<? (native-function llchar "llchar_char_ci_lt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char-ci>? (native-function llchar "llchar_char_ci_gt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char-ci<=? (native-function llchar "llchar_char_ci_lte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))
+    (define-stdlib char-ci>=? (native-function llchar "llchar_char_ci_gte" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>) nocapture))))
