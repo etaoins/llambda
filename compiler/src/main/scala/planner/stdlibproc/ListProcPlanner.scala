@@ -68,9 +68,9 @@ object ListProcPlanner extends StdlibProcPlanner {
       val falseValue = planListSearch(state)(dynamicCompareFunc, needleValue, tail)(falsePlan)
 
       val phiResult = PlanValuePhi(truePlan, sublist, falsePlan, falseValue)
-      val valuePhi = ps.ValuePhi(phiResult.resultTemp, phiResult.leftTempValue, phiResult.rightTempValue)
+      val valuePhis = phiResult.planStepPhis
 
-      plan.steps += ps.CondBranch(matchesPred, truePlan.steps.toList, falsePlan.steps.toList, List(valuePhi))
+      plan.steps += ps.CondBranch(matchesPred, truePlan.steps.toList, falsePlan.steps.toList, valuePhis)
 
       phiResult.resultValue
 
