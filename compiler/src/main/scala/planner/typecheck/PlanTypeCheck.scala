@@ -5,7 +5,6 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{PlanWriter, BoxedValue, PlanSymbolEquality}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.codegen.RuntimeFunctions
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{InternalCompilerErrorException, TypeException}
 

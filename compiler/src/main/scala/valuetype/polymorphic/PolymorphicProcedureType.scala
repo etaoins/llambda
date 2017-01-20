@@ -2,7 +2,6 @@ package io.llambda.compiler.valuetype.polymorphic
 import io.llambda
 
 import llambda.compiler.valuetype._
-import llambda.compiler.SourceLocated
 
 case class PolymorphicProcedureType(typeVars: Set[TypeVar], template: ProcedureType) {
   private def instantiate(reconciled: ReconcileTypeVars.Result): ProcedureType = {

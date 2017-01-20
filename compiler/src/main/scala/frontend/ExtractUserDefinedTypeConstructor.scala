@@ -2,7 +2,6 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler._
-import llambda.compiler.valuetype.{polymorphic => pm}
 
 object ExtractUserDefinedTypeConstructor {
   def apply(args: List[sst.ScopedDatum], definition: sst.ScopedDatum): UserDefinedTypeConstructor = {

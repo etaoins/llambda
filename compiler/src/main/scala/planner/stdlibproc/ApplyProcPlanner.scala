@@ -2,10 +2,6 @@ package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
 import llambda.compiler.et
-import llambda.compiler.{celltype => ct}
-import llambda.compiler.{valuetype => vt}
-import llambda.compiler.ContextLocated
-import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 

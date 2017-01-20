@@ -4,7 +4,6 @@ import io.llambda
 import llambda.compiler.et
 import llambda.compiler.ContextLocated
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 
 /** Optionally replaces a call to a stdlib procedure with plan steps */

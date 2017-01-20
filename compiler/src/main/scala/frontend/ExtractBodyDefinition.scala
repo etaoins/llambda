@@ -7,8 +7,6 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler._
 import llambda.compiler.frontend.syntax.ExpandMacro
 
-import annotation.tailrec
-
 private object FindBodyDefines {
   case class Result(extractedDefines: List[ExtractedVarDefine], bodyData: List[sst.ScopedDatum])
 

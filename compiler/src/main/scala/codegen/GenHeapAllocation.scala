@@ -2,7 +2,6 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.llvmir._
-import llambda.llvmir.IrFunction._
 
 object GenHeapAllocation {
   private val cellType = UserDefinedType("cell")

@@ -2,8 +2,6 @@ package io.llambda.compiler
 import io.llambda
 
 object SchemeStringImplicits {
-  import StringContext._
-
   class MultipleDatumError extends Exception("Multiple datums found")
 
   implicit class SchemeStringHelper(val sc: StringContext) extends AnyVal {

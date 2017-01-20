@@ -5,8 +5,6 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
-import llambda.compiler.valuetype.Implicits._
-
 class LibraryLoader(targetPlatform: platform.TargetPlatform) {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expr]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]

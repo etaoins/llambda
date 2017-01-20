@@ -2,7 +2,6 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.{PolymorphicSignature, ContextLocated}
-import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 import llambda.compiler.planner.stdlibproc.StdlibProcPlanner

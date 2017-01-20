@@ -3,10 +3,9 @@ import io.llambda
 
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.StorageLocation
 
 private[planner] object PlanLambda {
   private def closureFieldValues(

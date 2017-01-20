@@ -4,7 +4,6 @@ import io.llambda
 import llambda.compiler.et
 import llambda.compiler.StorageLocation
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Manifest for a planned lambda
   *

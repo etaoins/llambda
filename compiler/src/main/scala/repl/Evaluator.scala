@@ -6,9 +6,6 @@ import io.llambda.compiler._
 import java.io.File
 
 import scala.collection.mutable
-import annotation.tailrec
-
-import llambda.compiler.SchemeStringImplicits._
 
 class ReplProcessNonZeroExitException(val code: Int, val stdout: String, val stderr: String) extends
   Exception(s"Process exited with code ${code}")

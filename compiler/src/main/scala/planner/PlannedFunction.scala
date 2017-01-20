@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{ContextLocated, ProcedureSignature}
+import llambda.compiler.ProcedureSignature
 import llambda.compiler.debug
 import llambda.compiler.planner.{step => ps}
 

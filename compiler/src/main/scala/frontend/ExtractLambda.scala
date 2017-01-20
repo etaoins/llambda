@@ -5,8 +5,6 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.{polymorphic => pm}
 
-import llambda.compiler.valuetype.Implicits._
-
 object ExtractLambda {
   private case class ReconciledTypes(
     mandatoryArgTypes: List[(sst.Symbol, vt.SchemeType)],

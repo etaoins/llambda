@@ -1,7 +1,6 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
 
 object ShadowStackEntryHeaderValue extends StructureValue("shadowStackEntryHeader") {

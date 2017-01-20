@@ -1,8 +1,6 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.llvmir._
-
 case class GcState(
   rootedIdentities: Map[GcPointerIdentity, Int] = Map(),
   nextUnallocatedSlot: Int = 0

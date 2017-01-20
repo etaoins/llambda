@@ -2,7 +2,6 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Value field of mutables */
 case class MutableField(innerType: vt.ValueType) extends vt.RecordField("value", innerType, mutable=true)

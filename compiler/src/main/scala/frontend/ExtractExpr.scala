@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.frontend.syntax.ExpandMacro
 
 private[frontend] object ExtractExpr {

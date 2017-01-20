@@ -1,11 +1,10 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.ContextLocated
 import llambda.compiler.planner._
 import llambda.compiler.planner.typecheck._
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.InternalCompilerErrorException
 

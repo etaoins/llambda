@@ -2,7 +2,6 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.llvmir._
-import llambda.compiler.{valuetype => vt}
 
 object GenTestRecordLikeClass {
   def apply(block: IrBlockBuilder)(

@@ -1,8 +1,6 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{valuetype => vt}
-
 trait KnownListElement extends IntermediateValue {
   /** Returns the length of the proper list this element is a part of
     *

@@ -2,9 +2,6 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler._
-import llambda.compiler.{valuetype => vt}
-
-import llambda.compiler.valuetype.Implicits._
 
 object ExtractCaseLambda {
   def apply(located: SourceLocated, clauseData: List[sst.ScopedDatum])(implicit context: FrontendContext): et.CaseLambda = {

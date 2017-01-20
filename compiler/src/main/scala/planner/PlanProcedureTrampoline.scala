@@ -1,15 +1,13 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ProcedureAttribute, StorageLocation}
+import llambda.compiler.{ProcedureSignature, StorageLocation}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.et
-import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
-
-import llambda.compiler.valuetype.Implicits._
+import llambda.compiler.ContextLocated
 
 private[planner] object PlanProcedureTrampoline {
   /** Plans a trampoline for the passed procedure

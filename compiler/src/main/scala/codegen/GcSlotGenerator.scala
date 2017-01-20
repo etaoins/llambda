@@ -3,8 +3,6 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.InternalCompilerErrorException
-import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._

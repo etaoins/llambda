@@ -7,8 +7,6 @@ import llambda.compiler.{StorageLocation, ContextLocated}
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 
-import scala.collection.breakOut
-
 private[planner] object AttemptInlineApply {
   private sealed abstract class ValueSource
   private case class DirectSource(storageLoc: StorageLocation, value: LocationValue) extends ValueSource

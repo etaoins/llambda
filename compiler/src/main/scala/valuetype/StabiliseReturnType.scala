@@ -1,8 +1,6 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import llambda.compiler.{celltype => ct}
-
 object StabiliseReturnType {
   /** Stablises the type of a return type
     *

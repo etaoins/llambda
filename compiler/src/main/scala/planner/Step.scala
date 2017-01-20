@@ -2,7 +2,6 @@ package io.llambda.compiler.planner.step
 import io.llambda
 
 import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage, ProcedureAttribute}
-import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 

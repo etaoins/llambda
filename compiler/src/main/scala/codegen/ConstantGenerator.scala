@@ -5,8 +5,7 @@ import scala.io.Codec
 
 import scala.collection.mutable
 
-import llambda.compiler.SourceLocated
-import llambda.compiler.{RangeException, InternalCompilerErrorException}
+import llambda.compiler.InternalCompilerErrorException
 
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._

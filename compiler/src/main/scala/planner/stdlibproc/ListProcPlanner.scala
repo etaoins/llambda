@@ -1,10 +1,8 @@
 package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{ContextLocated, RangeException, InternalCompilerErrorException}
-import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._

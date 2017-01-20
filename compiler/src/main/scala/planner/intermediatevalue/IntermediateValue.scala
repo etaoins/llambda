@@ -2,13 +2,12 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 import llambda.compiler.ProcedureSignature
-import llambda.compiler.{TypeException, ArityException, InternalCompilerErrorException}
+import llambda.compiler.{TypeException, ArityException}
 
 trait IntermediateValueHelpers {
   def typeDescription: String

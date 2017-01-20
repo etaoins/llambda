@@ -5,8 +5,6 @@ import scala.io.Source
 
 import llambda.compiler._
 import llambda.llvmir._
-import llambda.compiler.platform.TargetPlatform
-import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 object GenProgram {

@@ -5,9 +5,6 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{ContextLocated, RuntimeErrorMessage, ErrorCategory, ProcedureAttribute}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
-
-import llambda.compiler.valuetype.Implicits._
 
 object PlanInvokeApply {
   private def withTempValues(

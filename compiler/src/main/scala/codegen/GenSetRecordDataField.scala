@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.InternalCompilerErrorException
 
 object GenSetRecordDataField {
   def apply(block: IrBlockBuilder)(recordDataIr: IrValue, generatedType: GeneratedType, recordField: vt.RecordField, newValueIr: IrValue) {

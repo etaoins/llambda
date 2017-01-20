@@ -1,8 +1,6 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import Implicits._
-
 object ReturnType {
   /** Represents the return type of a procedure */
   sealed abstract trait ReturnType[+T >: SchemeType <: ValueType] {

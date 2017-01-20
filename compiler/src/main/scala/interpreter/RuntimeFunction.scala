@@ -1,7 +1,6 @@
 package io.llambda.compiler.interpreter
 import io.llambda
 
-import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 
 abstract class RuntimeFunction extends ((InterpreterState, List[LiveValue]) => (InterpreterState, Option[LiveValue]))

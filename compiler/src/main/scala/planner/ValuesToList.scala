@@ -1,10 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{celltype => ct}
-import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.planner.{step => ps}
 
 private[planner] object ValuesToList {
   /** Converts a list of intermediate values to an intermediate value representing a list

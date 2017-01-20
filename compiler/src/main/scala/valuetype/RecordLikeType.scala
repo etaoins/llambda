@@ -2,7 +2,6 @@ package io.llambda.compiler.valuetype
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Identifies a record field
   *

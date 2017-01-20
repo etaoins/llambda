@@ -1,10 +1,8 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.InternalCompilerErrorException
 
 object ConstrainType {
   /** Represents a type constraint that can be applied to an intermediate value */

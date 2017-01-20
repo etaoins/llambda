@@ -3,11 +3,8 @@ import io.llambda
 
 import java.io._
 import scala.io.Source
-import scala.language.postfixOps
 import scala.sys.process._
 import planner.PlannedProgram
-
-import codegen.LlambdaTopLevelSignature
 
 class ExternalCompilerException extends Exception
 

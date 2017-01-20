@@ -6,10 +6,8 @@ import collection.mutable
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{ContextLocated, NoContextLocation}
 import llambda.compiler.InternalCompilerErrorException
-import llambda.compiler.et
 import llambda.compiler.{ProcedureSignature, NativeLibrary}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.planner.{intermediatevalue => iv}
 
 class PlanWriter(
     val config: PlanConfig,

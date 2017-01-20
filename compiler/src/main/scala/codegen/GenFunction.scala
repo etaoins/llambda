@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.llvmir._
-import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.planner.{step => ps}
 
 private[codegen] object GenFunction {

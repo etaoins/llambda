@@ -4,9 +4,6 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.InternalCompilerErrorException
-
-import llambda.compiler.valuetype.Implicits._
 
 object TempValueToIntermediate {
   def apply(valueType: vt.ValueType, tempValue: ps.TempValue): iv.IntermediateValue = valueType match {

@@ -4,7 +4,6 @@ import io.llambda
 import scala.collection.breakOut
 
 import llambda.compiler._
-import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
   private def extractMonoSignature(

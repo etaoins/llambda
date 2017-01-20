@@ -3,7 +3,6 @@ import io.llambda
 
 import io.llambda.compiler.RangeException
 import io.llambda.compiler.planner._
-import io.llambda.compiler.{valuetype => vt}
 
 trait StdlibProcPlannerHelpers {
   /** Asserts that an index is within an object of the passed length

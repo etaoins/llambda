@@ -6,7 +6,6 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
-import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 
 /** Represents a procedure with a known signature and direct entry point

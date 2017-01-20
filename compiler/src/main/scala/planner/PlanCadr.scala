@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 

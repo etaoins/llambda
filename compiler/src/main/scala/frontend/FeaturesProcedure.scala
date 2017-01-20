@@ -4,8 +4,6 @@ import io.llambda
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
-import llambda.compiler.valuetype.Implicits._
-
 private[frontend] object FeaturesProcedure {
   def apply(frontendConfig: FrontendConfig): et.Lambda = {
     // Create a fake lambda for this
