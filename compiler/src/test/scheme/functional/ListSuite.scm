@@ -63,7 +63,7 @@
 (define-test "length of improper list fails" (expect-error type-error?
   (length '(1 . 2))))
 
-(define-test "make-list" (expect-success
+(define-test "static (make-list)" (expect-static-success
   (assert-equal '() (make-list 0))
   (assert-equal '() (make-list 0 4.0))
   (assert-equal '(#!unit #!unit #!unit #!unit) (make-list 4))

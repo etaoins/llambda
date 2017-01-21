@@ -123,6 +123,12 @@ object ListProcPlanner extends StdlibProcPlanner {
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
+    case ("make-list", List((_, iv.ConstantIntegerValue(count)))) if count <= 4 =>
+      Some(ValuesToList(List.fill(count.toInt)(iv.UnitValue)))
+
+    case ("make-list", List((_, iv.ConstantIntegerValue(count)), (_, fillValue))) if count <= 4 =>
+      Some(ValuesToList(List.fill(count.toInt)(fillValue)))
+
     case ("length", List((_, knownListElement: iv.KnownListElement))) =>
       knownListElement.listLengthOpt map iv.ConstantIntegerValue.apply
 
