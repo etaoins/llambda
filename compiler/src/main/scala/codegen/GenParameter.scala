@@ -83,9 +83,14 @@ object GenParameter {
       worldPtrIr: IrValue,
       parameterProcIr: IrValue
   ): IrValue = {
-    // This isn't a GC barrier thankfully
+    // This isn't a GC barrier as we know this is a valid parameter procedure and we aren't passing arguments
     val block = state.currentBlock
 
-    block.callDecl(Some("parameterValue"))(valueForParameterDecl, List(worldPtrIr, parameterProcIr)).get
+    // Pass an empty rest argument as valueForParameterDecl needs to be compatible with the top procedure type
+    val emptyListIr = GlobalDefines.emptyListIrValue
+    val emptyListCastIr = BitcastToConstant(emptyListIr, PointerType(ct.ListElementCell.irType))
+
+    val arguments = List(worldPtrIr, parameterProcIr, emptyListCastIr)
+    block.callDecl(Some("parameterValue"))(valueForParameterDecl, arguments).get
   }
 }

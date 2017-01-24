@@ -16,6 +16,9 @@
   (parameterize ((param 50))
     (param))))
 
+(define-test "parameter procedures don't accept arguments" (expect-error arity-error?
+  ((make-parameter 50) #t)))
+
 (define-test "parameterize with non-parameter fails" (expect-error invalid-argument-error?
   (define not-param +)
 
@@ -29,8 +32,15 @@
     (parameterize ((param 'hello))
       (param)))))
 
-(define-test "parameters can be cast to <procedure>" (expect hello
-  ((typed-dynamic (make-parameter 'hello) <procedure>))))
+(define-test "parameters can be cast to <procedure>" (expect-success
+  (import (llambda error))
+
+  (define param (typed-dynamic (make-parameter 'hello) <procedure>))
+
+  (assert-equal 'hello (param))
+  (assert-equal 'world (parameterize ((param 'world)) (param)))
+  (assert-raises arity-error?
+                 (param 10))))
 
 (define-test "multiple parameter parameterize" (expect (newOne two newThree)
   (define param1 (make-parameter 'one))

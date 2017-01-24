@@ -1,6 +1,7 @@
 #include "binding/ProcedureCell.h"
 #include "binding/AnyCell.h"
 #include "binding/TypedProcedureCell.h"
+#include "binding/ProperList.h"
 
 #include "dynamic/State.h"
 #include "dynamic/ParameterProcedureCell.h"
@@ -40,8 +41,13 @@ ProcedureCell *llcore_make_parameter(World &world, AnyCell *initialValue)
 	return dynamic::ParameterProcedureCell::createInstance(world, initialValue);
 }
 
-AnyCell *llcore_value_for_parameter(World &world, ParameterProcedureCell *parameterProc)
+AnyCell *llcore_value_for_parameter(World &world, ParameterProcedureCell *parameterProc, RestValues<AnyCell> *argList)
 {
+	if (!argList->empty())
+	{
+		signalError(world, ErrorCategory::Arity, "Parameter procedures don't accept arguments", {argList});
+	}
+
 	return dynamic::State::activeState(world)->valueForParameter(parameterProc);
 }
 

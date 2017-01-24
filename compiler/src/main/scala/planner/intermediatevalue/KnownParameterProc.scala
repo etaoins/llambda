@@ -5,6 +5,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner._
+import llambda.compiler.ArityException
 import llambda.compiler.ContextLocated
 import llambda.compiler.codegen
 
@@ -58,6 +59,6 @@ class KnownParameterProc(selfTemp: ps.TempValue, val identity: ParameterIdentity
       }
 
     case _ =>
-      None
+      throw new ArityException(plan.activeContextLocated, "Parameter procedures don't accept arguments")
   }
 }

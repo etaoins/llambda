@@ -125,12 +125,16 @@ object RuntimeFunctions {
     attributes=Set(ProcedureAttribute.NoCapture)
   )
 
+  // This must be compatible with the top procedure signature
+  //
+  // If this has a non-top signature we will convert the procedure whenever storing to untyped variables or arguments.
+  // This creates a new trampoline procedure cell which (parameterize) will no longer recognise.
   val valueForParameterSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=true,
     mandatoryArgTypes=Nil,
     optionalArgTypes=Nil,
-    restArgMemberTypeOpt=None,
+    restArgMemberTypeOpt=Some(vt.AnySchemeType),
     returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
     attributes=Set()
   )
@@ -140,9 +144,10 @@ object RuntimeFunctions {
     name="llcore_value_for_parameter",
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
-      Argument(PointerType(ct.ProcedureCell.irType))
+      Argument(PointerType(ct.ProcedureCell.irType)),
+      Argument(PointerType(ct.ListElementCell.irType))
     ),
-    attributes=Set(IrFunction.NoUnwind, IrFunction.ReadOnly)
+    attributes=Set()
   )
 
   def hasSideEffects(symbol: String, arity: Int): Boolean = (symbol, arity) match {
