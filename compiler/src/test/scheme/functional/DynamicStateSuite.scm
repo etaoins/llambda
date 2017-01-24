@@ -29,6 +29,9 @@
     (parameterize ((param 'hello))
       (param)))))
 
+(define-test "parameters can be cast to <procedure>" (expect hello
+  ((typed-dynamic (make-parameter 'hello) <procedure>))))
+
 (define-test "multiple parameter parameterize" (expect (newOne two newThree)
   (define param1 (make-parameter 'one))
   (define param2 (make-parameter 'two))
@@ -44,3 +47,18 @@
     (param))
 
   (param)))
+
+(define-test "procedures do not capture their parameter values" (expect 0
+  (define param (make-parameter 0))
+
+  (define return-param-value
+    (parameterize ((param 50))
+      (lambda () (param))))
+
+  (return-param-value)))
+
+(define-test "procedures can be parameterized" (expect world
+  (define param (make-parameter (lambda () 'hello)))
+
+  (parameterize ((param (lambda () 'world)))
+    ((param)))))

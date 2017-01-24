@@ -79,6 +79,8 @@ private[planner] object AttemptInlineApply {
 
     val postClosureState = PlannerState(
       values=(directValues ++ closureValues).toMap,
+      // It's very important we get our parameter values from where we're inlined, not where we're defined
+      parameterValues=inlineState.parameterValues,
       inlineDepth=inlineState.inlineDepth + 1
     )
 

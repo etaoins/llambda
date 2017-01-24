@@ -12,17 +12,11 @@ import llambda.compiler.codegen
   *
   * This is used to optimise (parameterize) and applications of the parameter procedure
   *
-  * @param  selfTemp             Parameter procedure cell
-  * @param  initialValue         Initial value of the parameter. This is used for optimisation if the program does not
-  *                              use (parameterize)
-  * @param  initialValueInScope  Indicates if initialValue is still is scope. This can be used to avoid reloading the
-  *                              value from the parameter procedure.
+  * @param  selfTemp  Parameter procedure cell
+  * @param  identity  Unique identity for this parameter across all of its instances. This is used to look up the value
+  *                   or type of the parameter from the state.
   */
-class KnownParameterProc(
-    selfTemp: ps.TempValue,
-    initialValue: IntermediateValue,
-    initialValueInScope: Boolean = false
-) extends KnownProc(
+class KnownParameterProc(selfTemp: ps.TempValue, val identity: ParameterIdentity) extends KnownProc(
     codegen.RuntimeFunctions.valueForParameterSignature.toPolymorphic,
     Some(selfTemp)
 ) {
@@ -32,48 +26,38 @@ class KnownParameterProc(
     codegen.RuntimeFunctions.valueForParameter.name
 
   def withStdlibName(newStdlibName: String): KnownParameterProc =
-    new KnownParameterProc(selfTemp, initialValue, initialValueInScope)
+    new KnownParameterProc(selfTemp, identity)
 
   def withSelfTemp(selfTemp: ps.TempValue) =
-    new KnownParameterProc(selfTemp, initialValue, initialValueInScope=false)
+    new KnownParameterProc(selfTemp, identity)
 
   override def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =
     BoxedValue(ct.ProcedureCell, selfTemp)
 
   override def attemptInlineApplication(state: PlannerState)(
       args: List[(ContextLocated, IntermediateValue)]
-  )(implicit plan: PlanWriter): Option[PlanResult] = {
-    val constantParameters = !plan.config.analysis.parameterized && plan.config.optimise
+  )(implicit plan: PlanWriter): Option[PlanResult] = args match {
+    case Nil =>
+      state.parameterValues.get(identity) match {
+        case Some(KnownParameterValue(value)) =>
+          Some(PlanResult(state=state, value=value))
 
-    args match {
-      case Nil =>
-        if (constantParameters && (initialValueInScope || !initialValue.needsClosureRepresentation)) {
-          return Some(PlanResult(
-            state=state,
-            value=initialValue
-          ))
-        }
+        case otherValue =>
+          // Load this parameter value without going through the parameter procedure's trampoline
+          val resultTemp = ps.Temp(vt.AnySchemeType)
+          plan.steps += ps.LoadValueForParameterProc(resultTemp, selfTemp)
 
-        // Load this parameter value without going through the parameter procedure's trampoline
-        val resultTemp = ps.Temp(vt.AnySchemeType)
-        plan.steps += ps.LoadValueForParameterProc(resultTemp, selfTemp)
+          val resultType = otherValue match {
+            case Some(KnownParameterType(schemeType)) => schemeType
+            case _ => vt.AnySchemeType
+          }
 
-        val resultType = if (constantParameters) {
-          initialValue.schemeType
-        }
-        else {
-          vt.AnySchemeType
-        }
+          val resultValue = new CellValue(resultType, BoxedValue(ct.AnyCell, resultTemp))
 
-        val resultValue = new CellValue(resultType, BoxedValue(ct.AnyCell, resultTemp))
+          Some(PlanResult(state=state, value=resultValue))
+      }
 
-        Some(PlanResult(
-          state=state,
-          value=resultValue
-        ))
-
-      case _ =>
-        None
-    }
+    case _ =>
+      None
   }
 }

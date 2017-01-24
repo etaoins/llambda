@@ -135,6 +135,24 @@ object PlanLambdaPolymorph {
     case None => declType
   }
 
+  private def buildInitialState(parentState: PlannerState)(planConfig: PlanConfig): PlannerState =
+    if (planConfig.analysis.parameterized) {
+      // We don't know anything about our dynamic state at the time we're being called
+      PlannerState(inlineDepth=parentState.inlineDepth)
+    }
+    else {
+      val parameterValues = parentState.parameterValues.mapValues {
+        case KnownParameterValue(value) if value.needsClosureRepresentation =>
+          // The value is no longer is scope; downgrade to a mere type
+          KnownParameterType(value.schemeType)
+
+        case other => other
+      }
+
+      PlannerState(parameterValues=parameterValues, inlineDepth=parentState.inlineDepth)
+    }
+
+
   def apply(
       nativeSymbol: String,
       manifest: LambdaManifest,
@@ -196,7 +214,7 @@ object PlanLambdaPolymorph {
 
     // Initialise our plan
     val procPlan = parentPlan.forkPlan()
-    val initialState = PlannerState(values=Map(), inlineDepth=parentState.inlineDepth)
+    val initialState = buildInitialState(parentState)(parentPlan.config)
 
     val importedImmutablesState = manifest.closedVars.foldLeft(initialState)({
       case (state, imported: ImportedImmutable) =>

@@ -219,6 +219,7 @@ private[planner] object PlanExpr {
 
       case et.Parameterize(parameterValues, innerExpr) =>
         val parameterValueTemps = new mutable.ListBuffer[ps.ParameterizedValue]
+        val previousParameterValues = initialState.parameterValues
 
         val postValueState = parameterValues.foldLeft(initialState) { case (state, (parameterExpr, valueExpr)) =>
           val parameterResult = apply(state)(parameterExpr)
@@ -232,14 +233,31 @@ private[planner] object PlanExpr {
 
           parameterValueTemps += ps.ParameterizedValue(parameterTemp, valueTemp)
 
-          valueResult.state
+          val valueState = valueResult.state
+          parameterIntermediate match {
+            case knownParamProc: iv.KnownParameterProc =>
+              val identity = knownParamProc.identity
+
+              valueState.copy(
+                parameterValues=valueState.parameterValues + (identity -> KnownParameterValue(valueIntermediate))
+              )
+
+            case _ =>
+              // Unfortunately we do not know what was just parameterized; flush all parameter values
+              valueState.copy(
+                parameterValues=Map()
+              )
+          }
         }
 
         plan.steps += ps.PushDynamicState(parameterValueTemps.toList)
         val postInnerResult = PlanExpr(postValueState)(innerExpr)
         plan.steps += ps.PopDynamicState()
 
-        postInnerResult
+        // Restore the previous parameter values
+        postInnerResult.copy(
+          state=postInnerResult.state.copy(parameterValues=previousParameterValues)
+        )
     }
   }
 }

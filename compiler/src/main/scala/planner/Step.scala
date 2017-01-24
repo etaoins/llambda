@@ -982,12 +982,11 @@ case class CreateParameterProc(
     result: TempValue,
     initialValue: TempValue,
     inputToDispose: Set[TempValue] = Set()
-) extends Step with InputDisposableStep {
+) extends Step with InputDisposableStep with DiscardableStep {
   lazy val inputValues = Set(WorldPtrValue, initialValue)
   lazy val outputValues = Set(result)
 
   override def canAllocate = true
-  override def discardable = true
 
   def withDisposedInput(values: Set[TempValue]) =
     this.copy(inputToDispose=values).assignLocationFrom(this)
