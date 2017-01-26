@@ -2,6 +2,7 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
 
 object GenParameter {
