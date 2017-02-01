@@ -10,17 +10,11 @@ object StringProcPlanner extends StdlibProcPlanner {
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
-    case ("string-length", List((stringLocated, stringValue))) =>
-      stringValue match {
-        case iv.ConstantStringValue(stringValue) =>
-          // This is easy
-          val codePoints = stringValue.codePointCount(0, stringValue.length)
+    case ("string-length", List((_, iv.ConstantStringValue(stringValue)))) =>
+      // This is easy
+      val codePoints = stringValue.codePointCount(0, stringValue.length)
 
-          Some(iv.ConstantIntegerValue(codePoints))
-
-        case _ =>
-          None
-      }
+      Some(iv.ConstantIntegerValue(codePoints))
 
     case _ =>
       None

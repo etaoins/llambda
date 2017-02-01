@@ -292,7 +292,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     case ("*", Nil) =>
       Some(iv.ConstantIntegerValue(1))
 
-    case (reportName, List((argSourceLoc, singleArg))) if List("+", "*").contains(reportName) =>
+    case ("+" | "*", List((argSourceLoc, singleArg))) =>
       // Make sure the arg is numeric
       val numericValue = plan.withContextLocation(argSourceLoc) {
         singleArg.castToSchemeType(vt.NumberType)
