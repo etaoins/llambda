@@ -189,7 +189,7 @@
 
   (assert-true (eqv? eqv? eqv?))
 
-  ; If these returned different values it would be legal to merge them
+  ; If these returned the same value it would be legal to merge them
   (define (procecedure1) 1)
   (define (procecedure2) 2)
   (assert-false (eqv? procecedure1 procecedure2))))

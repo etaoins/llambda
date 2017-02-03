@@ -38,7 +38,8 @@ private[codegen] object GenFunction {
       name=nativeSymbol,
       attributes=attributes,
       linkage=Linkage.Internal,
-      callingConv=irSignature.callingConv
+      callingConv=irSignature.callingConv,
+      unnamedAddr=true
     )
 
     // Add our IR comment if one has been supplied
