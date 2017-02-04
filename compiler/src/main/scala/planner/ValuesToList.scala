@@ -16,15 +16,7 @@ private[planner] object ValuesToList {
       memberValues: List[iv.IntermediateValue],
       tailValue: iv.IntermediateValue = iv.EmptyListValue
   )(implicit plan: PlanWriter): iv.IntermediateValue =
-    memberValues.foldRight(tailValue) { case(carValue, cdrValue) =>
-      val listLengthOpt = cdrValue match {
-        case knownListElement: iv.KnownListElement =>
-          knownListElement.listLengthOpt.map(_ + 1)
-
-        case _ =>
-          None
-      }
-
-      ValuesToPair(carValue, cdrValue, listLengthOpt)
+    memberValues.foldRight(tailValue) { case (carValue, cdrValue) =>
+      ValuesToPair(carValue, cdrValue)
     }
 }

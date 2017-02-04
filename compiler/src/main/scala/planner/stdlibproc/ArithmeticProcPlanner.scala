@@ -280,7 +280,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
       (quotientValueOpt, remainderValueOpt) match {
         case (Some(quotientValue), Some(remainderValue)) =>
           plan.steps ++= inlinePlan.steps
-          Some(ValuesToPair(quotientValue, remainderValue, None))
+          Some(ValuesToPair(quotientValue, remainderValue))
 
         case _ =>
           None

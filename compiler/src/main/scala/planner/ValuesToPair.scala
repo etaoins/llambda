@@ -11,39 +11,41 @@ private[planner] object ValuesToPair {
     *
     * This automatically takes advantage of immutable pair support to build KnownPairCellValue instances
     *
-    * @param  carValue       car value for the new pair
-    * @param  cdrValue       cdr value for the new pair
-    * @param  listLengthOpt  Optional length of the proper list this pair is the head of
+    * @param  carValue   car value for the new pair
+    * @param  cdrValue   cdr value for the new pair
     */
   def apply(
       carValue: iv.IntermediateValue,
-      cdrValue: iv.IntermediateValue,
-      listLengthOpt: Option[Long]
-  )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    (carValue, cdrValue) match {
-      case (constantCar: iv.ConstantValue, constantCdr: iv.ConstantValue) =>
-        // We can make this a constant pair
-        return iv.ConstantPairValue(constantCar, constantCdr)
+      cdrValue: iv.IntermediateValue
+  )(implicit plan: PlanWriter): iv.IntermediateValue = (carValue, cdrValue) match {
+    case (constantCar: iv.ConstantValue, constantCdr: iv.ConstantValue) =>
+      // We can make this a constant pair
+      iv.ConstantPairValue(constantCar, constantCdr)
 
-      case _ =>
-    }
+    case _ =>
+      val listLengthOpt = cdrValue match {
+        case knownListElement: iv.KnownListElement =>
+          knownListElement.listLengthOpt.map(_ + 1)
 
-    val carTemp = carValue.toTempValue(vt.AnySchemeType)
-    val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
+        case _ =>
+          None
+      }
 
-    val pairTemp = ps.CellTemp(ct.PairCell)
-    plan.steps += ps.InitPair(pairTemp, carTemp, cdrTemp, listLengthOpt)
+      val carTemp = carValue.toTempValue(vt.AnySchemeType)
+      val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
 
-    // Note that when we converted to an vt.AnySchemeType TempValue we converted any procedure type we had to the
-    // TopProceduretype
-    // This is actually what we want - otherwise it would be very complicated to convert procedure typed lists
-    // between each other
-    var storedType = vt.PairType(
-      carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceApplicableType(vt.TopProcedureType)),
-      cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceApplicableType(vt.TopProcedureType))
-    )
+      val pairTemp = ps.CellTemp(ct.PairCell)
+      plan.steps += ps.InitPair(pairTemp, carTemp, cdrTemp, listLengthOpt)
 
-    // This pair is immutable and we can optimise based on that
-    new iv.KnownPairCellValue(carValue, cdrValue, storedType, pairTemp)
+      // Note that when we converted to an vt.AnySchemeType TempValue we converted any procedure type we had to the
+      // TopProceduretype
+      // This is actually what we want - otherwise it would be very complicated to convert procedure typed lists
+      // between each other
+      var storedType = vt.PairType(
+        carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceApplicableType(vt.TopProcedureType)),
+        cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceApplicableType(vt.TopProcedureType))
+      )
+
+      new iv.KnownPairCellValue(carValue, cdrValue, storedType, pairTemp)
   }
 }

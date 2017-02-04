@@ -133,7 +133,7 @@ object ListProcPlanner extends StdlibProcPlanner {
       knownListElement.listLengthOpt map iv.ConstantIntegerValue.apply
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
-      Some(ValuesToPair(carValue, cdrValue, None))
+      Some(ValuesToPair(carValue, cdrValue))
 
     case ("append", args) =>
       val (listArgs, terminator) = args.map(_._2).reverse match {
