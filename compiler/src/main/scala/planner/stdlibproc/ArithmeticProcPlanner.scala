@@ -397,16 +397,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
         if (power >= 0) && (power <= 62) =>
       Some(iv.ConstantIntegerValue(1L << power))
 
-    case ("floor", List((_, constInt: iv.ConstantIntegerValue))) =>
-      Some(constInt)
-
-    case ("ceiling", List((_, constInt: iv.ConstantIntegerValue))) =>
-      Some(constInt)
-
-    case ("truncate", List((_, constInt: iv.ConstantIntegerValue))) =>
-      Some(constInt)
-
-    case ("round", List((_, constInt: iv.ConstantIntegerValue))) =>
+    case ("floor" | "ceiling" | "truncate" | "round", List((_, constInt: iv.ConstantIntegerValue))) =>
       Some(constInt)
 
     case ("floor", List((_, iv.ConstantFlonumValue(value)))) =>
