@@ -475,8 +475,8 @@ case class CreateEmptyListCell(result: TempValue) extends CreateConstantCell {
 
 /** Creates a procedure with an empty closure
   *
-  * This is equivalent to RecordLikeInit(vt.EmptyClosureType] followed by LoadProcedureEntryPoint except it uses a
-  * compile time constant cell and is considerably more efficient
+  * This is equivalent to RecordLikeInit(vt.EmptyClosureType] except it uses compile time constant cell and is
+  * considerably more efficient
   **/
 case class CreateEmptyClosure(result: TempValue, entryPoint: TempValue) extends CreateConstantCell {
   lazy val inputValues = Set(entryPoint)
@@ -573,15 +573,12 @@ case class LoadPairCdr(result: TempValue, boxed: TempValue) extends LoadPairValu
     LoadPairCdr(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-/** Loads the entry point of a procedure
-  *
-  * This is a MutableRead to allow procedures to dynamically change entry points
-  */
+/** Loads the entry point of a procedure */
 case class LoadProcedureEntryPoint(
     result: TempValue,
     boxed: TempValue,
     signature: ProcedureSignature
-) extends DiscardableStep {
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
 
