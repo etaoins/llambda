@@ -113,14 +113,24 @@ AnyCell* llbase_append(World &world, RestValues<AnyCell> *argList)
 	while(--argCount)
 	{
 		auto argDatum = *(argIt++);
-		auto properList = cell_cast<ProperList<AnyCell>>(argDatum);
 
-		if (properList == nullptr)
+		if (auto pair = cell_cast<PairCell>(argDatum))
+		{
+			// Zero means "unknown list length" which will cause this to be a no-op
+			appendedElements.reserve(appendedElements.size() + pair->listLength());
+
+			do
+			{
+				appendedElements.insert(appendedElements.end(), pair->car());
+				argDatum = pair->cdr();
+			}
+			while((pair = cell_cast<PairCell>(argDatum)));
+		}
+
+		if (argDatum != EmptyListCell::instance())
 		{
 			signalError(world, ErrorCategory::Type, "Non-list passed to (append) in non-terminal position", {argDatum});
 		}
-
-		appendedElements.insert(appendedElements.end(), properList->begin(), properList->end());
 	}
 
 	// Use createList to append the last list on sharing its structure. This is required by R7RS
