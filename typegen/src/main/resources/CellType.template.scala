@@ -5,10 +5,10 @@ import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
 sealed abstract class CastableValue {
-  val irType : FirstClassType
-  val llvmName : String
+  val irType: FirstClassType
+  val llvmName: String
 
-  def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =
+  def genPointerBitcast(block: IrBlockBuilder)(uncastValue: IrValue): IrValue =
     if (uncastValue.irType == PointerType(irType)) {
       uncastValue
     }
@@ -18,11 +18,11 @@ sealed abstract class CastableValue {
 }
 
 sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TRAIT} {
-  val schemeName : String
-  val directSubtypes : Set[CellType]
+  val schemeName: String
+  val directSubtypes: Set[CellType]
 
-  lazy val concreteTypes : Set[ConcreteCellType] = this match {
-    case concreteType : ConcreteCellType => Set(concreteType)
+  lazy val concreteTypes: Set[ConcreteCellType] = this match {
+    case concreteType: ConcreteCellType => Set(concreteType)
     case abstractType => directSubtypes.flatMap(_.concreteTypes)
   }
 
