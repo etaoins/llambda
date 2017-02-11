@@ -127,7 +127,7 @@
 !73 = !{!"Procedure::entryPoint"}
 
 ; {supertype, extraData}
-%record = type {%recordLike, i8*}
+%record = type {%recordLike, [8 x i8]}
 !74 = !{!"Any::typeId->RecordLike->Record", !61}
 !75 = !{!"Any::gcState->RecordLike->Record", !62}
 !76 = !{!"RecordLike::dataIsInline->Record", !63}

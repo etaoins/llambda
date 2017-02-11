@@ -5,6 +5,7 @@ import collection.breakOut
 
 import llambda.compiler.planner
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._
@@ -90,14 +91,14 @@ private[codegen] object BuildRecordLikeTypes {
       (TypeDataStorage.OutOfLine, recordLikeType.fields)
     }
     else {
-      val inlineDataSize = (recordLikeType match {
+      val inlineDataSize = recordLikeType match {
         case _: vt.RecordType =>
-          // Records have two pointer sized fields for inline data storage
-          2
+          // Records have a pointer sized field followed by an area of extra data
+          (config.targetPlatform.pointerBits / 8) + ct.RecordCell.extraDataIrType.elements
         case _: vt.ClosureType =>
-          // Procedures have one pointer for inline storage. The second pointer points to the procedure's entry point
-          1
-      }) * (config.targetPlatform.pointerBits / 8)
+          // Procedures have one pointer for inline storage. A second pointer points to the procedure's entry point
+          config.targetPlatform.pointerBits / 8
+      }
 
       // Try to pack the record fields
       val packedRecord = PackRecordLikeInline(recordLikeType, inlineDataSize, config.targetPlatform)

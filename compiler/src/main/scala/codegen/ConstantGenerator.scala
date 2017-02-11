@@ -176,10 +176,12 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     generatedType.storageType match {
       case TypeDataStorage.Empty =>
         val recordDataNullPtrIr = NullPointerConstant(ct.RecordCell.recordDataIrType)
-        val extraDataNullPtrIr = NullPointerConstant(ct.RecordCell.extraDataIrType)
+        val extraDataNullIr = ArrayConstant(IntegerType(8),
+          List.fill(ct.RecordCell.extraDataIrType.elements)(IntegerConstant(IntegerType(8), 0))
+        )
 
         val recordCell = ct.RecordCell.createConstant(
-          extraData=extraDataNullPtrIr,
+          extraData=extraDataNullIr,
           dataIsInline=1,
           isUndefined=if (isUndefined) 1 else 0,
           recordClassId=generatedType.classId,
@@ -206,7 +208,9 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
         BitcastToConstant(packedCellDef, PointerType(ct.RecordCell.irType))
 
       case TypeDataStorage.OutOfLine =>
-        val extraDataNullPtrIr = NullPointerConstant(ct.RecordCell.extraDataIrType)
+        val extraDataNullIr = ArrayConstant(IntegerType(8),
+          List.fill(ct.RecordCell.extraDataIrType.elements)(IntegerConstant(IntegerType(8), 0))
+        )
 
         val recordDataName = baseName + ".data"
 
@@ -214,7 +218,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
         val recordDataDef = defineConstantData(module)(recordDataName, recordData)
 
         val recordCell = ct.RecordCell.createConstant(
-          extraData=extraDataNullPtrIr,
+          extraData=extraDataNullIr,
           dataIsInline=0,
           isUndefined=if (isUndefined) 1 else 0,
           recordClassId=generatedType.classId,

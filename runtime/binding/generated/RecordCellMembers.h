@@ -3,7 +3,12 @@
  ************************************************************/
 
 public:
-	void* extraData() const
+	const std::uint8_t* extraData() const
+	{
+		return m_extraData;
+	}
+
+	std::uint8_t* extraData()
 	{
 		return m_extraData;
 	}
@@ -20,4 +25,4 @@ public:
 	}
 
 private:
-	void* m_extraData;
+	std::uint8_t m_extraData[8];

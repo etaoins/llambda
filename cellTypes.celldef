@@ -133,7 +133,7 @@ concrete internal cell Procedure : RecordLike {
 
 // Records are internal because each record class is exposed as its own first-class type in Scheme
 concrete internal cell Record : RecordLike {
-	untypedptr extraData;
+	uint8 extraData[8];
 };
 
 concrete cell ErrorObject : Any {

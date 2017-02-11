@@ -1520,7 +1520,7 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
 sealed trait RecordFields extends RecordLikeFields {
   val irType: FirstClassType
 
-  val extraDataIrType = PointerType(IntegerType(8))
+  val extraDataIrType = ArrayType(8, IntegerType(8))
   val extraDataTbaaNode: Metadata
   val extraDataGepIndices: List[Int]
 
