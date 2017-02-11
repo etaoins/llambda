@@ -70,21 +70,21 @@ void testFromString(World &world)
 	}
 
 	{
-		alloc::StringRef asciiHeapString(world, StringCell::fromUtf8StdString(world, "Greetings, unit testers!"));
+		alloc::StringRef asciiHeapString(world, StringCell::fromUtf8StdString(world, "Greetings, fellow unit testers!"));
 
 		SymbolCell *testSymbol = SymbolCell::fromString(world, asciiHeapString);
 
-		ASSERT_EQUAL(testSymbol->byteLength(), 24);
-		ASSERT_EQUAL(memcmp(testSymbol->constUtf8Data(), "Greetings, unit testers!", 24), 0);
+		ASSERT_EQUAL(testSymbol->byteLength(), 31);
+		ASSERT_EQUAL(memcmp(testSymbol->constUtf8Data(), "Greetings, fellow unit testers!", 31), 0);
 	}
 
 	{
-		alloc::StringRef unicodeHeapString(world, StringCell::fromUtf8StdString(world, "Look it's a snowman: ☃!"));
+		alloc::StringRef unicodeHeapString(world, StringCell::fromUtf8StdString(world, "Look it's a little snowman: ☃!"));
 
 		SymbolCell *testSymbol = SymbolCell::fromString(world, unicodeHeapString);
 
-		ASSERT_EQUAL(testSymbol->byteLength(), 25);
-		ASSERT_EQUAL(memcmp(testSymbol->constUtf8Data(),  "Look it's a snowman: ☃!", 25), 0);
+		ASSERT_EQUAL(testSymbol->byteLength(), 32);
+		ASSERT_EQUAL(memcmp(testSymbol->constUtf8Data(),  "Look it's a little snowman: ☃!", 32), 0);
 	}
 }
 
