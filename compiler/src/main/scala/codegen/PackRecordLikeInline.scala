@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.platform.TargetPlatform
 
-object PackRecordLikeInline {
+private[codegen] object PackRecordLikeInline {
   /** Packed record-like
     *
     * @param fieldOrder  Record fields in their memory order
@@ -18,7 +18,7 @@ object PackRecordLikeInline {
   private def isPowerOfTwo(number: Long) =
     (number & (number - 1)) == 0
 
-  private def sizeOfStruct(fields: Seq[vt.ValueType], targetPlatform: TargetPlatform): Long = 
+  private def sizeOfStruct(fields: Seq[vt.ValueType], targetPlatform: TargetPlatform): Long =
     fields.foldLeft(0) { case (currentOffset, field) =>
       val fieldSize = targetPlatform.bytesForType(field)
 
@@ -51,8 +51,7 @@ object PackRecordLikeInline {
 
     if (!targetPlatform.usesNaturalAlignment) {
       // We assume natural alignment
-      // We have no way of reliably determing sizes so always use out-of-line
-      // data
+      // We have no way of reliably determing sizes so always use out-of-line data
       return existingOutOfLine
     }
 

@@ -35,7 +35,7 @@ case class GeneratedType(
     storageType: TypeDataStorage.Value
 )
 
-object BuildRecordLikeTypes {
+private[codegen] object BuildRecordLikeTypes {
   private case class BuildConfig(
       module: IrModuleBuilder,
       childTypesByParent: Map[vt.RecordLikeType, List[vt.RecordLikeType]],
