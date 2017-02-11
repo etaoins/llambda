@@ -20,4 +20,4 @@ public:
 
 private:
 	std::uint8_t m_inlineCharLength;
-	std::uint8_t m_inlineData[20];
+	std::uint8_t m_inlineData[28];

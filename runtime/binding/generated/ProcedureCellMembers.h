@@ -3,6 +3,16 @@
  ************************************************************/
 
 public:
+	const std::uint8_t* extraData() const
+	{
+		return m_extraData;
+	}
+
+	std::uint8_t* extraData()
+	{
+		return m_extraData;
+	}
+
 	void* entryPoint() const
 	{
 		return m_entryPoint;
@@ -20,4 +30,5 @@ public:
 	}
 
 private:
+	std::uint8_t m_extraData[8];
 	void* m_entryPoint;

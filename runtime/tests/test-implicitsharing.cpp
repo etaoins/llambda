@@ -38,8 +38,8 @@ public:
 
 	static void testAll(World &world)
 	{
-		auto sourceString = reinterpret_cast<const std::uint8_t*>(u8"Hello world everyone!");
-		const size_t sourceLength = 21;
+		auto sourceString = reinterpret_cast<const std::uint8_t*>(u8"Hello world everyone! This needs to be long!");
+		const size_t sourceLength = 44;
 
 		// Create a source bytevector
 		alloc::BytevectorRef origBv(world, BytevectorCell::fromData(world, sourceString, sourceLength));
@@ -96,8 +96,7 @@ public:
 		//
 		// Test a grand tour of string ->  symbol -> string -> bytevector -> string
 		//
-		
-		alloc::StringRef firstString(world, StringCell::fromUtf8StdString(world, u8"Hello world everyone!"));
+		alloc::StringRef firstString(world, StringCell::fromUtf8StdString(world, u8"Hello world everyone! This is very long!"));
 		alloc::SymbolRef firstSymbol(world, SymbolCell::fromString(world, firstString));
 		alloc::StringRef secondString(world, StringCell::fromSymbol(world, firstSymbol));
 		alloc::BytevectorRef firstBv(world, secondString->toUtf8Bytevector(world));

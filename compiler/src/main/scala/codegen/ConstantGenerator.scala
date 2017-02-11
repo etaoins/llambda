@@ -235,12 +235,16 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     // Find the class ID for the empty closure type
     val generatedType = generatedTypes(vt.EmptyClosureType)
 
+    val extraDataNullIr = ArrayConstant(IntegerType(8),
+      List.fill(ct.ProcedureCell.extraDataIrType.elements)(IntegerConstant(IntegerType(8), 0))
+    )
+
     val procCell = ct.ProcedureCell.createConstant(
+      extraData=extraDataNullIr,
       entryPoint=entryPoint,
       recordClassId=generatedType.classId,
-      // This can be anything as it's unused. Dynamic record cells leave this
-      // uninitialized to be instruction thrifty but we have to supply a value
-      // here
+      // This can be anything as it's unused. Dynamic record cells leave this uninitialized to be instruction thrifty
+      // but we have to supply a value here
       recordData=NullPointerConstant(ct.ProcedureCell.recordDataIrType),
       dataIsInline=1,
       isUndefined=0

@@ -37,7 +37,7 @@
 !25 = !{!"String::inlineByteLength"}
 
 ; {supertype, unsigned inlineCharLength, inlineData}
-%inlineString = type {%string, i8, [20 x i8]}
+%inlineString = type {%string, i8, [28 x i8]}
 !26 = !{!"InlineString::inlineCharLength"}
 !27 = !{!"InlineString::inlineData"}
 
@@ -54,7 +54,7 @@
 !33 = !{!"Symbol::inlineByteLength"}
 
 ; {supertype, unsigned inlineCharLength, inlineData}
-%inlineSymbol = type {%symbol, i8, [20 x i8]}
+%inlineSymbol = type {%symbol, i8, [28 x i8]}
 !34 = !{!"InlineSymbol::inlineCharLength"}
 !35 = !{!"InlineSymbol::inlineData"}
 
@@ -116,53 +116,54 @@
 !65 = !{!"RecordLike::recordClassId"}
 !66 = !{!"RecordLike::recordData"}
 
-; {supertype, entryPoint}
-%procedure = type {%recordLike, i8*}
+; {supertype, extraData, entryPoint}
+%procedure = type {%recordLike, [8 x i8], i8*}
 !67 = !{!"Any::typeId->RecordLike->Procedure", !61}
 !68 = !{!"Any::gcState->RecordLike->Procedure", !62}
 !69 = !{!"RecordLike::dataIsInline->Procedure", !63}
 !70 = !{!"RecordLike::isUndefined->Procedure", !64}
 !71 = !{!"RecordLike::recordClassId->Procedure", !65}
 !72 = !{!"RecordLike::recordData->Procedure", !66}
-!73 = !{!"Procedure::entryPoint"}
+!73 = !{!"Procedure::extraData"}
+!74 = !{!"Procedure::entryPoint"}
 
 ; {supertype, extraData}
-%record = type {%recordLike, [8 x i8]}
-!74 = !{!"Any::typeId->RecordLike->Record", !61}
-!75 = !{!"Any::gcState->RecordLike->Record", !62}
-!76 = !{!"RecordLike::dataIsInline->Record", !63}
-!77 = !{!"RecordLike::isUndefined->Record", !64}
-!78 = !{!"RecordLike::recordClassId->Record", !65}
-!79 = !{!"RecordLike::recordData->Record", !66}
-!80 = !{!"Record::extraData"}
+%record = type {%recordLike, [16 x i8]}
+!75 = !{!"Any::typeId->RecordLike->Record", !61}
+!76 = !{!"Any::gcState->RecordLike->Record", !62}
+!77 = !{!"RecordLike::dataIsInline->Record", !63}
+!78 = !{!"RecordLike::isUndefined->Record", !64}
+!79 = !{!"RecordLike::recordClassId->Record", !65}
+!80 = !{!"RecordLike::recordData->Record", !66}
+!81 = !{!"Record::extraData"}
 
 ; {supertype, category, message, irritants}
 %errorObject = type {%any, i16, %string*, %listElement*}
-!81 = !{!"Any::typeId->ErrorObject", !10}
-!82 = !{!"Any::gcState->ErrorObject", !11}
-!83 = !{!"ErrorObject::category"}
-!84 = !{!"ErrorObject::message"}
-!85 = !{!"ErrorObject::irritants"}
+!82 = !{!"Any::typeId->ErrorObject", !10}
+!83 = !{!"Any::gcState->ErrorObject", !11}
+!84 = !{!"ErrorObject::category"}
+!85 = !{!"ErrorObject::message"}
+!86 = !{!"ErrorObject::irritants"}
 
 ; {supertype, port}
 %port = type {%any, i8*}
-!86 = !{!"Any::typeId->Port", !10}
-!87 = !{!"Any::gcState->Port", !11}
-!88 = !{!"Port::port"}
+!87 = !{!"Any::typeId->Port", !10}
+!88 = !{!"Any::gcState->Port", !11}
+!89 = !{!"Port::port"}
 
 ; {supertype}
 %eofObject = type {%any}
-!89 = !{!"Any::typeId->EofObject", !10}
-!90 = !{!"Any::gcState->EofObject", !11}
+!90 = !{!"Any::typeId->EofObject", !10}
+!91 = !{!"Any::gcState->EofObject", !11}
 
 ; {supertype, mailbox}
 %mailbox = type {%any, i8*}
-!91 = !{!"Any::typeId->Mailbox", !10}
-!92 = !{!"Any::gcState->Mailbox", !11}
-!93 = !{!"Mailbox::mailbox"}
+!92 = !{!"Any::typeId->Mailbox", !10}
+!93 = !{!"Any::gcState->Mailbox", !11}
+!94 = !{!"Mailbox::mailbox"}
 
 ; {supertype, datumHashTree}
 %hashMap = type {%any, i8*}
-!94 = !{!"Any::typeId->HashMap", !10}
-!95 = !{!"Any::gcState->HashMap", !11}
-!96 = !{!"HashMap::datumHashTree"}
+!95 = !{!"Any::typeId->HashMap", !10}
+!96 = !{!"Any::gcState->HashMap", !11}
+!97 = !{!"HashMap::datumHashTree"}

@@ -16,7 +16,7 @@ class MemoryBlock;
 class AllocCell : public AnyCell
 {
 protected:
-	std::uint8_t padding[22];
+	std::uint8_t padding[30];
 };
 
 // This is a special cell that terminates a heap segment

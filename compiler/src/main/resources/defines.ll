@@ -4,7 +4,7 @@
 @llcore_true_value = external constant %boolean
 @llcore_empty_list_value = external constant %emptyList
 
-%cell = type {[24 x i8]}
+%cell = type {[32 x i8]}
 
 !0 = !{ !"World::shadowStackHead" }
 !1 = !{ !"World::allocNext" }

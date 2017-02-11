@@ -25,4 +25,4 @@ public:
 	}
 
 private:
-	std::uint8_t m_extraData[8];
+	std::uint8_t m_extraData[16];

@@ -67,7 +67,7 @@ concrete cell String : Any {
 
 variant cell InlineString : String {
 	uint8 inlineCharLength;
-	uint8 inlineData[20];
+	uint8 inlineData[28];
 };
 
 variant cell HeapString : String {
@@ -82,7 +82,7 @@ concrete cell Symbol : Any {
 
 variant cell InlineSymbol : Symbol {
 	uint8 inlineCharLength;
-	uint8 inlineData[20];
+	uint8 inlineData[28];
 };
 
 variant cell HeapSymbol : Symbol {
@@ -128,12 +128,13 @@ abstract internal cell RecordLike : Any {
 };
 
 concrete internal cell Procedure : RecordLike {
+	uint8 extraData[8];
 	untypedptr entryPoint;
 };
 
 // Records are internal because each record class is exposed as its own first-class type in Scheme
 concrete internal cell Record : RecordLike {
-	uint8 extraData[8];
+	uint8 extraData[16];
 };
 
 concrete cell ErrorObject : Any {
