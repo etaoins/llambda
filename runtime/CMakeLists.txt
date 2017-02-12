@@ -1,8 +1,12 @@
-# This is the version used to build this file
-# It hasn't been tested on earlier versions of CMake but it may work
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.0)
 
 project (lliby)
+
+# Enable C++14
+set(CMAKE_CXX_STANDARD 14)
+set(cMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_library(llcore
 	actor/ActorContext.cpp
 	actor/Mailbox.cpp
@@ -154,9 +158,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror")
 endif()
-
-# Enable C++11
-ADD_DEFINITIONS(-std=c++11)
 
 # Force colour output so Clang++ prints pretty errors in Ninja
 if (${CMAKE_GENERATOR} STREQUAL "Ninja" AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
