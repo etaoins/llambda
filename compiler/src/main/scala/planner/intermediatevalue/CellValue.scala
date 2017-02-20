@@ -140,7 +140,7 @@ class CellValue(
 
         // Convert to the right width
         val convTemp = ps.Temp(intType)
-        plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, intType.signed)
+        plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, signed=true)
         convTemp
       }
 

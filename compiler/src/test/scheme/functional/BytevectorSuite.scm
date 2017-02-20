@@ -19,41 +19,45 @@
   (assert-equal #u8() (bytevector))
   (assert-equal #u8(1 3 5 1 3 5) (bytevector 1 3 5 1 3 5))))
 
-(define-test "static bytevector length" (expect-static-success
+(define-test "static (bytevector) length" (expect-static-success
   (assert-equal 3 (bytevector-length #u8(1 2 3)))
   (assert-equal 0 (bytevector-length #u8()))))
 
-(define-test "dynamic bytevector length" (expect-success
+(define-test "dynamic (bytevector) length" (expect-success
   (assert-equal 15 (bytevector-length (make-bytevector 15 129)))
   (assert-equal 0 (bytevector-length (make-bytevector 0 15)))))
 
-(define-test "bytevector-u8-ref" (expect 5
-  (bytevector-u8-ref #u8(1 3 5 201 203 205) 2)))
+(define-test "(bytevector-u8-ref)" (expect-success
+  (define bv #u8(1 3 5 201 203 205))
 
-(define-test "bytevector-u8-ref past end of bytevector fails" (expect-error range-error?
+  (assert-equal 1 (bytevector-u8-ref bv 0))
+  (assert-equal 5 (bytevector-u8-ref bv 2))
+  (assert-equal 205 (bytevector-u8-ref bv 5))))
+
+(define-test "(bytevector-u8-ref) past end of bytevector fails" (expect-error range-error?
   (bytevector-u8-ref #u8(1 3 5 201 203 205) 7)))
 
-(define-test "bytevector-u8-ref with negative index fails" (expect-error range-error?
+(define-test "(bytevector-u8-ref) with negative index fails" (expect-error range-error?
   (bytevector-u8-ref #u8(1 3 5 201 203 205) -1)))
 
-(define-test "bytevector-u8-ref with non-integer fails" (expect-error type-error?
+(define-test "(bytevector-u8-ref) with non-integer fails" (expect-error type-error?
   (bytevector-u8-ref #u8(1 3 5 201 203 205) "4")))
 
-(define-test "bytevector-u8-set!" (expect #u8(1 1 2 1 1)
+(define-test "(bytevector-u8-set!)" (expect #u8(1 1 2 1 1)
   ; Need to make a new bytevector because vector literals are immutable
   (define test-bytevector (make-bytevector 5 1))
   (bytevector-u8-set! test-bytevector 2 2)
   test-bytevector))
 
-(define-test "bytevector-u8-set! on bytevector literal fails" (expect-error mutate-literal-error?
+(define-test "(bytevector-u8-set!) on bytevector literal fails" (expect-error mutate-literal-error?
   ; We should fail gracefully from this - i.e. no segfault, no silent success
   (bytevector-u8-set! #u8(1 1 1 1 1 1) 2 2)))
 
-(define-test "bytevector-u8-set! past end of bytevector fails" (expect-error range-error?
+(define-test "(bytevector-u8-set!) past end of bytevector fails" (expect-error range-error?
   (define test-bytevector (make-bytevector 5 1))
   (bytevector-u8-set! test-bytevector 5 2)))
 
-(define-test "bytevector-u8-set! with negative index fails" (expect-error range-error?
+(define-test "(bytevector-u8-set!) with negative index fails" (expect-error range-error?
   (define test-bytevector (make-bytevector 5 1))
   (bytevector-u8-set! test-bytevector -1 2)))
 

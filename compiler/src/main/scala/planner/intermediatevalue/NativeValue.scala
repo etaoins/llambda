@@ -59,7 +59,7 @@ class NativeIntegerValue(
       AssertIntInRange(tempValue, nativeType, intType)(possibleValues)
 
       val convTemp = ps.Temp(nativeType)
-      plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, intType.signed)
+      plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, nativeType.signed)
 
       convTemp
 
