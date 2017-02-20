@@ -177,7 +177,7 @@ protected:
 	void setLengths(ByteLengthType newByteLength, CharLengthType newCharLength);
 	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count);
 
-	static size_t inlineDataSize();
+	static std::size_t inlineDataSize();
 	bool dataIsInline() const;
 
 	std::size_t byteCapacity() const;

@@ -72,7 +72,7 @@ StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArr
 	const std::uint8_t *endPtr = scanPtr + byteLength;
 
 	// Calculate the character length - this can throw an exception
-	size_t charLength = utf8::validateData(scanPtr, endPtr);
+	std::size_t charLength = utf8::validateData(scanPtr, endPtr);
 
 	// Reference the byte array now that its contents have been validated
 	byteArray->ref();

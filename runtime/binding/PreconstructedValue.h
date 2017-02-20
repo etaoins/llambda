@@ -17,7 +17,7 @@ public:
 	}
 
 	// Disallow heap creation to force singleton use
-	void *operator new(size_t size) = delete;
+	void *operator new(std::size_t size) = delete;
 };
 
 }

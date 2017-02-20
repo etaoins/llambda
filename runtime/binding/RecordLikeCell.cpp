@@ -1,6 +1,6 @@
 #include "RecordLikeCell.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
 #include <atomic>
 
@@ -20,7 +20,7 @@ namespace
 #endif
 }
 
-void* RecordLikeCell::allocateRecordData(size_t bytes)
+void* RecordLikeCell::allocateRecordData(std::size_t bytes)
 {
 #ifdef _LLIBY_CHECK_LEAKS
 	recordDataAllocCount.fetch_add(1, std::memory_order_relaxed);
@@ -45,7 +45,7 @@ void RecordLikeCell::finalizeRecordLike()
 	}
 }
 
-size_t RecordLikeCell::recordDataInstanceCount()
+std::size_t RecordLikeCell::recordDataInstanceCount()
 {
 #ifdef _LLIBY_CHECK_LEAKS
 	return recordDataAllocCount.load(std::memory_order_relaxed);
@@ -67,7 +67,7 @@ const RecordClassMap* RecordLikeCell::classMap() const
 	}
 }
 
-RecordLikeCell::RecordClassIdType RecordLikeCell::registerRuntimeRecordClass(size_t totalSize, const std::vector<size_t> &offsets)
+RecordLikeCell::RecordClassIdType RecordLikeCell::registerRuntimeRecordClass(std::size_t totalSize, const std::vector<std::size_t> &offsets)
 {
 	// The raw class ID is the index in the runtimeRecordClass vector
 	const std::uint32_t offsetCount = offsets.size();

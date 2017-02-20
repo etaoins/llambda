@@ -49,7 +49,7 @@ public:
 	 *
 	 * This cannot fail. The program will be aborted if more memory cannot be allocated
 	 */
-	void *allocate(size_t count = 1)
+	void *allocate(std::size_t count = 1)
 	{
 		AllocCell *allocation = m_allocNext;
 		AllocCell *newAllocNext = allocation + count;
@@ -70,7 +70,7 @@ public:
 	/**
 	 * Returns the number of allocated cells in the heap since the last call to resetAllocationCounter()
 	 */
-	size_t allocationCounter() const
+	std::size_t allocationCounter() const
 	{
 		return currentSegmentAllocations() + m_allocationCounterBase;
 	}

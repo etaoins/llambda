@@ -157,7 +157,7 @@ public:
 				auto externNode = static_cast<ExternalRootListNode*>(node);
 
 				// Visit each cell in this range
-				for(size_t i = 0; i < externNode->cellCount(); i++)
+				for(std::size_t i = 0; i < externNode->cellCount(); i++)
 				{
 					auto cellRef = reinterpret_cast<AnyCell**>(&externNode->basePointer()[i]);
 
@@ -199,7 +199,7 @@ public:
 	void visitDynamicState(dynamic::State *state, T visitor)
 	{
 		dynamic::State::ParameterValueMap rebuiltMap;
-		const size_t valueCount = state->selfValues().size();
+		const std::size_t valueCount = state->selfValues().size();
 
 		if (valueCount > 0)
 		{

@@ -26,7 +26,7 @@ class RecordLikeCell : public AnyCell
 public:
 	using RecordClassIdType = decltype(m_recordClassId);
 
-	static void *allocateRecordData(size_t bytes);
+	static void *allocateRecordData(std::size_t bytes);
 	static void freeRecordData(void *);
 
 	// Used by the garbage collector to update any references to record data stored inline
@@ -79,7 +79,7 @@ public:
 	 * @param  offsets    List of offsets of AnyCells inside the record-like data
 	 * @return Unique class ID for the new record-like class
 	 */
-	static RecordClassIdType registerRuntimeRecordClass(size_t totalSize, const std::vector<size_t> &offsets);
+	static RecordClassIdType registerRuntimeRecordClass(std::size_t totalSize, const std::vector<std::size_t> &offsets);
 
 	void setRecordData(void *newData)
 	{
@@ -95,7 +95,7 @@ public:
 	 * concurrent instance creation or destruction and any other previously modifying threads have been synchronized
 	 * with through another mechanism.
 	 */
-	static size_t recordDataInstanceCount();
+	static std::size_t recordDataInstanceCount();
 
 	// TypeGenerator.scala always allocates this first
 	static const RecordClassIdType EmptyRecordLikeClassId = 0;

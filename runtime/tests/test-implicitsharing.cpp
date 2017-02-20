@@ -39,7 +39,7 @@ public:
 	static void testAll(World &world)
 	{
 		auto sourceString = reinterpret_cast<const std::uint8_t*>(u8"Hello world everyone! This needs to be long!");
-		const size_t sourceLength = 44;
+		const std::size_t sourceLength = 44;
 
 		// Create a source bytevector
 		alloc::BytevectorRef origBv(world, BytevectorCell::fromData(world, sourceString, sourceLength));

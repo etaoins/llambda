@@ -1,7 +1,7 @@
 #include "alloc/Heap.h"
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "alloc/MemoryBlock.h"
 #include "alloc/Finalizer.h"
@@ -81,7 +81,7 @@ AllocCell* Heap::addNewSegment(std::size_t reserveCount)
 	m_allocNext = m_currentSegmentStart + reserveCount;
 
 	// Find the number of cells we can fit in the segment with room for a segment terminator
-	const size_t usableCellCount = (newSegment->size(newSegmentSize) - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
+	const std::size_t usableCellCount = (newSegment->size(newSegmentSize) - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
 
 	m_allocEnd = reinterpret_cast<AllocCell*>(newSegment->startPointer()) + usableCellCount;
 

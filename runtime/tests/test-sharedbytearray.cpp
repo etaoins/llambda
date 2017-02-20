@@ -45,10 +45,10 @@ int main(int argc, char *argv[])
 		// However, the second free should
 		ASSERT_TRUE(handle2->unref());
 	}
-	
+
 	{
 		const char *testData = "01234";
-		const size_t testDataSize = 5;
+		const std::size_t testDataSize = 5;
 
 		// Create a byte array
 		SharedByteArray *handle1 = SharedByteArray::createInstance(5);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 	}
 
 	{
-		const size_t minimumByteCount = 17;
+		const std::size_t minimumByteCount = 17;
 
 		SharedByteArray *handle1 = SharedByteArray::createInstance(minimumByteCount);
 

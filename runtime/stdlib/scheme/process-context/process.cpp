@@ -9,7 +9,7 @@
 #include "dynamic/State.h"
 
 #include <cstring>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 
 using namespace lliby;

@@ -17,13 +17,13 @@ class AnyCell
 {
 #include "generated/AnyCellMembers.h"
 public:
-	void *operator new(size_t s, void *placement)
+	void *operator new(std::size_t s, void *placement)
 	{
 		return placement;
 	}
 
 	// Don't allow heap allocations
-	void *operator new(size_t s) = delete;
+	void *operator new(std::size_t s) = delete;
 
 	void operator delete(void *value)
 	{

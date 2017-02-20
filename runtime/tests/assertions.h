@@ -1,7 +1,7 @@
 #ifndef _LLIBY_TEST_ASSERTIONS_H
 #define _LLIBY_TEST_ASSERTIONS_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string.h>
 #include <iostream>
 

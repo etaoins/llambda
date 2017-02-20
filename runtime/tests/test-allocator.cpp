@@ -286,7 +286,7 @@ void testRecordLikeGc(World &world)
 	}
 }
 
-void createListOfSize(World &world, size_t cellCount)
+void createListOfSize(World &world, std::size_t cellCount)
 {
 	std::vector<AnyCell*> falseCells;
 	falseCells.resize(cellCount);
@@ -305,7 +305,7 @@ void createListOfSize(World &world, size_t cellCount)
 void testHugeRangeAlloc(World &world)
 {
 	// This ensures we can allocate large chunks of GCed memory at once
-	const size_t cellCount = 1024 * 1024;
+	const std::size_t cellCount = 1024 * 1024;
 	createListOfSize(world, cellCount);
 
 	// Force GC to ensure the collector doesn't crash

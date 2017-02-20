@@ -89,7 +89,7 @@ public:
 	{
 	}
 
-	size_t size() const
+	std::size_t size() const
 	{
 		return m_endPointer - m_startPointer;
 	}

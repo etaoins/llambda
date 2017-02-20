@@ -19,7 +19,7 @@ template<class T>
 class StrongRoot : public AbstractRoot<T>
 {
 public:
-	StrongRoot(World &world, T** cellRef, size_t cellCount = 1) :
+	StrongRoot(World &world, T** cellRef, std::size_t cellCount = 1) :
 		AbstractRoot<T>(&world.strongRoots(), cellRef, cellCount)
 	{
 	}

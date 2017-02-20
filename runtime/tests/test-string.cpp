@@ -36,7 +36,7 @@ std::uint8_t* utf8Bytes(const char *str)
 std::size_t slacklessStringSize(size_t minimumSize)
 {
 	void *testMalloc = malloc(minimumSize);
-	const size_t testSize = platform::mallocActualSize(testMalloc, minimumSize);
+	const std::size_t testSize = platform::mallocActualSize(testMalloc, minimumSize);
 	free(testMalloc);
 
 	return testSize;
@@ -91,7 +91,7 @@ void testFromUtf8Data(World &world)
 	}
 
 	{
-		const size_t testSize = slacklessStringSize(24);
+		const std::size_t testSize = slacklessStringSize(24);
 
 		auto *testCharData = new unsigned char[testSize];
 		memset(testCharData, 'a', testSize);
@@ -401,7 +401,7 @@ void testStringCellBuilder(World &world)
 	}
 
 	{
-		const size_t testSize = slacklessStringSize(24);
+		const std::size_t testSize = slacklessStringSize(24);
 
 		StringCellBuilder builder(testSize);
 
@@ -537,7 +537,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		const size_t testSize = slacklessStringSize(24);
+		const std::size_t testSize = slacklessStringSize(24);
 
 		// Allocate an extra by so copy() needs to COW
 		StringCell *offByOneTest = StringCell::fromFill(world, testSize + 1, UnicodeChar(0x20));

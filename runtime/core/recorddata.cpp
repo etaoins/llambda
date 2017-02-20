@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include <cstdint>
 
 #include "binding/RecordLikeCell.h"

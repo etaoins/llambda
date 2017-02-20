@@ -70,9 +70,9 @@ namespace
 	};
 }
 
-size_t collect(World &world, Heap &newHeap)
+std::size_t collect(World &world, Heap &newHeap)
 {
-	size_t reachableCells = 0;
+	std::size_t reachableCells = 0;
 
 	CellRefWalker walker;
 

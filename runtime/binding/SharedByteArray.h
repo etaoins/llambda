@@ -26,7 +26,7 @@ public:
 	constexpr static std::size_t maximumCapacity()
 	{
 		// We're limited by the maximum allocation size
-		return std::numeric_limits<size_t>::max() - sizeof(SharedByteArray);
+		return std::numeric_limits<std::size_t>::max() - sizeof(SharedByteArray);
 	}
 
 	/**

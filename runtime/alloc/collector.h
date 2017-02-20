@@ -11,7 +11,7 @@ class Heap;
 namespace alloc
 {
 
-size_t collect(World &world, Heap &newHeap);
+std::size_t collect(World &world, Heap &newHeap);
 
 }
 }

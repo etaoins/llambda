@@ -19,13 +19,13 @@ void shutdownGlobal();
 /**
  * Allocator for AnyCells
  */
-AllocCell *allocateCells(World &, size_t count = 1);
-RangeAlloc allocateRange(World &, size_t count);
+AllocCell *allocateCells(World &, std::size_t count = 1);
+RangeAlloc allocateRange(World &, std::size_t count);
 
 /**
  * Forces a major GC collection returning the number of reachable cells
  */
-size_t forceCollection(World &world);
+std::size_t forceCollection(World &world);
 
 }
 }

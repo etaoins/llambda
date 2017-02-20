@@ -31,7 +31,7 @@ namespace
 	Finalizer *finalizer = nullptr;
 
 #ifndef _LLIBY_ALWAYS_GC
-	const size_t MaxAllocBeforeForceGc = 1024 * 1024;
+	const std::size_t MaxAllocBeforeForceGc = 1024 * 1024;
 #endif
 }
 
@@ -66,7 +66,7 @@ void shutdownGlobal()
 #endif
 }
 
-AllocCell *allocateCells(World &world, size_t count)
+AllocCell *allocateCells(World &world, std::size_t count)
 {
 #ifndef _LLIBY_ALWAYS_GC
 	if (world.cellHeap.allocationCounter() > MaxAllocBeforeForceGc)
@@ -80,7 +80,7 @@ AllocCell *allocateCells(World &world, size_t count)
 	return static_cast<AllocCell*>(world.cellHeap.allocate(count));
 }
 
-RangeAlloc allocateRange(World &world, size_t count)
+RangeAlloc allocateRange(World &world, std::size_t count)
 {
 	auto start = static_cast<AllocCell*>(allocateCells(world, count));
 	auto end = start + count;
@@ -88,13 +88,13 @@ RangeAlloc allocateRange(World &world, size_t count)
 	return RangeAlloc(start, end);
 }
 
-size_t forceCollection(World &world)
+std::size_t forceCollection(World &world)
 {
 	// Make a new cell heap
 	Heap nextCellHeap(World::InitialHeapSegmentSize);
 
 	// Collect in to the new world
-	const size_t reachableCells = collect(world, nextCellHeap);
+	const std::size_t reachableCells = collect(world, nextCellHeap);
 
 	/* We can normally finalize memory in a background thread for better concurrency. However,  ALWAYS_GC
 	 * immediately marks the memory as inaccessible which means the finalizer must be done with it before we return

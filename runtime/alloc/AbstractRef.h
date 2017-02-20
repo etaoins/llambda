@@ -37,7 +37,7 @@ protected:
 	 * @param cellRef    Reference to the cell or cell array
 	 * @param cellCount  Number of cells in the cell array
 	 */
-	AbstractRoot(const CellRootIterable *rootList, T** cellRef, size_t cellCount = 1)
+	AbstractRoot(const CellRootIterable *rootList, T** cellRef, std::size_t cellCount = 1)
 	{
 		m_node.setData(reinterpret_cast<AllocCell**>(cellRef), cellCount);
 		m_node.insertAfter(rootList);
