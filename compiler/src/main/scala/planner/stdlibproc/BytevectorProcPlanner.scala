@@ -7,7 +7,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-object BytevectorProcPlanner extends StdlibProcPlanner {
+object BytevectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers {
   override def planWithValue(state: PlannerState)(
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
@@ -24,6 +24,11 @@ object BytevectorProcPlanner extends StdlibProcPlanner {
       plan.steps += ps.LoadBytevectorLength(resultTemp, bytevectorTemp)
 
       Some(TempValueToIntermediate(vt.Int64, resultTemp))
+
+    case ("bytevector-u8-ref", List((_, iv.ConstantBytevectorValue(elements)), (_, iv.ConstantIntegerValue(index)))) =>
+      assertIndexValid("(bytevector-ref)", elements.size, index)
+
+      Some(new iv.ConstantIntegerValue(elements(index.toInt)))
 
     case _ =>
       None

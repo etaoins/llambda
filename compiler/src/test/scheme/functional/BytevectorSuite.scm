@@ -27,12 +27,19 @@
   (assert-equal 15 (bytevector-length (make-bytevector 15 129)))
   (assert-equal 0 (bytevector-length (make-bytevector 0 15)))))
 
-(define-test "(bytevector-u8-ref)" (expect-success
+(define-test "static (bytevector-u8-ref)" (expect-static-success
   (define bv #u8(1 3 5 201 203 205))
 
   (assert-equal 1 (bytevector-u8-ref bv 0))
   (assert-equal 5 (bytevector-u8-ref bv 2))
   (assert-equal 205 (bytevector-u8-ref bv 5))))
+
+(define-test "dynamic (bytevector-u8-ref)" (expect-success
+  (define bv (make-bytevector 6 15))
+
+  (assert-equal 15 (bytevector-u8-ref bv 0))
+  (assert-equal 15 (bytevector-u8-ref bv 2))
+  (assert-equal 15 (bytevector-u8-ref bv 5))))
 
 (define-test "(bytevector-u8-ref) past end of bytevector fails" (expect-error range-error?
   (bytevector-u8-ref #u8(1 3 5 201 203 205) 7)))
