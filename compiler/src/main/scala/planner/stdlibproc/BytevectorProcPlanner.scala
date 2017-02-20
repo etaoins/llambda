@@ -12,6 +12,11 @@ object BytevectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHel
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
+    case ("make-bytevector", List((_, iv.ConstantIntegerValue(0)))) |
+         ("make-bytevector", List((_, iv.ConstantIntegerValue(0)), _)) |
+         ("bytevector", Nil) =>
+      Some(new iv.ConstantBytevectorValue(Vector()))
+
     case ("bytevector-length", List((_, iv.ConstantBytevectorValue(elements)))) =>
       Some(iv.ConstantIntegerValue(elements.length))
 
