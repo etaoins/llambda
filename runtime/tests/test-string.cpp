@@ -33,7 +33,7 @@ std::uint8_t* utf8Bytes(const char *str)
 
 // Finds an string size in bytes that will result in no allocation slack
 // This is useful for checking for boundary conditions
-std::size_t slacklessStringSize(size_t minimumSize)
+std::size_t slacklessStringSize(std::size_t minimumSize)
 {
 	void *testMalloc = malloc(minimumSize);
 	const std::size_t testSize = platform::mallocActualSize(testMalloc, minimumSize);

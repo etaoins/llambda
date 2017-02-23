@@ -80,7 +80,7 @@ public:
 	/**
 	 * Returns the shared byte hash for the UTF-8 data of the string
 	 *
-	 * This is not the same as the datum hash. Use DatumHash to hash the StringCell itself.
+	 * This is not the same as the datum hash. Use DatumHash to hash the SymbolCell itself.
 	 */
 	SharedByteHash::ResultType sharedByteHash() const;
 

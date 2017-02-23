@@ -154,7 +154,7 @@ protected:
 	explicit DatumHashTree(std::uint32_t bitmapIndex);
 	~DatumHashTree();
 
-	void *operator new(size_t s, void *placement);
+	void *operator new(std::size_t s, void *placement);
 	void operator delete(void *value);
 
 	DatumHashTree* ref();

@@ -206,7 +206,7 @@ AnyCell* lllist_fold(World &world, FoldProc *foldProcRaw, AnyCell *initialValue,
 	while(true)
 	{
 		// Collect our input from out input lists
-		for(size_t i = 0; i < inputListCount; i++)
+		for(std::size_t i = 0; i < inputListCount; i++)
 		{
 			if (inputLists[i] == EmptyListCell::instance())
 			{

@@ -463,7 +463,7 @@ DatumHashTree::~DatumHashTree()
 #endif
 }
 
-void* DatumHashTree::operator new(size_t s, void *placement)
+void* DatumHashTree::operator new(std::size_t s, void *placement)
 {
 	return placement;
 }

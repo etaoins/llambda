@@ -43,7 +43,7 @@ namespace
 		for(VectorCell::LengthType i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			for(size_t j = 0; j < restVectors.size(); j++)
+			for(std::size_t j = 0; j < restVectors.size(); j++)
 			{
 				restArgVector[j] = restVectors[j]->elements()[i];
 			}
@@ -82,7 +82,7 @@ namespace
 		for(ProperList<AnyCell>::size_type i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			for(size_t j = 0; j < restLists.size(); j++)
+			for(std::size_t j = 0; j < restLists.size(); j++)
 			{
 				auto restListPair = cell_unchecked_cast<PairCell>(restLists[j]);
 				restArgVector[j] = restListPair->car();
@@ -125,7 +125,7 @@ namespace
 		for(std::size_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			for(size_t j = 0; j < restCharVectors.size(); j++)
+			for(std::size_t j = 0; j < restCharVectors.size(); j++)
 			{
 				restArgVector[j] = restCharVectors[j][i];
 			}

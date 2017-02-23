@@ -46,7 +46,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
         new iv.KnownVectorCellValue(knownLength, vectorTemp)
 
       case None =>
-        new iv. CellValue(vt.VectorType, BoxedValue(ct.VectorCell, vectorTemp))
+        new iv.CellValue(vt.VectorType, BoxedValue(ct.VectorCell, vectorTemp))
     }
   }
 

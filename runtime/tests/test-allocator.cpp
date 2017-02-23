@@ -291,7 +291,7 @@ void createListOfSize(World &world, std::size_t cellCount)
 	std::vector<AnyCell*> falseCells;
 	falseCells.resize(cellCount);
 
-	for(size_t i = 0; i < cellCount; i++)
+	for(std::size_t i = 0; i < cellCount; i++)
 	{
 		falseCells[i] = const_cast<BooleanCell*>(BooleanCell::falseInstance());
 	}

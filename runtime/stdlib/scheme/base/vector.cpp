@@ -131,7 +131,7 @@ VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::int64
 	AnyCell **boxedChars = new AnyCell*[charCount];
 	auto unboxedIt = unboxedChars.begin();
 
-	for(size_t i = 0; i < charCount; i++)
+	for(std::size_t i = 0; i < charCount; i++)
 	{
 		boxedChars[i] = new (*allocIt++) CharCell(*unboxedIt++);
 	}
