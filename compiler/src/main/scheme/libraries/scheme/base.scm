@@ -499,8 +499,6 @@
     (define-stdlib port? (make-predicate <port>))
     (define-stdlib input-port? (native-function llbase "llbase_is_input_port" (-> <any> <native-bool>) nocapture))
     (define-stdlib output-port? (native-function llbase "llbase_is_output_port" (-> <any> <native-bool>) nocapture))
-    (define-stdlib textual-port? port?)
-    (define-stdlib binary-port? port?)
     (define-stdlib input-port-open? (native-function llbase "llbase_is_input_port_open" (-> <port> <native-bool>) nocapture))
     (define-stdlib output-port-open? (native-function llbase "llbase_is_output_port_open" (-> <port> <native-bool>) nocapture))
     (define-stdlib close-port (native-function llbase "llbase_close_port" (-> <port> <unit>) nocapture))
