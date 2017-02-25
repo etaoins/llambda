@@ -38,12 +38,9 @@ class KnownRecordMutatorProc(recordType: vt.RecordType, field: vt.RecordField) e
 
     val plan = parentPlan.forkPlan()
 
-    // Extract the record data
-    val recordDataTemp = ps.RecordLikeDataTemp()
-    plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
-
     // Store the new value
-    plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp)
+    val fieldsToSet = List((newValueTemp -> field))
+    plan.steps += ps.SetRecordLikeFields(recordCellTemp, recordType, fieldsToSet)
     plan.steps += ps.Return(None)
 
     PlannedFunction(
@@ -61,13 +58,12 @@ class KnownRecordMutatorProc(recordType: vt.RecordType, field: vt.RecordField) e
       case List((_, recordValue), (_, newValue)) =>
         val recordCellTemp = recordValue.toTempValue(recordType)
 
-        val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
-
-        // Read the field
+        // Store the field
         val fieldType = recordType.typeForField(field)
         val newValueTemp = newValue.toTempValue(fieldType)
-        plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp)
+        val fieldsToSet = List((newValueTemp -> field))
+
+        plan.steps += ps.SetRecordLikeFields(recordCellTemp, recordType, fieldsToSet)
 
         Some(PlanResult(
           state=state,

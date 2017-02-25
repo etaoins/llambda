@@ -909,65 +909,54 @@ case class AssertRecordLikeDefined(
     AssertRecordLikeDefined(f(record), recordLikeType, errorMessage).assignLocationFrom(this)
 }
 
-/** Sets a record field. The value must match the type of record field */
-case class SetRecordDataField(
-    recordData: TempValue,
+/** Sets record fields. The value must match the type of record field */
+case class SetRecordLikeFields(
+    record: TempValue,
     recordLikeType: vt.RecordLikeType,
-    recordField: vt.RecordField,
-    newValue: TempValue
+    fieldsToSet: List[(TempValue, vt.RecordField)]
 ) extends RecordLikeStep {
-  lazy val inputValues = Set(recordData, newValue)
+  lazy val inputValues = fieldsToSet.map(_._1).toSet + record
   val outputValues = Set[TempValue]()
 
-  def renamed(f: (TempValue) => TempValue) =
-    SetRecordDataField(f(recordData), recordLikeType, recordField, f(newValue)).assignLocationFrom(this)
+  def renamed(f: (TempValue) => TempValue) = {
+    val renamedFieldsToSet = fieldsToSet.map { case (newValue, field) =>
+      (f(newValue), field)
+    }
+
+    SetRecordLikeFields(f(record), recordLikeType, renamedFieldsToSet).assignLocationFrom(this)
+  }
 }
 
-/** Reads a record field. The value must match the type of record field */
-case class LoadRecordDataField(
-    result: TempValue,
-    recordData: TempValue,
+/** Reads record fields. The value must match the type of record field */
+case class LoadRecordLikeFields(
+    record: TempValue,
     recordLikeType: vt.RecordLikeType,
-    recordField: vt.RecordField
+    fieldsToLoad: List[(vt.RecordField, TempValue)]
 ) extends RecordLikeStep with DiscardableStep {
-  lazy val inputValues = Set(recordData)
-  lazy val outputValues = Set(result)
+  lazy val inputValues = Set(record)
+  lazy val outputValues = fieldsToLoad.map(_._2).toSet
 
-  def renamed(f: (TempValue) => TempValue) =
-    LoadRecordDataField(f(result), f(recordData), recordLikeType, recordField).assignLocationFrom(this)
+  def renamed(f: (TempValue) => TempValue) = {
+    val renamedFieldsToLoad = fieldsToLoad.map { case (field, result) =>
+      (field, f(result))
+    }
+
+    LoadRecordLikeFields(f(record), recordLikeType, renamedFieldsToLoad).assignLocationFrom(this)
+  }
 }
 
 /** Tests to see if a record is of a given class */
 case class TestRecordLikeClass(
     result: TempValue,
-    recordCell: TempValue,
+    record: TempValue,
     recordLikeType: vt.RecordLikeType,
     possibleTypesOpt: Option[Set[vt.RecordLikeType]] = None
 ) extends RecordLikeStep with DiscardableStep with MergeableStep {
-  lazy val inputValues = Set(recordCell)
+  lazy val inputValues = Set(record)
   lazy val outputValues = Set(result)
 
   def renamed(f: (TempValue) => TempValue) =
-    TestRecordLikeClass(result, f(recordCell), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
-}
-
-/** Loads the data of a record
-  *
-  * This is a mutable read as the record data can point to the inside of a GC moveable value. Since record data fields
-  * aren't full GC managed values there's no way for the garbage collector to update them when performing collection.
-  * The planner is careful to not keep a record data value alive across a GC barrier but merging record data loads could
-  * defeat that.
-  */
-case class LoadRecordLikeData(
-    result: TempValue,
-    recordCell: TempValue,
-    recordLikeType: vt.RecordLikeType
-) extends RecordLikeStep with DiscardableStep {
-  lazy val inputValues = Set(recordCell)
-  lazy val outputValues = Set(result)
-
-  def renamed(f: (TempValue) => TempValue) =
-    LoadRecordLikeData(f(result), f(recordCell), recordLikeType).assignLocationFrom(this)
+    TestRecordLikeClass(result, f(record), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
 }
 
 /** Creates a new parameter procedure

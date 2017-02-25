@@ -53,14 +53,21 @@ object CostForPlanSteps {
       floatMathCost
 
     case _: ps.UnboxValue | _: ps.LoadPairCar | _: ps.LoadPairCdr | _: ps.LoadProcedureEntryPoint |
-         _: ps.LoadVectorLength | _: ps.LoadRecordLikeData | _: ps.LoadRecordDataField | _: ps.LoadVectorElement |
-         _: ps.LoadVectorElementsData | _: ps.LoadBytevectorLength | _: ps.LoadSymbolByteLength |
-         _: ps.LoadSymbolByte =>
+         _: ps.LoadVectorLength |_: ps.LoadVectorElement | _: ps.LoadVectorElementsData | _: ps.LoadBytevectorLength |
+         _: ps.LoadSymbolByteLength | _: ps.LoadSymbolByte =>
       // This is a load from memory
       loadCost
 
-    case _: ps.SetRecordDataField | _: ps.SetRecordLikeDefined | _: ps.StoreVectorElement =>
+    case _: ps.SetRecordLikeDefined | _: ps.StoreVectorElement =>
       storeCost
+
+    case ps.LoadRecordLikeFields(_, _, fieldsToLoad) =>
+      // Load for the record data pointer + each field
+      loadCost + (loadCost * fieldsToLoad.length)
+
+    case ps.SetRecordLikeFields(_, _, fieldsToSet) =>
+      // Load for the record data pointer + each field
+      loadCost + (storeCost * fieldsToSet.length)
 
     case _: ps.TestCellType | _: ps.TestRecordLikeClass =>
       // These are typically a load + test

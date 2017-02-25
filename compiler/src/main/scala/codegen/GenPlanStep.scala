@@ -380,30 +380,31 @@ object GenPlanStep {
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
 
-    case ps.SetRecordDataField(recordDataTemp, recordType, recordField, newValueTemp) =>
-      val recordDataIr = state.liveTemps(recordDataTemp)
-      val newValueIr = state.liveTemps(newValueTemp)
+    case ps.SetRecordLikeFields(recordTemp, recordType, fieldsToSet) =>
+      val recordIr = state.liveTemps(recordTemp)
       val generatedType = genGlobals.generatedTypes(recordType)
+      val recordDataIr = GenLoadRecordLikeData(state.currentBlock)(recordIr, generatedType)
 
-      GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, newValueIr)
+      val fieldsToSetIr = fieldsToSet.map { case (newValueTemp,recordField) =>
+        (state.liveTemps(newValueTemp), recordField)
+      }
+
+      GenSetRecordLikeFields(state.currentBlock)(recordDataIr, generatedType, fieldsToSetIr)
 
       state
 
-    case ps.LoadRecordDataField(resultTemp, recordDataTemp, recordLikeType, recordField) =>
-      val recordDataIr = state.liveTemps(recordDataTemp)
+    case ps.LoadRecordLikeFields(recordTemp, recordLikeType, fieldsToLoad) =>
+      val recordIr = state.liveTemps(recordTemp)
       val generatedType = genGlobals.generatedTypes(recordLikeType)
+      val recordDataIr = GenLoadRecordLikeData(state.currentBlock)(recordIr, generatedType)
 
-      val resultIr = GenLoadRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField)
+      val resultIrs = GenLoadRecordLikeFields(state.currentBlock)(recordDataIr, generatedType, fieldsToLoad.map(_._1))
 
-      state.withTempValue(resultTemp -> resultIr)
+      val tempValuesToIr = fieldsToLoad.map(_._2).zip(resultIrs)
 
-    case ps.LoadRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
-      val recordCellIr = state.liveTemps(recordCellTemp)
-      val generatedType = genGlobals.generatedTypes(recordLikeType)
-
-      val resultIr = GenLoadRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
-
-      state.withTempValue(resultTemp -> resultIr)
+      tempValuesToIr.foldLeft(state) { case (state, tempValueToIr) =>
+        state.withTempValue(tempValueToIr)
+      }
 
     case ps.DisposeValues(disposedTemps) =>
       state.copy(

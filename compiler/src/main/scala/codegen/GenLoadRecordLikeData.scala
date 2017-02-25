@@ -6,7 +6,7 @@ import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
 object GenLoadRecordLikeData {
-  def apply(block: IrBlockBuilder)(recordCellIr: IrValue, generatedType: GeneratedType): IrValue = {
+  def apply(block: IrBlockBuilder)(recordIr: IrValue, generatedType: GeneratedType): IrValue = {
     val cellType = generatedType.recordLikeType.cellType
     val recordDataIrType = generatedType.irType
 
@@ -16,11 +16,11 @@ object GenLoadRecordLikeData {
 
       case TypeDataStorage.Inline =>
         // Our data is inline; return a pointer to the record data pointer itself
-        cellType.genPointerToRecordData(block)(recordCellIr)
+        cellType.genPointerToRecordData(block)(recordIr)
 
       case TypeDataStorage.OutOfLine =>
         // Our data is out-of-line; dereference the record data pointer
-        cellType.genLoadFromRecordData(block)(recordCellIr)
+        cellType.genLoadFromRecordData(block)(recordIr)
     }
 
     block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))

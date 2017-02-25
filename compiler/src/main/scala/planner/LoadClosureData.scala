@@ -33,15 +33,20 @@ private[planner] object LoadClosureData {
       Map()
     }
     else {
-      val closureDataTemp = ps.RecordLikeDataTemp()
-      plan.steps += ps.LoadRecordLikeData(closureDataTemp, procTemp, manifest.closureType)
-
-      wantedVariables.map({ capturedVar =>
-        // Load the variable
+      // Build Temps for each record field
+      val capturedVarToTemp = wantedVariables.map({ capturedVar =>
         val fieldType = manifest.closureType.typeForField(capturedVar.recordField)
-        val varTemp = new ps.TempValue(fieldType.isGcManaged)
-        plan.steps += ps.LoadRecordDataField(varTemp, closureDataTemp, manifest.closureType, capturedVar.recordField)
+        (capturedVar, new ps.TempValue(fieldType.isGcManaged))
+      })
 
+      // Load them all
+      val recordFieldToTemp = capturedVarToTemp.map { case (capturedVar, varTemp) =>
+        (capturedVar.recordField, varTemp)
+      }
+
+      plan.steps += ps.LoadRecordLikeFields(procTemp, manifest.closureType, recordFieldToTemp)
+
+      capturedVarToTemp.map({ case (capturedVar, varTemp) =>
         // Add it to our state
         capturedVar match {
           case immutable: CapturedImmutable =>

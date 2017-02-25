@@ -31,11 +31,9 @@ private[planner] object PlanProcedureTrampoline {
 
     val updatedProc = if (targetProc.polySignature.upperBound.hasSelfArg) {
       // Load the real target proc
-      val closureDataTemp = ps.RecordLikeDataTemp()
-      plan.steps += ps.LoadRecordLikeData(closureDataTemp, inSelfTemp, AdapterProcType)
-
       val targetProcCell = ps.CellTemp(ct.ProcedureCell)
-      plan.steps += ps.LoadRecordDataField(targetProcCell, closureDataTemp, AdapterProcType, AdapterProcField)
+      val fieldsToLoad = List((AdapterProcField -> targetProcCell))
+      plan.steps += ps.LoadRecordLikeFields(inSelfTemp, AdapterProcType, fieldsToLoad)
 
       targetProc.withSelfTemp(targetProcCell)
     }

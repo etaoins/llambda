@@ -377,4 +377,65 @@ class DisposeValuesSuite extends FunSuite {
 
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
+
+  test("unused load record fields is removed") {
+    val recordField1 = new vt.RecordField("field1", vt.Int64, mutable=false)
+    val recordField2 = new vt.RecordField("field2", vt.Int64, mutable=false)
+    val recordType = new vt.RecordType("<test>", List(recordField1, recordField2))
+
+    val fieldTemp1 = namedTemp(vt.Int64, "fieldTemp1")
+    val fieldTemp2 = namedTemp(vt.Int64, "fieldTemp2")
+
+    val fieldsToLoad = List(
+      (recordField1 -> fieldTemp1),
+      (recordField2 -> fieldTemp2)
+    )
+
+    val testSteps = List(
+      ps.LoadRecordLikeFields(fixedArgTemp, recordType, fieldsToLoad)
+    )
+
+    val testFunction = functionForSteps(testSteps)
+
+    val expectedSteps = List(
+      ps.DisposeValues(Set(selfTemp, fixedArgTemp, restArgTemp))
+    )
+
+    assert(DisposeValues(testFunction).steps === expectedSteps)
+  }
+
+  test("partially used load record fields has unused fields removed") {
+    val recordField1 = new vt.RecordField("field1", vt.Int64, mutable=false)
+    val recordField2 = new vt.RecordField("field2", vt.Int64, mutable=false)
+    val recordType = new vt.RecordType("<test>", List(recordField1, recordField2))
+
+    val fieldTemp1 = namedTemp(vt.Int64, "fieldTemp1")
+    val fieldTemp2 = namedTemp(vt.Int64, "fieldTemp2")
+
+    val testFieldsToLoad = List(
+      (recordField1 -> fieldTemp1),
+      (recordField2 -> fieldTemp2)
+    )
+
+    val testSteps = List(
+      ps.LoadRecordLikeFields(fixedArgTemp, recordType, testFieldsToLoad),
+      ps.Return(Some(fieldTemp1))
+    )
+
+    val testFunction = functionForSteps(testSteps)
+
+    val expectedFieldsToLoad = List(
+      (recordField1 -> fieldTemp1)
+    )
+
+    val expectedSteps = List(
+      ps.DisposeValues(Set(selfTemp, restArgTemp)),
+      ps.LoadRecordLikeFields(fixedArgTemp, recordType, expectedFieldsToLoad),
+      ps.DisposeValues(Set(fixedArgTemp)),
+      ps.Return(Some(fieldTemp1)),
+      ps.DisposeValues(Set(fieldTemp1))
+    )
+
+    assert(DisposeValues(testFunction).steps === expectedSteps)
+  }
 }

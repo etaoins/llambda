@@ -91,6 +91,28 @@ object DisposeValues {
           discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
       }
 
+    case (loadRecordFieldsStep: ps.LoadRecordLikeFields) :: reverseTail =>
+      val usedFieldsToLoad = loadRecordFieldsStep.fieldsToLoad.filter { case (field, tempValue) =>
+        usedValues.contains(tempValue)
+      }
+
+      if (usedFieldsToLoad.isEmpty) {
+        // Discard completely
+        discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
+      }
+      else {
+        val newStep = loadRecordFieldsStep
+          .copy(fieldsToLoad=usedFieldsToLoad)
+          .assignLocationFrom(loadRecordFieldsStep)
+
+        val allStepValues = newStep.inputValues ++ newStep.outputValues
+        val disposeList = disposeValuesToSteps(allStepValues -- usedValues)
+        val newUsedValues = usedValues ++ newStep.inputValues
+
+        val newAcc = newStep :: (disposeList ++ acc)
+        discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+      }
+
     case discardableStep :: reverseTail
         if discardableStep.discardable && (usedValues & discardableStep.outputValues).isEmpty =>
       // We can drop this step completely
@@ -108,12 +130,12 @@ object DisposeValues {
       val newAcc = inputDisposable.withDisposedInput(inputDisposeSet) :: (outputDisposeSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
-    case nonBranching :: reverseTail =>
-      val allStepValues = nonBranching.inputValues ++ nonBranching.outputValues
+    case otherStep :: reverseTail =>
+      val allStepValues = otherStep.inputValues ++ otherStep.outputValues
       val disposeList = disposeValuesToSteps(allStepValues -- usedValues)
-      val newUsedValues = usedValues ++ nonBranching.inputValues
+      val newUsedValues = usedValues ++ otherStep.inputValues
 
-      val newAcc = nonBranching :: (disposeList ++ acc)
+      val newAcc = otherStep :: (disposeList ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
     case Nil =>

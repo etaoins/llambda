@@ -68,13 +68,10 @@ private[planner] object PlanExpr {
               plan.steps += ps.AssertRecordLikeDefined(mutableTemp, mutableType, errorMessage)
             }
 
-            // Load our data pointer
-            val recordDataTemp = ps.RecordLikeDataTemp()
-            plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, mutableType)
-
             // Load the data
             val resultTemp = ps.Temp(mutableType.innerType)
-            plan.steps += ps.LoadRecordDataField(resultTemp, recordDataTemp, mutableType, mutableType.recordField)
+            val fieldsToLoad = List((mutableType.recordField -> resultTemp))
+            plan.steps += ps.LoadRecordLikeFields(mutableTemp, mutableType, fieldsToLoad)
 
             val resultValue = TempValueToIntermediate(mutableType.innerType, resultTemp)
 
@@ -113,12 +110,9 @@ private[planner] object PlanExpr {
           plan.steps += ps.AssertRecordLikeDefined(mutableTemp, mutableType, errorMessage)
         }
 
-        // Load our data pointer
-        val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, mutableType)
-
         // Store the data
-        plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, newValueTemp)
+        val fieldsToSet = List(newValueTemp -> mutableType.recordField)
+        plan.steps += ps.SetRecordLikeFields(mutableTemp, mutableType, fieldsToSet)
 
         PlanResult(
           state=newValueResult.state,

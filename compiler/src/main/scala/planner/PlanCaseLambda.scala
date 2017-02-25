@@ -87,12 +87,11 @@ private[planner] object PlanCaseLambda {
       val restoredProcValue = checkingClause.capturedProcOpt match {
         case Some(CapturedProc(_, recordField)) =>
           // We need to restore this procedure from our closure
-          val closureDataTemp = ps.RecordLikeDataTemp()
-          truePlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTempOpt.get, closureType)
-
           val fieldType = closureType.typeForField(recordField)
           val restoredTemp = ps.Temp(fieldType)
-          truePlan.steps += ps.LoadRecordDataField(restoredTemp, closureDataTemp, closureType, recordField)
+          val fieldsToLoad = List((recordField -> restoredTemp))
+
+          truePlan.steps += ps.LoadRecordLikeFields(innerSelfTempOpt.get, closureType, fieldsToLoad)
 
           procValue.withSelfTemp(restoredTemp)
 

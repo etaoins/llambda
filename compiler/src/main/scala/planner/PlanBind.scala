@@ -102,10 +102,8 @@ private[planner] object PlanBind {
             val initialValueTemp = initialIntermediate.toTempValue(mutableType.innerType)
 
             // Update the recursive to point to our new value
-            val recordDataTemp = ps.RecordLikeDataTemp()
-
-            plan.steps += ps.LoadRecordLikeData(recordDataTemp, recursiveTemp, mutableType)
-            plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, initialValueTemp)
+            val fieldsToSet = List((initialValueTemp -> mutableType.recordField))
+            plan.steps += ps.SetRecordLikeFields(recursiveTemp, mutableType, fieldsToSet)
 
             // Mark us as defined
             plan.steps += ps.SetRecordLikeDefined(recursiveTemp, mutableType)

@@ -56,7 +56,11 @@ object AnalyseEscapes extends FunctionConniver {
 
       convertToStack(reverseTail, newCapturedValues, newCond :: acc)
 
-    case (transferring @ (_: ps.CastCellToTypeUnchecked | _: ps.LoadPairValue)) :: reverseTail =>
+    case (transferring @ (
+        _: ps.CastCellToTypeUnchecked |
+        _: ps.LoadPairValue |
+        _: ps.LoadRecordLikeFields
+    )) :: reverseTail =>
       // This captures only if one of its outputs is captured
       val newCapturedValues = if ((capturedValues & transferring.outputValues).isEmpty) {
         capturedValues

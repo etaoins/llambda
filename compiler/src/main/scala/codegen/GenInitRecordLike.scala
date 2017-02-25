@@ -71,10 +71,11 @@ object GenInitRecordLike {
       cellType.genStoreToIsUndefined(block)(isUndefinedIr, recordCell)
     }
 
-    for((field, valueTemp) <- initStep.fieldValues) {
-      val valueIr = state.liveTemps(valueTemp)
-      GenSetRecordDataField(block)(castRecordData, generatedType, field, valueIr)
+    val irValueToRecordField = initStep.fieldValues.toList.map { case (field, valueTemp) =>
+      (state.liveTemps(valueTemp), field)
     }
+
+    GenSetRecordLikeFields(block)(castRecordData, generatedType, irValueToRecordField)
 
     val newState = state.copy(
       currentAllocation=newAllocation

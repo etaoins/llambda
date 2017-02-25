@@ -28,15 +28,12 @@ class KnownRecordAccessorProc(recordType: vt.RecordType, field: vt.RecordField) 
 
     val plan = parentPlan.forkPlan()
 
-    // Extract the record data
-    val recordDataTemp = ps.RecordLikeDataTemp()
-    plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
-
     // Read the field
     val fieldType = recordType.typeForField(field)
     val fieldValueTemp = ps.Temp(fieldType)
+    val fieldsToLoad = List((field -> fieldValueTemp))
 
-    plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field)
+    plan.steps += ps.LoadRecordLikeFields(recordCellTemp, recordType, fieldsToLoad)
     plan.steps += ps.Return(Some(fieldValueTemp))
 
     PlannedFunction(
@@ -63,14 +60,12 @@ class KnownRecordAccessorProc(recordType: vt.RecordType, field: vt.RecordField) 
       case List((_, recordValue)) =>
         val recordCellTemp = recordValue.toTempValue(recordType)
 
-        val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType)
-
         // Read the field
         val fieldType = recordType.typeForField(field)
         val fieldValueTemp = ps.Temp(fieldType)
+        val fieldsToLoad = List((field -> fieldValueTemp))
 
-        plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field)
+        plan.steps += ps.LoadRecordLikeFields(recordCellTemp, recordType, fieldsToLoad)
 
         val resultValue = TempValueToIntermediate(fieldType, fieldValueTemp)
 

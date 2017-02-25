@@ -23,8 +23,7 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
           case _: ps.DisposeValues =>
             // This doesn't come from a particular source line - these are inserted by DisposeValues
 
-          case ps.LoadRecordLikeData(_, _, _: vt.ClosureType) |
-               ps.LoadRecordDataField(_, _, _: vt.ClosureType, _) =>
+          case ps.LoadRecordLikeFields(_, _: vt.ClosureType, _) =>
             // This is loading from a closure in a lambda prologue
 
           case ps.Return(None) if symbol == codegen.LlambdaTopLevelSignature.nativeSymbol =>

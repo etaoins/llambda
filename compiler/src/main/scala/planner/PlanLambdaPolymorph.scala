@@ -235,12 +235,9 @@ object PlanLambdaPolymorph {
           innerSelfTemp
         }
         else {
-          // Load the closure of the primary polymorph
-          val closureDataTemp = ps.RecordLikeDataTemp()
-          procPlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTemp, AdapterProcType)
-
           val primarySelfTemp = ps.CellTemp(ct.ProcedureCell)
-          procPlan.steps += ps.LoadRecordDataField(primarySelfTemp, closureDataTemp, AdapterProcType, AdapterProcField)
+          val fieldsToLoad = List((AdapterProcField -> primarySelfTemp))
+          procPlan.steps += ps.LoadRecordLikeFields(innerSelfTemp, AdapterProcType, fieldsToLoad)
 
           primarySelfTemp
         }
