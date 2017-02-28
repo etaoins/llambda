@@ -775,7 +775,7 @@ case class BoxInteger(
   def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
-    BoxInteger(f(result), f(unboxed)).assignLocationFrom(this)
+    BoxInteger(f(result), f(unboxed), stackAllocate).assignLocationFrom(this)
 }
 
 case class BoxFlonum(
@@ -789,7 +789,7 @@ case class BoxFlonum(
   def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
-    BoxFlonum(f(result), f(unboxed)).assignLocationFrom(this)
+    BoxFlonum(f(result), f(unboxed), stackAllocate).assignLocationFrom(this)
 }
 
 case class BoxChar(
@@ -803,7 +803,7 @@ case class BoxChar(
   def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
-    BoxChar(f(result), f(unboxed)).assignLocationFrom(this)
+    BoxChar(f(result), f(unboxed), stackAllocate).assignLocationFrom(this)
 }
 
 /** Returns from the current function */
@@ -832,7 +832,7 @@ case class InitPair(
   def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
-    InitPair(f(result), f(carValue), f(cdrValue), listLengthOpt).assignLocationFrom(this)
+    InitPair(f(result), f(carValue), f(cdrValue), listLengthOpt, stackAllocate).assignLocationFrom(this)
 }
 
 /** Step creating a record-like cell */
