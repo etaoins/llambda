@@ -6,6 +6,8 @@ import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
 
 object GenParameter {
+  import Implicits._
+
   private val dynamicenvPushDecl = RuntimeFunctions.dynamicenvPush
   private val dynamicenvSetValueDecl = RuntimeFunctions.dynamicenvSetValue
   private val dynamicenvPopDecl = RuntimeFunctions.dynamicenvPop

@@ -64,7 +64,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   protected def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue
   protected def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
-    val trueTemp = ps.Temp(vt.Predicate)
+    val trueTemp = ps.TempValue()
     plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1)
 
    trueTemp
@@ -93,7 +93,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         errorMessageOpt
       )(isProcPlan)
 
-      val castTemp = ps.CellTemp(resultCellType)
+      val castTemp = ps.TempValue()
       isProcPlan.steps += ps.CastCellToTypeUnchecked(castTemp, procTemp, resultCellType)
       castTemp
     }
@@ -108,7 +108,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         errorMessageOpt
       )(isNotProcPlan)
 
-      val castTemp = ps.CellTemp(resultCellType)
+      val castTemp = ps.TempValue()
       isNotProcPlan.steps += ps.CastCellToTypeUnchecked(castTemp, nonProcTemp, resultCellType)
       castTemp
     }
@@ -188,7 +188,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       convertProcType: Boolean = true
   )(implicit plan: PlanWriter): ps.TempValue = targetType match {
     case vt.UnitType =>
-      val constantTemp = ps.CellTemp(ct.UnitCell, knownConstant=true)
+      val constantTemp = ps.TempValue()
       plan.steps += ps.CreateUnitCell(constantTemp)
       constantTemp
 

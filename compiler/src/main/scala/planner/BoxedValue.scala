@@ -25,7 +25,7 @@ case class BoxedValue(
       tempValue
     }
     else {
-      val castTemp = new ps.TempValue(tempValue.isGcManaged)
+      val castTemp = ps.TempValue()
       plan.steps += ps.CastCellToTypeUnchecked(castTemp, tempValue, targetType)
       castTemp
     }

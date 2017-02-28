@@ -25,11 +25,9 @@ class KnownRecordMutatorProc(recordType: vt.RecordType, field: vt.RecordField) e
       "!"
 
   def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
-    val fieldType = recordType.typeForField(field)
-
     // Set up our arguments
-    val recordCellTemp = ps.RecordTemp()
-    val newValueTemp = ps.Temp(fieldType)
+    val recordCellTemp = ps.TempValue()
+    val newValueTemp = ps.TempValue()
 
     val namedArguments = List(
       ("recordCell" -> recordCellTemp),

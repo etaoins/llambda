@@ -12,6 +12,13 @@ import collection.GenTraversableOnce
   */
 final class GcPointerIdentity
 
+/** IrValue with an additional flag determining if it is GC managed
+  *
+  * This is used to determine which values need to be rooted during a GC barrier
+  */
+case class CollectableIrValue(irValue: IrValue, gcRoot: Boolean)
+
+
 /** Tracks the state of temp values during codegen
   *
   * When not using pointer aliases this behaves mostly like a simple Map(). However, explicitly aliased values can be
@@ -19,22 +26,22 @@ final class GcPointerIdentity
   * aliased values
   */
 case class LiveTemps(
-  tempValueToIr: Map[ps.TempValue, IrValue] = Map(),
+  tempValueToCiv: Map[ps.TempValue, CollectableIrValue] = Map(),
   pointerIdentities: Map[ps.TempValue, GcPointerIdentity]  = Map()
-) extends ((ps.TempValue) => IrValue) {
+) extends ((ps.TempValue) => CollectableIrValue) {
   /** Returns the IR value for a temp value */
-  def apply(tempValue: ps.TempValue): IrValue =
-    tempValueToIr(tempValue)
+  def apply(tempValue: ps.TempValue): CollectableIrValue =
+    tempValueToCiv(tempValue)
 
-  def get(tempValue: ps.TempValue): Option[IrValue] =
-    tempValueToIr.get(tempValue)
+  def get(tempValue: ps.TempValue): Option[CollectableIrValue] =
+    tempValueToCiv.get(tempValue)
 
-  def keySet = tempValueToIr.keySet
+  def keySet = tempValueToCiv.keySet
 
-  def +(tempTuple: (ps.TempValue, IrValue)) = {
-    val tempValue = tempTuple._1
+  def +(civTuple: (ps.TempValue, CollectableIrValue)) = {
+    val (tempValue, civ) = civTuple
 
-    val newPointerIdentities = if (tempValue.isGcManaged) {
+    val newPointerIdentities = if (civ.gcRoot) {
       pointerIdentities + (tempValue -> new GcPointerIdentity)
     }
     else {
@@ -42,50 +49,54 @@ case class LiveTemps(
     }
 
     this.copy(
-      tempValueToIr=(tempValueToIr + tempTuple),
+      tempValueToCiv=(tempValueToCiv + civTuple),
       pointerIdentities=newPointerIdentities
     )
   }
 
-  def ++(tempTuples: GenTraversableOnce[(ps.TempValue, IrValue)]) = {
-    tempTuples.foldLeft(this) { case (state, tempTuple) =>
-      state + tempTuple
+  def ++(civTuples: GenTraversableOnce[(ps.TempValue, CollectableIrValue)]) = {
+    civTuples.foldLeft(this) { case (state, civTuple) =>
+      state + civTuple
     }
   }
 
   def -(tempValue: ps.TempValue) = {
     this.copy(
-      tempValueToIr=tempValueToIr - tempValue,
+      tempValueToCiv=tempValueToCiv - tempValue,
       pointerIdentities=pointerIdentities - tempValue
     )
   }
 
   def --(tempValues: GenTraversableOnce[ps.TempValue]) = {
     this.copy(
-      tempValueToIr=tempValueToIr -- tempValues,
+      tempValueToCiv=tempValueToCiv -- tempValues,
       pointerIdentities=pointerIdentities -- tempValues
     )
   }
 
-  def withUpdatedIrValues(updates: GenTraversableOnce[(ps.TempValue, IrValue)]) =
+  def withUpdatedValues(updates: GenTraversableOnce[(ps.TempValue, CollectableIrValue)]) =
     this.copy(
-      tempValueToIr=tempValueToIr ++ updates
+      tempValueToCiv=tempValueToCiv ++ updates
     )
 
-  def withAliasedTempValue(originalTemp: ps.TempValue, tempTuple: (ps.TempValue, IrValue)) =
-    if (originalTemp.isGcManaged) {
+  def withAliasedTempValue(originalTemp: ps.TempValue, tempTuple: (ps.TempValue, IrValue)) = {
+    val gcRoot = tempValueToCiv(originalTemp).gcRoot
+    val civTuple = tempTuple._1 -> CollectableIrValue(tempTuple._2, gcRoot)
+
+    if (gcRoot) {
       val aliasedTemp = tempTuple._1
       // Use the pointer identity from the original value
       val pointerIdentity = pointerIdentities(originalTemp)
 
       this.copy(
-        tempValueToIr=(tempValueToIr + tempTuple),
+        tempValueToCiv=tempValueToCiv + civTuple,
         pointerIdentities=(pointerIdentities + (aliasedTemp -> pointerIdentity))
       )
     }
     else {
       this.copy(
-        tempValueToIr=(tempValueToIr + tempTuple)
+        tempValueToCiv=tempValueToCiv + civTuple
       )
     }
+  }
 }

@@ -18,7 +18,7 @@ object SymbolForTypePredicateProc {
     val allocedSymbol = parentPlan.allocSymbol(symbolHint)
 
     // We only have a single argument
-    val argumentTemp = ps.CellTemp(ct.AnyCell)
+    val argumentTemp = ps.TempValue()
 
     val plan = parentPlan.forkPlan()
 

@@ -6,6 +6,8 @@ import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 
 private[codegen] object GenFunction {
+  import Implicits._
+
   // This is effectively the only exception personality on mainstream Unix-likes
   private val gccPersonalityV0 = GlobalVariable(
     name="__gcc_personality_v0",
@@ -15,6 +17,23 @@ private[codegen] object GenFunction {
       hasVararg=true
     ))
   )
+
+  private def argumentsAreGcRoots(signature: ProcedureSignature): List[Boolean] =
+    if (signature.hasWorldArg) {
+      false :: argumentsAreGcRoots(signature.copy(hasWorldArg=false))
+    }
+    else if (signature.hasSelfArg) {
+      true :: argumentsAreGcRoots(signature.copy(hasSelfArg=false))
+    }
+    else if (signature.mandatoryArgTypes.length > 0) {
+      signature.mandatoryArgTypes.map(_.isGcManaged) ++ argumentsAreGcRoots(signature.copy(mandatoryArgTypes=Nil))
+    }
+    else if ((signature.optionalArgTypes.length > 0) || signature.restArgMemberTypeOpt.isDefined) {
+      true :: argumentsAreGcRoots(signature.copy(optionalArgTypes=Nil, restArgMemberTypeOpt=None))
+    }
+    else {
+      Nil
+    }
 
   def apply(module: IrModuleBuilder, genGlobals: GenGlobals)(nativeSymbol: String, plannedFunction: planner.PlannedFunction) {
     val irSignature = ProcedureSignatureToIr(plannedFunction.signature).irSignature
@@ -47,9 +66,12 @@ private[codegen] object GenFunction {
       generatedFunction.entryBlock.comment(irComment)
     }
 
+    val argsAreGcRoots = argumentsAreGcRoots(plannedFunction.signature)
+
     // Create a blank generation state with just our args
-    val argTemps = plannedFunction.namedArguments.foldLeft(LiveTemps()) { case (liveTemps, (name, tempValue)) =>
-      liveTemps + (tempValue -> generatedFunction.argumentValues(name))
+    val argTemps = plannedFunction.namedArguments.zip(argsAreGcRoots).foldLeft(LiveTemps()) {
+      case (liveTemps, ((name, tempValue), gcRoot)) =>
+        liveTemps + (tempValue -> CollectableIrValue(generatedFunction.argumentValues(name), gcRoot=gcRoot))
     }
 
     // Do we need to set up GC for this function?

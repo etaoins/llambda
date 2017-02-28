@@ -13,7 +13,7 @@ object DynamicProcPlanner extends StdlibProcPlanner {
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[PlanResult] = (reportName, args) match {
     case ("make-parameter", List((_, initialValue))) =>
-      val resultTemp = ps.Temp(vt.TopProcedureType)
+      val resultTemp = ps.TempValue()
       val initialValueTemp = initialValue.toTempValue(vt.AnySchemeType)
 
       plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp)

@@ -49,7 +49,7 @@ object PlanInvokeApply {
         }
 
       case otherType =>
-        val resultTemp = ps.Temp(otherType.representationTypeOpt.get)
+        val resultTemp = ps.TempValue()
         plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, argTemps, discardable=discardable)
 
         otherType match {

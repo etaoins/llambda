@@ -24,13 +24,12 @@ class KnownRecordAccessorProc(recordType: vt.RecordType, field: vt.RecordField) 
       "-" + field.name
 
   def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
-    val recordCellTemp = ps.RecordTemp()
+    val recordCellTemp = ps.TempValue()
 
     val plan = parentPlan.forkPlan()
 
     // Read the field
-    val fieldType = recordType.typeForField(field)
-    val fieldValueTemp = ps.Temp(fieldType)
+    val fieldValueTemp = ps.TempValue()
     val fieldsToLoad = List((field -> fieldValueTemp))
 
     plan.steps += ps.LoadRecordLikeFields(recordCellTemp, recordType, fieldsToLoad)
@@ -62,7 +61,7 @@ class KnownRecordAccessorProc(recordType: vt.RecordType, field: vt.RecordField) 
 
         // Read the field
         val fieldType = recordType.typeForField(field)
-        val fieldValueTemp = ps.Temp(fieldType)
+        val fieldValueTemp = ps.TempValue()
         val fieldsToLoad = List((field -> fieldValueTemp))
 
         plan.steps += ps.LoadRecordLikeFields(recordCellTemp, recordType, fieldsToLoad)

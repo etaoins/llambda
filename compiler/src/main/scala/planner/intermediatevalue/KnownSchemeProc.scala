@@ -60,11 +60,11 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) 
     val polymorphSignature = plan.plannedFunctions(polymorphSymbol).signature
 
     val polymorphSelfTempOpt = selfTempOpt map { selfTemp =>
-      val polymorphEntryPointTemp = ps.EntryPointTemp()
+      val polymorphEntryPointTemp = ps.TempValue()
       plan.steps += ps.CreateNamedEntryPoint(polymorphEntryPointTemp, polymorphSignature, polymorphSymbol)
 
       // Create the polymorph procedure cell
-      val polymorphProcTemp = ps.CellTemp(ct.ProcedureCell)
+      val polymorphProcTemp = ps.TempValue()
 
       val adapterFields = Map[vt.RecordField, ps.TempValue](AdapterProcField -> selfTemp)
       plan.steps += ps.InitProcedure(polymorphProcTemp, AdapterProcType, polymorphEntryPointTemp, adapterFields)

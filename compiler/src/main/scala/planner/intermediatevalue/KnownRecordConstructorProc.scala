@@ -26,8 +26,7 @@ class KnownRecordConstructorProc(recordType: vt.RecordType, initializedFields: L
     val plan = parentPlan.forkPlan()
 
     val fieldToTempValue = (initializedFields.map { field =>
-      val fieldType = recordType.typeForField(field)
-      (field, ps.Temp(fieldType))
+      (field, ps.TempValue())
     }).toMap
 
     // Get unique argument names
@@ -40,7 +39,7 @@ class KnownRecordConstructorProc(recordType: vt.RecordType, initializedFields: L
       }).toList
 
     // Initialize the record
-    val cellTemp = ps.RecordTemp()
+    val cellTemp = ps.TempValue()
 
     // Find our field values
     val allFieldValues = (recordType.fieldsWithInherited map { field =>

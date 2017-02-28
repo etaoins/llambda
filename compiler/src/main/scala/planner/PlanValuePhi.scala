@@ -46,7 +46,7 @@ object PlanValuePhi {
         val leftTempValue = leftInteger.toTempValue(targetType)(leftPlan)
         val rightTempValue = rightInteger.toTempValue(targetType)(rightPlan)
 
-        val phiResultTemp = ps.Temp(targetType)
+        val phiResultTemp = ps.TempValue()
         val phiPossibleValues = leftInteger.possibleValues ++ rightInteger.possibleValues
 
         val resultValue = new iv.NativeIntegerValue(phiResultTemp, targetType)(phiPossibleValues)
@@ -61,7 +61,7 @@ object PlanValuePhi {
       case (leftUnboxed: iv.UnboxedValue, rightUnboxed: iv.UnboxedValue)
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType
-        val phiResultTemp = ps.Temp(commonType)
+        val phiResultTemp = ps.TempValue()
 
         val leftTempValue = leftUnboxed.toTempValue(commonType)(leftPlan)
         val rightTempValue = rightUnboxed.toTempValue(commonType)(rightPlan)
@@ -82,11 +82,7 @@ object PlanValuePhi {
         val leftTempValue = leftValue.toTempValue(phiSchemeType)(leftPlan)
         val rightTempValue = rightValue.toTempValue(phiSchemeType)(rightPlan)
 
-        // If we're constants on both sides we don't need to be GC managed
-        val isGcManaged = leftTempValue.isGcManaged || rightTempValue.isGcManaged
-
-        val phiResultTemp = new ps.TempValue(isGcManaged)
-
+        val phiResultTemp = ps.TempValue()
         val boxedValue = BoxedValue(phiSchemeType.cellType, phiResultTemp)
 
         new DynamicResult(

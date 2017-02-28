@@ -18,8 +18,8 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("standalone boxing is converted") {
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false)
@@ -33,8 +33,8 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("boxing captured by return is not converted") {
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -47,9 +47,9 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("TestCellType does not capture") {
-    val resultTemp = ps.Temp(vt.Predicate)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val resultTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -65,8 +65,8 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("unboxing does not capture") {
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -82,9 +82,9 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("CastCellToTypeUnchecked does not capture if the result is not captured") {
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val anyTemp = ps.Temp(vt.AnySchemeType)
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
+    val anyTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -100,9 +100,9 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("CastCellToTypeUnchecked captures if the result is captured") {
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val anyTemp = ps.Temp(vt.AnySchemeType)
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
+    val anyTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -116,11 +116,11 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("CondBranch does not capture if the phied result is not captured") {
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val trueTemp = ps.Temp(vt.IntegerType)
-    val falseTemp = ps.Temp(vt.IntegerType)
-    val phiTemp = ps.Temp(vt.IntegerType)
-    val testTemp = ps.Temp(vt.Predicate)
+    val unboxedTemp = ps.TempValue()
+    val trueTemp = ps.TempValue()
+    val falseTemp = ps.TempValue()
+    val phiTemp = ps.TempValue()
+    val testTemp = ps.TempValue()
 
     val valuePhis = List(ps.ValuePhi(phiTemp, trueTemp, falseTemp))
 
@@ -148,11 +148,11 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("CondBranch captures if the phied result is captured") {
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val trueTemp = ps.Temp(vt.IntegerType)
-    val falseTemp = ps.Temp(vt.IntegerType)
-    val phiTemp = ps.Temp(vt.IntegerType)
-    val testTemp = ps.Temp(vt.Predicate)
+    val unboxedTemp = ps.TempValue()
+    val trueTemp = ps.TempValue()
+    val falseTemp = ps.TempValue()
+    val phiTemp = ps.TempValue()
+    val testTemp = ps.TempValue()
 
     val valuePhis = List(ps.ValuePhi(phiTemp, trueTemp, falseTemp))
 
@@ -173,11 +173,11 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("CondBranch does not capture if the branches do not capture") {
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val trueTemp = ps.Temp(vt.IntegerType)
-    val falseTemp = ps.Temp(vt.IntegerType)
-    val testTemp = ps.Temp(vt.Predicate)
+    val unboxedTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val trueTemp = ps.TempValue()
+    val falseTemp = ps.TempValue()
+    val testTemp = ps.TempValue()
 
     val trueSteps = List(
       ps.UnboxInteger(trueTemp, boxedTemp)
@@ -199,11 +199,11 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("CondBranch does capture if the branches do capture") {
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val trueTemp = ps.Temp(vt.IntegerType)
-    val falseTemp = ps.Temp(vt.IntegerType)
-    val testTemp = ps.Temp(vt.Predicate)
+    val unboxedTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val trueTemp = ps.TempValue()
+    val falseTemp = ps.TempValue()
+    val testTemp = ps.TempValue()
 
     val trueSteps = List(
       ps.UnboxInteger(trueTemp, boxedTemp)
@@ -222,9 +222,9 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("InitPair does not capture if the pair itself is not captured") {
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val pairTemp = ps.Temp(vt.AnyPairType)
+    val unboxedTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val pairTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -240,9 +240,9 @@ class AnalyseEscapesSuite extends FunSuite {
   }
 
   test("InitPair does capture if the pair itself is captured") {
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val pairTemp = ps.Temp(vt.AnyPairType)
+    val unboxedTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val pairTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -265,9 +265,9 @@ class AnalyseEscapesSuite extends FunSuite {
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set(ProcedureAttribute.NoCapture)
     )
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val entryPointTemp = ps.EntryPointTemp()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
+    val entryPointTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -292,9 +292,9 @@ class AnalyseEscapesSuite extends FunSuite {
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set()
     )
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val entryPointTemp = ps.EntryPointTemp()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
+    val entryPointTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),
@@ -316,9 +316,9 @@ class AnalyseEscapesSuite extends FunSuite {
       returnType=vt.ReturnType.Reachable(vt.UnitType),
       attributes=Set(ProcedureAttribute.NoCapture)
     )
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
-    val entryPointTemp = ps.EntryPointTemp()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
+    val entryPointTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.BoxInteger(boxedTemp, unboxedTemp, false),

@@ -49,7 +49,7 @@ object PlanCadr {
           vt.AnySchemeType
       }
 
-      val resultTemp = ps.CellTemp(ct.AnyCell)
+      val resultTemp = ps.TempValue()
       plan.steps += planLoader(resultTemp, pairTemp)
 
       val resultValue = new iv.CellValue(resultType, BoxedValue(ct.AnyCell, resultTemp))

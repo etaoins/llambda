@@ -8,6 +8,8 @@ import llambda.compiler.InternalCompilerErrorException
 import llambda.llvmir._
 
 object GenGcBarrier {
+  import Implicits._
+
   case class RestoreData(
     loadFromSlot: Int,
     previousIrValue: IrValue,
@@ -37,23 +39,23 @@ object GenGcBarrier {
       throw new InternalCompilerErrorException("Cell allocation held across GC barrier")
     }
 
-    // We only care about GC managed values
+    // We only care about GC root values
     // Sort them by their IR representation to ensure we generate stable IR between runs
-    val liveGcManagedValues = liveTemps.tempValueToIr.toSeq.filter(_._1.isGcManaged).sortBy(_._2.toIr)
+    val liveGcRootValues = liveTemps.tempValueToCiv.toSeq.filter(_._2.gcRoot).sortBy(_._2.toIr)
 
     // If we have a root filter due to a GC flush we might be only rooting some GC managed values
     val flushingGcManagedValues = flushFilterOpt match {
       case Some(filterTemps) =>
-        liveGcManagedValues.filter { case (tempValue, irValue) =>
+        liveGcRootValues.filter { case (tempValue, irValue) =>
           filterTemps.contains(tempValue)
         }
 
       case _ =>
-        liveGcManagedValues
+        liveGcRootValues
     }
 
     // Build a set of all pointer identities that are live, even if they aren't being flushed
-    val liveIdentities = Set[GcPointerIdentity](liveGcManagedValues.map({ case (tempValue, _) =>
+    val liveIdentities = Set[GcPointerIdentity](liveGcRootValues.map({ case (tempValue, _) =>
       liveTemps.pointerIdentities(tempValue)
     }): _*)
 
@@ -98,7 +100,7 @@ object GenGcBarrier {
 
     // Build our save list in numeric slot order
     val saveSlots = ((stolenIdentitiesToSlot ++ unstolenIdentitiesToSlot) map { case (pointerIdentity, slot) =>
-      unflushedIdentities(pointerIdentity) -> slot
+      unflushedIdentities(pointerIdentity).irValue -> slot
     }).toList.sortBy(_._2)
 
     // Any derooted identites we didn't steal need to be zeroed before they're put in the availabe slot pool
@@ -109,7 +111,7 @@ object GenGcBarrier {
 
     // Generate restore information for them in slot order
     val restoreTemps = if (!flushOnly) {
-      (liveGcManagedValues.map { case (tempValue, previousIrValue) =>
+      (liveGcRootValues.map { case (tempValue, previousIrValue) =>
         val loadFromSlot = rootedIdentities(liveTemps.pointerIdentities(tempValue))
 
         RestoreData(
@@ -222,8 +224,13 @@ object GenGcBarrier {
     val newIrValues = genRestoreGcRoots(postInnerBlockState)(calcedBarrier)
     val tempValueToIrUpdate = calcedBarrier.restoreTemps.map(_.restoreToTemp).zip(newIrValues)
 
+    val tempValueToCivUpdate = tempValueToIrUpdate map { case (tempValue, irValue) =>
+      // Because this lived across a GC barrier it is by definition a GC root
+      (tempValue -> CollectableIrValue(irValue, true))
+    }
+
     // Open code this instead of using ++ which will assign all new pointer identities
-    val finalLiveTemps = initialState.liveTemps.withUpdatedIrValues(tempValueToIrUpdate)
+    val finalLiveTemps = initialState.liveTemps.withUpdatedValues(tempValueToCivUpdate)
 
     val finalState = postInnerBlockState.copy(
       liveTemps=finalLiveTemps,

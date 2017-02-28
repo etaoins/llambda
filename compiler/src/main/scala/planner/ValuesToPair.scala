@@ -34,7 +34,7 @@ private[planner] object ValuesToPair {
       val carTemp = carValue.toTempValue(vt.AnySchemeType)
       val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
 
-      val pairTemp = ps.CellTemp(ct.PairCell)
+      val pairTemp = ps.TempValue()
       plan.steps += ps.InitPair(pairTemp, carTemp, cdrTemp, listLengthOpt)
 
       // Note that when we converted to an vt.AnySchemeType TempValue we converted any procedure type we had to the

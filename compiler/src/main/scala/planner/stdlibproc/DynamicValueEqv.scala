@@ -66,7 +66,7 @@ private[stdlibproc] object DynamicValueEqv {
     val val1Temp = val1.toTempValue(valueType, convertProcType=false)
     val val2Temp = val2.toTempValue(valueType, convertProcType=false)
 
-    val predicateTemp = ps.Temp(vt.Predicate)
+    val predicateTemp = ps.TempValue()
 
     // Do a direct integer compare
     plan.steps += ps.IntegerCompare(predicateTemp, ps.CompareCond.Equal, None, val1Temp, val2Temp)
@@ -78,7 +78,7 @@ private[stdlibproc] object DynamicValueEqv {
       staticValue: Double,
       dynamicValue: iv.IntermediateValue
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val resultPred = ps.Temp(vt.Predicate)
+    val resultPred = ps.TempValue()
 
     if (staticValue.isNaN) {
       val dynamicTemp = dynamicValue.toTempValue(vt.Double)
@@ -86,7 +86,7 @@ private[stdlibproc] object DynamicValueEqv {
     }
     else {
       // Create the static double
-      val staticTemp = ps.Temp(vt.Double)
+      val staticTemp = ps.TempValue()
       plan.steps += ps.CreateNativeFloat(staticTemp, staticValue, vt.Double)
 
       // Create the dynamic double
@@ -114,8 +114,8 @@ private[stdlibproc] object DynamicValueEqv {
     val val2Temp = val2.toTempValue(vt.AnySchemeType, convertProcType=false)
 
     val signature = RuntimeFunctions.equivalenceProcSignature
-    val entryPointTemp = ps.EntryPointTemp()
-    val resultTemp = ps.Temp(vt.Predicate)
+    val entryPointTemp = ps.TempValue()
+    val resultTemp = ps.TempValue()
 
     val invokeArgs = List(val1Temp, val2Temp)
 

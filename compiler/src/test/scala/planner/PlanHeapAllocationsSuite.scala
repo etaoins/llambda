@@ -37,7 +37,7 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("single non-consuming step") {
-    val nativeResult = ps.Temp(vt.Int64)
+    val nativeResult = ps.TempValue()
     val testSteps = List(
       ps.CreateNativeInteger(nativeResult, 25, 64)
     )
@@ -52,8 +52,8 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("single consuming step") {
-    val nativeResult = ps.Temp(vt.Int64)
-    val boxedResult = ps.Temp(vt.IntegerType)
+    val nativeResult = ps.TempValue()
+    val boxedResult = ps.TempValue()
 
     val testSteps = List(
       ps.CreateNativeInteger(nativeResult, 25, 64),
@@ -72,9 +72,9 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("allocations happen after dispose") {
-    val disposingTemp = ps.Temp(vt.SymbolType)
-    val nativeResult = ps.Temp(vt.Int64)
-    val boxedResult = ps.Temp(vt.IntegerType)
+    val disposingTemp = ps.TempValue()
+    val nativeResult = ps.TempValue()
+    val boxedResult = ps.TempValue()
 
     val testSteps = List(
       ps.DisposeValues(Set(disposingTemp)),
@@ -95,8 +95,8 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("multiple consuming steps are merged") {
-    val nativeResult = ps.Temp(vt.Int64)
-    val boxedResult = ps.Temp(vt.IntegerType)
+    val nativeResult = ps.TempValue()
+    val boxedResult = ps.TempValue()
 
     val testSteps = List(
       ps.CreateNativeInteger(nativeResult, 25, 64),
@@ -119,8 +119,8 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("cell allocations can not be merged across GC barrier") {
-    val nativeResult = ps.Temp(vt.Int64)
-    val boxedResult = ps.Temp(vt.IntegerType)
+    val nativeResult = ps.TempValue()
+    val boxedResult = ps.TempValue()
 
     val testSteps = List(
       ps.CreateNativeInteger(nativeResult, 25, 64),
@@ -146,9 +146,9 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("cell allocations are not affected by empty branch") {
-    val nativeResult = ps.Temp(vt.Int64)
-    val boxedResult = ps.Temp(vt.IntegerType)
-    val condResult = ps.Temp(vt.Int64)
+    val nativeResult = ps.TempValue()
+    val boxedResult = ps.TempValue()
+    val condResult = ps.TempValue()
     val valuePhi = ps.ValuePhi(condResult, nativeResult, nativeResult)
 
     val testSteps = List(
@@ -174,9 +174,9 @@ class PlanHeapAllocationsSuite extends FunSuite {
   }
 
   test("cell allocations with allocating branch") {
-    val nativeResult = ps.Temp(vt.Int64)
-    val boxedResult = ps.Temp(vt.IntegerType)
-    val condResult = ps.Temp(vt.Int64)
+    val nativeResult = ps.TempValue()
+    val boxedResult = ps.TempValue()
+    val condResult = ps.TempValue()
     val valuePhi = ps.ValuePhi(condResult, nativeResult, nativeResult)
 
     val trueSteps = List(

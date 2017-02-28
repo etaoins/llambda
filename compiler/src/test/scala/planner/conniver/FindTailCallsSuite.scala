@@ -24,8 +24,8 @@ class FindTailCallsSuite extends FunSuite {
   }
 
   test("trivial tail call returning void") {
-    val entryTemp = ps.EntryPointTemp()
-    val retTemp = new ps.TempValue(false)
+    val entryTemp = ps.TempValue()
+    val retTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_test"),
@@ -40,8 +40,8 @@ class FindTailCallsSuite extends FunSuite {
   }
 
   test("trivial tail call returning value") {
-    val entryTemp = ps.EntryPointTemp()
-    val retTemp = new ps.TempValue(false)
+    val entryTemp = ps.TempValue()
+    val retTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_test"),
@@ -56,9 +56,9 @@ class FindTailCallsSuite extends FunSuite {
   }
 
   test("tail call followed by futher steps can be converted to tail call") {
-    val entryTemp = ps.EntryPointTemp()
-    val retTemp = new ps.TempValue(false)
-    val otherTemp = new ps.TempValue(true)
+    val entryTemp = ps.TempValue()
+    val retTemp = ps.TempValue()
+    val otherTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_test"),
@@ -74,9 +74,9 @@ class FindTailCallsSuite extends FunSuite {
   }
 
   test("call with intervening step can't be converted to a tail call") {
-    val entryTemp = ps.EntryPointTemp()
-    val retTemp = new ps.TempValue(false)
-    val otherTemp = new ps.TempValue(true)
+    val entryTemp = ps.TempValue()
+    val retTemp = ps.TempValue()
+    val otherTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_test"),
@@ -89,9 +89,9 @@ class FindTailCallsSuite extends FunSuite {
   }
 
   test("return with other value cannot be converted to tail call") {
-    val entryTemp = ps.EntryPointTemp()
-    val retTemp = new ps.TempValue(false)
-    val otherTemp = new ps.TempValue(true)
+    val entryTemp = ps.TempValue()
+    val retTemp = ps.TempValue()
+    val otherTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateBooleanCell(otherTemp, false),
@@ -104,15 +104,15 @@ class FindTailCallsSuite extends FunSuite {
   }
 
   test("returning from cond branch can be converted to a tail call") {
-    val entryTemp = ps.EntryPointTemp()
-    val innerTestTemp = new ps.TempValue(false)
-    val outerTestTemp = new ps.TempValue(false)
-    val retTemp = new ps.TempValue(false)
+    val entryTemp = ps.TempValue()
+    val innerTestTemp = ps.TempValue()
+    val outerTestTemp = ps.TempValue()
+    val retTemp = ps.TempValue()
 
-    val trueTrueResultTemp = new ps.TempValue(true)
-    val trueFalseResultTemp = new ps.TempValue(true)
-    val trueResultTemp = new ps.TempValue(true)
-    val falseResultTemp = new ps.TempValue(true)
+    val trueTrueResultTemp = ps.TempValue()
+    val trueFalseResultTemp = ps.TempValue()
+    val trueResultTemp = ps.TempValue()
+    val falseResultTemp = ps.TempValue()
 
     val trueValuePhi = ps.ValuePhi(trueResultTemp, trueTrueResultTemp, trueFalseResultTemp)
     val valuePhi = ps.ValuePhi(retTemp, trueResultTemp, falseResultTemp)

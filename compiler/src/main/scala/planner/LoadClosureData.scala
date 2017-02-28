@@ -35,8 +35,7 @@ private[planner] object LoadClosureData {
     else {
       // Build Temps for each record field
       val capturedVarToTemp = wantedVariables.map({ capturedVar =>
-        val fieldType = manifest.closureType.typeForField(capturedVar.recordField)
-        (capturedVar, new ps.TempValue(fieldType.isGcManaged))
+        (capturedVar, ps.TempValue())
       })
 
       // Load them all

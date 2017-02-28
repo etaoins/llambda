@@ -24,7 +24,7 @@ sealed abstract class ConstantValue(val cellType: ct.ConcreteCellType) extends I
 
 sealed abstract class TrivialConstantValue[T, U <: ps.CreateConstantCell](cellType: ct.ConcreteCellType, value: T, stepConstructor: (ps.TempValue, T) => U) extends ConstantValue(cellType) {
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
     plan.steps += stepConstructor(constantTemp, value)
 
     BoxedValue(cellType, constantTemp)
@@ -56,7 +56,7 @@ case class ConstantIntegerValue(value: Long) extends TrivialConstantValue(ct.Int
         impossibleConversion(message)
       }
 
-      val constantTemp = ps.Temp(intType)
+      val constantTemp = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(constantTemp, value, intType.bits)
       constantTemp
 
@@ -79,7 +79,7 @@ case class ConstantFlonumValue(value: Double) extends TrivialConstantValue(ct.Fl
 
   def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue = nativeType match {
     case fpType: vt.FpType =>
-      val constantTemp = ps.Temp(fpType)
+      val constantTemp = ps.TempValue()
       plan.steps += ps.CreateNativeFloat(constantTemp, value, fpType)
       constantTemp
 
@@ -109,7 +109,7 @@ case class ConstantCharValue(value: Int) extends TrivialConstantValue(ct.CharCel
 
   def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
-      val constantTemp = ps.Temp(vt.UnicodeChar)
+      val constantTemp = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(constantTemp, value, vt.UnicodeChar.bits)
       constantTemp
 
@@ -126,7 +126,7 @@ case class ConstantBooleanValue(value: Boolean) extends TrivialConstantValue(ct.
   private val intValue = if (value) 1 else 0
 
   override def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
-    val predTemp = ps.Temp(vt.Predicate)
+    val predTemp = ps.TempValue()
     plan.steps += ps.CreateNativeInteger(predTemp, intValue, vt.Predicate.bits)
 
     predTemp
@@ -146,7 +146,7 @@ case class ConstantPairValue(car: ConstantValue, cdr: ConstantValue) extends Con
   val typeDescription = "constant pair"
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
 
     // Box our car/cdr first
     val carTemp = car.toTempValue(vt.AnySchemeType)
@@ -170,7 +170,7 @@ case class ConstantRecordValue(
   val knownFieldValues = fieldValues
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
 
     // Box our values
     val fieldValueTemps = fieldValues map { case (field, value) =>
@@ -190,7 +190,7 @@ case class ConstantVectorValue(
   val typeDescription = "constant vector"
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
 
     // Box our elements
     val elementTemps = elements.map {
@@ -209,7 +209,7 @@ case object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnl
   val typeDescription = "constant empty list"
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
     plan.steps += ps.CreateEmptyListCell(constantTemp)
     BoxedValue(cellType, constantTemp)
   }
@@ -223,7 +223,7 @@ case object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {
   val typeDescription = "constant unit value"
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
     plan.steps += ps.CreateUnitCell(constantTemp)
     BoxedValue(cellType, constantTemp)
   }
@@ -233,7 +233,7 @@ case object UnreachableValue extends ConstantValue(ct.UnitCell) with BoxedOnlyVa
   val typeDescription = "unreachable value"
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
-    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+    val constantTemp = ps.TempValue()
     plan.steps += ps.CreateUnitCell(constantTemp)
     BoxedValue(cellType, constantTemp)
   }

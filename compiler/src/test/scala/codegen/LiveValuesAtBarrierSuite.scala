@@ -39,13 +39,12 @@ class LiveValuesAtBarrierSuite extends FunSuite {
     attributes=Set(ProcedureAttribute.NoReturn)
   )
 
-  def namedTemp(valueType: vt.ValueType, name: String): ps.TempValue =
-    new ps.TempValue(valueType.isGcManaged) {
-      override def toString = name
-    }
+  def namedTemp(name: String): ps.TempValue = new ps.TempValue() {
+    override def toString = name
+  }
 
   test("empty steps have no barrier") {
-    val initialValues = Set(namedTemp(vt.IntegerType, "someTemp"))
+    val initialValues = Set(namedTemp("someTemp"))
     val testSteps = Nil
 
     val expectedResult = NoBarrier
@@ -54,9 +53,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("invoke without world pointer is not a GC barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -71,9 +70,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("invoke with world pointer is a GC barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -88,9 +87,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("invoke with world pointer that does not return is not a GC barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -105,9 +104,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("tail call with world pointer is not a GC barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -122,9 +121,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("dispose removes values from future GC barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -140,9 +139,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("return prevents a GC barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -158,9 +157,9 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("invoke that disposes input values removes them from its barrier") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
     val initialValues = Set(temp1, temp2)
 
@@ -175,13 +174,13 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("branches with disjoint rooted values") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
-    val condResult = namedTemp(vt.IntegerType, "condResult")
-    val trueResult = namedTemp(vt.IntegerType, "condResult")
-    val falseResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
+    val trueResult = namedTemp("condResult")
+    val falseResult = namedTemp("condResult")
 
     val initialValues = Set(temp1, temp2)
 
@@ -204,13 +203,13 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("branches with intersecting rooted values") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
-    val condResult = namedTemp(vt.IntegerType, "condResult")
-    val trueResult = namedTemp(vt.IntegerType, "condResult")
-    val falseResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
+    val trueResult = namedTemp("condResult")
+    val falseResult = namedTemp("condResult")
 
     val initialValues = Set(temp1, temp2)
 
@@ -233,13 +232,13 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("branches with only one barrier branch") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
-    val condResult = namedTemp(vt.IntegerType, "condResult")
-    val trueResult = namedTemp(vt.IntegerType, "condResult")
-    val falseResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
+    val trueResult = namedTemp("condResult")
+    val falseResult = namedTemp("condResult")
 
     val initialValues = Set(temp1, temp2)
 
@@ -262,16 +261,16 @@ class LiveValuesAtBarrierSuite extends FunSuite {
   }
 
   test("nested barrier branches") {
-    val entryPointTemp = ps.EntryPointTemp()
-    val temp1 = namedTemp(vt.IntegerType, "temp1")
-    val temp2 = namedTemp(vt.IntegerType, "temp2")
+    val entryPointTemp = ps.TempValue()
+    val temp1 = namedTemp("temp1")
+    val temp2 = namedTemp("temp2")
 
-    val condResult = namedTemp(vt.IntegerType, "condResult")
-    val falseResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
+    val falseResult = namedTemp("condResult")
 
-    val nestedCondResult = namedTemp(vt.IntegerType, "condResult")
-    val nestedTrueResult = namedTemp(vt.IntegerType, "condResult")
-    val nestedFalseResult = namedTemp(vt.IntegerType, "condResult")
+    val nestedCondResult = namedTemp("condResult")
+    val nestedTrueResult = namedTemp("condResult")
+    val nestedFalseResult = namedTemp("condResult")
 
     val initialValues = Set(temp1, temp2)
 

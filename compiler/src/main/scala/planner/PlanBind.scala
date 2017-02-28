@@ -58,7 +58,7 @@ private[planner] object PlanBind {
         val mutableType = MutableType(compactInnerType)
 
         // Mark this value as undefined so a runtime error will be raised if it is accessed
-        val recursiveTemp = ps.RecordTemp()
+        val recursiveTemp = ps.TempValue()
         plan.steps += ps.InitRecord(recursiveTemp, mutableType, Map(), isUndefined=true)
 
         state.withValue(storageLoc -> MutableValue(mutableType, recursiveTemp, true))
@@ -118,7 +118,7 @@ private[planner] object PlanBind {
         if (plan.config.analysis.mutableVars.contains(storageLoc)) {
           // If we used to be a recursive value we can reuse that record
           val mutableValue = prevRecursiveOpt.getOrElse {
-            val mutableTemp = ps.RecordTemp()
+            val mutableTemp = ps.TempValue()
 
             val compactInnerType = CompactRepresentationForType(storageLoc.schemeType)
             val mutableType = MutableType(compactInnerType)

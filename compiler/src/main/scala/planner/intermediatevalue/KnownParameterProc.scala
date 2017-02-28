@@ -45,7 +45,7 @@ class KnownParameterProc(selfTemp: ps.TempValue, val identity: ParameterIdentity
 
         case otherValue =>
           // Load this parameter value without going through the parameter procedure's trampoline
-          val resultTemp = ps.Temp(vt.AnySchemeType)
+          val resultTemp = ps.TempValue()
           plan.steps += ps.LoadValueForParameterProc(resultTemp, selfTemp)
 
           val resultType = otherValue match {

@@ -69,7 +69,7 @@ private[planner] object PlanExpr {
             }
 
             // Load the data
-            val resultTemp = ps.Temp(mutableType.innerType)
+            val resultTemp = ps.TempValue()
             val fieldsToLoad = List((mutableType.recordField -> resultTemp))
             plan.steps += ps.LoadRecordLikeFields(mutableTemp, mutableType, fieldsToLoad)
 

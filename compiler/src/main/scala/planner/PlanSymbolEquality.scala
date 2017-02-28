@@ -14,14 +14,14 @@ object PlanSymbolEquality {
       symbolTemp1: ps.TempValue,
       symbolTemp2: ps.TempValue
   )(implicit plan: PlanWriter): ps.TempValue = {
-    val entryTemp = ps.EntryPointTemp()
+    val entryTemp = ps.TempValue()
     plan.steps += ps.CreateNamedEntryPoint(
       entryTemp,
       RuntimeFunctions.symbolIsEqvSignature,
       RuntimeFunctions.symbolIsEqvSymbol
     )
 
-    val resultPred = ps.Temp(vt.Predicate)
+    val resultPred = ps.TempValue()
     plan.steps += ps.Invoke(
       result=Some(resultPred),
       signature=RuntimeFunctions.symbolIsEqvSignature,
@@ -49,22 +49,22 @@ object PlanSymbolEquality {
 
     val lengthMatchPred = if (possibleLengths == Set(staticByteLength)) {
       // All symbol have the same length; skip length test
-      val staticTrue = ps.Temp(vt.Predicate)
+      val staticTrue = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(staticTrue, 1, vt.Predicate.bits)
 
       staticTrue
     }
     else {
       // Load our dynamic length
-      val dynamicLengthTemp = ps.Temp(vt.UInt16)
+      val dynamicLengthTemp = ps.TempValue()
       plan.steps += ps.LoadSymbolByteLength(dynamicLengthTemp, dynamicTemp, Some(possibleLengths))
 
       // Create our static length
-      val staticLengthTemp = ps.Temp(vt.UInt16)
+      val staticLengthTemp = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 32)
 
       // Compare them
-      val lengthMatchPred = ps.Temp(vt.Predicate)
+      val lengthMatchPred = ps.TempValue()
       plan.steps += ps.IntegerCompare(lengthMatchPred, ps.CompareCond.Equal, None, staticLengthTemp, dynamicLengthTemp)
 
       lengthMatchPred
@@ -90,11 +90,11 @@ object PlanSymbolEquality {
           val possibleValues = sameLengthMatches.map(_(firstDifferentOffset)) + staticUtf8Data(firstDifferentOffset)
 
           // Create a temp value and store the offset to read
-          val offsetTemp = ps.Temp(vt.UInt32)
+          val offsetTemp = ps.TempValue()
           truePlan.steps += ps.CreateNativeInteger(offsetTemp, firstDifferentOffset, 32)
 
           // Load the byte from the symbol
-          val actualByteTemp = ps.Temp(vt.UInt8)
+          val actualByteTemp = ps.TempValue()
           truePlan.steps += ps.LoadSymbolByte(
             result=actualByteTemp,
             boxed=dynamicTemp,
@@ -104,17 +104,17 @@ object PlanSymbolEquality {
           )
 
           // Create a temp for the expected byte
-          val expectedByteTemp = ps.Temp(vt.UInt8)
+          val expectedByteTemp = ps.TempValue()
           truePlan.steps += ps.CreateNativeInteger(expectedByteTemp, staticUtf8Data(firstDifferentOffset), 8)
 
           // Make sure the byte matches
-          val matchTemp = ps.Temp(vt.Predicate)
+          val matchTemp = ps.TempValue()
           truePlan.steps += ps.IntegerCompare(matchTemp, ps.CompareCond.Equal, None, actualByteTemp, expectedByteTemp)
 
           matchTemp
         },
         falseBuilder={ falsePlan =>
-          val falseTemp = ps.Temp(vt.Predicate)
+          val falseTemp = ps.TempValue()
           falsePlan.steps += ps.CreateNativeInteger(falseTemp, 0, vt.Predicate.bits)
 
           falseTemp
@@ -152,7 +152,7 @@ object PlanSymbolEquality {
   )(implicit plan: PlanWriter): ps.TempValue =
     if (vt.SatisfiesType(dynamicSymbolType, vt.SymbolType) == Some(true)) {
       // This can be any symbol - we can't do anything clever here
-      val staticSymbolTemp = ps.Temp(vt.SymbolType, knownConstant=true)
+      val staticSymbolTemp = ps.TempValue()
       plan.steps += ps.CreateSymbolCell(staticSymbolTemp, staticSymbolName)
 
       planRuntimeEqualityFallback(staticSymbolTemp, dynamicSymbolTemp)

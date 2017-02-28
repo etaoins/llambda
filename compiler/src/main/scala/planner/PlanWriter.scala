@@ -141,9 +141,7 @@ class PlanWriter(
     val falsePlan = forkPlan()
     val falseValue = falseBuilder(falsePlan)
 
-    val resultGcManaged = trueValue.isGcManaged || falseValue.isGcManaged
-    val phiTemp = new ps.TempValue(resultGcManaged)
-
+    val phiTemp = ps.TempValue()
     val valuePhi = ps.ValuePhi(phiTemp, trueValue, falseValue)
 
     this.planSealed = false

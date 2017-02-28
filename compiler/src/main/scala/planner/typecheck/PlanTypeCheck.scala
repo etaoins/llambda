@@ -50,7 +50,7 @@ object PlanTypeCheck {
     // Cast the value to its boxed form
     val recordCellTemp = checkValue.castToCellTempValue(recordType.cellType)(plan)
 
-    val classMatchedPred = ps.Temp(vt.Predicate)
+    val classMatchedPred = ps.TempValue()
     plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt)
     DynamicResult(classMatchedPred)
   }
@@ -77,14 +77,14 @@ object PlanTypeCheck {
         val pairCellTemp = checkValue.castToCellTempValue(ct.PairCell)(isPairPlan)
 
         // Test the car first - the order doesn't actually matter here
-        val carTemp = ps.CellTemp(ct.AnyCell)
+        val carTemp = ps.TempValue()
         isPairPlan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
 
         val checkableCar = BoxedValue(ct.AnyCell, carTemp)
         branchOnType(isPairPlan, checkableCar, knownCarType, testCarType, isTypePlanner=Some({
           (carSatifiesPlan, _) =>
             // car matched, load the cdr
-            val cdrTemp = ps.CellTemp(ct.AnyCell)
+            val cdrTemp = ps.TempValue()
             carSatifiesPlan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
 
             val checkableCdr = BoxedValue(ct.AnyCell, cdrTemp)
@@ -108,7 +108,7 @@ object PlanTypeCheck {
 
     plan.requiredNativeLibraries += predicate.library
 
-    val entryPointTemp = ps.EntryPointTemp()
+    val entryPointTemp = ps.TempValue()
 
     plan.steps += ps.CreateNamedEntryPoint(
       entryPointTemp,
@@ -116,7 +116,7 @@ object PlanTypeCheck {
       predicate.nativeSymbol
     )
 
-    val resultPred = ps.Temp(vt.Predicate)
+    val resultPred = ps.TempValue()
     plan.steps += ps.Invoke(
       Some(resultPred),
       vt.ExternalRecordTypePredicate.signature,
@@ -153,10 +153,10 @@ object PlanTypeCheck {
         val castTemp = checkValue.castToCellTempValue(ct.BooleanCell)(plan)
 
         // This works because booleans are preconstructed
-        val expectedTemp = ps.Temp(vt.BooleanType)
+        val expectedTemp = ps.TempValue()
         plan.steps += ps.CreateBooleanCell(expectedTemp, value)
 
-        val valueMatchedPred = ps.Temp(vt.Predicate)
+        val valueMatchedPred = ps.TempValue()
         plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
 
         DynamicResult(valueMatchedPred)
@@ -173,7 +173,7 @@ object PlanTypeCheck {
       case vt.SchemeTypeAtom(cellType) =>
         val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes)
 
-        val isCellTypePred = ps.Temp(vt.Predicate)
+        val isCellTypePred = ps.TempValue()
         plan.steps += ps.TestCellType(isCellTypePred, checkValue.tempValue, cellType, possibleCellTypes)
         DynamicResult(isCellTypePred)
 
@@ -273,13 +273,13 @@ object PlanTypeCheck {
           val signature = TypePredicateProcSignature
 
           // Load the entry point for the predicate procedure
-          val entryPointTemp = ps.EntryPointTemp()
+          val entryPointTemp = ps.TempValue()
           plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
           // Cast the value to datum*
           val datumValueTemp = checkValue.castToCellTempValue(ct.AnyCell)(plan)
 
-          val resultPredTemp = ps.Temp(vt.Predicate)
+          val resultPredTemp = ps.TempValue()
           plan.steps += ps.Invoke(
             result=Some(resultPredTemp),
             signature=signature,
@@ -308,7 +308,7 @@ object PlanTypeCheck {
           testResult
         }
         else {
-          val phiPred = ps.Temp(vt.Predicate)
+          val phiPred = ps.TempValue()
           val testPred = testResult.toNativePred()(plan)
           val trueValue = isTypeResult.toNativePred()(isTypePlan)
           val falseValue = isNotTypeResult.toNativePred()(isNotTypePlan)
@@ -360,10 +360,10 @@ object PlanTypeCheck {
       val nativePredTemp = nativePredValue.toTempValue(vt.Predicate)
 
       val expectedInt = if (boolValue) 1L else 0L
-      val expectedTemp = ps.Temp(vt.Predicate)
+      val expectedTemp = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(expectedTemp, expectedInt, bits=1)
 
-      val valueMatchedPred = ps.Temp(vt.Predicate)
+      val valueMatchedPred = ps.TempValue()
       plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, nativePredTemp, expectedTemp)
 
       DynamicResult(valueMatchedPred)

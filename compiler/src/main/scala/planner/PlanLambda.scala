@@ -71,10 +71,10 @@ private[planner] object PlanLambda {
 
     val outerSelfTempOpt = if (!capturedVariables.isEmpty) {
       // Save the closure values from the parent's scope
-      val cellTemp = ps.RecordTemp()
+      val cellTemp = ps.TempValue()
 
       // Create our entry point
-      val entryPointTemp = ps.EntryPointTemp()
+      val entryPointTemp = ps.TempValue()
       parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, plannedFunction.signature, nativeSymbol)
 
       // Create our closure

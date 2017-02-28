@@ -34,7 +34,7 @@ case class StaticResult(result: Boolean) extends CheckResult {
     iv.ConstantBooleanValue(result)
 
   def toNativePred()(implicit plan: PlanWriter) = {
-    val resultTemp = ps.Temp(vt.Predicate)
+    val resultTemp = ps.TempValue()
     plan.steps += ps.CreateNativeInteger(resultTemp, if (result) 1 else 0, vt.Predicate.bits)
     resultTemp
   }

@@ -38,7 +38,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
 
     val fillTemp = fillValue.toTempValue(vt.AnySchemeType)
 
-    val vectorTemp = ps.CellTemp(ct.VectorCell)
+    val vectorTemp = ps.TempValue()
     plan.steps += ps.InitFilledVector(vectorTemp, lengthTemp, fillTemp)
 
     knownLengthOpt match {
@@ -70,7 +70,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
 
       val elementTemps = initialElementValues.map(_.toTempValue(vt.AnySchemeType)).toVector
 
-      val vectorTemp = ps.CellTemp(ct.VectorCell)
+      val vectorTemp = ps.TempValue()
       plan.steps += ps.InitVector(vectorTemp, elementTemps)
 
       Some(new iv.KnownVectorCellValue(initialElements.length, vectorTemp))
@@ -83,7 +83,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
         vectorValue.toTempValue(vt.VectorType)
       }
 
-      val resultTemp = ps.Temp(vt.Int64)
+      val resultTemp = ps.TempValue()
       plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
       Some(TempValueToIntermediate(vt.Int64, resultTemp))
@@ -101,11 +101,11 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       val vectorTemp = knownVector.toTempValue(knownVector.schemeType)
 
       // Load the vector elements pointer
-      val elementsTemp = ps.VectorElementsTemp()
+      val elementsTemp = ps.TempValue()
       plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
 
       // Load the element
-      val resultTemp = ps.Temp(vt.AnySchemeType)
+      val resultTemp = ps.TempValue()
       val indexTemp = constantInt.toTempValue(vt.Int64)
 
       plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, elementsTemp, indexTemp)
@@ -124,7 +124,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       val vectorTemp = vectorCellValue.toTempValue(vectorCellValue.schemeType)
 
       // Load the vector elements pointer
-      val elementsTemp = ps.VectorElementsTemp()
+      val elementsTemp = ps.TempValue()
 
       // Store the element
       plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
@@ -141,7 +141,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       knownList.toValueListOpt map { initialElements =>
         val elementTemps = initialElements.map(_.toTempValue(vt.AnySchemeType)).toVector
 
-        val vectorTemp = ps.CellTemp(ct.VectorCell)
+        val vectorTemp = ps.TempValue()
         plan.steps += ps.InitVector(vectorTemp, elementTemps)
 
         new iv.KnownVectorCellValue(initialElements.length, vectorTemp)

@@ -73,8 +73,7 @@ class KnownCaseLambdaProc(
   )(implicit plan: PlanWriter): IntermediateValue = {
     clause.recordField match {
       case Some(recordField) if !clausesInScope =>
-        val fieldType = closureType.typeForField(recordField)
-        val clauseSelfTemp = new ps.TempValue(fieldType.isGcManaged)
+        val clauseSelfTemp = new ps.TempValue()
         val fieldsToLoad = List((recordField -> clauseSelfTemp))
 
         plan.steps += ps.LoadRecordLikeFields(selfTempOpt.get, closureType, fieldsToLoad)

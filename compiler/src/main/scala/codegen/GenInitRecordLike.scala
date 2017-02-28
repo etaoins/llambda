@@ -7,6 +7,8 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
 object GenInitRecordLike {
+  import Implicits._
+
   def apply(
       state: GenerationState,
       generatedTypes: Map[vt.RecordLikeType, GeneratedType]
@@ -72,7 +74,7 @@ object GenInitRecordLike {
     }
 
     val irValueToRecordField = initStep.fieldValues.toList.map { case (field, valueTemp) =>
-      (state.liveTemps(valueTemp), field)
+      (state.liveTemps(valueTemp).irValue, field)
     }
 
     GenSetRecordLikeFields(block)(castRecordData, generatedType, irValueToRecordField)

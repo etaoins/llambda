@@ -388,7 +388,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
 
       case ps.CreateVectorCell(_, elementTemps) =>
         val elementIrs = elementTemps.map { elementTemp =>
-          state.liveTemps(elementTemp) match {
+          state.liveTemps(elementTemp).irValue match {
             case constant: IrConstant => constant
             case other =>
               throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
@@ -401,7 +401,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
 
       case ps.CreateRecordCell(_, recordType, fieldTemps, isUndefined) =>
         val fieldIrs = fieldTemps.map { case (field, fieldTemp) =>
-          state.liveTemps(fieldTemp) match {
+          state.liveTemps(fieldTemp).irValue match {
             case constant: IrConstant =>
               field -> constant
 
@@ -417,13 +417,13 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
         })
 
       case ps.CreatePairCell(_, carTemp, cdrTemp, listLengthOpt) =>
-        val carIrConstant = state.liveTemps(carTemp) match {
+        val carIrConstant = state.liveTemps(carTemp).irValue match {
           case constant: IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
         }
 
-        val cdrIrConstant = state.liveTemps(cdrTemp) match {
+        val cdrIrConstant = state.liveTemps(cdrTemp).irValue match {
           case constant: IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
@@ -451,7 +451,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
         GlobalDefines.emptyListIrValue
 
       case ps.CreateEmptyClosure(_, entryPointTemp) =>
-        val entryPointConstant = state.liveTemps(entryPointTemp) match {
+        val entryPointConstant = state.liveTemps(entryPointTemp).irValue match {
           case constant: IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")

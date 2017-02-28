@@ -59,7 +59,7 @@ object PlanLambdaPolymorph {
   )(implicit plan: PlanWriter): LocationValue = {
     if (plan.config.analysis.mutableVars.contains(storageLoc)) {
       // Init the mutable
-      val mutableTemp = ps.RecordTemp()
+      val mutableTemp = ps.TempValue()
 
       // Determine our type and convert the argument to it
       val compactInnerType = CompactRepresentationForType(value.schemeType)
@@ -83,7 +83,7 @@ object PlanLambdaPolymorph {
   )(implicit plan: PlanWriter): (iv.IntermediateValue, PlannerState) = arg match {
     case RetypedOptional(storageLoc, schemeType, defaultExpr) =>
       val varArgsListHeadTemp = varArgsListHead.toBoxedValue().tempValue
-      val isPairPred = ps.Temp(vt.Predicate)
+      val isPairPred = ps.TempValue()
       plan.steps += ps.TestCellType(isPairPred, varArgsListHeadTemp, ct.PairCell, Set(ct.PairCell, ct.EmptyListCell))
 
       val providedValuePlan = plan.forkPlan()
@@ -171,7 +171,7 @@ object PlanLambdaPolymorph {
       None
     }
     else {
-      Some(ps.CellTemp(ct.ProcedureCell))
+      Some(ps.TempValue())
     }
 
     // See if we can retype some of our args
@@ -235,7 +235,7 @@ object PlanLambdaPolymorph {
           innerSelfTemp
         }
         else {
-          val primarySelfTemp = ps.CellTemp(ct.ProcedureCell)
+          val primarySelfTemp = ps.TempValue()
           val fieldsToLoad = List((AdapterProcField -> primarySelfTemp))
           procPlan.steps += ps.LoadRecordLikeFields(innerSelfTemp, AdapterProcType, fieldsToLoad)
 
@@ -248,7 +248,7 @@ object PlanLambdaPolymorph {
 
     // Import all of our mandatory args
     val mandatoryArgs = retypedMandatoryArgs.map({ case (storageLoc, valueType) =>
-      MandatoryArgument(storageLoc, ps.Temp(valueType), valueType)
+      MandatoryArgument(storageLoc, ps.TempValue(), valueType)
     })
 
     val postMandatoryState = mandatoryArgs.foldLeft(postClosureState) {
@@ -258,7 +258,7 @@ object PlanLambdaPolymorph {
     }
 
     // Now the optional args
-    val varArgTemp = ps.CellTemp(ct.ListElementCell)
+    val varArgTemp = ps.TempValue()
     val varArgType = vt.VariableArgsToListType(
       optionalArgs=retypedOptionalArgs.map(_.schemeType),
       restArgMemberTypeOpt=polymorphType.restArgMemberTypeOpt

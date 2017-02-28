@@ -17,9 +17,9 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("optimal unboxing is preserved") {
-    val initialTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val initialTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
@@ -34,11 +34,11 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("unboxing is moved across unrelated steps") {
-    val initialTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val initialTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
-    val symbolTemp = ps.Temp(vt.SymbolType)
+    val symbolTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
@@ -61,14 +61,14 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("moving multiple unboxing steps") {
-    val initialTemp = ps.Temp(vt.Int64)
+    val initialTemp = ps.TempValue()
 
-    val boxedTemp1 = ps.Temp(vt.IntegerType)
-    val unboxedTemp1 = ps.Temp(vt.Int64)
-    val boxedTemp2 = ps.Temp(vt.IntegerType)
-    val unboxedTemp2 = ps.Temp(vt.Int64)
+    val boxedTemp1 = ps.TempValue()
+    val unboxedTemp1 = ps.TempValue()
+    val boxedTemp2 = ps.TempValue()
+    val unboxedTemp2 = ps.TempValue()
 
-    val symbolTemp = ps.Temp(vt.SymbolType)
+    val symbolTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
@@ -92,12 +92,12 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("unboxing won't cross step using boxed version as input") {
-    val initialTemp = ps.Temp(vt.Int64)
-    val boxedTemp = ps.Temp(vt.IntegerType)
-    val unboxedTemp = ps.Temp(vt.Int64)
+    val initialTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
 
-    val symbolTemp = ps.Temp(vt.SymbolType)
-    val testTemp = ps.Temp(vt.Predicate)
+    val symbolTemp = ps.TempValue()
+    val testTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNativeInteger(initialTemp, 0, 64),
@@ -121,12 +121,12 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("external boxed values are unboxed at top") {
-    val boxedTemp1 = ps.Temp(vt.IntegerType)
-    val unboxedTemp1 = ps.Temp(vt.Int64)
-    val boxedTemp2 = ps.Temp(vt.IntegerType)
-    val unboxedTemp2 = ps.Temp(vt.Int64)
+    val boxedTemp1 = ps.TempValue()
+    val unboxedTemp1 = ps.TempValue()
+    val boxedTemp2 = ps.TempValue()
+    val unboxedTemp2 = ps.TempValue()
 
-    val symbolTemp = ps.Temp(vt.SymbolType)
+    val symbolTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateSymbolCell(symbolTemp, "Test"),
@@ -144,11 +144,11 @@ class UnboxEarlySuite extends FunSuite {
   }
 
   test("unboxing in branches") {
-    val initialTemp = ps.Temp(vt.Int64)
+    val initialTemp = ps.TempValue()
 
-    val trueBoxedTemp = ps.Temp(vt.IntegerType)
-    val trueSymbolTemp = ps.Temp(vt.SymbolType)
-    val trueUnboxedTemp = ps.Temp(vt.Int64)
+    val trueBoxedTemp = ps.TempValue()
+    val trueSymbolTemp = ps.TempValue()
+    val trueUnboxedTemp = ps.TempValue()
 
     val inputTrueSteps = List(
       ps.BoxInteger(trueBoxedTemp, initialTemp),
@@ -156,9 +156,9 @@ class UnboxEarlySuite extends FunSuite {
       ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp)
     )
 
-    val falseBoxedTemp = ps.Temp(vt.IntegerType)
-    val falseSymbolTemp = ps.Temp(vt.SymbolType)
-    val falseUnboxedTemp = ps.Temp(vt.Int64)
+    val falseBoxedTemp = ps.TempValue()
+    val falseSymbolTemp = ps.TempValue()
+    val falseUnboxedTemp = ps.TempValue()
 
     val inputFalseSteps = List(
       ps.BoxInteger(trueBoxedTemp, initialTemp),
@@ -166,10 +166,10 @@ class UnboxEarlySuite extends FunSuite {
       ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp)
     )
 
-    val condBranchResult = ps.Temp(vt.Int64)
-    val outerBoxedTemp = ps.Temp(vt.IntegerType)
-    val outerSymbolTemp = ps.Temp(vt.SymbolType)
-    val outerUnboxedTemp = ps.Temp(vt.Int64)
+    val condBranchResult = ps.TempValue()
+    val outerBoxedTemp = ps.TempValue()
+    val outerSymbolTemp = ps.TempValue()
+    val outerUnboxedTemp = ps.TempValue()
 
     val valuePhi = ps.ValuePhi(condBranchResult, trueUnboxedTemp, falseUnboxedTemp)
 

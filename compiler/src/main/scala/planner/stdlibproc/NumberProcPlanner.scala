@@ -58,7 +58,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
         case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
           val intTemp = knownInt.toTempValue(vt.Int64)
-          val doubleTemp = ps.Temp(vt.Double)
+          val doubleTemp = ps.TempValue()
 
           plan.steps += ps.ConvertNativeIntegerToFloat(doubleTemp, intTemp, true, vt.Double)
 
@@ -89,7 +89,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
         val val1Temp = integer1.toTempValue(vt.Int64)
         val val2Temp = integer2.toTempValue(vt.Int64)
 
-        val predicateTemp = ps.Temp(vt.Predicate)
+        val predicateTemp = ps.TempValue()
 
         val signed = if (compareCond == ps.CompareCond.Equal) {
           None
@@ -107,7 +107,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
         val val1Temp = flonum1.toTempValue(vt.Double)
         val val2Temp = flonum2.toTempValue(vt.Double)
 
-        val predicateTemp = ps.Temp(vt.Predicate)
+        val predicateTemp = ps.TempValue()
 
         // Do a direct float compare
         plan.steps += ps.FloatCompare(predicateTemp, compareCond, val1Temp, val2Temp)
@@ -161,7 +161,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
     // Combine all of the native predicates together
     val resultPred = pairwiseNativePreds.reduceLeft { (nativePred, trueBranchValue) =>
-      val condResult = ps.Temp(vt.Predicate)
+      val condResult = ps.TempValue()
       val valuePhi = ps.ValuePhi(condResult, trueBranchValue, nativePred)
 
       plan.steps += ps.CondBranch(nativePred, Nil, Nil, List(valuePhi))
@@ -215,7 +215,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
           // Phi the results together
           val resultType = phiTypeForSelect(left, right)
-          val resultTemp = ps.Temp(resultType)
+          val resultTemp = ps.TempValue()
 
           val trueResult = left.toTempValue(resultType)(truePlan)
           val falseResult = right.toTempValue(resultType)(falsePlan)

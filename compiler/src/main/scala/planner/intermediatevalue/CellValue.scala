@@ -27,10 +27,10 @@ class CellValue(
     val isFalsePred = isFalseResult.toNativePred()
 
     // Invert the result
-    val constantZeroPred = ps.Temp(vt.Predicate)
+    val constantZeroPred = ps.TempValue()
     plan.steps += ps.CreateNativeInteger(constantZeroPred, 0, vt.Predicate.bits)
 
-    val truthyPred = ps.Temp(vt.Predicate)
+    val truthyPred = ps.TempValue()
     plan.steps += ps.IntegerCompare(truthyPred, ps.CompareCond.Equal, None, isFalsePred, constantZeroPred)
     truthyPred
   }
@@ -106,11 +106,11 @@ class CellValue(
       trampolineSymbol
     })
 
-    val trampEntryPointTemp = ps.EntryPointTemp()
+    val trampEntryPointTemp = ps.TempValue()
     plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol)
 
     // Create the adapter procedure cell
-    val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
+    val adapterProcTemp = ps.TempValue()
 
     val adapterFields = Map[vt.RecordField, ps.TempValue](AdapterProcField -> targetProcTemp)
     plan.steps += ps.InitProcedure(adapterProcTemp, AdapterProcType, trampEntryPointTemp, adapterFields)
@@ -121,14 +121,14 @@ class CellValue(
   def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val boxedChar = toTempValue(vt.CharType)
-      val unboxedTemp = ps.Temp(vt.UnicodeChar)
+      val unboxedTemp = ps.TempValue()
       plan.steps += ps.UnboxChar(unboxedTemp, boxedChar)
 
       unboxedTemp
 
     case intType: vt.IntType =>
       val boxedInt = toTempValue(vt.IntegerType)
-      val unboxedTemp = ps.Temp(vt.Int64)
+      val unboxedTemp = ps.TempValue()
       plan.steps += ps.UnboxInteger(unboxedTemp, boxedInt)
 
       if (intType.bits == 64) {
@@ -139,7 +139,7 @@ class CellValue(
         AssertIntInRange(unboxedTemp, vt.Int64, intType, evidenceOpt=Some(boxedInt))()
 
         // Convert to the right width
-        val convTemp = ps.Temp(intType)
+        val convTemp = ps.TempValue()
         plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, signed=true)
         convTemp
       }
@@ -152,7 +152,7 @@ class CellValue(
 
       // Unbox as flonum
       val boxedFlonum = toTempValue(vt.FlonumType)
-      val unboxedTemp = ps.Temp(vt.Double)
+      val unboxedTemp = ps.TempValue()
       plan.steps += ps.UnboxFlonum(unboxedTemp, boxedFlonum)
 
       if (fpType == vt.Double) {
@@ -160,7 +160,7 @@ class CellValue(
         unboxedTemp
       }
       else {
-        val convTemp = ps.Temp(fpType)
+        val convTemp = ps.TempValue()
 
         plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
         convTemp

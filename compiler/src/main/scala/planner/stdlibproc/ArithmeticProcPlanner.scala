@@ -23,7 +23,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     }
     else {
       val intTemp = value.toTempValue(vt.Int64)
-      val convertTemp = ps.Temp(vt.Double)
+      val convertTemp = ps.TempValue()
       plan.steps += ps.ConvertNativeIntegerToFloat(convertTemp, intTemp, true, vt.Double)
 
       convertTemp
@@ -113,8 +113,8 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
           val intTemp1 = other1.toTempValue(vt.Int64)(inlinePlan)
           val intTemp2 = other2.toTempValue(vt.Int64)(inlinePlan)
 
-          val resultTemp = ps.Temp(vt.Int64)
-          val overflowTemp = ps.Temp(vt.Predicate)
+          val resultTemp = ps.TempValue()
+          val overflowTemp = ps.TempValue()
 
           inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
 
@@ -125,7 +125,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
           val doubleTemp1 = numberToDoubleTemp(other1, type1 == KnownFlonum)(inlinePlan)
           val doubleTemp2 = numberToDoubleTemp(other2, type2 == KnownFlonum)(inlinePlan)
 
-          val resultTemp = ps.Temp(vt.Double)
+          val resultTemp = ps.TempValue()
           inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2)
 
           TypedOperand(new iv.NativeFlonumValue(resultTemp, vt.Double), KnownFlonum)
@@ -191,7 +191,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
           val doubleTemp1 = numberToDoubleTemp(dynamicNumer, dynamicNumerIsFlonum)(inlinePlan)
           val doubleTemp2 = numberToDoubleTemp(dynamicDenom, dynamicDenomIsFlonum)(inlinePlan)
 
-          val resultTemp = ps.Temp(vt.Double)
+          val resultTemp = ps.TempValue()
           inlinePlan.steps += ps.FloatDiv(resultTemp, doubleTemp1, doubleTemp2)
 
           new iv.NativeFlonumValue(resultTemp, vt.Double)
@@ -238,7 +238,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
 
           val denomTemp = knownDenom.toTempValue(vt.Int64)
 
-          val resultTemp = ps.Temp(vt.Int64)
+          val resultTemp = ps.TempValue()
           plan.steps += instr(resultTemp, numerTemp, denomTemp)
 
           Some(new iv.NativeIntegerValue(resultTemp, vt.Int64)())

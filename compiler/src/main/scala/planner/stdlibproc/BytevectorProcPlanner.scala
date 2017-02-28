@@ -25,7 +25,7 @@ object BytevectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHel
         bytevectorValue.toTempValue(vt.BytevectorType)
       }
 
-      val resultTemp = ps.Temp(vt.Int64)
+      val resultTemp = ps.TempValue()
       plan.steps += ps.LoadBytevectorLength(resultTemp, bytevectorTemp)
 
       Some(TempValueToIntermediate(vt.Int64, resultTemp))

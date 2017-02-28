@@ -5,43 +5,16 @@ import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
-class TempValue(val isGcManaged: Boolean) {
+class TempValue {
   override def toString = s"%${this.hashCode.toHexString}"
 }
 
-object WorldPtrValue extends TempValue(false)
-
-object Temp {
-  def apply(valueType: vt.ValueType, knownConstant: Boolean = false) =
-    new TempValue(!knownConstant && valueType.isGcManaged)
+object TempValue {
+  def apply() = new TempValue
 }
 
-object CellTemp {
-  def apply(cellType: ct.CellType, knownConstant: Boolean = false) =
-    // Open code this so we don't need to create a temporary vt.SchemeType which can be expensive
-    new TempValue(!knownConstant && !cellType.isInstanceOf[ct.PreconstructedCellType])
-}
+object WorldPtrValue extends TempValue
 
-object RecordTemp {
-  def apply() =
-    // Records are always GC managed
-    new TempValue(true)
-}
-
-object RecordLikeDataTemp {
-  def apply() =
-    new TempValue(false)
-}
-
-object VectorElementsTemp {
-  def apply() =
-    new TempValue(false)
-}
-
-object EntryPointTemp {
-  def apply() =
-    new TempValue(false)
-}
 
 sealed trait Step extends ContextLocated {
   val inputValues: Set[TempValue]
@@ -120,7 +93,7 @@ sealed trait MergeableStep extends Step {
 }
 
 object MergeableStep {
-  object PlaceholderResultTemp extends TempValue(false)
+  object PlaceholderResultTemp extends TempValue
 }
 
 /** Step that can conditionally terminate execution based on a test */

@@ -37,7 +37,7 @@ object CharProcPlanner extends StdlibProcPlanner {
         val val1Temp = dynamic1.toTempValue(vt.UnicodeChar)(comparePlan)
         val val2Temp = dynamic2.toTempValue(vt.UnicodeChar)(comparePlan)
 
-        val predicateTemp = ps.Temp(vt.Predicate)
+        val predicateTemp = ps.TempValue()
 
         val signed = if (compareCond == ps.CompareCond.Equal) {
           None
@@ -62,7 +62,7 @@ object CharProcPlanner extends StdlibProcPlanner {
 
     // Combine all of the native predicates together
     val resultPred = pairwiseNativePreds.reduceLeft { (nativePred, trueBranchValue) =>
-      val condResult = ps.Temp(vt.Predicate)
+      val condResult = ps.TempValue()
       val valuePhi = ps.ValuePhi(condResult, trueBranchValue, nativePred)
 
       plan.steps += ps.CondBranch(nativePred, Nil, Nil, List(valuePhi))

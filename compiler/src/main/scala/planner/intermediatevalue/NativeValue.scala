@@ -40,7 +40,7 @@ class NativePredicateValue(tempValue: ps.TempValue) extends NativeValue(vt.Predi
   }
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =  {
-    val boxedTemp = ps.CellTemp(ct.BooleanCell)
+    val boxedTemp = ps.TempValue()
     plan.steps += ps.BoxBoolean(boxedTemp, tempValue)
 
     BoxedValue(cellType, boxedTemp)
@@ -58,7 +58,7 @@ class NativeIntegerValue(
     case intType: vt.IntType =>
       AssertIntInRange(tempValue, nativeType, intType)(possibleValues)
 
-      val convTemp = ps.Temp(nativeType)
+      val convTemp = ps.TempValue()
       plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, nativeType.signed)
 
       convTemp
@@ -69,7 +69,7 @@ class NativeIntegerValue(
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue = {
     // We can only box 64bit signed ints
-    val boxedTemp = ps.CellTemp(ct.IntegerCell)
+    val boxedTemp = ps.TempValue()
     plan.steps += ps.BoxInteger(boxedTemp, toTempValue(vt.Int64))
 
     BoxedValue(cellType, boxedTemp)
@@ -79,7 +79,7 @@ class NativeIntegerValue(
 class NativeFlonumValue(tempValue: ps.TempValue, nativeType: vt.FpType) extends NativeValue(nativeType, ct.FlonumCell, tempValue) {
   override def planCastToNativeTempValue(targetType: vt.NativeType)(implicit plan: PlanWriter): ps.TempValue = targetType match {
     case fpType: vt.FpType =>
-      val convTemp = ps.Temp(fpType)
+      val convTemp = ps.TempValue()
       plan.steps += ps.ConvertNativeFloat(convTemp, tempValue, fpType)
 
       convTemp
@@ -90,7 +90,7 @@ class NativeFlonumValue(tempValue: ps.TempValue, nativeType: vt.FpType) extends 
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =  {
     // We can only box doubles
-    val boxedTemp = ps.CellTemp(ct.FlonumCell)
+    val boxedTemp = ps.TempValue()
     plan.steps += ps.BoxFlonum(boxedTemp, toTempValue(vt.Double))
 
     BoxedValue(cellType, boxedTemp)
@@ -99,7 +99,7 @@ class NativeFlonumValue(tempValue: ps.TempValue, nativeType: vt.FpType) extends 
 
 class NativeCharValue(tempValue: ps.TempValue) extends NativeValue(vt.UnicodeChar, ct.CharCell, tempValue) {
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =  {
-    val boxedTemp = ps.CellTemp(cellType)
+    val boxedTemp = ps.TempValue()
     plan.steps += ps.BoxChar(boxedTemp, tempValue)
 
     BoxedValue(cellType, boxedTemp)

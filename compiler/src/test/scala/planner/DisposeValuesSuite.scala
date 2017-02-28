@@ -18,14 +18,13 @@ class DisposeValuesSuite extends FunSuite {
     attributes=Set()
   )
 
-  def namedTemp(valueType: vt.ValueType, name: String): ps.TempValue =
-    new ps.TempValue(valueType.isGcManaged) {
-      override def toString = name
-    }
+  def namedTemp(name: String): ps.TempValue = new ps.TempValue {
+    override def toString = name
+  }
 
-  val selfTemp = namedTemp(vt.TopProcedureType, "self")
-  val fixedArgTemp = namedTemp(vt.IntegerType, "fixedArg")
-  val restArgTemp = namedTemp(vt.ListElementType, "restArg")
+  val selfTemp = namedTemp("self")
+  val fixedArgTemp = namedTemp("fixedArg")
+  val restArgTemp = namedTemp("restArg")
 
   val runtimeErrorMessage = RuntimeErrorMessage(
     category=ErrorCategory.Arity,
@@ -57,7 +56,7 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("unused step is completely removed") {
-    val unboxResult = namedTemp(vt.Int64, "unboxResult")
+    val unboxResult = namedTemp("unboxResult")
 
     val testSteps = List(
       ps.UnboxInteger(unboxResult, fixedArgTemp)
@@ -73,7 +72,7 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("simple step with used result") {
-    val unboxResult = namedTemp(vt.Int64, "unboxResult")
+    val unboxResult = namedTemp("unboxResult")
 
     val testSteps = List(
       ps.UnboxInteger(unboxResult, fixedArgTemp),
@@ -94,19 +93,19 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("condition with unused test value discards at top of branches") {
-    val trueUnboxResult = namedTemp(vt.Int64, "trueUnboxResult")
+    val trueUnboxResult = namedTemp("trueUnboxResult")
 
     val trueSteps = List(
       ps.UnboxInteger(trueUnboxResult, fixedArgTemp)
     )
 
-    val falseUnboxResult = namedTemp(vt.Int64, "falseUnboxResult")
+    val falseUnboxResult = namedTemp("falseUnboxResult")
 
     val falseSteps = List(
       ps.UnboxInteger(falseUnboxResult, fixedArgTemp)
     )
 
-    val condResult = namedTemp(vt.Int64, "condResult")
+    val condResult = namedTemp("condResult")
 
     val valuePhi = ps.ValuePhi(condResult, trueUnboxResult, falseUnboxResult)
     val testSteps = List(
@@ -139,7 +138,7 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("condition with unused result value discards phi") {
-    val condResult = namedTemp(vt.Int64, "condResult")
+    val condResult = namedTemp("condResult")
 
     val valuePhi = ps.ValuePhi(condResult, fixedArgTemp, fixedArgTemp)
     val trueSteps = List(
@@ -170,9 +169,9 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("condition using outer value as branch result can dispose that value") {
-    val condResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
 
-    val trueResult = namedTemp(vt.IntegerType, "trueResult")
+    val trueResult = namedTemp("trueResult")
     val trueSteps = List(
       ps.CreateIntegerCell(trueResult, 25)
     )
@@ -209,20 +208,20 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("condition using outer value in only one branch disposes value in other branch") {
-    val condResult = namedTemp(vt.Int64, "condResult")
-    val outerValue = namedTemp(vt.IntegerType, "outerValue")
+    val condResult = namedTemp("condResult")
+    val outerValue = namedTemp("outerValue")
 
     // Make sure we don't try to unroot internal result in the other branch
-    val internalUnboxResult = namedTemp(vt.Int64, "internalUnbox")
-    val internalReboxResult = namedTemp(vt.IntegerType, "internalReboxResult")
-    val trueResult = namedTemp(vt.Int64, "trueResult")
+    val internalUnboxResult = namedTemp("internalUnbox")
+    val internalReboxResult = namedTemp("internalReboxResult")
+    val trueResult = namedTemp("trueResult")
     val trueSteps = List(
       ps.UnboxInteger(internalUnboxResult, outerValue),
       ps.BoxInteger(internalReboxResult, internalUnboxResult),
       ps.UnboxInteger(trueResult, internalReboxResult)
     )
 
-    val falseResult = namedTemp(vt.Int64, "falseResult")
+    val falseResult = namedTemp("falseResult")
     val falseSteps = List(
       ps.CreateNativeInteger(falseResult, 25, 64)
     )
@@ -263,9 +262,9 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("unused condition is completely removed") {
-    val condResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
 
-    val trueResult = namedTemp(vt.IntegerType, "trueResult")
+    val trueResult = namedTemp("trueResult")
     val trueSteps = List(
       ps.CreateIntegerCell(trueResult, 25)
     )
@@ -287,9 +286,9 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("condition with identical branches is simplified") {
-    val condResult = namedTemp(vt.IntegerType, "condResult")
+    val condResult = namedTemp("condResult")
 
-    val trueResult = namedTemp(vt.IntegerType, "trueResult")
+    val trueResult = namedTemp("trueResult")
     val trueSteps = List(
       ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
       ps.CreateIntegerCell(trueResult, 25),
@@ -320,8 +319,8 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("invoke disposing both arguments") {
-    val entryPoint = ps.EntryPointTemp()
-    val invokeResult = namedTemp(vt.Int64, "invokeResult")
+    val entryPoint = ps.TempValue()
+    val invokeResult = namedTemp("invokeResult")
 
     val testSteps = List(
       ps.CreateNamedEntryPoint(entryPoint, testSignature, "native_symbol"),
@@ -349,8 +348,8 @@ class DisposeValuesSuite extends FunSuite {
   }
 
   test("invoke disposing one argument and its result") {
-    val entryPoint = ps.EntryPointTemp()
-    val invokeResult = namedTemp(vt.Int64, "invokeResult")
+    val entryPoint = ps.TempValue()
+    val invokeResult = namedTemp("invokeResult")
 
     val testSteps = List(
       ps.CreateNamedEntryPoint(entryPoint, testSignature, "native_symbol"),
@@ -383,8 +382,8 @@ class DisposeValuesSuite extends FunSuite {
     val recordField2 = new vt.RecordField("field2", vt.Int64, mutable=false)
     val recordType = new vt.RecordType("<test>", List(recordField1, recordField2))
 
-    val fieldTemp1 = namedTemp(vt.Int64, "fieldTemp1")
-    val fieldTemp2 = namedTemp(vt.Int64, "fieldTemp2")
+    val fieldTemp1 = namedTemp("fieldTemp1")
+    val fieldTemp2 = namedTemp("fieldTemp2")
 
     val fieldsToLoad = List(
       (recordField1 -> fieldTemp1),
@@ -409,8 +408,8 @@ class DisposeValuesSuite extends FunSuite {
     val recordField2 = new vt.RecordField("field2", vt.Int64, mutable=false)
     val recordType = new vt.RecordType("<test>", List(recordField1, recordField2))
 
-    val fieldTemp1 = namedTemp(vt.Int64, "fieldTemp1")
-    val fieldTemp2 = namedTemp(vt.Int64, "fieldTemp2")
+    val fieldTemp1 = namedTemp("fieldTemp1")
+    val fieldTemp2 = namedTemp("fieldTemp2")
 
     val testFieldsToLoad = List(
       (recordField1 -> fieldTemp1),

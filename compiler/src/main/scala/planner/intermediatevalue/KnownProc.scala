@@ -87,11 +87,11 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
     })
 
     // Load the trampoline's entry point
-    val trampEntryPointTemp = ps.EntryPointTemp()
+    val trampEntryPointTemp = ps.TempValue()
     plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol)
 
     // Create the adapter procedure cell
-    val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
+    val adapterProcTemp = ps.TempValue()
 
     selfTempOpt match {
       case Some(selfTemp) =>
@@ -111,7 +111,7 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
     this
 
   def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
-    val entryPointTemp = ps.EntryPointTemp()
+    val entryPointTemp = ps.TempValue()
     plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, polySignature.upperBound, nativeSymbol)
 
     entryPointTemp
@@ -122,7 +122,7 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
       case Some(selfTemp) => selfTemp
 
       case None =>
-        val cellTemp = ps.CellTemp(ct.ProcedureCell)
+        val cellTemp = ps.TempValue()
         plan.steps += ps.CreateEmptyClosure(cellTemp, planEntryPoint())
         cellTemp
     }

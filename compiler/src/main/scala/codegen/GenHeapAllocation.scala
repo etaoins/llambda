@@ -79,7 +79,7 @@ object GenHeapAllocation {
           PhiSource(gcIrValue, collectGarbageBlock)
         )
 
-        (restoreToTemp -> (phiedGcRoot: IrValue))
+        (restoreToTemp -> CollectableIrValue(phiedGcRoot: IrValue, gcRoot=true))
     }
 
     val allocation = new HeapAllocation(allocResultValue, 0, count)
@@ -87,7 +87,7 @@ object GenHeapAllocation {
     // Note we don't update gcRootedTemps here because it happens in a branch
     (initialState.copy(
       currentBlock=allocFinishedBlock,
-      liveTemps=initialState.liveTemps.withUpdatedIrValues(liveTempsUpdate),
+      liveTemps=initialState.liveTemps.withUpdatedValues(liveTempsUpdate),
       gcState=GcState.fromBranches(initialState.gcState, List(calcedBarrier.finalGcState))
     ), allocation)
   }

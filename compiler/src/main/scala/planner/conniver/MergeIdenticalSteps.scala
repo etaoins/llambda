@@ -8,10 +8,6 @@ object MergeIdenticalSteps extends FunctionConniver {
   /** Mapping of step merge keys to the result value of that step */
   type AvailableMerges = Map[Any, ps.TempValue]
 
-  // This is used when comparing mergeable steps
-  // They're equal for our purposes regardless if their result is equal
-  private object PlaceholderResultTemp extends ps.TempValue(false)
-
   protected def dropAndRename(steps: List[ps.Step], renames: Map[ps.TempValue, ps.TempValue], availableMerges: AvailableMerges, acc: List[ps.Step]): (List[ps.Step], Map[ps.TempValue, ps.TempValue]) = steps match {
     case step :: tailSteps =>
       val renamedStep = step.renamed { tempValue =>

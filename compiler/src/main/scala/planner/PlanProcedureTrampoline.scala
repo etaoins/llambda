@@ -23,7 +23,7 @@ private[planner] object PlanProcedureTrampoline {
       targetProc: iv.InvokableProc,
       targetProcLocOpt: Option[ContextLocated] = None
   )(implicit parentPlan: PlanWriter): PlannedFunction = {
-    val inSelfTemp = ps.CellTemp(ct.ProcedureCell)
+    val inSelfTemp = ps.TempValue()
     implicit val plan = parentPlan.forkPlan()
 
     // Make some aliases
@@ -31,7 +31,7 @@ private[planner] object PlanProcedureTrampoline {
 
     val updatedProc = if (targetProc.polySignature.upperBound.hasSelfArg) {
       // Load the real target proc
-      val targetProcCell = ps.CellTemp(ct.ProcedureCell)
+      val targetProcCell = ps.TempValue()
       val fieldsToLoad = List((AdapterProcField -> targetProcCell))
       plan.steps += ps.LoadRecordLikeFields(inSelfTemp, AdapterProcType, fieldsToLoad)
 
@@ -42,7 +42,7 @@ private[planner] object PlanProcedureTrampoline {
     }
 
     val (mandatoryArgTemps, mandatoryArgValues) = inSignature.mandatoryArgTypes.map({ mandatoryArgType =>
-      val mandatoryArgTemp = ps.Temp(mandatoryArgType)
+      val mandatoryArgTemp = ps.TempValue()
       val mandatoryArgValue = TempValueToIntermediate(mandatoryArgType, mandatoryArgTemp)
 
       (mandatoryArgTemp, mandatoryArgValue)
@@ -54,7 +54,7 @@ private[planner] object PlanProcedureTrampoline {
       (None, None)
     }
     else {
-      val varArgsTemp = ps.CellTemp(ct.ListElementCell)
+      val varArgsTemp = ps.TempValue()
       val varArgsValue = new iv.CellValue(varArgsListType, BoxedValue(ct.ListElementCell, varArgsTemp))
 
       (Some(varArgsTemp), Some(varArgsValue))

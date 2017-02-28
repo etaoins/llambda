@@ -27,10 +27,10 @@ object AssertIntInRange {
     val enclosingValueInterval = possibleValues.enclosingInterval.get
 
     if (enclosingValueInterval.start < toType.minIntValue) {
-      val lowerRangeTemp = ps.Temp(toType)
+      val lowerRangeTemp = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(lowerRangeTemp, toType.minIntValue, fromType.bits)
 
-      val withinLowerRangeTemp = ps.Temp(vt.Predicate)
+      val withinLowerRangeTemp = ps.TempValue()
       plan.steps += ps.IntegerCompare(
         result=withinLowerRangeTemp,
         cond=ps.CompareCond.GreaterThanEqual,
@@ -49,10 +49,10 @@ object AssertIntInRange {
     }
 
     if (enclosingValueInterval.end > toType.maxIntValue) {
-      val upperRangeTemp = ps.Temp(toType)
+      val upperRangeTemp = ps.TempValue()
       plan.steps += ps.CreateNativeInteger(upperRangeTemp, toType.maxIntValue, fromType.bits)
 
-      val withinUpperRangeTemp = ps.Temp(vt.Predicate)
+      val withinUpperRangeTemp = ps.TempValue()
       plan.steps += ps.IntegerCompare(
         result=withinUpperRangeTemp,
         cond=ps.CompareCond.LessThanEqual,

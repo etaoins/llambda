@@ -4,6 +4,7 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 
+
 sealed abstract class GenResult {
   val gcState: GcState
 }
@@ -31,9 +32,11 @@ case class GenerationState(
     BlockTerminated(gcState)
   }
 
-  def withTempValue(tempTuple: (ps.TempValue, IrValue)) = {
+  def withTempValue(tempTuple: (ps.TempValue, IrValue), gcRoot: Boolean) = {
+    val civ = CollectableIrValue(tempTuple._2, gcRoot)
+
     this.copy(
-      liveTemps=liveTemps + tempTuple
+      liveTemps=liveTemps + (tempTuple._1 -> civ)
     )
   }
 

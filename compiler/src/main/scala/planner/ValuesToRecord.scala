@@ -17,7 +17,7 @@ private[planner] object ValuesToRecord {
       field -> value.toTempValue(fieldType)
     }
 
-    val cellTemp = ps.RecordTemp()
+    val cellTemp = ps.TempValue()
     plan.steps += ps.InitRecord(cellTemp, recordType, fieldToTempValue, isUndefined=isUndefined)
     cellTemp
   }

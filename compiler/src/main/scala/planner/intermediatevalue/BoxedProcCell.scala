@@ -21,7 +21,7 @@ class BoxedProcCell(
     tempValue
 
   def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
-    val entryPointTemp = ps.EntryPointTemp()
+    val entryPointTemp = ps.TempValue()
     plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, tempValue, signature)
 
     entryPointTemp
