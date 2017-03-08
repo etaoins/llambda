@@ -336,7 +336,8 @@ object GenPlanStep {
     case initStep: ps.InitRecord =>
       val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
 
-      initedState.withTempValue(initStep.result -> resultIr, gcRoot=true)
+      val gcRoot = !initStep.stackAllocate || initStep.recordLikeType.typeForField.exists(_._2.isGcManaged)
+      initedState.withTempValue(initStep.result -> resultIr, gcRoot=gcRoot)
 
     case initStep: ps.InitProcedure =>
       val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
@@ -602,9 +603,11 @@ object GenPlanStep {
       val cdrValueIr = state.liveTemps(cdrValueTemp)
       ct.PairCell.genStoreToCdr(state.currentBlock)(cdrValueIr, resultIr)
 
+      val gcRoot = !stackAllocate || carValueIr.gcRoot || cdrValueIr.gcRoot
+
       state.copy(
         currentAllocation=newAllocation
-      ).withTempValue(resultTemp -> resultIr, gcRoot=true)
+      ).withTempValue(resultTemp -> resultIr, gcRoot=gcRoot)
 
     case ps.AssertPredicate(predicateTemp, errorMessage, evidenceOpt) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)

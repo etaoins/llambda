@@ -5,6 +5,8 @@ import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.InternalCompilerErrorException
+
 
 object GenInitRecordLike {
   import Implicits._
@@ -18,14 +20,25 @@ object GenInitRecordLike {
     val block = state.currentBlock
     val module = block.function.module
 
-    // Get a pointer to the new cell
-    val allocation = state.currentAllocation
-    val (newAllocation, recordCell) = allocation.consumeCells(block)(1, cellType)
-
     // Get our record type information
     val recordLikeType = initStep.recordLikeType
     val generatedType = generatedTypes(recordLikeType)
     val recordDataIrType = generatedType.irType
+
+    // Get a pointer to the new cell
+    val allocation = state.currentAllocation
+
+    val (newAllocation, recordCell) = if (initStep.stackAllocate) {
+      if (generatedType.storageType == TypeDataStorage.OutOfLine) {
+        // This would require a destructor which we do not support for stack allocated values
+        throw new InternalCompilerErrorException("Attempted to allocate a record on the stack with out-of-line storage")
+      }
+
+      (allocation, GenStackAllocation(block)(cellType))
+    }
+    else {
+      allocation.consumeCells(block)(1, cellType)
+    }
 
     // Set the class ID
     val classIdIr = IntegerConstant(cellType.recordClassIdIrType, generatedType.classId)

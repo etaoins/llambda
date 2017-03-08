@@ -4,12 +4,15 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.PlannedFunction
+import llambda.compiler.planner.{PlannedFunction, MutableType}
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 
 import org.scalatest.FunSuite
 
 class AnalyseEscapesSuite extends FunSuite {
+  val mutableType = MutableType(vt.Int64)
+  val mutableField = mutableType.recordField
+
   private def escapeAnalyseSteps(steps: List[ps.Step]): List[ps.Step] =
     AnalyseEscapes.conniveSteps(steps)
 
@@ -326,6 +329,80 @@ class AnalyseEscapesSuite extends FunSuite {
     )
 
     val expectedSteps = inputSteps
+
+    assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
+  }
+
+  test("mutable InitRecord can be stack allocated if the record is not captured") {
+    val unboxedTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val recordTemp = ps.TempValue()
+
+    val inputSteps = List(
+      ps.BoxInteger(boxedTemp, unboxedTemp, false),
+      ps.InitRecord(recordTemp, mutableType, Map(mutableField -> boxedTemp), isUndefined=false, stackAllocate=false)
+    )
+
+    val expectedSteps = List(
+      // We assume all of our inputs are captured because we do not track field captures
+      ps.BoxInteger(boxedTemp, unboxedTemp, false),
+      ps.InitRecord(recordTemp, mutableType, Map(mutableField -> boxedTemp), isUndefined=false, stackAllocate=true)
+    )
+
+    assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
+  }
+
+  test("mutable InitRecord cannot be stack allocated if the record is captured") {
+    val unboxedTemp = ps.TempValue()
+    val boxedTemp = ps.TempValue()
+    val recordTemp = ps.TempValue()
+
+    val inputSteps = List(
+      ps.BoxInteger(boxedTemp, unboxedTemp, false),
+      ps.InitRecord(recordTemp, mutableType, Map(mutableField -> boxedTemp), isUndefined=false, stackAllocate=false),
+      ps.Return(Some(recordTemp))
+    )
+
+    val expectedSteps = inputSteps
+
+    assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
+  }
+
+  test("mutable InitRecord can be stack allocated if one of its fields is loaded and captured") {
+    val recordTemp = ps.TempValue()
+    val loadedTemp = ps.TempValue()
+
+    val inputSteps = List(
+      ps.InitRecord(recordTemp, mutableType, Map(), isUndefined=false, stackAllocate=false),
+      ps.LoadRecordLikeFields(recordTemp, mutableType, List(mutableField -> loadedTemp)),
+      ps.Return(Some(loadedTemp))
+    )
+
+    val expectedSteps = List(
+      ps.InitRecord(recordTemp, mutableType, Map(), isUndefined=false, stackAllocate=true),
+      ps.LoadRecordLikeFields(recordTemp, mutableType, List(mutableField -> loadedTemp)),
+      ps.Return(Some(loadedTemp))
+    )
+
+    assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
+  }
+
+  test("setting a mutable field captures the stored value") {
+    val recordTemp = ps.TempValue()
+    val unboxedTemp = ps.TempValue()
+    val storedTemp = ps.TempValue()
+
+    val inputSteps = List(
+      ps.BoxInteger(storedTemp, unboxedTemp, stackAllocate=false),
+      ps.InitRecord(recordTemp, mutableType, Map(), isUndefined=false, stackAllocate=false),
+      ps.SetRecordLikeFields(recordTemp, mutableType, List(storedTemp -> mutableField))
+    )
+
+    val expectedSteps = List(
+      ps.BoxInteger(storedTemp, unboxedTemp, stackAllocate=false),
+      ps.InitRecord(recordTemp, mutableType, Map(), isUndefined=false, stackAllocate=true),
+      ps.SetRecordLikeFields(recordTemp, mutableType, List(storedTemp -> mutableField))
+    )
 
     assert(escapeAnalyseSteps(inputSteps) === expectedSteps)
   }

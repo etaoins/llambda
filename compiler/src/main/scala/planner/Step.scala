@@ -810,7 +810,8 @@ case class InitPair(
 
 /** Step creating a record-like cell */
 sealed trait InitRecordLikeStep extends RecordLikeStep with DiscardableStep {
-  override def requiredHeapCells = 1
+  def stackAllocate: Boolean
+  override def requiredHeapCells = if (stackAllocate) 0 else 1
 
   /** Resulting record-like cell */
   val result: TempValue
@@ -827,18 +828,30 @@ sealed trait InitRecordLikeStep extends RecordLikeStep with DiscardableStep {
   val isUndefined: Boolean
 }
 
-/** Allocates a cell for a record of a given type */
+/** Allocates a cell for a record of a given type
+  *
+  * Currently codegen can only stack allocate a record if the following are true:
+  *
+  * - There are at most two fields
+  * - The record type is never inherited
+  *
+  * For this reason this is not a StackAllocable and stack allocation is explicitly only enabled in AnalyseEscapes for
+  * the planner-internal type for mutable varables.
+  */
 case class InitRecord(
     result: TempValue,
     recordLikeType: vt.RecordType,
     fieldValues: Map[vt.RecordField, TempValue],
-    isUndefined: Boolean
+    isUndefined: Boolean,
+    stackAllocate: Boolean = false
 ) extends InitRecordLikeStep {
   lazy val inputValues = fieldValues.map(_._2).toSet
   lazy val outputValues = Set(result)
 
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
+
   def renamed(f: (TempValue) => TempValue) =
-    InitRecord(f(result), recordLikeType, fieldValues.mapValues(f), isUndefined).assignLocationFrom(this)
+    InitRecord(f(result), recordLikeType, fieldValues.mapValues(f), isUndefined, stackAllocate).assignLocationFrom(this)
 }
 
 /** Allocates a cell for a procedure with the given closure type and entry point
@@ -851,6 +864,7 @@ case class InitProcedure(
     entryPoint: TempValue,
     fieldValues: Map[vt.RecordField, TempValue]
 ) extends InitRecordLikeStep {
+  val stackAllocate = false
   lazy val inputValues = fieldValues.map(_._2).toSet + entryPoint
   lazy val outputValues = Set(result)
 
