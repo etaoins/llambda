@@ -38,8 +38,7 @@
                                                                         (write expected)
                                                                         (display "' did not match actual value of '")
                                                                         (write actual)
-                                                                        (display "'")
-                                                                        (display " when evaluating '")
+                                                                        (display "' when evaluating '")
                                                                         (write 'actual-expr)
                                                                         (display "'\n")
                                                                         (exit -1)))))))
@@ -51,7 +50,7 @@
 
     (define-syntax assert-false
       (syntax-rules ()
-                    ((assert-true actual-expr)
+                    ((assert-false actual-expr)
                      (assert-equal #f actual-expr))))
 
     (define-syntax assert-within
