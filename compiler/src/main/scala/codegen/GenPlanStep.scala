@@ -164,7 +164,7 @@ object GenPlanStep {
         return state.terminateFunction(() => {
           preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
           preBarrierState.currentBlock.unreachable
-        })
+        }, needGcCleanup=invokeStep.canAllocate)
       }
 
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {

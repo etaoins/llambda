@@ -17,14 +17,14 @@ case class GenerationState(
   liveTemps: LiveTemps,
   gcState: GcState
 ) extends GenResult {
-  def terminateFunction(terminatorProc: () => Unit): BlockTerminated = {
+  def terminateFunction(terminatorProc: () => Unit, needGcCleanup: Boolean = true): BlockTerminated = {
     gcSlotsOpt match {
-      case Some(gcSlots) =>
+      case Some(gcSlots) if needGcCleanup =>
         // Make sure to clean up our GC state
         // terminatorProc will be called by our GC code at the end of codegen for this function
         gcSlots.unrootAllAndTerminate(currentBlock)(terminatorProc)
 
-      case None =>
+      case _ =>
         // Just terminate
         terminatorProc()
     }
