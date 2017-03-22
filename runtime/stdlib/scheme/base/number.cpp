@@ -154,24 +154,6 @@ double llbase_flonum(NumberCell *numeric)
 	return static_cast<double>(integer->value());
 }
 
-bool llbase_is_rational(AnyCell *anyCell)
-{
-	if (IntegerCell::isInstance(anyCell))
-	{
-		return true;
-	}
-	else if (auto flonumCell = cell_cast<FlonumCell>(anyCell))
-	{
-		double doubleValue = flonumCell->value();
-		return !std::isnan(doubleValue) && !std::isinf(doubleValue);
-	}
-	else
-	{
-		// Not a number
-		return false;
-	}
-}
-
 bool llbase_numeric_equal(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,

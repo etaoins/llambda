@@ -239,7 +239,13 @@
     (define-stdlib flonum? (make-predicate <flonum>))
     (define-stdlib integer? (make-predicate <integer>))
 
-    (define-stdlib rational? (native-function llbase "llbase_is_rational" (-> <any> <native-bool>) nocapture))
+    (define (rational? [val : <any>])
+      (cond
+        ((integer? val) #t)
+        ((flonum? val)
+         ; XXX: This would be more idiomatic as a (memv) but our optimiser has issues getting rid of the temporary list
+         (not (or (eqv? val +nan.0) (eqv? val +inf.0) (eqv? val -inf.0))))
+        (else #f)))
 
     (define-stdlib = (native-function llbase "llbase_numeric_equal" (-> <number> <number> <number> * <native-bool>) nocapture))
     (define-stdlib < (native-function llbase "llbase_numeric_lt" (-> <number> <number> <number> * <native-bool>) nocapture))
