@@ -5,6 +5,8 @@ import collection.immutable.ListMap
 import io.llambda.llvmir
 
 object ProcessCellClasses {
+  private val rootTbaaNode = llvmir.NumberedMetadata(0)
+
   /** Simple class encapsulting an incrementing integer counter */
   private class IntCounter(initialValue: Int = 0) extends Function0[Int] {
     var nextValue: Int = initialValue
@@ -21,7 +23,7 @@ object ProcessCellClasses {
     // Create parentless TBAA nodes for the new fields we introduce
     ListMap(selfFields.map { cellField =>
       val identity = s"${selfName}::${cellField.name}"
-      val tbaaNode = llvmir.TbaaMetadata(identity, None)
+      val tbaaNode = llvmir.TbaaMetadata(identity, Some(rootTbaaNode))
 
       val tbaaIndex = indexCounter()
       (cellField -> llvmir.NumberedMetadataDef(tbaaIndex, tbaaNode))

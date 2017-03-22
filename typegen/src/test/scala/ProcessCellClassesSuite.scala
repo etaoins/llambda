@@ -183,14 +183,14 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(typeIdTbaaNode.index === 10)
       inside(typeIdTbaaNode.metadataNode) {
         case tbaaMetadata: llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === None)
+          assert(tbaaMetadata.parentOpt === Some(llvmir.NumberedMetadata(0)))
       }
 
       val gcStateTbaaNode = datumClass.fieldTbaaNodes(gcStateField)
       assert(gcStateTbaaNode.index === 11)
       inside(gcStateTbaaNode.metadataNode) {
         case tbaaMetadata: llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === None)
+          assert(tbaaMetadata.parentOpt === Some(llvmir.NumberedMetadata(0)))
       }
     }
   }
@@ -251,14 +251,14 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(parentTypeIdTbaaNode.index === 10)
       inside(parentTypeIdTbaaNode.metadataNode) {
         case tbaaMetadata: llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === None)
+          assert(tbaaMetadata.parentOpt === Some(llvmir.NumberedMetadata(0)))
       }
 
       val parentGcStateTbaaNode = datumClass.fieldTbaaNodes(gcStateField)
       assert(parentGcStateTbaaNode.index === 11)
       inside(parentGcStateTbaaNode.metadataNode) {
         case tbaaMetadata: llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === None)
+          assert(tbaaMetadata.parentOpt === Some(llvmir.NumberedMetadata(0)))
       }
 
       // Now our inherited nodes
@@ -281,7 +281,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(charCountNode.index === 14)
       inside(charCountNode.metadataNode) {
         case tbaaMetadata: llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === None)
+          assert(tbaaMetadata.parentOpt === Some(llvmir.NumberedMetadata(0)))
       }
     }
   }

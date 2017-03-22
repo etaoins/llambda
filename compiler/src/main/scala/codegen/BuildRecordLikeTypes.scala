@@ -37,6 +37,8 @@ case class GeneratedType(
 )
 
 private[codegen] object BuildRecordLikeTypes {
+  private val rootTbaaNode = NumberedMetadata(0)
+
   private case class BuildConfig(
       module: IrModuleBuilder,
       childTypesByParent: Map[vt.RecordLikeType, List[vt.RecordLikeType]],
@@ -133,7 +135,7 @@ private[codegen] object BuildRecordLikeTypes {
       // If we allow toll-free briding with C structs we'll need to loosen this at least for them
       val nodeName = s"${recordTypeName}::${field.name}"
       val numberedTbaaMetadata = module.numberMetadataNode(
-        TbaaMetadata(nodeName)
+        TbaaMetadata(nodeName, Some(rootTbaaNode))
       )
 
       field -> numberedTbaaMetadata

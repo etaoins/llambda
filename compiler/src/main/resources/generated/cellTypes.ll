@@ -4,8 +4,8 @@
 
 ; {supertype, typeId, gcState}
 %any = type {i8, i8}
-!10 = !{!"Any::typeId"}
-!11 = !{!"Any::gcState"}
+!10 = !{!"Any::typeId", !0}
+!11 = !{!"Any::gcState", !0}
 
 ; {supertype}
 %unit = type {%any}
@@ -21,9 +21,9 @@
 %pair = type {%listElement, i32, %any*, %any*}
 !16 = !{!"Any::typeId->ListElement->Pair", !14}
 !17 = !{!"Any::gcState->ListElement->Pair", !15}
-!18 = !{!"Pair::listLength"}
-!19 = !{!"Pair::car"}
-!20 = !{!"Pair::cdr"}
+!18 = !{!"Pair::listLength", !0}
+!19 = !{!"Pair::car", !0}
+!20 = !{!"Pair::cdr", !0}
 
 ; {supertype}
 %emptyList = type {%listElement}
@@ -34,41 +34,41 @@
 %string = type {%any, i8}
 !23 = !{!"Any::typeId->String", !10}
 !24 = !{!"Any::gcState->String", !11}
-!25 = !{!"String::inlineByteLength"}
+!25 = !{!"String::inlineByteLength", !0}
 
 ; {supertype, unsigned inlineCharLength, inlineData}
 %inlineString = type {%string, i8, [28 x i8]}
-!26 = !{!"InlineString::inlineCharLength"}
-!27 = !{!"InlineString::inlineData"}
+!26 = !{!"InlineString::inlineCharLength", !0}
+!27 = !{!"InlineString::inlineData", !0}
 
 ; {supertype, unsigned heapByteLength, unsigned heapCharLength, heapByteArray}
 %heapString = type {%string, i32, i32, %sharedByteArray*}
-!28 = !{!"HeapString::heapByteLength"}
-!29 = !{!"HeapString::heapCharLength"}
-!30 = !{!"HeapString::heapByteArray"}
+!28 = !{!"HeapString::heapByteLength", !0}
+!29 = !{!"HeapString::heapCharLength", !0}
+!30 = !{!"HeapString::heapByteArray", !0}
 
 ; {supertype, unsigned inlineByteLength}
 %symbol = type {%any, i8}
 !31 = !{!"Any::typeId->Symbol", !10}
 !32 = !{!"Any::gcState->Symbol", !11}
-!33 = !{!"Symbol::inlineByteLength"}
+!33 = !{!"Symbol::inlineByteLength", !0}
 
 ; {supertype, unsigned inlineCharLength, inlineData}
 %inlineSymbol = type {%symbol, i8, [28 x i8]}
-!34 = !{!"InlineSymbol::inlineCharLength"}
-!35 = !{!"InlineSymbol::inlineData"}
+!34 = !{!"InlineSymbol::inlineCharLength", !0}
+!35 = !{!"InlineSymbol::inlineData", !0}
 
 ; {supertype, unsigned heapByteLength, unsigned heapCharLength, heapByteArray}
 %heapSymbol = type {%symbol, i32, i32, %sharedByteArray*}
-!36 = !{!"HeapSymbol::heapByteLength"}
-!37 = !{!"HeapSymbol::heapCharLength"}
-!38 = !{!"HeapSymbol::heapByteArray"}
+!36 = !{!"HeapSymbol::heapByteLength", !0}
+!37 = !{!"HeapSymbol::heapCharLength", !0}
+!38 = !{!"HeapSymbol::heapByteArray", !0}
 
 ; {supertype, bool value}
 %boolean = type {%any, i8}
 !39 = !{!"Any::typeId->Boolean", !10}
 !40 = !{!"Any::gcState->Boolean", !11}
-!41 = !{!"Boolean::value"}
+!41 = !{!"Boolean::value", !0}
 
 ; {supertype}
 %number = type {%any}
@@ -79,42 +79,42 @@
 %integer = type {%number, i64}
 !44 = !{!"Any::typeId->Number->Integer", !42}
 !45 = !{!"Any::gcState->Number->Integer", !43}
-!46 = !{!"Integer::value"}
+!46 = !{!"Integer::value", !0}
 
 ; {supertype, value}
 %flonum = type {%number, double}
 !47 = !{!"Any::typeId->Number->Flonum", !42}
 !48 = !{!"Any::gcState->Number->Flonum", !43}
-!49 = !{!"Flonum::value"}
+!49 = !{!"Flonum::value", !0}
 
 ; {supertype, unicodeChar}
 %char = type {%any, i32}
 !50 = !{!"Any::typeId->Char", !10}
 !51 = !{!"Any::gcState->Char", !11}
-!52 = !{!"Char::unicodeChar"}
+!52 = !{!"Char::unicodeChar", !0}
 
 ; {supertype, signed length, elements}
 %vector = type {%any, i64, %any**}
 !53 = !{!"Any::typeId->Vector", !10}
 !54 = !{!"Any::gcState->Vector", !11}
-!55 = !{!"Vector::length"}
-!56 = !{!"Vector::elements"}
+!55 = !{!"Vector::length", !0}
+!56 = !{!"Vector::elements", !0}
 
 ; {supertype, signed length, byteArray}
 %bytevector = type {%any, i64, %sharedByteArray*}
 !57 = !{!"Any::typeId->Bytevector", !10}
 !58 = !{!"Any::gcState->Bytevector", !11}
-!59 = !{!"Bytevector::length"}
-!60 = !{!"Bytevector::byteArray"}
+!59 = !{!"Bytevector::length", !0}
+!60 = !{!"Bytevector::byteArray", !0}
 
 ; {supertype, bool dataIsInline, bool isUndefined, unsigned recordClassId, recordData}
 %recordLike = type {%any, i8, i8, i32, i8*}
 !61 = !{!"Any::typeId->RecordLike", !10}
 !62 = !{!"Any::gcState->RecordLike", !11}
-!63 = !{!"RecordLike::dataIsInline"}
-!64 = !{!"RecordLike::isUndefined"}
-!65 = !{!"RecordLike::recordClassId"}
-!66 = !{!"RecordLike::recordData"}
+!63 = !{!"RecordLike::dataIsInline", !0}
+!64 = !{!"RecordLike::isUndefined", !0}
+!65 = !{!"RecordLike::recordClassId", !0}
+!66 = !{!"RecordLike::recordData", !0}
 
 ; {supertype, extraData, entryPoint}
 %procedure = type {%recordLike, [8 x i8], i8*}
@@ -124,8 +124,8 @@
 !70 = !{!"RecordLike::isUndefined->Procedure", !64}
 !71 = !{!"RecordLike::recordClassId->Procedure", !65}
 !72 = !{!"RecordLike::recordData->Procedure", !66}
-!73 = !{!"Procedure::extraData"}
-!74 = !{!"Procedure::entryPoint"}
+!73 = !{!"Procedure::extraData", !0}
+!74 = !{!"Procedure::entryPoint", !0}
 
 ; {supertype, extraData}
 %record = type {%recordLike, [16 x i8]}
@@ -135,21 +135,21 @@
 !78 = !{!"RecordLike::isUndefined->Record", !64}
 !79 = !{!"RecordLike::recordClassId->Record", !65}
 !80 = !{!"RecordLike::recordData->Record", !66}
-!81 = !{!"Record::extraData"}
+!81 = !{!"Record::extraData", !0}
 
 ; {supertype, category, message, irritants}
 %errorObject = type {%any, i16, %string*, %listElement*}
 !82 = !{!"Any::typeId->ErrorObject", !10}
 !83 = !{!"Any::gcState->ErrorObject", !11}
-!84 = !{!"ErrorObject::category"}
-!85 = !{!"ErrorObject::message"}
-!86 = !{!"ErrorObject::irritants"}
+!84 = !{!"ErrorObject::category", !0}
+!85 = !{!"ErrorObject::message", !0}
+!86 = !{!"ErrorObject::irritants", !0}
 
 ; {supertype, port}
 %port = type {%any, i8*}
 !87 = !{!"Any::typeId->Port", !10}
 !88 = !{!"Any::gcState->Port", !11}
-!89 = !{!"Port::port"}
+!89 = !{!"Port::port", !0}
 
 ; {supertype}
 %eofObject = type {%any}
@@ -160,10 +160,10 @@
 %mailbox = type {%any, i8*}
 !92 = !{!"Any::typeId->Mailbox", !10}
 !93 = !{!"Any::gcState->Mailbox", !11}
-!94 = !{!"Mailbox::mailbox"}
+!94 = !{!"Mailbox::mailbox", !0}
 
 ; {supertype, datumHashTree}
 %hashMap = type {%any, i8*}
 !95 = !{!"Any::typeId->HashMap", !10}
 !96 = !{!"Any::gcState->HashMap", !11}
-!97 = !{!"HashMap::datumHashTree"}
+!97 = !{!"HashMap::datumHashTree", !0}

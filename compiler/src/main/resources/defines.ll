@@ -6,17 +6,18 @@
 
 %cell = type {[32 x i8]}
 
-!0 = !{ !"World::shadowStackHead" }
-!1 = !{ !"World::allocNext" }
-!2 = !{ !"World::allocEnd" }
+!0 = !{ !"ROOT" }
+!1 = !{ !"World::shadowStackHead", !0 }
+!2 = !{ !"World::allocNext", !0 }
+!3 = !{ !"World::allocEnd", !0 }
 
 ; {shadowStackHead, allocNext, allocEnd}
 %world = type {%shadowStackEntryHeader*, %cell*, %cell*}
 
-!3 = !{ !"ShadowStackEntryHeader::next" }
-!4 = !{ !"ShadowStackEntryHeader::cellCount" }
+!4 = !{ !"ShadowStackEntryHeader::next", !0 }
+!5 = !{ !"ShadowStackEntryHeader::cellCount", !0 }
 
-!5 = !{ !"VectorCell::m_elements" }
+!6 = !{ !"VectorCell::m_elements", !0 }
 
 ; {next, cellCount}
 %shadowStackEntryHeader = type {%shadowStackEntryHeader*, i32}

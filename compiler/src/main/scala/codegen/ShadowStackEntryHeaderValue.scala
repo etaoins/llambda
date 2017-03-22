@@ -8,14 +8,14 @@ object ShadowStackEntryHeaderValue extends StructureValue("shadowStackEntryHeade
     name="next",
     index=0,
     irType=PointerType(UserDefinedType("shadowStackEntryHeader")),
-    tbaaNode=NumberedMetadata(3)
+    tbaaNode=NumberedMetadata(4)
   )
 
   val cellCountField = StructureField(
     name="cellCount",
     index=1,
     irType=IntegerType(32),
-    tbaaNode=NumberedMetadata(4)
+    tbaaNode=NumberedMetadata(5)
   )
 
   def genPointerToNext = genPointerToField(nextField)_
