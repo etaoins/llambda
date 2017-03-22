@@ -48,7 +48,7 @@ sealed trait Step extends ContextLocated {
 /** Step that dispose its input values as part of the step
   *
   * This is typically used for steps that are GC barriers so they can avoid rooting input values that will be unused
-  * after the step completets
+  * after the step completes
   */
 sealed trait InputDisposableStep extends Step {
   def inputToDispose: Set[TempValue]
@@ -187,7 +187,7 @@ case class AllocateHeapCells(count: Int) extends Step {
 /** Permanently forgets about a temp value
   *
   * Referencing a TempValue after DisposeValues has been called will fail at compile time. Disposing a GC managed value
-  * will allow it to be garbage collected at the next allocaion if there are no other references to it
+  * will allow it to be garbage collected at the next allocation if there are no other references to it
   */
 case class DisposeValues(values: Set[TempValue]) extends Step {
   lazy val inputValues = values
@@ -601,7 +601,7 @@ case class LoadSymbolByte(
       .assignLocationFrom(this)
 }
 
-/** Loads the length of a bytevector as a Int64 */
+/** Loads the length of a bytevector as an Int64 */
 case class LoadBytevectorLength(
     result: TempValue,
     boxed: TempValue
@@ -822,7 +822,7 @@ sealed trait InitRecordLikeStep extends RecordLikeStep with DiscardableStep {
   /** Initial values for the record-like's fields */
   val fieldValues: Map[vt.RecordField, TempValue]
 
-  /** Indicates if the record should be initialially marked as undefined. This can be tested with
+  /** Indicates if the record should be initially marked as undefined. This can be tested with
     * AssertRecordLikeDefined. This can be used to implemented recursive values.
     */
   val isUndefined: Boolean
@@ -836,7 +836,7 @@ sealed trait InitRecordLikeStep extends RecordLikeStep with DiscardableStep {
   * - The record type is never inherited
   *
   * For this reason this is not a StackAllocable and stack allocation is explicitly only enabled in AnalyseEscapes for
-  * the planner-internal type for mutable varables.
+  * the planner-internal type for mutable variables.
   */
 case class InitRecord(
     result: TempValue,
@@ -997,7 +997,7 @@ case class LoadValueForParameterProc(
   * @param  parameterProc         Parameter procedure to set the value for. A runtime error will be signalled if this is
   *                               another type of procedure
   * @param  newValue              New value for the parameter procedure. This will be automatically converted if the
-  *                               was created with a converte procedure
+  *                               was created with a converter procedure
   */
 case class ParameterizedValue(
     parameterProc: TempValue,
@@ -1009,7 +1009,7 @@ case class ParameterizedValue(
 
 /** Pushes a new dynamic state with the given parameter values
   *
-  * @param parameterValues  Map of parameter procedure IR values to the new value the paramer should take
+  * @param parameterValues  Map of parameter procedure IR values to the new value the parameter should take
   */
 case class PushDynamicState(parameterValues: List[ParameterizedValue]) extends Step {
   lazy val inputValues = parameterValues.flatMap({
@@ -1091,7 +1091,7 @@ case class IntegerDiv(
     IntegerDiv(f(result), signed, f(val1), f(val2)).assignLocationFrom(this)
 }
 
-/** Calculats the remainder of truncating division on two integers of the same type */
+/** Calculates the remainder of truncating division on two integers of the same type */
 case class IntegerRem(
     result: TempValue,
     signed: Boolean,
