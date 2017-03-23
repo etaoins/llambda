@@ -28,19 +28,12 @@ namespace alloc
 
 namespace
 {
-	Finalizer *finalizer = nullptr;
-
 #ifndef _LLIBY_ALWAYS_GC
 	const std::size_t MaxAllocBeforeForceGc = 1024 * 1024;
 #endif
 }
 
-void initGlobal()
-{
-	finalizer = new Finalizer;
-}
-
-void shutdownGlobal()
+void reportGlobalLeaks()
 {
 #ifdef _LLIBY_CHECK_LEAKS
 	sched::Dispatcher::defaultInstance().waitForDrain();
@@ -101,9 +94,9 @@ std::size_t forceCollection(World &world)
 	 * from collection.
 	 */
 #if !defined(_LLIBY_ALWAYS_GC)
-	finalizer->finalizeHeapAsync(world.cellHeap);
+	Finalizer::finalizeHeapAsync(world.cellHeap);
 #else
-	finalizer->finalizeHeapSync(world.cellHeap);
+	Finalizer::finalizeHeapSync(world.cellHeap);
 #endif
 
 	// The finalizer should've emptied us

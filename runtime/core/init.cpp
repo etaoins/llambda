@@ -33,8 +33,6 @@ void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv, bool 
 
 	dynamic::init();
 
-	alloc::initGlobal();
-
 	{
 		// Make sure the world is alive for the exception handler
 		World rootWorld;
@@ -53,12 +51,11 @@ void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv, bool 
 		{
 			// Intentionally leak all of the world's cells
 			rootWorld.cellHeap.detach();
-
 		}
 #endif
 	}
 
-	alloc::shutdownGlobal();
+	alloc::reportGlobalLeaks();
 }
 
 }

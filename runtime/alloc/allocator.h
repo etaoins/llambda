@@ -13,8 +13,7 @@ namespace alloc
 class AllocCell;
 class RangeAlloc;
 
-void initGlobal();
-void shutdownGlobal();
+void reportGlobalLeaks();
 
 /**
  * Allocator for AnyCells
