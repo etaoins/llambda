@@ -39,7 +39,7 @@ void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv, bool 
 
 		try
 		{
-			rootWorld.run(entryPoint);
+			entryPoint(rootWorld);
 		}
 		catch (dynamic::SchemeException &except)
 		{

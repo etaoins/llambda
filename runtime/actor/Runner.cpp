@@ -75,10 +75,8 @@ namespace
 			try
 			{
 				// Restart the actor
-				actorWorld->run([&] (World &world) {
-					auto behaviourCell = context->closure()->apply(*actorWorld);
-					context->setBehaviour(static_cast<ActorBehaviourCell*>(behaviourCell));
-				});
+				auto behaviourCell = context->closure()->apply(*actorWorld);
+				context->setBehaviour(static_cast<ActorBehaviourCell*>(behaviourCell));
 
 				return true;
 			}
@@ -115,12 +113,8 @@ std::shared_ptr<Mailbox> Runner::start(World &parentWorld, ActorClosureCell *clo
 	ActorContext *context = new ActorContext(clonedClosureCell, supervisor);
 	actorWorld->setActorContext(context);
 
-	ActorBehaviourCell *behaviourCell;
-
 	// Initialise the actor's closure in its world but our thread
-	actorWorld->run([&] (World &world) {
-		behaviourCell = clonedClosureCell->apply(world);
-	});
+	ActorBehaviourCell *behaviourCell = clonedClosureCell->apply(*actorWorld);
 
 	// Set our initial behaviour
 	actorWorld->actorContext()->setBehaviour(behaviourCell);
@@ -194,12 +188,8 @@ void Runner::wake(World *actorWorld)
 
 					if (context->supervisorStrategy())
 					{
-						SymbolCell *failureAction;
-
 						// Consult our Scheme supervisor strategy
-						actorWorld->run([&] (World &world) {
-							failureAction = context->supervisorStrategy()->apply(world, msgCell);
-						});
+						SymbolCell *failureAction = context->supervisorStrategy()->apply(*actorWorld, msgCell);;
 
 						if (failureAction->byteLength() == 8)
 						{
@@ -224,9 +214,7 @@ void Runner::wake(World *actorWorld)
 				}
 				else if (type == Message::Type::User)
 				{
-					actorWorld->run([=] (World &world) {
-						context->behaviour()->apply(world, msgCell);
-					});
+					context->behaviour()->apply(*actorWorld, msgCell);
 				}
 			}
 			catch (dynamic::SchemeException &except)

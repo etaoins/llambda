@@ -6,7 +6,6 @@
 #include "alloc/CellRootList.h"
 
 #include <memory>
-#include <functional>
 #include <vector>
 
 namespace lliby
@@ -48,9 +47,7 @@ public: // Normal C++ API
 	static const std::size_t InitialHeapSegmentSize = 4 * 1024;
 
 	/**
-	 * Constructs a new non-running world
-	 *
-	 * @sa run()
+	 * Constructs a new World
 	 */
 	World();
 
@@ -58,14 +55,6 @@ public: // Normal C++ API
 	 * Destroys the World and frees all resources associated with it
 	 */
 	~World();
-
-	/**
-	 * Sets up the World to run and executes the passed function.
-	 *
-	 * Once the function returns all dynamic states will be popped. This can be run multiple times consecutively on the
-	 * same World but only one World function can be run at once.
-	 */
-	void run(const std::function<void(World &)> &func);
 
 	/**
 	 * Returns the active dynamic state of the world

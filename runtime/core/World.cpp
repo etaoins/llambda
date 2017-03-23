@@ -9,7 +9,6 @@
 #include "actor/ActorContext.h"
 
 #include "dynamic/State.h"
-#include "dynamic/SchemeException.h"
 
 using namespace lliby;
 
@@ -51,18 +50,6 @@ World::~World()
 		fatalError("Cells leaked from world on exit");
 	}
 #endif
-}
-
-void World::run(const std::function<void(World &)> &func)
-{
-	try
-	{
-		func(*this);
-	}
-	catch (dynamic::SchemeException &except)
-	{
-		throw;
-	}
 }
 
 void World::addChildActor(const std::weak_ptr<actor::Mailbox> &childActor)
