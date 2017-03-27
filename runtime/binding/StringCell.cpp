@@ -98,7 +98,7 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, Byt
 	const std::uint8_t *endPtr = data + byteLength;
 
 	// Find the character length - this can throw an exception
-	size_t charLength = utf8::validateData(scanPtr, endPtr);
+	std::size_t charLength = utf8::validateData(scanPtr, endPtr);
 
 	return StringCell::fromValidatedUtf8Data(world, data, byteLength, charLength);
 }
@@ -199,7 +199,7 @@ StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 	}
 }
 
-size_t StringCell::inlineDataSize()
+std::size_t StringCell::inlineDataSize()
 {
 	return sizeof(InlineStringCell::m_inlineData);
 }
@@ -389,7 +389,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 		}
 		else if (needHeapRealloc)
 		{
-			size_t byteArraySize = newByteLength;
+			std::size_t byteArraySize = newByteLength;
 
 			newByteArray = SharedByteArray::createInstance(byteArraySize);
 			destString = newByteArray->data();

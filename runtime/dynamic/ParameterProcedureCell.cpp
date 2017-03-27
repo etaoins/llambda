@@ -56,7 +56,7 @@ bool ParameterProcedureCell::isInstance(const ProcedureCell *proc)
 void ParameterProcedureCell::registerRecordClass()
 {
 	// Register our closure type so our garbage collector knows what to do
-	std::vector<size_t> offsets = { 0 };
+	std::vector<std::size_t> offsets = { 0 };
 
 	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(void *), offsets);
 }

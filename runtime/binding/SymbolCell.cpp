@@ -26,7 +26,7 @@ InlineSymbolCell::InlineSymbolCell(std::uint8_t byteLength, std::uint8_t charLen
 {
 }
 
-size_t SymbolCell::inlineDataSize()
+std::size_t SymbolCell::inlineDataSize()
 {
 	return sizeof(InlineSymbolCell::m_inlineData);
 }

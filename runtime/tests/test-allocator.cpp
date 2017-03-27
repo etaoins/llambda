@@ -315,8 +315,8 @@ void testHugeRangeAlloc(World &world)
 void testLargeNumberOfAllocations(World &world)
 {
 	// Allocate a series of ever increasingly large lists
-	size_t allocationSize = 257;
-	size_t allocationsLeft = 128;
+	std::size_t allocationSize = 257;
+	std::size_t allocationsLeft = 128;
 
 	while(allocationsLeft--)
 	{

@@ -16,7 +16,7 @@ namespace
 	std::vector<RecordClassMap *> runtimeRecordClassMaps;
 
 #ifdef _LLIBY_CHECK_LEAKS
-	std::atomic<size_t> recordDataAllocCount(0);
+	std::atomic<std::size_t> recordDataAllocCount(0);
 #endif
 }
 

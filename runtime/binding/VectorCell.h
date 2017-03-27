@@ -31,7 +31,7 @@ public:
 	constexpr static LengthType maximumLength()
 	{
 		// We're limited by our allocation size on both 32bit and 64bit
-		return std::numeric_limits<size_t>::max() / sizeof(AnyCell*);
+		return std::numeric_limits<std::size_t>::max() / sizeof(AnyCell*);
 	}
 
 	AnyCell* elementAt(LengthType offset) const
