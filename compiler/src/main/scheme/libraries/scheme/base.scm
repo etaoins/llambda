@@ -591,7 +591,7 @@
     (define-stdlib read-error? (native-function llbase "llbase_is_read_error" (-> <any> <native-bool>) nocapture))
 
     #| This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient native
-       native code implementation |#
+       code implementation |#
     (define guard-kernel (world-function llbase "llbase_guard_kernel" (-> (-> <any> <any>) (-> <any>) <any>)))
 
     (define-syntax guard
