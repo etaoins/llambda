@@ -38,7 +38,19 @@ public:
 	 */
 	StringCellBuilder(const StringCellBuilder &other) = delete;
 
-	StringCellBuilder(StringCellBuilder &&other) = default;
+	StringCellBuilder(StringCellBuilder &&other)
+	{
+		m_outputBuffer = other.m_outputBuffer;
+		m_expectedChars = other.m_expectedChars;
+		m_outputCursor = other.m_outputCursor;
+
+#ifndef NDEBUG
+		m_actualChars = other.m_actualChars;
+#endif
+
+		// Prevent a double delete
+		other.m_outputBuffer = nullptr;
+	}
 
 	~StringCellBuilder()
 	{
