@@ -30,6 +30,11 @@ namespace
 		// This is the minimum length of all of our input vectors
 		VectorCell::LengthType minimumLength = firstVectorRaw->length();
 
+		for(auto restVector : *restVectorList)
+		{
+			minimumLength = std::min(minimumLength, restVector->length());
+		}
+
 		// Build our vector of input vector cells
 		alloc::StrongRefVector<VectorCell> restVectors(world, restVectorList->begin(), restVectorList->end());
 

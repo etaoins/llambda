@@ -4,6 +4,8 @@
   (assert-equal #(5 7 9) (vector-map + '#(1 2 3) '#(4 5 6 7)))
   (assert-equal #(1 2 3) (vector-map (lambda (x) x) '#(1 2 3)))
 
+  (assert-equal #(4 5) (vector-map (lambda (x y) y) #(1 2 3) #(4 5)))
+
   (assert-equal #(1 2)
                 (let ((count 0))
                   (vector-map
