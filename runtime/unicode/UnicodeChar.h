@@ -48,7 +48,7 @@ public:
 	{
 		return codePoint() == other.codePoint();
 	}
-	
+
 	bool operator!=(const UnicodeChar &other) const
 	{
 		return codePoint() != other.codePoint();
