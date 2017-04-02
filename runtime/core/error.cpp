@@ -53,11 +53,10 @@ void llcore_signal_error(World &world, ErrorCategory category, const char *messa
 namespace lliby
 {
 
-void signalError(World &world, ErrorCategory category, const std::string &message, const std::vector<AnyCell*> &irritants)
+void signalError(World &world, ErrorCategory category, const std::string &message, std::initializer_list<AnyCell*> irritants)
 {
 	// Convert our C++ data type to Scheme cells
-	std::vector<AnyCell*> irritantsCopy(irritants);
-	alloc::StrongRef<ProperList<AnyCell>> irritantsCell(world, ProperList<AnyCell>::create(world, irritantsCopy));
+	alloc::StrongRef<ProperList<AnyCell>> irritantsCell(world, ProperList<AnyCell>::create(world, irritants));
 
 	StringCell *messageCell = StringCell::fromUtf8StdString(world, message);
 
