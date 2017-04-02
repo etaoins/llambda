@@ -12,7 +12,7 @@ struct SharedByteHash
 	/**
 	 * Hashes the passed binary data
 	 *
-	 * This is guaranteed to never return ImpossibleSharedByteHashValue
+	 * This is guaranteed to never return ImpossibleResultValue
 	 */
 	ResultType operator()(const std::uint8_t *data, std::size_t size);
 };

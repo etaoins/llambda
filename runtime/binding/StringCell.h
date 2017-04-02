@@ -129,12 +129,12 @@ public:
 	CharRange charRange(SliceIndexType start, SliceIndexType end = -1);
 
 	/**
-	 * Returns the length of the symbol's UTF-8 data in bytes
+	 * Returns the length of the string's UTF-8 data in bytes
 	 */
 	ByteLengthType byteLength() const;
 
 	/**
-	 * Returns the length of the symbol in Unicode code points
+	 * Returns the length of the string in Unicode code points
 	 */
 	CharLengthType charLength() const;
 

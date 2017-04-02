@@ -26,7 +26,7 @@ public:
 	explicit StringCellBuilder(StringCell::CharLengthType charLength) :
 		m_expectedChars(charLength)
 	{
-		// Four bytes is the largest encoding for a UTF-8 chacracter
+		// Four bytes is the largest encoding for a UTF-8 character
 		m_outputBuffer = new std::uint8_t[charLength * 4];
 		m_outputCursor = m_outputBuffer;
 	}
@@ -58,7 +58,7 @@ public:
 	}
 
 	/**
-	 * Returns the total byte length of UTF-8 encoded data appened to the builder
+	 * Returns the total byte length of UTF-8 encoded data appended to the builder
 	 *
 	 * @sa StringCell::maximumByteLength()
 	 */

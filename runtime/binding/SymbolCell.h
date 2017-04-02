@@ -32,22 +32,16 @@ public:
 
 	/**
 	 * Creates a new symbol from an STL string
-	 *
-	 * This will return nullptr if the string is larger than 64KiB
 	 */
 	static SymbolCell* fromUtf8StdString(World &world, const std::string &str);
 
 	/**
 	 * Creates a new symbol from raw UTF-8 data
-	 *
-	 * This will return nullptr if the string is larger than 64KiB
 	 */
 	static SymbolCell* fromUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength);
 
 	/**
 	 * Creates a new symbol from a string
-	 *
-	 * This will return nullptr if the string is larger than 64KiB
 	 */
 	static SymbolCell* fromString(World &world, StringCell *string);
 
@@ -78,7 +72,7 @@ public:
 	std::uint32_t charLength() const;
 
 	/**
-	 * Returns the shared byte hash for the UTF-8 data of the string
+	 * Returns the shared byte hash for the UTF-8 data of the symbol
 	 *
 	 * This is not the same as the datum hash. Use DatumHash to hash the SymbolCell itself.
 	 */
