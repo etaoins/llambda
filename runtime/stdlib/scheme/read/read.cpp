@@ -28,7 +28,7 @@ AnyCell *llread_read(World &world, PortCell *portCell)
 	}
 	catch(const ReadErrorException &e)
 	{
-		signalError(world, ErrorCategory::Read, e.message().c_str());
+		signalError(world, ErrorCategory::Read, e.message());
 	}
 	catch(const utf8::InvalidByteSequenceException &e)
 	{
