@@ -149,7 +149,7 @@ object ExtractPatternMatch {
         val vectorLengthProcLoc = expectedVarLoc("vector-length")
         val vectorRefProcLoc = expectedVarLoc("vector-ref")
 
-        val isVectorExpr = et.Apply(et.VarRef(vectorProcLoc), List(et.VarRef(valueLoc)))
+        val isVectorExpr = et.Apply(et.VarRef(vectorPredProcLoc), List(et.VarRef(valueLoc)))
         val vectorLengthExpr = et.Apply(et.VarRef(vectorLengthProcLoc), List(et.VarRef(valueLoc)))
         val expectedLengthExpr = et.Literal(ast.Integer(vectorPatternData.length))
 

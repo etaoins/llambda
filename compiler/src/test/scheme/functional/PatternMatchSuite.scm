@@ -15,7 +15,9 @@
   (match 'other
          ('one 1)
          ('two 2)
-         ('three 3))))
+         ('three 3)
+         ((vector four five six) 4)
+         ((cons seven eight) 7))))
 
 (define-test "equality matches" (expect-static-success
   (import (llambda match))
