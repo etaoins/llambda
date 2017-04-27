@@ -75,7 +75,7 @@ object ExtractDefine {
           typeDatum,
           value
       )) =>
-        val providedType = ExtractType.extractStableType(typeDatum)(context.config)
+        val providedType = ExtractType.extractStableType(typeDatum)
         val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=Some(providedType))
 
         List(ExtractedVarDefine(valueTarget, () => {
@@ -103,7 +103,7 @@ object ExtractDefine {
         Nil
 
       case (Primitives.DefineRecordType, _) =>
-        ParseRecordTypeDefine(located, operands)(context.config) match {
+        ParseRecordTypeDefine(located, operands) match {
           case ParseRecordTypeDefine.Result(typeSymbol, recordType, (constructorSym, constructorExpr), procedures) =>
             bindValue(typeSymbol, BoundType(recordType))
 

@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 private[valuetype] object UnrollType {
   /** Unrolls a recursive type reference

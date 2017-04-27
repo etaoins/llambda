@@ -280,7 +280,7 @@ object ExtractType {
   def extractStableType(
       datum: sst.ScopedDatum,
       recursiveVars: RecursiveVars = RecursiveVars()
-  )(implicit frontendConfig: FrontendConfig): vt.SchemeType = {
+  ): vt.SchemeType = {
     val schemeType = extractSchemeType(datum, recursiveVars)
     val stableType = vt.StabiliseType(schemeType)
 

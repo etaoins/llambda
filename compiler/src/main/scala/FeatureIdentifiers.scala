@@ -1,7 +1,7 @@
 package io.llambda.compiler
 
-import io.llambda
 import platform.TargetPlatform
+
 
 object FeatureIdentifiers {
   /** Feature identifier for the specific version of the compiler

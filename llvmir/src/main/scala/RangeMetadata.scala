@@ -27,8 +27,6 @@ object RangeMetadata {
       acc.reverse
 
     case minimumValue :: tailValues =>
-      val maxIntValue = 2L << (intBits - 1)
-
       // Drop all the values sequentially following this one
       val newTailValues = (tailValues.zipWithIndex.dropWhile { case (tailValue, index) =>
         tailValue == (minimumValue + index + 1)

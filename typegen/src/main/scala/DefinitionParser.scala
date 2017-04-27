@@ -3,7 +3,6 @@ package io.llambda.typegen
 import scala.util.parsing.combinator._
 import java.io.File
 import scala.io.Source
-import scala.util.parsing.input.Positional
 
 class ParseErrorException(message: String) extends Exception(message)
 

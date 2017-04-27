@@ -9,8 +9,6 @@ import llambda.compiler.InternalCompilerErrorException
 
 
 object GenInitRecordLike {
-  import Implicits._
-
   def apply(
       state: GenerationState,
       generatedTypes: Map[vt.RecordLikeType, GeneratedType]

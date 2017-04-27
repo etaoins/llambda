@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object StabiliseType {
   /** Recursively stablises a pair elements' types and replaces its applicable type

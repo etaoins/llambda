@@ -39,7 +39,7 @@ private[frontend] object ParseRecordTypeDefine {
       selfTypeVar: pm.TypeVar,
       fieldData: List[sst.ScopedDatum],
       inheritedFieldNames: Set[String]
-  )(implicit frontendConfig: FrontendConfig): ListMap[String, ParsedField] = {
+  ): ListMap[String, ParsedField] = {
     val typeBindings = List(selfSymbol -> BoundType(selfTypeVar))
     val typeScopeMapping = Scope.mappingForBoundValues(typeBindings)
 
@@ -157,7 +157,7 @@ private[frontend] object ParseRecordTypeDefine {
       constructorArgs: List[sst.ScopedDatum],
       predicateSymbol: sst.Symbol,
       fieldData: List[sst.ScopedDatum]
-  )(implicit frontendConfig: FrontendConfig): Result = {
+  ): Result = {
     val parentRecordOpt = parentSymbolOpt map { parentSymbol =>
       ExtractType.extractSchemeType(parentSymbol) match {
         case parentRecord: vt.RecordType =>
@@ -218,10 +218,7 @@ private[frontend] object ParseRecordTypeDefine {
     Result(nameSymbol, recordType, constructorProcedure, allProcedures.toMap)
   }
 
-  def apply(
-      located: SourceLocated,
-      args: List[sst.ScopedDatum]
-  )(implicit frontendConfig: FrontendConfig): Result = args match {
+  def apply(located: SourceLocated, args: List[sst.ScopedDatum]): Result = args match {
     case (nameSymbol: sst.Symbol) ::
          sst.ProperList((constructorSymbol: sst.Symbol) :: constructorArgs) ::
          (predicateSymbol: sst.Symbol) ::

@@ -164,8 +164,6 @@ object PlanLambdaPolymorph {
 
     val parentState = manifest.parentState
 
-    val optionalArgLocs = lambdaExpr.optionalArgs.map(_.storageLoc)
-
     // Determine if we have a closure
     val innerSelfTempOpt = if (manifest.capturedVars.isEmpty) {
       None

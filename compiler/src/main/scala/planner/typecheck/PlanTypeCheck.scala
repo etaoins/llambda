@@ -342,13 +342,8 @@ object PlanTypeCheck {
       valueType: vt.SchemeType,
       testType: vt.SchemeType,
       selfSymbolOpt: Option[String] = None
-  )(implicit plan: PlanWriter): CheckResult = {
-    val predProcs = (selfSymbolOpt map { selfSymbol =>
-      (testType -> selfSymbol)
-    }).toMap
-
+  )(implicit plan: PlanWriter): CheckResult =
     branchOnType(plan, checkValue, valueType, testType, mustInline=selfSymbolOpt.isDefined)
-  }
 
   def withIntermediateValue(
       checkValue: iv.IntermediateValue,

@@ -1,7 +1,6 @@
 package io.llambda.typegen
 
 import io.llambda.llvmir
-import annotation.unchecked
 
 object LlvmTypeToScalaConstructor {
   def apply(llvmType: llvmir.IrType): String = {

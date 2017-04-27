@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object SatisfiesType {
   private def satisfiesTypeRef(

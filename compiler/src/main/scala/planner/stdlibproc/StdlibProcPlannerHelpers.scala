@@ -1,8 +1,9 @@
 package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
-import io.llambda.compiler.RangeException
-import io.llambda.compiler.planner._
+import llambda.compiler.RangeException
+import llambda.compiler.planner._
+
 
 trait StdlibProcPlannerHelpers {
   /** Asserts that an index is within an object of the passed length

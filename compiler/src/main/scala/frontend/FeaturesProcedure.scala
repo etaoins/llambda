@@ -17,14 +17,12 @@ private[frontend] object FeaturesProcedure {
       returnType=vt.ReturnType.Reachable(vt.UniformProperListType(vt.SymbolType))
     )
 
-    var featuresProc = et.Lambda(
+    et.Lambda(
       polyType=featuresProcType.toPolymorphic,
       mandatoryArgs=Nil,
       optionalArgs=Nil,
       restArgOpt=None,
       body=et.Literal(ast.ProperList(featuresList.map(ast.Symbol(_))))
     )
-
-    featuresProc
   }
 }

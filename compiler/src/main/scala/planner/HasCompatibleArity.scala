@@ -1,5 +1,5 @@
 package io.llambda.compiler.planner
-import io.llambda
+
 
 private[planner] object HasCompatibleArity {
   /**

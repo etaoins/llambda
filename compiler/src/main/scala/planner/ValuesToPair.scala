@@ -1,7 +1,6 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.{step => ps}
@@ -41,7 +40,7 @@ private[planner] object ValuesToPair {
       // TopProceduretype
       // This is actually what we want - otherwise it would be very complicated to convert procedure typed lists
       // between each other
-      var storedType = vt.PairType(
+      val storedType = vt.PairType(
         carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceApplicableType(vt.TopProcedureType)),
         cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceApplicableType(vt.TopProcedureType))
       )

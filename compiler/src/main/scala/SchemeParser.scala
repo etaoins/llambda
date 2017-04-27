@@ -1,5 +1,4 @@
 package io.llambda.compiler
-import io.llambda
 
 import scala.language.implicitConversions
 import scala.annotation.switch
@@ -10,6 +9,7 @@ import scala.util.{Success,Failure}
 import scala.collection.mutable.LongMap
 
 import org.parboiled2._
+
 
 sealed abstract class ParseErrorException(message: String) extends Exception(message)
 

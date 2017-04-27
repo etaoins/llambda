@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object IntersectTypes {
   private[valuetype] def intersectTypeSets(

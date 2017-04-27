@@ -1,8 +1,8 @@
 package io.llambda.compiler
-import io.llambda
 
 import scala.io.Source
 import java.io.FileNotFoundException
+
 
 class RequiredRuntimeBuildFileNotFoundException(path: String) extends
   Exception(s"Required runtime build file ${path} not found. " +

@@ -9,7 +9,7 @@ private[planner] object ValuesToRecord {
   private def valuesToMutableRecordTemp(
     recordType: vt.RecordType,
     fieldValues: Map[vt.RecordField, iv.IntermediateValue],
-    isUndefined: Boolean = false
+    isUndefined: Boolean
   )(implicit plan: PlanWriter): ps.TempValue = {
     // Convert our fields to temp values
     val fieldToTempValue = fieldValues.map { case (field, value) =>

@@ -1,7 +1,7 @@
 package io.llambda.compiler
-import io.llambda
 
 import scala.annotation.tailrec
+
 
 case class SourceLocation(
   filenameOpt: Option[String],

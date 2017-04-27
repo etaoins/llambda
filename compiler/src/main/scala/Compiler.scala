@@ -1,5 +1,4 @@
 package io.llambda.compiler
-import io.llambda
 
 import java.io._
 import scala.io.Source
@@ -85,7 +84,7 @@ object Compiler {
       plannedProgram: PlannedProgram,
       output: File,
       config: CompileConfig,
-      entryFilenameOpt: Option[String] = None
+      entryFilenameOpt: Option[String]
   ): Unit = {
     // Generate the LLVM IR
     val irString = codegen.GenProgram(
@@ -119,7 +118,7 @@ object Compiler {
 
   private def abstractRun[T](
       planInput: (T, CompileConfig) => PlannedProgram
-  )(input: T, config: CompileConfig, extraEnv: List[(String, String)] = Nil): RunResult = {
+  )(input: T, config: CompileConfig, extraEnv: List[(String, String)]): RunResult = {
     val plannedProgram = planInput(input, config)
 
     try {

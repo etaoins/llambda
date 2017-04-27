@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object ConvertibleToType {
   /** Determines if a source type is convertable to the destination type

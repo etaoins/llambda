@@ -73,7 +73,7 @@ object GenCalcProperListLength {
     continueCountBlock.add(incedCounterIr)(wrapBehaviour, currentCounterIr, IntegerConstant(IntegerType(32), 1))
 
     // Cast it to a list element
-    val listElementCastIr = continueCountBlock.bitcastTo(nextListElIr)(cdrIr, listElementPtrType)
+    continueCountBlock.bitcastTo(nextListElIr)(cdrIr, listElementPtrType)
 
     // Jump back to the beginning of the loop
     continueCountBlock.uncondBranch(countBlock)

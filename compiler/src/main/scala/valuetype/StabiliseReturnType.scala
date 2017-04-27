@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object StabiliseReturnType {
   /** Stablises the type of a return type

@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object FormalsToListType {
   /** Converts a formals definition in to a list type that matches the formal's expected args */

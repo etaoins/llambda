@@ -12,9 +12,6 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
   private type DoubleCompartor = (Double, Double) => Boolean
 
-  private type StaticIntegerOp = (Long, Long) => Long
-  private type StaticDoubleOp = (Double, Double) => Double
-
   private sealed abstract class CompareResult
   private case class StaticCompare(result: Boolean) extends CompareResult
   private case class DynamicCompare(nativePred: ps.TempValue) extends CompareResult
@@ -22,7 +19,7 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
   private def integerValue(
       value: iv.IntermediateValue
-  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
+  ): Option[iv.IntermediateValue] = {
       value match  {
         case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
           // Already an  int

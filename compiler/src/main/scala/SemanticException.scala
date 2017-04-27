@@ -1,5 +1,5 @@
 package io.llambda.compiler
-import io.llambda
+
 
 sealed abstract class SemanticException(val located: SourceLocated, message: String) extends
     Exception(message + "\n" + located.locationString) {

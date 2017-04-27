@@ -1,5 +1,5 @@
 package io.llambda.compiler.platform
-import io.llambda
+
 
 object DetectLlvmTarget {
   def fromLlvmIr(llvmir: String): Option[TargetPlatform] = {

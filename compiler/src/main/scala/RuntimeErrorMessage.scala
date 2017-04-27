@@ -1,5 +1,5 @@
 package io.llambda.compiler
-import io.llambda
+
 
 /** Human-readable runtime error message
   *
@@ -7,8 +7,4 @@ import io.llambda
   * @param  name      Internal identifier unique to the error message
   * @param  text      Human-readable error message
   */
-case class RuntimeErrorMessage(
-  category: ErrorCategory,
-  name: String,
-  text: String
-)
+case class RuntimeErrorMessage(category: ErrorCategory, name: String, text: String)

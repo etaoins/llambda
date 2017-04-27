@@ -1,5 +1,5 @@
 package io.llambda.compiler.analyser
-import io.llambda
+
 
 object StdlibProcHasSideEffects {
   // Be *very* careful here - the procedure cannot throw an exception if passed the indicated number of arguments

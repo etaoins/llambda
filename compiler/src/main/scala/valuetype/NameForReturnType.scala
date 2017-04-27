@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object NameForReturnType {
   def apply[T >: SchemeType <: ValueType](returnType: ReturnType.ReturnType[T]): String = returnType match {

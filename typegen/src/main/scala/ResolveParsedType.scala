@@ -1,7 +1,5 @@
 package io.llambda.typegen
 
-import io.llambda.llvmir
-
 object ResolveParsedType {
   def apply(fieldTypes: Map[String, FieldType])(parsedType: ParsedType): FieldType = {
     val recursiveResolve = apply(fieldTypes)_

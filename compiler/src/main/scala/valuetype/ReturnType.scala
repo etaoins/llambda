@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object ReturnType {
   /** Represents the return type of a procedure */

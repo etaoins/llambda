@@ -14,8 +14,8 @@ object PlanCadr {
 
   private def loadCadr(
       pairValue: iv.IntermediateValue,
-      emptyListMessageOpt: Option[RuntimeErrorMessage] = None,
-      improperListMessageOpt: Option[RuntimeErrorMessage] = None,
+      emptyListMessageOpt: Option[RuntimeErrorMessage],
+      improperListMessageOpt: Option[RuntimeErrorMessage],
       knownPairLoader: KnownPairLoader,
       typeRefForPairType: TypeRefForPairType,
       planLoader: PlanLoader

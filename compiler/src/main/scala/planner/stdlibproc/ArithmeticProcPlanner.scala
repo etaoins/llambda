@@ -114,7 +114,6 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
           val intTemp2 = other2.toTempValue(vt.Int64)(inlinePlan)
 
           val resultTemp = ps.TempValue()
-          val overflowTemp = ps.TempValue()
 
           inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
 

@@ -19,7 +19,7 @@ object ExtractModuleBody {
   private def handleExtractedDefine(
       located: SourceLocated,
       extractedDefine: ExtractedVarDefine
-  )(implicit context: FrontendContext): List[et.Expr] = extractedDefine match {
+  ): List[et.Expr] = extractedDefine match {
     case ExtractedVarDefine(valueTarget, exprBlock) =>
       val symbol = valueTarget.definedSymbol
 

@@ -134,7 +134,7 @@
 ; Writes out ErrorCategory.scala
 (define (write-error-category-scala)
   (display "package io.llambda.compiler\n")
-  (display "import io.llambda\n")
+  (newline)
   (newline)
 
   (display "// ")

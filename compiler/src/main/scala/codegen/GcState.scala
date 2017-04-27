@@ -1,5 +1,5 @@
 package io.llambda.compiler.codegen
-import io.llambda
+
 
 case class GcState(
   rootedIdentities: Map[GcPointerIdentity, Int] = Map(),

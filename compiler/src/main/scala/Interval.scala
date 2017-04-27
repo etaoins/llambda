@@ -1,5 +1,4 @@
 package io.llambda.compiler
-import io.llambda
 
 
 /** Class representing an interval of Long values

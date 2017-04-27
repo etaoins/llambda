@@ -1,8 +1,5 @@
 package io.llambda.typegen
 
-import scala.concurrent._
-import ExecutionContext.Implicits.global
-
 import java.io._
 
 object GenerateTypes {

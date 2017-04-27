@@ -1,5 +1,5 @@
 package io.llambda.compiler
-import io.llambda
+
 
 object SchemeStringImplicits {
   class MultipleDatumError extends Exception("Multiple datums found")

@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 object HasRecursiveRef {
   private def refHasRecursiveRef(schemeTypeRef: SchemeTypeRef, depth: Int): Boolean = schemeTypeRef match {

@@ -12,12 +12,6 @@ import llambda.compiler.{valuetype => vt}
 object GenPlanStep {
   import Implicits._
 
-  // Our runtime doesn't have defined wrap behaviour so we don't either
-  // We only do math on signed values so nsw is sufficient here
-  private val integerWrapBehaviour = Set(
-    WrapBehaviour.NoSignedWrap
-  ): Set[WrapBehaviour]
-
   private val fastMathFlags = Set[FastMathFlag]()
 
   private def stepCompareCondToIntegerIr(stepCond: ps.CompareCond): IComparisonCond = stepCond match {
@@ -265,7 +259,6 @@ object GenPlanStep {
       newState.withTempValue(resultTemp -> resultIr, gcRoot=false)
 
     case ps.LoadSymbolByte(resultTemp, symbolTemp, offsetTemp, symbolByteLength, possibleValuesOpt) =>
-      val block = state.currentBlock
       val symbolIr = state.liveTemps(symbolTemp)
       val offsetIr = state.liveTemps(offsetTemp)
 
@@ -368,7 +361,7 @@ object GenPlanStep {
       // Mark ourselves as defined
       val recordCellIr = state.liveTemps(recordCellTemp)
       val cellType = generatedType.recordLikeType.cellType
-      val irResult = cellType.genStoreToIsUndefined(state.currentBlock)(IntegerConstant(cellType.isUndefinedIrType, 0), recordCellIr)
+      cellType.genStoreToIsUndefined(state.currentBlock)(IntegerConstant(cellType.isUndefinedIrType, 0), recordCellIr)
 
       state
 

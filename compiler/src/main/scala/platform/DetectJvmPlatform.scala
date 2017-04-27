@@ -1,8 +1,8 @@
 package io.llambda.compiler.platform
-import io.llambda
 
 import java.nio.ByteOrder
 import java.nio.ByteOrder.{BIG_ENDIAN, LITTLE_ENDIAN}
+
 
 object DetectJvmPlatform {
   def apply(): Option[TargetPlatform] = {

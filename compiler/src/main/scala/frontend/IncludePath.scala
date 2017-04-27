@@ -1,7 +1,7 @@
 package io.llambda.compiler.frontend
-import io.llambda
 
 import java.net.URL
+
 
 /** Represents a list of paths to search for libraries and included files */
 case class IncludePath(userConfiguredPaths: Seq[URL]) {
