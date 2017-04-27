@@ -88,7 +88,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       val knownType = schemeType & procTypeAtom
       val retypedThis = this.withSchemeType(knownType)
 
-      val procTemp = toProcedureTempValue(
+      val procTemp = retypedThis.toProcedureTempValue(
         targetApplicableType,
         errorMessageOpt
       )(isProcPlan)
