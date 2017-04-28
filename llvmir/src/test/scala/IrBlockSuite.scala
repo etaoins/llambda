@@ -1,11 +1,10 @@
 package io.llambda.llvmir
 
-import org.scalatest.FunSuite
 
 class IrBlockSuite extends IrTestSuite {
   test("comment") {
     val block = new IrChildBlockBuilder(createTestFunction(), new LocalNameSource, "testLabel")
-    
+
     block.comment("This is a test comment")
 
     assert(block.toIr === "testLabel:\n\t; This is a test comment")
@@ -21,7 +20,7 @@ class IrBlockSuite extends IrTestSuite {
 
     assertInstr(block, "ret void, !dbg !1")
   }
-  
+
   test("multiple withMetadata") {
     val testFunction = createTestFunction()
     val block = new IrChildBlockBuilder(testFunction, new LocalNameSource, "testLabel")
@@ -37,7 +36,7 @@ class IrBlockSuite extends IrTestSuite {
     // This should be in alphabetical order
     assertInstr(block, "ret void, !a !1, !b !2, !c !3")
   }
-  
+
   test("nested withMetadata") {
     val testFunction = createTestFunction()
     val block = new IrChildBlockBuilder(testFunction, new LocalNameSource, "testLabel")
@@ -84,7 +83,7 @@ class IrBlockSuite extends IrTestSuite {
 
     assertInstr(block, "%predefinedVar = icmp eq i32 20, 30")
   }
-  
+
   test("instr result in to predefined variable of different type fails") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
@@ -92,7 +91,7 @@ class IrBlockSuite extends IrTestSuite {
     val localVar = LocalVariable("predefinedVar", DoubleType)
 
     val block = createTestBlock()
-    
+
     intercept[InconsistentIrException] {
       block.icmp(localVar)(IComparisonCond.Equal, None, var1, var2)
     }

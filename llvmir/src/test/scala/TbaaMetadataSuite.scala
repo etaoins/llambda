@@ -18,8 +18,6 @@ class TbaaMetadataSuite extends FunSuite {
   }
 
   test("trivial child node") {
-    val parentNode = TbaaMetadata
-
     val tbaaNode = TbaaMetadata("test node", Some(testTbaaParent))
 
     assert(tbaaNode.toIr === """!{!"test node", !0}""")

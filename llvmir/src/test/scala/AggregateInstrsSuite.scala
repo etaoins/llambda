@@ -1,6 +1,5 @@
 package io.llambda.llvmir
 
-import org.scalatest.FunSuite
 
 class AggregateInstrsSuite extends IrTestSuite {
   test("0 index extractvalue fails") {

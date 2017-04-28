@@ -1,6 +1,5 @@
 package io.llambda.llvmir
 
-import org.scalatest.FunSuite
 
 class MemoryInstrsSuite extends IrTestSuite {
   val i32 = IntegerType(32)
@@ -51,24 +50,24 @@ class MemoryInstrsSuite extends IrTestSuite {
 
   test("load from non-pointer") {
     val fakePointer = LocalVariable("fake", IntegerType(8))
-    
+
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
       block.load("error")(fakePointer)
     }
   }
-  
+
   test("load from non-first class type") {
     val fakePointer = LocalVariable("fake", PointerType(FunctionType(i32, List(i32))))
-    
+
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
       block.load("error")(fakePointer)
     }
   }
-  
+
   test("volatile load") {
     val fakePointer = LocalVariable("fake", PointerType(FloatType))
 
@@ -125,55 +124,55 @@ class MemoryInstrsSuite extends IrTestSuite {
 
   test("trivial store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
-    
+
     val block = createTestBlock()
     block.store(IntegerConstant(IntegerType(8), 1), fakePointer)
 
     assertInstr(block, "store i8 1, i8* %fake")
   }
-  
+
   test("store to non-pointer") {
     val fakePointer = LocalVariable("fake", IntegerType(8))
-    
+
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
       block.store(IntegerConstant(IntegerType(8), 1), fakePointer)
     }
   }
-  
+
   test("store to incompatible type") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
-    
+
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
       block.store(IntegerConstant(IntegerType(16), 1), fakePointer)
     }
   }
-  
+
   test("volatile store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(16)))
-    
+
     val block = createTestBlock()
     block.store(IntegerConstant(IntegerType(16), 1), fakePointer, volatile=true)
 
     assertInstr(block, "store volatile i16 1, i16* %fake")
   }
-  
+
   test("aligned store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
-    
+
     val block = createTestBlock()
     block.store(IntegerConstant(IntegerType(32), 1), fakePointer, alignment=128)
 
     assertInstr(block, "store i32 1, i32* %fake, align 128")
   }
-  
+
   test("tbaa store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     val tbaaNode = NumberedMetadata(0)
-    
+
     val block = createTestBlock()
     block.store(
       IntegerConstant(IntegerType(32), 1),
@@ -183,11 +182,11 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     assertInstr(block, "store i32 1, i32* %fake, !tbaa !0")
   }
-  
+
   test("aligned volatile tbaa store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(64)))
     val tbaaNode = NumberedMetadata(45)
-    
+
     val block = createTestBlock()
     block.store(
       IntegerConstant(IntegerType(64), 1),
@@ -218,7 +217,7 @@ class MemoryInstrsSuite extends IrTestSuite {
     val fakeNonPointer = LocalVariable("fake", IntegerType(8))
 
     val block = createTestBlock()
-    
+
     intercept[InconsistentIrException] {
       block.getelementptr("error")(
         elementType=IntegerType(8),
@@ -227,7 +226,7 @@ class MemoryInstrsSuite extends IrTestSuite {
       )
     }
   }
-  
+
   test("non-integer index getelementptr") {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
@@ -260,7 +259,7 @@ class MemoryInstrsSuite extends IrTestSuite {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
     val block = createTestBlock()
-    
+
     intercept[InconsistentIrException] {
       block.getelementptr("oneindexMismatch")(
         elementType=IntegerType(16),
@@ -269,7 +268,7 @@ class MemoryInstrsSuite extends IrTestSuite {
       )
     }
   }
-  
+
   test("inbounds getelementptr") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
 

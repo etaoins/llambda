@@ -1,12 +1,12 @@
 package io.llambda.llvmir
 
-import org.scalatest.FunSuite
 import IrFunction._
+
 
 class IrFunctionBuilderSuite extends IrTestSuite {
   test("empty function def") {
     val result = IrFunction.Result(VoidType, Set())
-   
+
     val function = new IrFunctionBuilder(
       module=createTestModule(),
       result=result,
@@ -25,9 +25,9 @@ class IrFunctionBuilderSuite extends IrTestSuite {
 
   test("function returning arg def") {
     val result = Result(IntegerType(32), Set())
-    
+
     val namedArguments = List("testArg" -> Argument(IntegerType(32)))
-   
+
     val function = new IrFunctionBuilder(
       module=createTestModule(),
       result=result,
@@ -52,7 +52,7 @@ class IrFunctionBuilderSuite extends IrTestSuite {
       initializer=StringConstant.fromUtf8String("Hello, world!"),
       constant=true,
       unnamedAddr=true)
-    
+
     val putsDecl = {
       IrFunctionDecl(
         result=IrFunction.Result(IntegerType(32), Set()),
@@ -62,7 +62,7 @@ class IrFunctionBuilderSuite extends IrTestSuite {
     }
 
     val result = IrFunction.Result(IntegerType(32), Set())
-    
+
     val namedArguments = List(
       "Argument Count" -> IrFunction.Argument(IntegerType(32)),
       "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8)))))
@@ -72,7 +72,7 @@ class IrFunctionBuilderSuite extends IrTestSuite {
       result=result,
       namedArguments=namedArguments,
       name="main")
-      
+
     val entryBlock = function.entryBlock
 
     val helloPointer = entryBlock.getelementptr("helloPtr")(
@@ -80,11 +80,11 @@ class IrFunctionBuilderSuite extends IrTestSuite {
       basePointer=helloWorldDef.variable,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
     )
-      
+
     entryBlock.callDecl(None)(putsDecl, helloPointer :: Nil)
     entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
-    assert(function.toIr === 
+    assert(function.toIr ===
       """|define i32 @main(i32 %"Argument Count", i8** %argv) {
          |entry:
          |	%helloPtr1 = getelementptr [14 x i8], [14 x i8]* @helloWorldString, i32 0, i32 0
@@ -92,16 +92,16 @@ class IrFunctionBuilderSuite extends IrTestSuite {
          |	ret i32 0
          |}""".stripMargin)
   }
-  
+
   test("multi block function def") {
     val result = IrFunction.Result(VoidType, Set())
-   
+
     val function = new IrFunctionBuilder(
       module=createTestModule(),
       result=result,
       name="donothing",
       namedArguments=Nil)
-    
+
     val entryBlock = function.entryBlock
     val continueBlock = function.startChildBlock("continue")
 
