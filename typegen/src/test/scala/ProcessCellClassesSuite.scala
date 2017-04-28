@@ -1,9 +1,9 @@
 package io.llambda.typegen
 
-import collection.immutable.ListMap
 import org.scalatest.{FunSuite, Inside}
 
 import io.llambda.llvmir
+
 
 class ProcessCellClassesSuite extends FunSuite with Inside {
   def processString(str: String) = {
