@@ -1,5 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
+
 
 class HashMapTypeSuite extends SchemeTypeSuite {
   test("the any hash map type satisfies itself") {

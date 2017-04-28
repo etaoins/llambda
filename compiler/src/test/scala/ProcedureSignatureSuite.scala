@@ -1,9 +1,9 @@
 package io.llambda.compiler
-import io.llambda
 
 import io.llambda.compiler.{valuetype => vt}
 
 import org.scalatest.FunSuite
+
 
 class ProcedureSignatureSuite extends FunSuite {
   test("returning procedure without optional or rest arg") {

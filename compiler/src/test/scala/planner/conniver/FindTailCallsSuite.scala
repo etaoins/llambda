@@ -3,10 +3,10 @@ import io.llambda
 
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.planner.PlannedFunction
 import llambda.compiler.planner.{step => ps}
 
 import org.scalatest.FunSuite
+
 
 class FindTailCallsSuite extends FunSuite {
   val testSignature = ProcedureSignature(
@@ -25,7 +25,6 @@ class FindTailCallsSuite extends FunSuite {
 
   test("trivial tail call returning void") {
     val entryTemp = ps.TempValue()
-    val retTemp = ps.TempValue()
 
     val inputSteps = List(
       ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_test"),

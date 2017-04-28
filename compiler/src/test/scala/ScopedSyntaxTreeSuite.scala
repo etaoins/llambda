@@ -1,8 +1,8 @@
 package io.llambda.compiler
-import io.llambda
 
 import org.scalatest.FunSuite
 import collection.mutable
+
 
 class ScopedSyntaxTreeSuite  extends FunSuite {
   private object TestLocation extends SourceLocation (

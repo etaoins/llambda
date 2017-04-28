@@ -1,10 +1,7 @@
 package io.llambda.compiler.valuetype
-import io.llambda
 
-import org.scalatest.FunSuite
-
-import llambda.compiler.{celltype => ct}
 import Implicits._
+
 
 class ProperListTypeSuite extends SchemeTypeSuite {
   test("proper list type satisfies itself") {

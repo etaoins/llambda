@@ -1,10 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
 
-import org.scalatest.FunSuite
-
-import llambda.compiler.{celltype => ct}
-import Implicits._
 
 class LiteralBooleanTypeSuite extends SchemeTypeSuite {
   test("the union of both literal booleans is the general boolean") {
@@ -24,7 +19,7 @@ class LiteralBooleanTypeSuite extends SchemeTypeSuite {
     assertIntersection(literalTrue, BooleanType, literalTrue)
     assertIntersection(literalFalse, BooleanType, literalFalse)
   }
-  
+
   test("boolean literals satisfy themselvs") {
     assert(SatisfiesType(literalFalse, literalFalse) === Some(true))
     assert(SatisfiesType(literalTrue, literalTrue) === Some(true))

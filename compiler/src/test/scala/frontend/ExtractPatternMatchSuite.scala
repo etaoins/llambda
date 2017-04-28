@@ -4,8 +4,7 @@ import io.llambda
 import org.scalatest.{FunSuite,OptionValues}
 
 import llambda.compiler._
-import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.Implicits._
+
 
 class ExtractPatternSuite extends FunSuite with OptionValues with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))

@@ -1,7 +1,6 @@
 package io.llambda.compiler.planner.conniver
 import io.llambda
 
-import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 
@@ -156,8 +155,6 @@ class UnboxEarlySuite extends FunSuite {
       ps.UnboxInteger(trueUnboxedTemp, trueBoxedTemp)
     )
 
-    val falseBoxedTemp = ps.TempValue()
-    val falseSymbolTemp = ps.TempValue()
     val falseUnboxedTemp = ps.TempValue()
 
     val inputFalseSteps = List(

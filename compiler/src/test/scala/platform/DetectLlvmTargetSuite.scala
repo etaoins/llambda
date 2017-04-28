@@ -1,7 +1,7 @@
 package io.llambda.compiler.platform
-import io.llambda
 
 import org.scalatest.FunSuite
+
 
 class DetectLlvmTargetSuite extends FunSuite {
   test("x86_64-apple-macosx10.10.0") {

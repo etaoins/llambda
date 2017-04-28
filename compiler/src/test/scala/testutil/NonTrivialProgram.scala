@@ -2,11 +2,8 @@ package io.llambda.compiler.testutil
 import io.llambda
 import scala.io.Source
 
-
-import org.scalatest.{FunSuite,OptionValues}
-
 import llambda.compiler._
-import llambda.compiler.frontend.IncludePath
+
 
 /** Provides data and an include path for a generic "non-trivial" program
   *
@@ -20,8 +17,6 @@ object NonTrivialProgram {
 
   lazy val data: List[ast.Datum] = {
     val lifeProgramPath = s"${lifeBaseDir}life.scm"
-
-    val includePath = frontend.IncludePath(List(lifeBaseUrl))
 
     val stream = getClass.getClassLoader.getResourceAsStream(lifeProgramPath)
 

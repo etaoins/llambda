@@ -3,7 +3,7 @@ import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.compiler.{NativeLibrary, NativeStaticLibrary, NativeSystemLibrary}
+import llambda.compiler.{NativeStaticLibrary,NativeSystemLibrary}
 
 class NativeLibrarySuite extends FunSuite with PlanHelpers {
   test("no native functions require no libraries") {

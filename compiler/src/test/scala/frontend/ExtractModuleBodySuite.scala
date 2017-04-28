@@ -5,7 +5,7 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.Implicits._
+
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))

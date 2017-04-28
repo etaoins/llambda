@@ -4,9 +4,9 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.valuetype._
-import llambda.compiler.NoSourceLocation
 
 import Implicits._
+
 
 class InstantiateTypeSuite extends FunSuite {
   val polyA = new TypeVar("A")

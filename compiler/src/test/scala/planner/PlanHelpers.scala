@@ -6,8 +6,7 @@ import org.scalatest.{FunSuite, Inside}
 import llambda.compiler._
 import llambda.compiler.frontend.IncludePath
 import llambda.compiler.SchemeStringImplicits._
-import llambda.compiler.planner.{step => ps}
-import llambda.compiler.{valuetype => vt}
+
 
 trait PlanHelpers extends FunSuite with Inside {
   val topLevelSymbol = codegen.LlambdaTopLevelSignature.nativeSymbol

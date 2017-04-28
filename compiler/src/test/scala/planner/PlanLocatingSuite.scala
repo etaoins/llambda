@@ -2,11 +2,11 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import org.scalatest.FunSuite
-import scala.io.Source
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
+
 
 class PlanLocatingSuite extends FunSuite with PlanHelpers {
   private def assertPlanLocated(plannedFunctions: Map[String, planner.PlannedFunction], description: String) {

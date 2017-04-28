@@ -176,8 +176,6 @@ class DisposeValuesSuite extends FunSuite {
       ps.CreateIntegerCell(trueResult, 25)
     )
 
-    val falseSteps = Nil
-
     val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
     val testSteps = List(
       ps.CondBranch(restArgTemp, trueSteps, Nil, List(valuePhi)),

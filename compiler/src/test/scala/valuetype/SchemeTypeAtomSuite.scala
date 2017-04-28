@@ -1,10 +1,8 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import org.scalatest.FunSuite
-
 import llambda.compiler.{celltype => ct}
-import Implicits._
+
 
 class SchemeTypeAtomSuite extends SchemeTypeSuite {
   test("creating scheme types from concrete cell types") {
@@ -12,7 +10,7 @@ class SchemeTypeAtomSuite extends SchemeTypeSuite {
       IntegerType
     )
   }
-  
+
   test("creating scheme types from abstract cell types") {
     assert(SchemeType.fromCellType(ct.NumberCell) ===
       UnionType(Set(IntegerType, FlonumType))
@@ -24,7 +22,7 @@ class SchemeTypeAtomSuite extends SchemeTypeSuite {
       UnionType(Set(IntegerType, FlonumType))
     )
   }
-  
+
   test("union types are flattened when creating a new union") {
     assert(SchemeType.fromTypeUnion(List(IntegerType, UnionType(Set(FlonumType, StringType)))) ===
       UnionType(Set(IntegerType, FlonumType, StringType))
@@ -52,7 +50,7 @@ class SchemeTypeAtomSuite extends SchemeTypeSuite {
   test("atom types minus themselves is an empty union") {
     assert((IntegerType - IntegerType) === EmptySchemeType)
   }
-  
+
   test("atom type minus the empty type is itself") {
     assert((IntegerType - EmptySchemeType) === IntegerType)
   }
@@ -60,16 +58,16 @@ class SchemeTypeAtomSuite extends SchemeTypeSuite {
   test("atom type minus another atom type is original type") {
     assert((IntegerType - FlonumType) === IntegerType)
   }
- 
+
 
   test("atom types intersected with themselves is the original type") {
     assertIntersection(IntegerType, IntegerType, IntegerType)
   }
-  
+
   test("atom types intersected with another atom is the empty type") {
     assertIntersection(IntegerType, FlonumType, EmptySchemeType)
   }
-  
+
   test("atom types intersected with the empty type is the empty type") {
     assertIntersection(IntegerType, EmptySchemeType, EmptySchemeType)
   }

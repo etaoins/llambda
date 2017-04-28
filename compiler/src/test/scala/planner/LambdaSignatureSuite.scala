@@ -2,13 +2,11 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.SchemeStringImplicits._
-
-import llambda.compiler.valuetype.Implicits._
 
 import llambda.compiler._
 import org.scalatest.FunSuite
+
 
 class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   private def retypingProcedureName = "retyping-procedure"

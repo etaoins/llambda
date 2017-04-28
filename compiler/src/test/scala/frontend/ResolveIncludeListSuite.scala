@@ -4,7 +4,6 @@ import io.llambda
 import org.scalatest.{FunSuite, Inside}
 import llambda.compiler._
 
-import SchemeStringImplicits._
 
 class ResolveIncludeListSuite extends FunSuite with Inside {
   val resourceBaseUrl = getClass.getClassLoader.getResource("")

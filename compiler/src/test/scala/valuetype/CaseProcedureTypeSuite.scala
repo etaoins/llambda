@@ -1,10 +1,8 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import org.scalatest.FunSuite
-
 import llambda.compiler.{celltype => ct}
-import Implicits._
+
 
 class CaseProcedureTypeSuite extends SchemeTypeSuite {
   val oneUnitToPortProcedure = ProcedureType(
@@ -46,43 +44,43 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
 
     assert(SatisfiesType(superCase, testingCase) === Some(true))
   }
-  
+
   test("case procedure definitely satisfies case with more clauses") {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure, threeSymbolToNullProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
 
     assert(SatisfiesType(superCase, testingCase) === Some(true))
   }
-  
+
   test("case procedure may satisfy case with fewer clauses") {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure, threeSymbolToNullProcedure)
     )
 
     assert(SatisfiesType(superCase, testingCase) === None)
   }
-  
+
   test("case procedure may satisfy case with partially disjoint clauses") {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, threeSymbolToNullProcedure)
     )
@@ -94,19 +92,19 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToIntProcedure)
     )
 
     assert(SatisfiesType(superCase, testingCase) === Some(true))
   }
-  
+
   test("case procedure may satisfy case with sub clauses") {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToIntProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
@@ -118,14 +116,14 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
     val superCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
     )
-    
+
     val testingCase = CaseProcedureType(
       List(threeSymbolToNullProcedure, fourPortToNullProcedure)
     )
 
     assert(SatisfiesType(superCase, testingCase) === Some(false))
   }
-  
+
   test("case procedure definitely may satisfy top procedure type") {
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)
@@ -133,7 +131,7 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
 
     assert(SatisfiesType(TopProcedureType, testingCase) === None)
   }
-  
+
   test("case procedure definitely satifies procedure type atom") {
     val testingCase = CaseProcedureType(
       List(oneUnitToPortProcedure, twoStringToNumberProcedure)

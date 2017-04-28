@@ -7,7 +7,6 @@ import llambda.compiler.valuetype._
 import llambda.compiler.NoSourceLocation
 import llambda.compiler.TypeException
 
-import Implicits._
 
 class ReconcileTypeVarsSuite extends FunSuite {
   val polyNumA = new TypeVar("A", NumberType)

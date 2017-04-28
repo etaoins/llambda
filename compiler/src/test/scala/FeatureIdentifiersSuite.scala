@@ -1,7 +1,7 @@
 package io.llambda.compiler
-import io.llambda
 
 import org.scalatest.FunSuite
+
 
 class FeatureIdentifiersSuite  extends FunSuite {
   test("posix64be features") {

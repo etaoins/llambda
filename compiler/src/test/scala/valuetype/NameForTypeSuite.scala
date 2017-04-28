@@ -1,10 +1,9 @@
 package io.llambda.compiler.valuetype
-import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.compiler.{celltype => ct}
 import Implicits._
+
 
 class NameForTypeSuite extends FunSuite {
   private def binaryTreeType(memberType: SchemeType): SchemeType =
@@ -78,7 +77,6 @@ class NameForTypeSuite extends FunSuite {
   }
 
   test("(Listof <any>)") {
-    val pairType = PairType(AnySchemeType, AnySchemeType)
     assert(NameForType(UniformProperListType(AnySchemeType)) === "(Listof <any>)")
   }
 

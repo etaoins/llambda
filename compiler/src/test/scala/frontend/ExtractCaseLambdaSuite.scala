@@ -1,11 +1,11 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import org.scalatest.{FunSuite,Inside,OptionValues}
+import org.scalatest.{FunSuite,Inside}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.Implicits._
+
 
 class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq: _*))

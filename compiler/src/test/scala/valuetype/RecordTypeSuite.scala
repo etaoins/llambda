@@ -1,10 +1,5 @@
 package io.llambda.compiler.valuetype
-import io.llambda
 
-import org.scalatest.FunSuite
-
-import llambda.compiler.{celltype => ct}
-import Implicits._
 
 class RecordTypeSuite extends SchemeTypeSuite {
   test("record types definitely satisfy themselves") {
@@ -12,13 +7,13 @@ class RecordTypeSuite extends SchemeTypeSuite {
       Some(true)
     )
   }
-  
+
   test("record types definitely don't satisfy other record types") {
     assert(SatisfiesType(recordType1, recordType2) ===
       Some(false)
     )
   }
-  
+
   test("record types definitely satisfy the record atom") {
     assert(SatisfiesType(recordAtomType, recordType1) ===
       Some(true)
@@ -46,7 +41,7 @@ class RecordTypeSuite extends SchemeTypeSuite {
   test("distinct record types intersected with each other is an empty union") {
     assertIntersection(recordType1, recordType2, EmptySchemeType)
   }
-  
+
   test("union of record types intersected with the record type atom is the original union") {
     assertIntersection(UnionType(Set(recordType1, recordType2)), recordAtomType, UnionType(Set(recordType1, recordType2)))
   }

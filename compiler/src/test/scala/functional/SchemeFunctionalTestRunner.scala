@@ -2,12 +2,12 @@ package io.llambda.compiler.functional
 import io.llambda
 
 import java.io.File
-import java.io.InputStream
 import scala.io.Source
 import org.scalatest.{FunSuite, Inside}
 
 import llambda.compiler._
 import llambda.compiler.SchemeStringImplicits._
+
 
 abstract class SchemeFunctionalTestRunner(
     testName: String,
@@ -223,9 +223,6 @@ abstract class SchemeFunctionalTestRunner(
     (datum"(import (llambda error))" :: testImports) :+
       ast.ProperList(ast.Symbol("assert-raises") :: ast.Symbol(errorPredicate) :: testExprs)
   }
-
-  private def utf8InputStreamToString(stream: InputStream): String =
-    Source.fromInputStream(stream, "UTF-8").mkString
 
   private def executeProgram(program: List[ast.Datum], optimiseLevel: Int): ExecutionResult = {
     val finalProgram = testImportDecl :: program

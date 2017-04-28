@@ -1,5 +1,4 @@
 package io.llambda.compiler
-import io.llambda
 
 import org.scalatest.FunSuite
 

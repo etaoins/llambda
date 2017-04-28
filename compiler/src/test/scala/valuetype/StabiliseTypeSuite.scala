@@ -1,11 +1,9 @@
 package io.llambda.compiler.valuetype
-import io.llambda
-
-import llambda.compiler.{celltype => ct}
 
 import org.scalatest.FunSuite
 
 import Implicits._
+
 
 class StabiliseTypeSuite extends FunSuite {
   val StringToStringProcedure = ProcedureType(

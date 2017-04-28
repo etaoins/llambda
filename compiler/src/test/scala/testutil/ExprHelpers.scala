@@ -4,7 +4,8 @@ import io.llambda
 import org.scalatest.{FunSuite,OptionValues}
 
 import llambda.compiler._
-import llambda.compiler.frontend.{LibraryLoader, IncludePath}
+import llambda.compiler.frontend.LibraryLoader
+
 
 trait ExprHelpers extends FunSuite with OptionValues {
   // Resolve imports relative to /

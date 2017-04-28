@@ -127,7 +127,6 @@ class AnalyseExprsSuite extends FunSuite {
 
   test("mutate var in one side of conditional makes a var mutable") {
     val testLocA = new StorageLocation("testLocA")
-    val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
       et.TopLevelDefine(et.Binding(testLocA, et.Literal(ast.Boolean(true)))),
@@ -153,7 +152,6 @@ class AnalyseExprsSuite extends FunSuite {
 
   test("mutate var inside lambda parameters make a var mutable") {
     val testLocA = new StorageLocation("testLocA")
-    val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
       et.TopLevelDefine(et.Binding(testLocA, et.Literal(ast.Boolean(true)))),

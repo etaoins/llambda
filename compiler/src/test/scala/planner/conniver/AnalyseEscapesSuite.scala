@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlannedFunction, MutableType}
+import llambda.compiler.planner.MutableType
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 
 import org.scalatest.FunSuite
@@ -205,7 +205,6 @@ class AnalyseEscapesSuite extends FunSuite {
     val unboxedTemp = ps.TempValue()
     val boxedTemp = ps.TempValue()
     val trueTemp = ps.TempValue()
-    val falseTemp = ps.TempValue()
     val testTemp = ps.TempValue()
 
     val trueSteps = List(
