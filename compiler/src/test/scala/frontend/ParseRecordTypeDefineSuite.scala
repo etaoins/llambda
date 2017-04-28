@@ -115,7 +115,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             ),
             et.TopLevelDefine(et.Binding(`predLoc`, et.TypePredicate(`recordType`))),
             et.TopLevelDefine(
-              et.Binding(constDatumAccessorLoc, et.RecordAccessor(recordType, constDatumField))
+              et.Binding(`constDatumAccessorLoc`, et.RecordAccessor(recordType, constDatumField))
             )
           ) =>
         }

@@ -624,7 +624,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
 
     inside(expr) {
       case et.TopLevelDefine(et.Binding(storageLoc,
-          et.Lambda(polyType, Nil, List(et.OptionalArg(fixedArg, expectedDefault)), None, bodyExpr, _)))
+          et.Lambda(polyType, Nil, List(et.OptionalArg(fixedArg, `expectedDefault`)), None, bodyExpr, _)))
           if procLoc == storageLoc =>
         assert(polyType === vt.ProcedureType(
           mandatoryArgTypes=Nil,
