@@ -15,13 +15,13 @@ import llambda.compiler.{valuetype => vt}
 class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
   /* Caches of constants indexed by their value
    *
-   * This is ensure proper Scheme semantics are enforced with the lazily value instantiation the planner does. For
-   * example, the following code:
+   * This ensures proper Scheme semantics are maintained with the planner's lazy value instantiation. For example,
+   * the following code:
    * (define x '(1 2 3))
    * (eqv? x x)
    *
-   * Will actually plan the list for 'x' once for each argument. This breaks the Scheme semantics as (eqv?) would
-   * return false there
+   * Will actually plan the list for 'x' once for each argument. This breaks Scheme semantics as (eqv?) would return
+   * false if a separate instance was returned for each argument.
    */
 
   private val stringCache = new mutable.HashMap[String, IrConstant]
@@ -391,7 +391,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
           state.liveTemps(elementTemp).irValue match {
             case constant: IrConstant => constant
             case other =>
-              throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
+              throw new InternalCompilerErrorException(s"Attempted to create constant vector with non-constant element: ${other}")
           }
         }
 
