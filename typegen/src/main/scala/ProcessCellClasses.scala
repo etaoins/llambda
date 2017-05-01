@@ -57,7 +57,7 @@ object ProcessCellClasses {
       }
     }
 
-    val cellField = new CellField(parsedField.name, resolvedType, parsedField.initializer)
+    val cellField = new CellField(parsedField.name, resolvedType, parsedField.isConst, parsedField.initializer)
     cellField.setPos(parsedField.pos)
   }
 

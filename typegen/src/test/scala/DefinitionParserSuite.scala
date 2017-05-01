@@ -143,7 +143,7 @@ class DefinitionParserSuite extends FunSuite {
   test("root cell class with fields and initializer") {
     val (cellType: ParsedRootClassDefinition) :: Nil = parseString("""
       root cell Datum typetag typeId {
-        uint8 typeId;
+        const uint8 typeId;
         uint8* garbageState = 256;
         int64* intPointers[3][5];
       };
@@ -156,14 +156,17 @@ class DefinitionParserSuite extends FunSuite {
 
     assert(typeIdField.name === "typeId")
     assert(typeIdField.fieldType === ParsedTypeName("uint8"))
+    assert(typeIdField.isConst === true)
     assert(typeIdField.initializer === None)
 
     assert(garbageStateField.name === "garbageState")
     assert(garbageStateField.fieldType === ParsedPointerType(ParsedTypeName("uint8")))
+    assert(garbageStateField.isConst === false)
     assert(garbageStateField.initializer === Some(256))
 
     assert(intPointersField.name === "intPointers")
     assert(intPointersField.fieldType === ParsedArrayType(List(3, 5), ParsedPointerType(ParsedTypeName("int64"))))
+    assert(intPointersField.isConst === false)
     assert(intPointersField.initializer === None)
   }
 
@@ -222,7 +225,7 @@ class DefinitionParserSuite extends FunSuite {
   test("tagged cell class with function pointers") {
     val (cellType: ParsedTaggedClassDefinition) :: Nil = parseString("""
       abstract cell Procedure : Datum {
-        void (*callback)(int64[5], double *);
+        const void (*callback)(int64[5], double *);
         int64* (*delegate)();
       };
     """)
@@ -241,12 +244,14 @@ class DefinitionParserSuite extends FunSuite {
         ParsedPointerType(ParsedTypeName("double"))
       )
     ))
+    assert(callbackField.isConst === true)
 
     assert(delegateField.name === "delegate")
     assert(delegateField.fieldType === ParsedFunctionPointerType(
       Some(ParsedPointerType(ParsedTypeName("int64"))),
       Nil
     ))
+    assert(delegateField.isConst === false)
   }
 
   test("tagged cell class with array brackets before identifier fails") {

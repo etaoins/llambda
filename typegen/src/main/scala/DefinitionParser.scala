@@ -101,8 +101,13 @@ trait CellDefinitionParser extends CommonParsers {
 
   def field = positioned(arrayField | functionPointerField | valueField) <~ ";"
 
-  def valueField = nonArrayType ~ identifier ~ initializer ^^ { case fieldType ~ fieldName ~ fieldInitializer =>
-    new ParsedCellField(fieldName, fieldType, fieldInitializer)
+  def valueField = constSpecifier ~ nonArrayType ~ identifier ~ initializer ^^ {
+    case isConst ~ fieldType ~ fieldName ~ fieldInitializer =>
+      new ParsedCellField(fieldName, fieldType, isConst, fieldInitializer)
+  }
+
+  def constSpecifier = opt("const") ^^ { constOpt =>
+    constOpt.isDefined
   }
 
   def initializer = opt("=" ~> """\d+""".r) ^^ { initializerOpt =>
@@ -111,13 +116,14 @@ trait CellDefinitionParser extends CommonParsers {
     }
   }
 
-  def arrayField = valueType ~ identifier ~ arrayDimensions ^^ { case elementType ~ fieldName ~ dimensions =>
-    ParsedCellField(fieldName, ParsedArrayType(dimensions, elementType), None)
+  def arrayField = constSpecifier ~ valueType ~ identifier ~ arrayDimensions ^^ {
+    case isConst ~ elementType ~ fieldName ~ dimensions =>
+      ParsedCellField(fieldName, ParsedArrayType(dimensions, elementType), isConst, None)
   }
 
-  def functionPointerField = returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" ^^ {
-    case retType ~ _  ~ _ ~ fieldName ~ _ ~ _ ~ argTypes ~ _ =>
-      ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), None)
+  def functionPointerField = constSpecifier ~ returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" ^^ {
+    case isConst ~ retType ~ _  ~ _ ~ fieldName ~ _ ~ _ ~ argTypes ~ _ =>
+      ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), isConst, None)
   }
 }
 

@@ -18,6 +18,7 @@
 !5 = !{ !"ShadowStackEntryHeader::cellCount", !0 }
 
 !6 = !{ !"VectorCell::m_elements", !0 }
+!7 = !{}
 
 ; {next, cellCount}
 %shadowStackEntryHeader = type {%shadowStackEntryHeader*, i32}

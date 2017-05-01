@@ -77,7 +77,7 @@ sealed trait AnyFields {
 
   def genLoadFromTypeId(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val typeIdPtr = genPointerToTypeId(block)(valueCell)
-    val allMetadata = Map("tbaa" -> typeIdTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> typeIdTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("typeId")(typeIdPtr, metadata=allMetadata)
   }
 
@@ -102,7 +102,7 @@ sealed trait AnyFields {
 
   def genLoadFromGcState(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val gcStatePtr = genPointerToGcState(block)(valueCell)
-    val allMetadata = Map("tbaa" -> gcStateTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> gcStateTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("gcState")(gcStatePtr, metadata=allMetadata)
   }
 }
@@ -205,7 +205,7 @@ sealed trait PairFields extends ListElementFields {
 
   def genLoadFromListLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val listLengthPtr = genPointerToListLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> listLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> listLengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("listLength")(listLengthPtr, metadata=allMetadata)
   }
 
@@ -230,7 +230,7 @@ sealed trait PairFields extends ListElementFields {
 
   def genLoadFromCar(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val carPtr = genPointerToCar(block)(valueCell)
-    val allMetadata = Map("tbaa" -> carTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> carTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("car")(carPtr, metadata=allMetadata)
   }
 
@@ -255,7 +255,7 @@ sealed trait PairFields extends ListElementFields {
 
   def genLoadFromCdr(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val cdrPtr = genPointerToCdr(block)(valueCell)
-    val allMetadata = Map("tbaa" -> cdrTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> cdrTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("cdr")(cdrPtr, metadata=allMetadata)
   }
 }
@@ -406,7 +406,7 @@ sealed trait InlineStringFields extends StringFields {
 
   def genLoadFromInlineCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineCharLengthPtr = genPointerToInlineCharLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> inlineCharLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> inlineCharLengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("inlineCharLength")(inlineCharLengthPtr, metadata=allMetadata)
   }
 
@@ -526,7 +526,7 @@ sealed trait HeapStringFields extends StringFields {
 
   def genLoadFromHeapCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapCharLengthPtr = genPointerToHeapCharLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> heapCharLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> heapCharLengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("heapCharLength")(heapCharLengthPtr, metadata=allMetadata)
   }
 
@@ -677,7 +677,7 @@ sealed trait InlineSymbolFields extends SymbolFields {
 
   def genLoadFromInlineCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineCharLengthPtr = genPointerToInlineCharLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> inlineCharLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> inlineCharLengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("inlineCharLength")(inlineCharLengthPtr, metadata=allMetadata)
   }
 
@@ -797,7 +797,7 @@ sealed trait HeapSymbolFields extends SymbolFields {
 
   def genLoadFromHeapCharLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapCharLengthPtr = genPointerToHeapCharLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> heapCharLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> heapCharLengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("heapCharLength")(heapCharLengthPtr, metadata=allMetadata)
   }
 
@@ -887,7 +887,7 @@ sealed trait BooleanFields extends AnyFields {
 
   def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val valuePtr = genPointerToValue(block)(valueCell)
-    val allMetadata = Map("tbaa" -> valueTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> valueTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("value")(valuePtr, metadata=allMetadata)
   }
 }
@@ -960,7 +960,7 @@ sealed trait IntegerFields extends NumberFields {
 
   def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val valuePtr = genPointerToValue(block)(valueCell)
-    val allMetadata = Map("tbaa" -> valueTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> valueTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("value")(valuePtr, metadata=allMetadata)
   }
 }
@@ -1017,7 +1017,7 @@ sealed trait FlonumFields extends NumberFields {
 
   def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val valuePtr = genPointerToValue(block)(valueCell)
-    val allMetadata = Map("tbaa" -> valueTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> valueTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("value")(valuePtr, metadata=allMetadata)
   }
 }
@@ -1078,7 +1078,7 @@ sealed trait CharFields extends AnyFields {
 
   def genLoadFromUnicodeChar(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val unicodeCharPtr = genPointerToUnicodeChar(block)(valueCell)
-    val allMetadata = Map("tbaa" -> unicodeCharTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> unicodeCharTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("unicodeChar")(unicodeCharPtr, metadata=allMetadata)
   }
 }
@@ -1139,7 +1139,7 @@ sealed trait VectorFields extends AnyFields {
 
   def genLoadFromLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val lengthPtr = genPointerToLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> lengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> lengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("length")(lengthPtr, metadata=allMetadata)
   }
 
@@ -1164,7 +1164,7 @@ sealed trait VectorFields extends AnyFields {
 
   def genLoadFromElements(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val elementsPtr = genPointerToElements(block)(valueCell)
-    val allMetadata = Map("tbaa" -> elementsTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> elementsTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("elements")(elementsPtr, metadata=allMetadata)
   }
 }
@@ -1232,7 +1232,7 @@ sealed trait BytevectorFields extends AnyFields {
 
   def genLoadFromLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val lengthPtr = genPointerToLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> lengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> lengthTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("length")(lengthPtr, metadata=allMetadata)
   }
 
@@ -1333,7 +1333,7 @@ sealed trait RecordLikeFields extends AnyFields {
 
   def genLoadFromDataIsInline(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val dataIsInlinePtr = genPointerToDataIsInline(block)(valueCell)
-    val allMetadata = Map("tbaa" -> dataIsInlineTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> dataIsInlineTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("dataIsInline")(dataIsInlinePtr, metadata=allMetadata)
   }
 
@@ -1383,7 +1383,7 @@ sealed trait RecordLikeFields extends AnyFields {
 
   def genLoadFromRecordClassId(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val recordClassIdPtr = genPointerToRecordClassId(block)(valueCell)
-    val allMetadata = Map("tbaa" -> recordClassIdTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> recordClassIdTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("recordClassId")(recordClassIdPtr, metadata=allMetadata)
   }
 
@@ -1505,7 +1505,7 @@ sealed trait ProcedureFields extends RecordLikeFields {
 
   def genLoadFromEntryPoint(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val entryPointPtr = genPointerToEntryPoint(block)(valueCell)
-    val allMetadata = Map("tbaa" -> entryPointTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> entryPointTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("entryPoint")(entryPointPtr, metadata=allMetadata)
   }
 }
@@ -1658,7 +1658,7 @@ sealed trait ErrorObjectFields extends AnyFields {
 
   def genLoadFromCategory(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val categoryPtr = genPointerToCategory(block)(valueCell)
-    val allMetadata = Map("tbaa" -> categoryTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> categoryTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("category")(categoryPtr, metadata=allMetadata)
   }
 
@@ -1683,7 +1683,7 @@ sealed trait ErrorObjectFields extends AnyFields {
 
   def genLoadFromMessage(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val messagePtr = genPointerToMessage(block)(valueCell)
-    val allMetadata = Map("tbaa" -> messageTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> messageTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("message")(messagePtr, metadata=allMetadata)
   }
 
@@ -1708,7 +1708,7 @@ sealed trait ErrorObjectFields extends AnyFields {
 
   def genLoadFromIrritants(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val irritantsPtr = genPointerToIrritants(block)(valueCell)
-    val allMetadata = Map("tbaa" -> irritantsTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> irritantsTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("irritants")(irritantsPtr, metadata=allMetadata)
   }
 }
@@ -1779,7 +1779,7 @@ sealed trait PortFields extends AnyFields {
 
   def genLoadFromPort(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val portPtr = genPointerToPort(block)(valueCell)
-    val allMetadata = Map("tbaa" -> portTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> portTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("port")(portPtr, metadata=allMetadata)
   }
 }
@@ -1859,7 +1859,7 @@ sealed trait MailboxFields extends AnyFields {
 
   def genLoadFromMailbox(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val mailboxPtr = genPointerToMailbox(block)(valueCell)
-    val allMetadata = Map("tbaa" -> mailboxTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> mailboxTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("mailbox")(mailboxPtr, metadata=allMetadata)
   }
 }
@@ -1920,7 +1920,7 @@ sealed trait HashMapFields extends AnyFields {
 
   def genLoadFromDatumHashTree(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val datumHashTreePtr = genPointerToDatumHashTree(block)(valueCell)
-    val allMetadata = Map("tbaa" -> datumHashTreeTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> datumHashTreeTbaaNode, "invariant.load" ->  NumberedMetadata(7L)) ++ metadata
     block.load("datumHashTree")(datumHashTreePtr, metadata=allMetadata)
   }
 }

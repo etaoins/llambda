@@ -9,6 +9,7 @@ import io.llambda.llvmir
 final class CellField(
   val name: String,
   val fieldType: FieldType,
+  val isConst: Boolean,
   val initializer: Option[Long]
 ) extends Positional
 

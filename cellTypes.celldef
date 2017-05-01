@@ -41,9 +41,9 @@ fieldtype MailboxRef : untypedptr {
 };
 
 root cell Any typetag typeId {
-	TypeId typeId;
+	const TypeId typeId;
 	// This is GarbageState::GlobalConstant
-	GarbageState gcState = 1;
+	const GarbageState gcState = 1;
 };
 
 preconstructed cell Unit : Any {
@@ -53,9 +53,9 @@ abstract cell ListElement : Any {
 };
 
 concrete internal cell Pair : ListElement {
-	uint32 listLength;
-	Any* car;
-	Any* cdr;
+	const uint32 listLength;
+	const Any* car;
+	const Any* cdr;
 };
 
 preconstructed cell EmptyList : ListElement {
@@ -66,13 +66,13 @@ concrete cell String : Any {
 };
 
 variant cell InlineString : String {
-	uint8 inlineCharLength;
+	const uint8 inlineCharLength;
 	uint8 inlineData[28];
 };
 
 variant cell HeapString : String {
 	uint32 heapByteLength;
-	uint32 heapCharLength;
+	const uint32 heapCharLength;
 	SharedByteArray* heapByteArray;
 };
 
@@ -81,55 +81,55 @@ concrete cell Symbol : Any {
 };
 
 variant cell InlineSymbol : Symbol {
-	uint8 inlineCharLength;
+	const uint8 inlineCharLength;
 	uint8 inlineData[28];
 };
 
 variant cell HeapSymbol : Symbol {
 	uint32 heapByteLength;
-	uint32 heapCharLength;
+	const uint32 heapCharLength;
 	SharedByteArray* heapByteArray;
 };
 
 preconstructed cell Boolean : Any {
-	bool value;
+	const bool value;
 };
 
 abstract cell Number : Any {
 };
 
 concrete cell Integer : Number {
-	int64 value;
+	const int64 value;
 };
 
 concrete cell Flonum : Number {
-	double value;
+	const double value;
 };
 
 concrete cell Char : Any {
-	UnicodeChar unicodeChar;
+	const UnicodeChar unicodeChar;
 };
 
 concrete cell Vector : Any {
-	int64 length;
-	Any** elements;
+	const int64 length;
+	const Any** elements;
 };
 
 concrete cell Bytevector : Any {
-	int64 length;
+	const int64 length;
 	SharedByteArray* byteArray;
 };
 
 abstract internal cell RecordLike : Any {
-	bool dataIsInline;
+	const bool dataIsInline;
 	bool isUndefined;
-	uint32 recordClassId;
+	const uint32 recordClassId;
 	untypedptr recordData;
 };
 
 concrete internal cell Procedure : RecordLike {
 	uint8 extraData[8];
-	untypedptr entryPoint;
+	const untypedptr entryPoint;
 };
 
 // Records are internal because each record class is exposed as its own first-class type in Scheme
@@ -138,22 +138,22 @@ concrete internal cell Record : RecordLike {
 };
 
 concrete cell ErrorObject : Any {
-	ErrorCategory category;
-	String* message;
-	ProperList* irritants;
+	const ErrorCategory category;
+	const String* message;
+	const ProperList* irritants;
 };
 
 concrete cell Port : Any {
-	AbstractPort *port;
+	const AbstractPort *port;
 };
 
 preconstructed cell EofObject : Any {
 };
 
 concrete cell Mailbox : Any {
-	MailboxRef mailbox;
+	const MailboxRef mailbox;
 };
 
 concrete internal cell HashMap : Any {
-	DatumHashTree *datumHashTree;
+	const DatumHashTree *datumHashTree;
 };

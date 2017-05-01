@@ -150,7 +150,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
         int32 typeId;
-        int8 gcState = 16;
+        const int8 gcState = 16;
       };
     """)
 
@@ -170,6 +170,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         llvmir.IntegerType(32),
         "std::int32_t"
       ))
+      assert(typeIdField.isConst === false)
       assert(typeIdField.initializer === None)
 
       assert(gcStateField.fieldType === PrimitiveFieldType(
@@ -177,6 +178,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         llvmir.IntegerType(8),
         "std::int8_t"
       ))
+      assert(gcStateField.isConst === true)
       assert(gcStateField.initializer === Some(16))
 
       val typeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)

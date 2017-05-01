@@ -110,9 +110,21 @@ object WriteScalaCellTypes extends writer.OutputWriter {
         }
 
         scalaBuilder += s"def genLoadFrom${capitalizedName}(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue ="
+
+        val tbaaMetadata = s""""tbaa" -> ${field.name}TbaaNode"""
+        val invariantLoadMetadataOpt = if (field.isConst) {
+          Some(""""invariant.load" -> NumberedMetadata(7L)""")
+        }
+        else {
+          None
+        }
+
+        val standardMetadata = List(tbaaMetadata) ++ invariantLoadMetadataOpt
+        val standardMetadataInitialiser = s"Map(${standardMetadata.mkString(", ")})"
+
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"""val allMetadata = Map("tbaa" -> ${field.name}TbaaNode) ++ metadata"""
+          scalaBuilder += s"""val allMetadata = ${standardMetadataInitialiser} ++ metadata"""
           scalaBuilder += s"""block.load("${field.name}")(${pointerVarName}, metadata=allMetadata)"""
         }
       }
