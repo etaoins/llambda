@@ -124,6 +124,7 @@ abstract internal cell RecordLike : Any {
 	const bool dataIsInline;
 	bool isUndefined;
 	const uint32 recordClassId;
+	// This is not const as we can store inline data in the pointer itself
 	untypedptr recordData;
 };
 

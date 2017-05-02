@@ -113,7 +113,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
 
         val tbaaMetadata = s""""tbaa" -> ${field.name}TbaaNode"""
         val invariantLoadMetadataOpt = if (field.isConst) {
-          Some(""""invariant.load" -> NumberedMetadata(7L)""")
+          Some(""""invariant.load" -> GlobalDefines.emptyMetadataNode""")
         }
         else {
           None

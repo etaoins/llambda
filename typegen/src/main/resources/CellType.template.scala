@@ -3,6 +3,8 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.codegen.GlobalDefines
+
 
 sealed abstract class CastableValue {
   val irType: FirstClassType

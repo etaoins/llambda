@@ -20,7 +20,11 @@ object GenLoadRecordLikeData {
 
       case TypeDataStorage.OutOfLine =>
         // Our data is out-of-line; dereference the record data pointer
-        cellType.genLoadFromRecordData(block)(recordIr)
+
+        // While the data pointed to by this pointer may change the pointer itself cannot
+        val loadMetadata = Map("invariant.load" -> GlobalDefines.emptyMetadataNode)
+
+        cellType.genLoadFromRecordData(block)(recordIr, loadMetadata)
     }
 
     block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))

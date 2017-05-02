@@ -20,7 +20,17 @@ object GenLoadRecordLikeFields {
     // Get the element pointer
     val fieldPtr = block.getelementptr("fieldPtr")(fieldIrType, recordDataIr, (0 :: fieldIndices).map(IntegerConstant(IntegerType(32), _)))
 
+    val tbaaMetadata = "tbaa" -> tbaaNode
+    val invariantLoadMetadataOpt = if (recordField.mutable) {
+      None
+    }
+    else {
+      Some("invariant.load" -> GlobalDefines.emptyMetadataNode)
+    }
+
+    val loadMetadata = Map(tbaaMetadata) ++ invariantLoadMetadataOpt
+
     // Perform the load
-    block.load("loadedField")(fieldPtr, metadata=Map("tbaa" -> tbaaNode))
+    block.load("loadedField")(fieldPtr, metadata=loadMetadata)
   }
 }
