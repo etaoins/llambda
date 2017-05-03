@@ -10,7 +10,7 @@ import llambda.llvmir.DataLayout
   * This may differ from the current platform during cross compilation
   */
 case class TargetPlatform(dataLayout: DataLayout) {
-  val pointerBits: Int = dataLayout.pointerAlignment.sizeBits
+  val pointerBits: Int = dataLayout.pointerLayout.sizeBits
 
   def bytesForType(valueType: vt.ValueType) = valueType match {
     // Use the + 7 to make sure we round up to the next byte boundary

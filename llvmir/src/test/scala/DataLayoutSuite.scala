@@ -9,19 +9,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Big)
     assert(dataLayout.stackAlignmentBits === 0)
-    assert(dataLayout.pointerAlignment === DataAlignment(64, 64, 64))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(64, 64, 64))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 32, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 32, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.ELF)
     assert(dataLayout.nativeIntegerBits === Set(8, 16, 32, 64))
@@ -32,19 +32,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 128)
-    assert(dataLayout.pointerAlignment === DataAlignment(64, 64, 64))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(64, 64, 64))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === Some(DataAlignment(80, 128, 128)))
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === Some(TypeLayout(80, 128, 128)))
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.ELF)
     assert(dataLayout.nativeIntegerBits === Set(8, 16, 32, 64))
@@ -55,19 +55,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 128)
-    assert(dataLayout.pointerAlignment === DataAlignment(32, 32, 32))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(32, 32, 32))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 32, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 32, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 32, 64))
-    assert(dataLayout.floatAlignments.get(80) === Some(DataAlignment(80, 128, 128)))
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 32, 64))
+    assert(dataLayout.floatLayouts.get(80) === Some(TypeLayout(80, 128, 128)))
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.MachO)
     assert(dataLayout.nativeIntegerBits === Set(8, 16, 32))
@@ -78,18 +78,18 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 12) // ???
-    assert(dataLayout.pointerAlignment === DataAlignment(64, 64, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === Some(DataAlignment(80, 128, 128)))
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === Some(TypeLayout(80, 128, 128)))
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.WinCOFF)
     assert(dataLayout.nativeIntegerBits === Set(8, 16, 32, 64))
@@ -100,19 +100,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 3) // ???
-    assert(dataLayout.pointerAlignment === DataAlignment(32, 32, 32))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 32))
+    assert(dataLayout.pointerLayout === TypeLayout(32, 32, 32))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 32))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === Some(DataAlignment(80, 32, 32)))
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === Some(TypeLayout(80, 32, 32)))
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.Win86COFF)
     assert(dataLayout.nativeIntegerBits === Set(8, 16, 32))
@@ -123,19 +123,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 32)
-    assert(dataLayout.pointerAlignment === DataAlignment(32, 32, 32))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 32))
+    assert(dataLayout.pointerLayout === TypeLayout(32, 32, 32))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 32))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 32, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 32, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 32, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 32, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 32, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 32, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 32, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 32, 128))
 
     assert(dataLayout.mangling === Mangling.MachO)
     assert(dataLayout.nativeIntegerBits === Set(32))
@@ -146,18 +146,18 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 64)
-    assert(dataLayout.pointerAlignment === DataAlignment(32, 32, 32))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 32))
+    assert(dataLayout.pointerLayout === TypeLayout(32, 32, 32))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 32))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 64, 128))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 64, 128))
 
     assert(dataLayout.mangling === Mangling.WinCOFF)
     assert(dataLayout.nativeIntegerBits === Set(32))
@@ -168,19 +168,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Little)
     assert(dataLayout.stackAlignmentBits === 128)
-    assert(dataLayout.pointerAlignment === DataAlignment(64, 64, 64))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(64, 64, 64))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 32))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 32))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.ELF)
     assert(dataLayout.nativeIntegerBits === Set(32, 64))
@@ -191,19 +191,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Big)
     assert(dataLayout.stackAlignmentBits === 0)
-    assert(dataLayout.pointerAlignment === DataAlignment(32, 32, 32))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(32, 32, 32))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 32, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 32, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 32, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 32, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.MachO)
     assert(dataLayout.nativeIntegerBits === Set(32))
@@ -214,19 +214,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Big)
     assert(dataLayout.stackAlignmentBits === 0)
-    assert(dataLayout.pointerAlignment === DataAlignment(64, 64, 64))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(64, 64, 64))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 8))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 8))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.MachO)
     assert(dataLayout.nativeIntegerBits === Set(32, 64))
@@ -237,19 +237,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Big)
     assert(dataLayout.stackAlignmentBits === 64)
-    assert(dataLayout.pointerAlignment === DataAlignment(32, 32, 32))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 0, 64))
+    assert(dataLayout.pointerLayout === TypeLayout(32, 32, 32))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 0, 64))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 8))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 32))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 8))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 32))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.MIPS)
     assert(dataLayout.nativeIntegerBits === Set(32))
@@ -260,19 +260,19 @@ class DataLayoutSuite extends FunSuite {
 
     assert(dataLayout.endian === Endian.Big)
     assert(dataLayout.stackAlignmentBits === 0)
-    assert(dataLayout.pointerAlignment === DataAlignment(64, 64, 64))
-    assert(dataLayout.aggregateAlignment === DataAlignment(0, 8, 16))
+    assert(dataLayout.pointerLayout === TypeLayout(64, 64, 64))
+    assert(dataLayout.aggregateLayout === TypeLayout(0, 8, 16))
 
-    assert(dataLayout.integerAlignments(1) === DataAlignment(1, 8, 16))
-    assert(dataLayout.integerAlignments(8) === DataAlignment(8, 8, 16))
-    assert(dataLayout.integerAlignments(32) === DataAlignment(32, 32, 32))
-    assert(dataLayout.integerAlignments(64) === DataAlignment(64, 64, 64))
+    assert(dataLayout.integerLayouts(1) === TypeLayout(1, 8, 16))
+    assert(dataLayout.integerLayouts(8) === TypeLayout(8, 8, 16))
+    assert(dataLayout.integerLayouts(32) === TypeLayout(32, 32, 32))
+    assert(dataLayout.integerLayouts(64) === TypeLayout(64, 64, 64))
 
-    assert(dataLayout.floatAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.floatAlignments.get(80) === None)
+    assert(dataLayout.floatLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.floatLayouts.get(80) === None)
 
-    assert(dataLayout.vectorAlignments(64) === DataAlignment(64, 64, 64))
-    assert(dataLayout.vectorAlignments(128) === DataAlignment(128, 128, 128))
+    assert(dataLayout.vectorLayouts(64) === TypeLayout(64, 64, 64))
+    assert(dataLayout.vectorLayouts(128) === TypeLayout(128, 128, 128))
 
     assert(dataLayout.mangling === Mangling.ELF)
     assert(dataLayout.nativeIntegerBits === Set(32, 64))
