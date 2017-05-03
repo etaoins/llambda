@@ -7,7 +7,7 @@ import org.scalatest.FunSuite
 import llambda.compiler.SchemeStringImplicits._
 
 class EvaluatorSuite extends FunSuite {
-  private val targetPlatform = platform.DetectTargetPlatform()
+  private val targetPlatform = platform.DetectLlvmTarget()
 
   private def testEvaluator(): Evaluator =
     new Evaluator(targetPlatform)

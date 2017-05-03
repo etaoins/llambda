@@ -16,15 +16,6 @@ object CompilerApp extends App {
     runAsScript: Boolean = false
   )
 
-  private val stringToPlatform = Map(
-    ("posix64be" -> platform.Posix64BE),
-    ("posix64le" -> platform.Posix64LE),
-    ("posix32be" -> platform.Posix32BE),
-    ("posix32le" -> platform.Posix32LE),
-    ("win32"     -> platform.Win32),
-    ("win64"     -> platform.Win64)
-  )
-
   val parser = new scopt.OptionParser[Config]("llambda") {
     head("llambda")
 
@@ -50,18 +41,6 @@ object CompilerApp extends App {
         success
       }
     } text("set optimisation level")
-
-    opt[String]("target-platform") action { (platformString, c) =>
-      c.copy(targetPlatformOpt=Some(stringToPlatform(platformString)))
-    } validate { platformString =>
-      val validPlatforms = stringToPlatform.keys.toList.sorted
-      if (!validPlatforms.contains(platformString)) {
-        failure("Unknown target platform. Valid values are: " + validPlatforms.mkString(", "))
-      }
-      else {
-        success
-      }
-    } text("target platform")
 
     opt[String]("with-feature-ident") unbounded() action { (featureIdent, c) =>
       c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)
@@ -93,9 +72,7 @@ object CompilerApp extends App {
 
   parser.parse(args, Config()) map { config =>
     // Determine our target platform
-    val targetPlatform = config.targetPlatformOpt getOrElse {
-      platform.DetectTargetPlatform()
-    }
+    val targetPlatform = platform.DetectLlvmTarget()
 
     config.inputFile match {
       case Some(input) =>

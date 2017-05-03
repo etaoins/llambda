@@ -27,7 +27,7 @@ abstract class SchemeFunctionalTestRunner(
     128 + 11
   )
 
-  private val targetPlatform = platform.DetectTargetPlatform()
+  private val targetPlatform = platform.DetectLlvmTarget()
 
   private case class ExecutionResult(
       success: Boolean,

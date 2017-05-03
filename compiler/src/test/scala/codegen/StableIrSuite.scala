@@ -12,7 +12,7 @@ class StableIrSuite extends FunSuite {
     val compileConfig = CompileConfig(
       includePath=testutil.NonTrivialProgram.includePath,
       optimiseLevel=2,
-      targetPlatform=platform.Posix64LE
+      targetPlatform=platform.ExamplePlatform.`x86_64-pc-linux-gnu`
     )
 
     // Compile the program 4 times

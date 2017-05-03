@@ -49,12 +49,6 @@ private[codegen] object PackRecordLikeInline {
     // The existing order stored inline
     lazy val existingInline = PackedRecordLike(recordLike.fields, true)
 
-    if (!targetPlatform.usesNaturalAlignment) {
-      // We assume natural alignment
-      // We have no way of reliably determing sizes so always use out-of-line data
-      return existingOutOfLine
-    }
-
     val fieldsWithType = recordLike.fields map { field =>
       field -> recordLike.typeForField(field)
     }

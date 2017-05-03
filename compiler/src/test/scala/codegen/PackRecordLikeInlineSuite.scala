@@ -7,9 +7,11 @@ import llambda.compiler.platform
 import llambda.compiler.{valuetype => vt}
 
 class PackRecordLikeInlineSuite extends FunSuite {
+  private val targetPlatform = platform.ExamplePlatform.`x86_64-pc-linux-gnu`
+
   test("empty record can be packed") {
     val unpackedRecord = new vt.RecordType("<test>", Nil)
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
       fieldOrder=Nil,
@@ -21,7 +23,7 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val onlyField = new vt.RecordField("only", vt.Int64, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(onlyField))
 
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
       fieldOrder=List(onlyField),
@@ -29,28 +31,11 @@ class PackRecordLikeInlineSuite extends FunSuite {
     ))
   }
 
-  test("platforms with non-natural alignment never inline") {
-    // Without predictable alignment we can't inline
-    val unnaturalPosix64 = new platform.TargetPlatform with platform.AbstractLP64 with platform.AbstractPosix with platform.AbstractLittleEndian {
-      override val usesNaturalAlignment = false
-    }
-
-    val onlyField = new vt.RecordField("only", vt.Int64, mutable=false)
-    val unpackedRecord = new vt.RecordType("<test>", List(onlyField))
-
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, unnaturalPosix64)
-
-    assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
-      fieldOrder=List(onlyField),
-      inline=false
-    ))
-  }
-
   test("one field that does not fit is packed out-of-line") {
     val onlyField = new vt.RecordField("only", vt.Int64, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(onlyField))
 
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 4, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(unpackedRecord, 4, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
       fieldOrder=List(onlyField),
@@ -64,7 +49,7 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField))
 
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
       fieldOrder=List(firstField, secondField, thirdField),
@@ -78,7 +63,7 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField))
 
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
       fieldOrder=List(firstField, secondField, thirdField),
@@ -97,7 +82,7 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val sixthField = new vt.RecordField("sixth", vt.Int8, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField, fourthField, fifthField, sixthField))
 
-    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     // This assumes that we repack for space minimization
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
