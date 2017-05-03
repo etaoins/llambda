@@ -8,7 +8,7 @@
   (begin
     (define-native-library llprocesscontext (static-library "ll_scheme_processcontext"))
 
-    (define native-exit (native-function system-library "exit" (-> <native-int> <unit>) noreturn))
+    (define native-exit (native-function system-library "exit" (-> <native-int32> <unit>) noreturn))
 
     (define-stdlib (exit (val : (U <integer> <boolean>)))
       (define exit-code : <integer>

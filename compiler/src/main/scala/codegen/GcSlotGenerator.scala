@@ -4,10 +4,9 @@ import io.llambda
 import collection.mutable
 
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._
 
-class GcSlotGenerator(entryBlock: IrEntryBlockBuilder)(worldPtrIr: IrValue, nextBlock: IrChildBlockBuilder, targetPlatform: TargetPlatform) extends {
+class GcSlotGenerator(entryBlock: IrEntryBlockBuilder)(worldPtrIr: IrValue, nextBlock: IrChildBlockBuilder) extends {
   private val blockTerminators = new mutable.ListBuffer[(IrBlockBuilder, () => Unit)]
   private val module = entryBlock.function.module
 

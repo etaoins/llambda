@@ -13,13 +13,13 @@ trait ExprHelpers extends FunSuite with OptionValues {
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
 
   val debugContext = debug.UnknownContext
-  val libraryLoader = new LibraryLoader(platform.Posix64LE)
+  val libraryLoader = new LibraryLoader()
 
   val includePath = frontend.IncludePath(List(resourceBaseUrl))
 
   val frontendConfig = frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=FeatureIdentifiers(platform.Posix64LE)
+      featureIdentifiers=FeatureIdentifiers()
     )
 
   val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)

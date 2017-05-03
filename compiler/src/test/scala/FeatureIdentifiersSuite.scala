@@ -4,38 +4,25 @@ import org.scalatest.FunSuite
 
 
 class FeatureIdentifiersSuite  extends FunSuite {
-  test("posix64be features") {
+  test("basic features") {
     val expectedFeatures = Set(
-      "posix",
-      "lp64",
-      "big-endian"
+      "llvm",
+      "llambda",
+      "llambda-0.3"
     )
 
-    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Posix64BE))
+    assert(FeatureIdentifiers() === expectedFeatures)
   }
 
-  test("win64 features") {
+  test("features with extras") {
     val expectedFeatures = Set(
-      "windows",
-      "llp64",
-      "little-endian"
-    )
-
-    assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Win64))
-  }
-
-  test("posix64le features with extras") {
-    val expectedFeatures = Set(
-      "posix",
-      "lp64",
-      "big-endian",
+      "llvm",
+      "llambda",
+      "llambda-0.3",
       "user-def-1",
       "user-def-2"
     )
 
-    assert(expectedFeatures subsetOf FeatureIdentifiers(
-      platform.Posix64BE,
-      Set("user-def-1", "user-def-2")
-    ))
+    assert(FeatureIdentifiers(Set("user-def-1", "user-def-2")) === expectedFeatures)
   }
 }

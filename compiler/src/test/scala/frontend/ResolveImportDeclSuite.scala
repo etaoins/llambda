@@ -13,7 +13,7 @@ class ResolveImportDeclSuite extends FunSuite {
 
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
 
-    ResolveImportDecl(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
+    ResolveImportDecl(datum)(new LibraryLoader, frontendConfig)
   }
 
   test("import all primitives") {

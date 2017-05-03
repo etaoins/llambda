@@ -1,11 +1,11 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.{valuetype => vt}
 
+
 object IntrinsicTypes {
-  def apply(targetPlatform: TargetPlatform): Map[String, vt.ValueType] =
+  def apply(): Map[String, vt.ValueType] =
     // Intrinsic native types
     List(
       vt.Predicate,
@@ -21,15 +21,6 @@ object IntrinsicTypes {
       vt.UnicodeChar
     ).map({nativeType =>
       (vt.NameForType(nativeType) -> nativeType)
-    }).toMap ++
-    // Type aliases
-    Map(
-      ("<native-int>"     -> targetPlatform.intType),
-      ("<native-long>"    -> targetPlatform.longType),
-      ("<native-ushort>"  -> targetPlatform.ushortType),
-      ("<native-uint>"    -> targetPlatform.uintType),
-      ("<native-size_t>"  -> targetPlatform.sizeType),
-      ("<native-wchar_t>" -> targetPlatform.wcharType)
-    ) ++ vt.IntrinsicSchemeTypes() +
+    }).toMap ++ vt.IntrinsicSchemeTypes() +
     ("<any>" -> vt.AnySchemeType)
 }

@@ -175,8 +175,8 @@ object Compiler {
   /** Plans the specified input Scheme data */
   def planData(data: List[ast.Datum], config: CompileConfig): PlannedProgram = {
     // Prepare to extract
-    val loader = new frontend.LibraryLoader(config.targetPlatform)
-    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents)
+    val loader = new frontend.LibraryLoader
+    val featureIdentifiers = FeatureIdentifiers(config.extraFeatureIdents)
 
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(

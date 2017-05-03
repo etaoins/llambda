@@ -5,7 +5,7 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
-class LibraryLoader(targetPlatform: platform.TargetPlatform) {
+class LibraryLoader {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expr]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
   private var featuresStorageLoc: Option[StorageLocation] = None
@@ -63,8 +63,7 @@ class LibraryLoader(targetPlatform: platform.TargetPlatform) {
 
     case List("llambda", "nfi") =>
       Some(
-        // Our NFI types depend on our target platform
-        IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
+        IntrinsicTypes().mapValues(BoundType.apply) +
           ("<list>" -> BoundType(vt.UniformProperListType(vt.AnySchemeType))) +
           ("<pair>" -> BoundType(vt.AnyPairType)) +
           ("<procedure>" -> BoundType(vt.SchemeTypeAtom(ct.ProcedureCell))) +

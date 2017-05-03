@@ -23,7 +23,7 @@ private object ReplFrontendConfig {
 
     frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=FeatureIdentifiers(targetPlatform)
+      featureIdentifiers=FeatureIdentifiers()
     )
   }
 }
@@ -41,7 +41,7 @@ class Evaluator(targetPlatform: platform.TargetPlatform) {
     targetPlatform=targetPlatform
   )
 
-  val loader: frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
+  val loader: frontend.LibraryLoader = new frontend.LibraryLoader()
   val prefixExprs: mutable.ListBuffer[et.Expr] = new mutable.ListBuffer
 
   implicit val frontendContext = frontend.FrontendContext(frontendConfig, loader, debug.UnknownContext)

@@ -76,10 +76,10 @@ abstract class SchemeFunctionalTestRunner(
 
   private def runTestConfiguration(allTests: List[ast.Datum], optimiseLevel: Int) {
     // Deal with (cond-expand) for this configuration
-    val expandLibraryLoader = new frontend.LibraryLoader(targetPlatform)
+    val expandLibraryLoader = new frontend.LibraryLoader
     val expandFrontendConfig = frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=targetPlatform.platformFeatures
+      featureIdentifiers=FeatureIdentifiers()
     )
 
     val expandedTests = expandTopLevel(allTests)(expandLibraryLoader, expandFrontendConfig)

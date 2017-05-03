@@ -82,7 +82,7 @@ private[codegen] object GenFunction {
       val procStartBlock = generatedFunction.startChildBlock("procStart")
 
       // Create our GC slot allocator
-      val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock, genGlobals.targetPlatform)
+      val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock)
 
       // Create our landingpad
       val gcCleanUpBlock = {

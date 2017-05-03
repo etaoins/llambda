@@ -6,7 +6,7 @@ import llambda.compiler._
 
 object NfiExports {
   def apply(): collection.mutable.Map[String, BoundValue] = {
-    val libraryLoader = new LibraryLoader(platform.Posix64LE)
+    val libraryLoader = new LibraryLoader
     implicit val frontendConfig = frontend.FrontendConfig(
       includePath=IncludePath(Nil),
       featureIdentifiers=Set()

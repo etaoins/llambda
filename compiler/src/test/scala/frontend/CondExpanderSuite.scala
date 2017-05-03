@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class CondExpanderSuite extends FunSuite {
-  private val libraryLoader = new LibraryLoader(platform.Posix64LE)
+  private val libraryLoader = new LibraryLoader
 
   private def expansionFor(clauseList: List[String], featureIdentifiers: Set[String]): List[ast.Datum] = {
     val parsedClauses = clauseList.map(SchemeParser.parseStringAsData(_, None).head)

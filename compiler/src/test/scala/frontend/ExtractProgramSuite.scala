@@ -12,7 +12,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
       featureIdentifiers=Set()
     )
 
-    frontend.ExtractProgram(data)(new LibraryLoader(platform.Posix64LE), frontendConfig)
+    frontend.ExtractProgram(data)(new LibraryLoader, frontendConfig)
   }
 
   test("initial environment has no bindings") {

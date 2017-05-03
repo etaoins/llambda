@@ -248,7 +248,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_misc" (-> <native-bool> <integer> * <native-int>))""")
+      exprFor("""(native-function system-library "lliby_misc" (-> <native-bool> <integer> * <native-int32>))""")
     }
   }
 
@@ -268,7 +268,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with In
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_misc" (All () (-> <native-bool> <integer> * <native-int>)))""")
+      exprFor("""(native-function system-library "lliby_misc" (All () (-> <native-bool> <integer> * <native-int32>)))""")
     }
   }
 

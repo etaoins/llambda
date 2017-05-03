@@ -33,13 +33,7 @@ class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
       featureIdentifiers=Set()
     )
 
-    val compileConfig = CompileConfig(
-      includePath=includePath,
-      optimiseLevel=0,
-      targetPlatform=platform.Posix64LE
-    )
-
-    val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
+    val loader = new frontend.LibraryLoader
     val expressions = frontend.ExtractProgram(testutil.NonTrivialProgram.data)(loader, frontendConfig)
 
     expressions.map(assertExprLocated)

@@ -16,20 +16,14 @@ trait PlanHelpers extends FunSuite with Inside {
       optimise: Boolean,
       includePath: IncludePath = IncludePath(Nil)
   ) = {
-    val compileConfig = CompileConfig(
-      includePath=includePath,
-      optimiseLevel=if (optimise) 0 else 2,
-      targetPlatform=platform.Posix64LE
-    )
-
-    val featureIdentifiers = compileConfig.targetPlatform.platformFeatures
+    val featureIdentifiers = FeatureIdentifiers()
 
     val frontendConfig = frontend.FrontendConfig(
       includePath=includePath,
       featureIdentifiers=featureIdentifiers
     )
 
-    val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
+    val loader = new frontend.LibraryLoader
     val exprs = frontend.ExtractProgram(data)(loader, frontendConfig)
     val analysis = analyser.AnalyseExprs(exprs)
 
