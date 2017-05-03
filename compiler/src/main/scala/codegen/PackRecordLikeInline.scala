@@ -1,8 +1,10 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
+import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.platform.TargetPlatform
+
 
 private[codegen] object PackRecordLikeInline {
   /** Packed record-like
@@ -15,64 +17,32 @@ private[codegen] object PackRecordLikeInline {
     inline: Boolean
   )
 
-  private def isPowerOfTwo(number: Long) =
-    (number & (number - 1)) == 0
+  private def sizeOfStruct(fields: List[vt.ValueType], targetPlatform: TargetPlatform): Long = {
+    val llvmType = StructureType(
+      fields.map(ValueTypeToIr).map(_.irType)
+    )
 
-  private def sizeOfStruct(fields: Seq[vt.ValueType], targetPlatform: TargetPlatform): Long =
-    fields.foldLeft(0) { case (currentOffset, field) =>
-      val fieldSize = targetPlatform.bytesForType(field)
+    LayoutForIrType(targetPlatform.dataLayout)(llvmType).sizeBits / 8
+  }
 
-      // Align to the right size
-      val startOffset = if ((currentOffset % fieldSize) == 0) {
-        // Already aligned
-        currentOffset
-      }
-      else {
-        // Align to the next multiple of our field size
-        currentOffset + (fieldSize - (currentOffset % fieldSize))
-      }
-
-      startOffset + fieldSize
-    }
-
-  /** Attempts to reorder a record's fields to fit within an inline data area
-    *
-    * Whenever possible existing field order is preserved
+  /** Reorders a record's fields to take up a minimum size
     *
     * @param recordLike        Record-like type to repack
     * @param inlineDataByres   Number of bytes available for inline data storage
     * @param targetPlatform    Target platform to use when determing type sizes and alignments
     */
   def apply(recordLike: vt.RecordLikeType, inlineDataBytes: Int, targetPlatform: TargetPlatform): PackedRecordLike = {
-    // The existing order stored out-of-line
-    lazy val existingOutOfLine = PackedRecordLike(recordLike.fields, false)
-    // The existing order stored inline
-    lazy val existingInline = PackedRecordLike(recordLike.fields, true)
+    val sortedFieldWithTypeAndSize = recordLike.fields.map({ case field =>
+      val fieldType = recordLike.typeForField(field)
+      val sizeBits = LayoutForIrType(targetPlatform.dataLayout)(ValueTypeToIr(fieldType).irType).sizeBits
 
-    val fieldsWithType = recordLike.fields map { field =>
-      field -> recordLike.typeForField(field)
-    }
+      (field, fieldType, sizeBits)
+    }).sortBy(-_._3)
 
-    if (sizeOfStruct(fieldsWithType.map(_._2), targetPlatform) <= inlineDataBytes) {
-      // This already fits
-      return existingInline
-    }
+    val recordDataBytes = sizeOfStruct(sortedFieldWithTypeAndSize.map(_._2), targetPlatform)
+    val isInline = recordDataBytes <= inlineDataBytes
 
-    // Get the sizes of the fields once
-    val fieldsWithSize = fieldsWithType.map { case (field, fieldType) =>
-      (field, targetPlatform.bytesForType(fieldType))
-    }
-
-    // If every size is a power of two we can pack them perfectly in descending order of size
-    if (fieldsWithSize.map(_._2).forall(isPowerOfTwo(_)) &&
-        (fieldsWithSize.map(_._2).sum <= inlineDataBytes)) {
-      val fieldOrder = fieldsWithSize.sortBy(-_._2).map(_._1)
-
-      PackedRecordLike(fieldOrder, true)
-    }
-    else {
-       existingOutOfLine
-    }
+    PackedRecordLike(sortedFieldWithTypeAndSize.map(_._1), isInline)
   }
 }
 

@@ -43,7 +43,7 @@ class PackRecordLikeInlineSuite extends FunSuite {
     ))
   }
 
-  test("three fields that already fit have their order preserved") {
+  test("three fields that already fit") {
     val firstField = new vt.RecordField("first", vt.Int32, mutable=false)
     val secondField = new vt.RecordField("second", vt.Int8, mutable=false)
     val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
@@ -52,12 +52,12 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
-      fieldOrder=List(firstField, secondField, thirdField),
+      fieldOrder=List(thirdField, firstField, secondField),
       inline=true
     ))
   }
 
-  test("three fields that cannot fit have their order preserved") {
+  test("three fields that cannot fit") {
     val firstField = new vt.RecordField("first", vt.Int64, mutable=false)
     val secondField = new vt.RecordField("second", vt.Int8, mutable=false)
     val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
@@ -66,12 +66,12 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val packedRecord = PackRecordLikeInline(unpackedRecord, 16, targetPlatform)
 
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
-      fieldOrder=List(firstField, secondField, thirdField),
+      fieldOrder=List(firstField, thirdField, secondField),
       inline=false
     ))
   }
 
-  test("three fields that can be reordered to fit are packed") {
+  test("three fields that can be reordered to fit") {
     val firstField = new vt.RecordField("first", vt.Int32, mutable=false)
     val secondField = new vt.RecordField("second", vt.Int64, mutable=false)
     val thirdField = new vt.RecordField("third", vt.Int8, mutable=false)

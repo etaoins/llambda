@@ -8,7 +8,7 @@ case class SignedFirstClassType(
   irType: llvmir.FirstClassType,
   signed: Option[Boolean])
 
-object ValueTypeToIr {
+object ValueTypeToIr extends (vt.ValueType => SignedFirstClassType) {
   def apply(valueType: vt.ValueType): SignedFirstClassType = valueType match {
     case intLike: vt.IntLikeType =>
       SignedFirstClassType(llvmir.IntegerType(intLike.bits), Some(intLike.signed))
