@@ -1,17 +1,21 @@
 package io.llambda.compiler.planner
 import io.llambda
 
+import scala.collection.breakOut
+import scala.collection.immutable.ListMap
+
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.StorageLocation
 
+
 private[planner] object PlanLambda {
   private def closureFieldValues(
       closureType: vt.ClosureType,
       capturedVariables: List[CapturedVariable]
-  )(implicit plan: PlanWriter): Map[vt.RecordField, ps.TempValue] = {
+  )(implicit plan: PlanWriter): ListMap[vt.RecordField, ps.TempValue] = {
     capturedVariables.map({ capturedVar =>
       val varTemp = capturedVar match {
         case immutable: CapturedImmutable =>
@@ -25,7 +29,7 @@ private[planner] object PlanLambda {
 
       // Store to the field
       (capturedVar.recordField -> varTemp)
-    }).toMap
+    })(breakOut)
   }
 
   def apply(parentState: PlannerState, parentPlan: PlanWriter)(
