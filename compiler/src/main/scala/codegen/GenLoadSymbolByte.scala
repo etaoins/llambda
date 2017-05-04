@@ -36,10 +36,12 @@ object GenLoadSymbolByte {
       )
     }
 
-    val loadMetadata = rangeMetadataOpt match {
+    val invariantLoadMetadata = Map("invariant.load" -> GlobalDefines.emptyMetadataNode)
+
+    val loadMetadata = invariantLoadMetadata ++ (rangeMetadataOpt match {
       case Some(rangeMetadata) => Map("range" -> rangeMetadata)
       case _ =>                   Map[String, Metadata]()
-    }
+    })
 
     block.load("byteValue")(bytePtr, metadata=loadMetadata)
   }

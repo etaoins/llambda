@@ -77,18 +77,18 @@ variant cell HeapString : String {
 };
 
 concrete cell Symbol : Any {
-	uint8 inlineByteLength;
+	const uint8 inlineByteLength;
 };
 
 variant cell InlineSymbol : Symbol {
 	const uint8 inlineCharLength;
-	uint8 inlineData[28];
+	const uint8 inlineData[28];
 };
 
 variant cell HeapSymbol : Symbol {
-	uint32 heapByteLength;
+	const uint32 heapByteLength;
 	const uint32 heapCharLength;
-	SharedByteArray* heapByteArray;
+	const SharedByteArray* heapByteArray;
 };
 
 preconstructed cell Boolean : Any {
