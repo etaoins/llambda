@@ -3,16 +3,13 @@ import io.llambda
 
 import java.io.File
 import scala.io.Source
-import org.scalatest.{FunSuite, Inside}
+import org.scalatest.FunSuite
 
 import llambda.compiler._
 import llambda.compiler.SchemeStringImplicits._
 
 
-abstract class SchemeFunctionalTestRunner(
-    testName: String,
-    onlyOptimised: Boolean = false
-) extends FunSuite with Inside {
+abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boolean = false) extends FunSuite {
   // Implicit import decl every test gets
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
 
@@ -37,65 +34,35 @@ abstract class SchemeFunctionalTestRunner(
       runMethod: RunResult.RunMethod
   )
 
-  val resourceBaseDir = "functional/"
-  val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
-  val resourcePath = s"${resourceBaseDir}${testName}.scm"
+  private val resourceBaseDir = "functional/"
+  private val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
+  private val resourcePath = s"${resourceBaseDir}${testName}.scm"
 
-  val includePath = frontend.IncludePath(List(resourceBaseUrl))
+  private val includePath = frontend.IncludePath(List(resourceBaseUrl))
 
-  val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
+  private val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
 
   if (stream == null) {
     throw new Exception(s"Unable to load Scheme test source from ${resourcePath}")
   }
 
   // Load the tests
-  val allTestSource = Source.fromInputStream(stream, "UTF-8").mkString
+  private val allTestSource = Source.fromInputStream(stream, "UTF-8").mkString
+  private val allTests = SchemeParser.parseStringAsData(allTestSource, Some(s":/${resourcePath}"))
 
-  val parsed = SchemeParser.parseStringAsData(allTestSource, Some(s":/${resourcePath}"))
-  runAllTests(parsed)
+  private val optimiseLevels = if (onlyOptimised) List(2) else List(0, 2)
 
-  private def runAllTests(allTests: List[ast.Datum]) {
-    if (!onlyOptimised) {
-      runTestConfiguration(allTests, 0)
-    }
-
-    runTestConfiguration(allTests, 2)
-  }
-
-  /** Expands top-level (cond-expand) expressions in the test source */
-  private def expandTopLevel(data: List[ast.Datum])(implicit libraryLoader: frontend.LibraryLoader, frontendConfig: frontend.FrontendConfig): List[ast.Datum] = {
-    data flatMap {
-      case ast.ProperList(ast.Symbol("cond-expand") :: firstClause :: restClauses) =>
-        frontend.CondExpander.expandData(firstClause :: restClauses)
-
-      case other =>
-        List(other)
-    }
-  }
-
-  private def runTestConfiguration(allTests: List[ast.Datum], optimiseLevel: Int) {
-    // Deal with (cond-expand) for this configuration
-    val expandLibraryLoader = new frontend.LibraryLoader
-    val expandFrontendConfig = frontend.FrontendConfig(
-      includePath=includePath,
-      featureIdentifiers=FeatureIdentifiers()
-    )
-
-    val expandedTests = expandTopLevel(allTests)(expandLibraryLoader, expandFrontendConfig)
-
-    for(singleTest <- expandedTests) {
-      singleTest match {
-        case ast.ProperList(ast.Symbol("define-test") :: ast.String(name) :: condition :: Nil) =>
-          // Start a nested test
-          test(s"$name (-O ${optimiseLevel})") {
-            runSingleCondition(condition, optimiseLevel)
-          }
-
-        case other =>
-          fail("Unable to parse test: " + singleTest.toString)
+  allTests.foreach {
+    case ast.ProperList(ast.Symbol("define-test") :: ast.String(name) :: condition :: Nil) =>
+      for(optimiseLevel <- optimiseLevels) {
+        // Start a nested test
+        test(s"$name (-O ${optimiseLevel})") {
+          runSingleCondition(condition, optimiseLevel)
+        }
       }
-    }
+
+    case other =>
+      fail("Unable to parse test: " + other.toString)
   }
 
   private def runSingleCondition(condition: ast.Datum, optimiseLevel: Int) {
