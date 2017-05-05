@@ -104,7 +104,7 @@ private[codegen] object BuildRecordLikeTypes {
       val inlineDataSize = LayoutForIrType(config.targetPlatform.dataLayout)(inlineDataStruct).sizeBits / 8
 
       // Try to pack the record fields
-      val packedRecord = PackRecordLikeInline(recordLikeType, inlineDataSize, config.targetPlatform)
+      val packedRecord = PackRecordLike(recordLikeType, inlineDataSize, config.targetPlatform)
 
       // Check if we can inline
       val storage = if (packedRecord.inline) {

@@ -6,7 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.platform.TargetPlatform
 
 
-private[codegen] object PackRecordLikeInline {
+private[codegen] object PackRecordLike {
   /** Packed record-like
     *
     * @param fieldOrder  Record fields in their memory order
