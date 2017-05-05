@@ -9,6 +9,4 @@ import llambda.llvmir.DataLayout
   *
   * This may differ from the current platform during cross compilation
   */
-case class TargetPlatform(dataLayout: DataLayout) {
-  val pointerBits: Int = dataLayout.pointerLayout.sizeBits
-}
+case class TargetPlatform(dataLayout: DataLayout)

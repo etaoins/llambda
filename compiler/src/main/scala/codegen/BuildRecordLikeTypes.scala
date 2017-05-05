@@ -94,12 +94,14 @@ private[codegen] object BuildRecordLikeTypes {
     }
     else {
       // The out-of-line data pointer is reused for inline data storage
-      val inlineDataSize = (recordLikeType match {
+      val inlineDataStruct = StructureType(recordLikeType match {
         case _: vt.RecordType =>
-          ct.RecordCell.extraDataIrType.elements
+          List(ct.RecordLikeCell.recordDataIrType, ct.RecordCell.extraDataIrType)
         case _: vt.ClosureType =>
-          ct.ProcedureCell.extraDataIrType.elements
-      }) + (config.targetPlatform.pointerBits / 8)
+          List(ct.RecordLikeCell.recordDataIrType, ct.ProcedureCell.extraDataIrType)
+      })
+
+      val inlineDataSize = LayoutForIrType(config.targetPlatform.dataLayout)(inlineDataStruct).sizeBits / 8
 
       // Try to pack the record fields
       val packedRecord = PackRecordLikeInline(recordLikeType, inlineDataSize, config.targetPlatform)
