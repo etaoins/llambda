@@ -10,28 +10,24 @@ private[codegen] object PackRecordLike {
   /** Packed record-like
     *
     * @param fieldOrder  Record fields in their memory order
-    * @param inline      True if the record fields will fit within the inline data area
+    * @param sizeBytes   Size of the record data
     */
   case class PackedRecordLike(
     fieldOrder: List[vt.RecordField],
-    inline: Boolean
+    sizeBytes: Int
   )
-
-  private def sizeOfStruct(fields: List[vt.ValueType], targetPlatform: TargetPlatform): Long = {
-    val llvmType = StructureType(
-      fields.map(ValueTypeToIr).map(_.irType)
-    )
-
-    LayoutForIrType(targetPlatform.dataLayout)(llvmType).sizeBits / 8
-  }
 
   /** Reorders a record's fields to take up a minimum size
     *
-    * @param recordLike        Record-like type to repack
-    * @param inlineDataByres   Number of bytes available for inline data storage
-    * @param targetPlatform    Target platform to use when determing type sizes and alignments
+    * @param parentStructTypeOpt  LLVM IR structure of the parent record-like
+    * @param recordLike           Record-like type to repack
+    * @param targetPlatform       Target platform to use when determing type sizes and alignments
     */
-  def apply(recordLike: vt.RecordLikeType, inlineDataBytes: Int, targetPlatform: TargetPlatform): PackedRecordLike = {
+  def apply(
+    parentStructTypeOpt: Option[StructureType],
+    recordLike: vt.RecordLikeType,
+    targetPlatform: TargetPlatform
+  ): PackedRecordLike = {
     val sortedFieldWithTypeAndSize = recordLike.fields.map({ case field =>
       val fieldType = recordLike.typeForField(field)
       val sizeBits = LayoutForIrType(targetPlatform.dataLayout)(ValueTypeToIr(fieldType).irType).sizeBits
@@ -39,10 +35,15 @@ private[codegen] object PackRecordLike {
       (field, fieldType, sizeBits)
     }).sortBy(-_._3)
 
-    val recordDataBytes = sizeOfStruct(sortedFieldWithTypeAndSize.map(_._2), targetPlatform)
-    val isInline = recordDataBytes <= inlineDataBytes
+    // We can't reuse sizeBits here because it does not take in to account alignment. Build a full struct instead.
+    val structType = StructureType(
+      parentStructTypeOpt.toList ++
+      sortedFieldWithTypeAndSize.map { case (_, valueType, _) => ValueTypeToIr(valueType).irType }
+    )
 
-    PackedRecordLike(sortedFieldWithTypeAndSize.map(_._1), isInline)
+    val recordDataBytes = LayoutForIrType(targetPlatform.dataLayout)(structType).sizeBits / 8
+
+    PackedRecordLike(sortedFieldWithTypeAndSize.map(_._1), recordDataBytes)
   }
 }
 

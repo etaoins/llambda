@@ -4,6 +4,7 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.platform
+import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
 
 class PackRecordLikeSuite extends FunSuite {
@@ -11,83 +12,57 @@ class PackRecordLikeSuite extends FunSuite {
 
   test("empty record can be packed") {
     val unpackedRecord = new vt.RecordType("<test>", Nil)
-    val packedRecord = PackRecordLike(unpackedRecord, 16, targetPlatform)
+    val packedRecord = PackRecordLike(None, unpackedRecord, targetPlatform)
 
     assert(packedRecord === PackRecordLike.PackedRecordLike(
       fieldOrder=Nil,
-      inline=true
+      sizeBytes=0
     ))
   }
 
-  test("one field that fits is packed inline") {
-    val onlyField = new vt.RecordField("only", vt.Int64, mutable=false)
-    val unpackedRecord = new vt.RecordType("<test>", List(onlyField))
-
-    val packedRecord = PackRecordLike(unpackedRecord, 16, targetPlatform)
-
-    assert(packedRecord === PackRecordLike.PackedRecordLike(
-      fieldOrder=List(onlyField),
-      inline=true
-    ))
-  }
-
-  test("one field that does not fit is packed out-of-line") {
-    val onlyField = new vt.RecordField("only", vt.Int64, mutable=false)
-    val unpackedRecord = new vt.RecordType("<test>", List(onlyField))
-
-    val packedRecord = PackRecordLike(unpackedRecord, 4, targetPlatform)
-
-    assert(packedRecord === PackRecordLike.PackedRecordLike(
-      fieldOrder=List(onlyField),
-      inline=false
-    ))
-  }
-
-  test("three fields that already fit") {
+  test("three fields without parent type") {
     val firstField = new vt.RecordField("first", vt.Int32, mutable=false)
     val secondField = new vt.RecordField("second", vt.Int8, mutable=false)
     val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField))
 
-    val packedRecord = PackRecordLike(unpackedRecord, 16, targetPlatform)
+    val packedRecord = PackRecordLike(None, unpackedRecord, targetPlatform)
 
     assert(packedRecord === PackRecordLike.PackedRecordLike(
       fieldOrder=List(thirdField, firstField, secondField),
-      inline=true
+      sizeBytes=16
     ))
   }
 
-  test("three fields that cannot fit") {
-    val firstField = new vt.RecordField("first", vt.Int64, mutable=false)
+  test("three fields with parent type") {
+    val structType = StructureType(List(IntegerType(32)))
+
+    val firstField = new vt.RecordField("first", vt.Int32, mutable=false)
     val secondField = new vt.RecordField("second", vt.Int8, mutable=false)
     val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
     val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField))
 
-    val packedRecord = PackRecordLike(unpackedRecord, 16, targetPlatform)
+    val packedRecord = PackRecordLike(Some(structType), unpackedRecord, targetPlatform)
 
     assert(packedRecord === PackRecordLike.PackedRecordLike(
-      fieldOrder=List(firstField, thirdField, secondField),
-      inline=false
+      fieldOrder=List(thirdField, firstField, secondField),
+      sizeBytes=24
     ))
   }
 
-  test("three fields that can be reordered to fit") {
+  test("three fields should be stable sort") {
+    val structType = StructureType(List(IntegerType(32)))
+
     val firstField = new vt.RecordField("first", vt.Int32, mutable=false)
-    val secondField = new vt.RecordField("second", vt.Int64, mutable=false)
-    val thirdField = new vt.RecordField("third", vt.Int8, mutable=false)
-    // Have these extra fields to ensure their relative order is preserved
-    // This is important to generate stable LLVM IR
-    val fourthField = new vt.RecordField("fourth", vt.Int8, mutable=false)
-    val fifthField = new vt.RecordField("fifth", vt.Int8, mutable=false)
-    val sixthField = new vt.RecordField("sixth", vt.Int8, mutable=false)
-    val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField, fourthField, fifthField, sixthField))
+    val secondField = new vt.RecordField("second", vt.Int8, mutable=false)
+    val thirdField = new vt.RecordField("third", vt.Int64, mutable=false)
+    val unpackedRecord = new vt.RecordType("<test>", List(firstField, secondField, thirdField))
 
-    val packedRecord = PackRecordLike(unpackedRecord, 16, targetPlatform)
+    val packedRecord = PackRecordLike(Some(structType), unpackedRecord, targetPlatform)
 
-    // This assumes that we repack for space minimization
     assert(packedRecord === PackRecordLike.PackedRecordLike(
-      fieldOrder=List(secondField, firstField, thirdField, fourthField, fifthField, sixthField),
-      inline=true
+      fieldOrder=List(thirdField, firstField, secondField),
+      sizeBytes=24
     ))
   }
 }

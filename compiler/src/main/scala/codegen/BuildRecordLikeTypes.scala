@@ -17,23 +17,29 @@ object TypeDataStorage extends Enumeration {
 
 /** Generated record-like type
   *
-  * @param  recordLikeType     Frontend record type object
-  * @param  irType             LLVM IR structure type for the record data
-  * @param  classId            Record class ID. This is used for type checks and indexing in to the offset map
-  * @param  lastChildClassId   Last class ID of any descendant type. Descendant classes are guaranteed to be assigned
-  *                            a contiguous block of class IDs to facilitate simple type checking.
-  * @param  fieldToTbaaNode    Mapping of record fields to TBAA metadata nodes
-  * @param  fieldToGepIndices  Mapping of record fields to getelementptr indices
-  * @param  storageType        Storage type of the record data
+  * @param  recordLikeType           Frontend record type object
+  * @param  irType                   LLVM IR user defined type for the record data
+  * @param  expandedStructType       Structure type for the record data including the structure type for all parents.
+  *                                  This is used to calculate the size of descendant record data structs.
+  * @param  classId                  Record class ID. This is used for type checks and indexing in to the offset map
+  * @param  lastChildClassId         Last class ID of any descendant type. Descendant classes are guaranteed to be
+  *                                  assigned a contiguous block of class IDs to facilitate simple type checking.
+  * @param  fieldToTbaaNode          Mapping of record fields to TBAA metadata nodes
+  * @param  fieldToGepIndices        Mapping of record fields to getelementptr indices
+  * @param  storageType              Storage type of the record data
+  * @param  hasOutOfLineDescendants  Indicates if any descendant classes have out-of-line data storage. This is used to
+  *                                  determine if dataIsInline needs to be consulted when loading record-like data.
   */
 case class GeneratedType(
     recordLikeType: vt.RecordLikeType,
     irType: UserDefinedType,
+    expandedStructType: StructureType,
     classId: Long,
     lastChildClassId: Long,
     fieldToTbaaNode: Map[vt.RecordField, Metadata],
     fieldToGepIndices: Map[vt.RecordField, List[Int]],
-    storageType: TypeDataStorage.Value
+    storageType: TypeDataStorage.Value,
+    hasOutOfLineDescendants: Boolean
 )
 
 private[codegen] object BuildRecordLikeTypes {
@@ -77,59 +83,46 @@ private[codegen] object BuildRecordLikeTypes {
     val module = config.module
 
     val childTypes = config.childTypesByParent.get(recordLikeType).getOrElse(Nil)
-    val parentStorage = parentGeneratedTypeOpt.map(_.storageType).getOrElse(TypeDataStorage.Empty)
 
-    // Determine our storage type and layout
-    val (storageType, fieldOrder) = if (parentStorage != TypeDataStorage.Empty) {
-      // Use the same storage as our parent
-      (parentStorage, recordLikeType.fields)
+    // Calculate the size of our inline data area
+    val inlineDataStruct = StructureType(recordLikeType match {
+      case _: vt.RecordType =>
+        List(ct.RecordLikeCell.recordDataIrType, ct.RecordCell.extraDataIrType)
+      case _: vt.ClosureType =>
+        List(ct.RecordLikeCell.recordDataIrType, ct.ProcedureCell.extraDataIrType)
+    })
+
+    val inlineDataBytes = LayoutForIrType(config.targetPlatform.dataLayout)(inlineDataStruct).sizeBits / 8
+
+    // Try to pack the record fields
+    val parentExpandedStructTypeOpt = parentGeneratedTypeOpt.map(_.expandedStructType)
+    val packedRecord = PackRecordLike(parentExpandedStructTypeOpt, recordLikeType, config.targetPlatform)
+    val fieldOrder = packedRecord.fieldOrder
+
+    // Check if we can inline
+    val storageType = if (packedRecord.sizeBytes == 0) {
+      TypeDataStorage.Empty
     }
-    else if (recordLikeType.fields.isEmpty) {
-      (TypeDataStorage.Empty, Nil)
-    }
-    else if (!childTypes.isEmpty) {
-      // If we contain data and we have child classes always store out of line to handle the case where our children
-      // might overflow our inline size
-      (TypeDataStorage.OutOfLine, recordLikeType.fields)
+    else if (packedRecord.sizeBytes <= inlineDataBytes) {
+      TypeDataStorage.Inline
     }
     else {
-      // The out-of-line data pointer is reused for inline data storage
-      val inlineDataStruct = StructureType(recordLikeType match {
-        case _: vt.RecordType =>
-          List(ct.RecordLikeCell.recordDataIrType, ct.RecordCell.extraDataIrType)
-        case _: vt.ClosureType =>
-          List(ct.RecordLikeCell.recordDataIrType, ct.ProcedureCell.extraDataIrType)
-      })
-
-      val inlineDataSize = LayoutForIrType(config.targetPlatform.dataLayout)(inlineDataStruct).sizeBits / 8
-
-      // Try to pack the record fields
-      val packedRecord = PackRecordLike(recordLikeType, inlineDataSize, config.targetPlatform)
-
-      // Check if we can inline
-      val storage = if (packedRecord.inline) {
-        TypeDataStorage.Inline
-      }
-      else {
-        TypeDataStorage.OutOfLine
-      }
-
-      (storage, packedRecord.fieldOrder)
+      TypeDataStorage.OutOfLine
     }
 
     // Define the type
     val recordTypeName = module.nameSource.allocate(recordLikeType.sourceName)
 
-    val parentStructOpt = parentGeneratedTypeOpt.map(_.irType)
-
     val selfFields = fieldOrder.map { field =>
       ValueTypeToIr(recordLikeType.typeForField(field)).irType
     }
 
-    val irType = StructureType(parentStructOpt.toSeq ++ selfFields)
+    val parentIrTypeOpt = parentGeneratedTypeOpt.map(_.irType)
+    val structType = StructureType(parentIrTypeOpt.toSeq ++ selfFields)
+    val expandedStructType = StructureType(parentExpandedStructTypeOpt.toSeq ++ selfFields)
 
     // Give the type a name
-    val userDefinedType = module.nameType(recordTypeName, irType)
+    val userDefinedType = module.nameType(recordTypeName, structType)
 
     // Make TBAA nodes for each field
     val selfTbaaNodes = (fieldOrder map { field =>
@@ -174,14 +167,16 @@ private[codegen] object BuildRecordLikeTypes {
     val classId = nextClassId
     val incrementedClassId = classId + 1
 
-    val initialGeneratedType = GeneratedType(
+    val initialGeneratedType: GeneratedType = GeneratedType(
       recordLikeType=recordLikeType,
       irType=userDefinedType,
+      expandedStructType=expandedStructType,
       classId=classId,
       lastChildClassId=classId,
       fieldToTbaaNode=fieldToTbaaNode,
       fieldToGepIndices=fieldToGepIndices,
-      storageType=storageType
+      storageType=storageType,
+      hasOutOfLineDescendants=false
     )
 
     val childrenResult = childTypes.foldLeft(IntermediateResult(incrementedClassId)) {
@@ -194,9 +189,13 @@ private[codegen] object BuildRecordLikeTypes {
         )
     }
 
-    // Add our last child class ID for type checks
+    val hasOutOfLineDescendants = childrenResult.generatedTypes.exists { case (_, childType) =>
+      childType.hasOutOfLineDescendants || (childType.storageType == TypeDataStorage.OutOfLine)
+    }
+
     val finalGeneratedType = initialGeneratedType.copy(
-      lastChildClassId=childrenResult.nextClassId - 1
+      lastChildClassId=childrenResult.nextClassId - 1,
+      hasOutOfLineDescendants=hasOutOfLineDescendants
     )
 
     childrenResult.copy(
