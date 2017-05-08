@@ -4,6 +4,8 @@ import io.llambda
 import llambda.compiler.planner._
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.ProcedureAttribute
+import llambda.compiler.codegen.CanStackAllocateRecordLikeType
+
 
 /** Performs escape analysis on planned functions
   *
@@ -37,18 +39,18 @@ object AnalyseEscapes extends FunctionConniver {
 
       convertToStack(reverseTail, newCapturedValues, newStep :: acc)
 
-    // See Step.scala for a a description of why this is restricted to MutableType
-    case (initMutable @ ps.InitRecord(result, _: MutableType, _, _, _)) :: reverseTail =>
-      val newStep = if (!capturedValues.contains(result)) {
+    case (initRecordLike: ps.InitRecordLikeStep) :: reverseTail
+        if CanStackAllocateRecordLikeType(initRecordLike.recordLikeType) =>
+      val newStep = if (!capturedValues.contains(initRecordLike.result)) {
         // Our output isn't captured; allocate on the stack
-        initMutable.asStackAllocated
+        initRecordLike.asStackAllocated
       }
       else {
-        initMutable
+        initRecordLike
       }
 
       // We do not track the capture status of our fields; assume they are all captured
-      val newCapturedValues = capturedValues ++ initMutable.inputValues
+      val newCapturedValues = capturedValues ++ initRecordLike.inputValues
       convertToStack(reverseTail, newCapturedValues, newStep :: acc)
 
     case (cond: ps.CondBranch) :: reverseTail =>
@@ -94,7 +96,7 @@ object AnalyseEscapes extends FunctionConniver {
       // These do not capture
       convertToStack(reverseTail, capturedValues, nonCapturing :: acc)
 
-    case (step @ ps.SetRecordLikeFields(_, _: MutableType, fieldsToSet)) :: reverseTail =>
+    case (step @ ps.SetRecordLikeFields(_, _, fieldsToSet)) :: reverseTail =>
       // Setting a record like fields does not capture the record
       val newCapturedValues = capturedValues ++ fieldsToSet.map(_._1).toSet
       convertToStack(reverseTail, newCapturedValues, step :: acc)

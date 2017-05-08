@@ -342,7 +342,8 @@ object GenPlanStep {
       val castEntryPointIr = block.bitcastTo("castEntryPoint")(entryPointIr, ct.ProcedureCell.entryPointIrType)
       ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(castEntryPointIr, resultIr)
 
-      initedState.withTempValue(initStep.result -> resultIr, gcRoot=true)
+      val gcRoot = !initStep.stackAllocate || initStep.recordLikeType.typeForField.exists(_._2.isGcManaged)
+      initedState.withTempValue(initStep.result -> resultIr, gcRoot=gcRoot)
 
     case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType, possibleTypesOpt) =>
       val generatedType = genGlobals.generatedTypes(recordLikeType)

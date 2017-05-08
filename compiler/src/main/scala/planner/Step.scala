@@ -826,17 +826,14 @@ sealed trait InitRecordLikeStep extends RecordLikeStep with DiscardableStep {
     * AssertRecordLikeDefined. This can be used to implemented recursive values.
     */
   val isUndefined: Boolean
+
+  def asStackAllocated: InitRecordLikeStep
 }
 
 /** Allocates a cell for a record of a given type
   *
-  * Currently codegen can only stack allocate a record if the following are true:
-  *
-  * - There are at most two fields
-  * - The record type is never inherited
-  *
-  * For this reason this is not a StackAllocable and stack allocation is explicitly only enabled in AnalyseEscapes for
-  * the planner-internal type for mutable variables.
+  * Currently codegen can only stack allocate a record in certain situations. For this reason it's not a StackAllocable
+  * and stack allocation is explicitly handled in AnalyseEscapes.
   */
 case class InitRecord(
     result: TempValue,
@@ -862,16 +859,18 @@ case class InitProcedure(
     result: TempValue,
     recordLikeType: vt.ClosureType,
     entryPoint: TempValue,
-    fieldValues: Map[vt.RecordField, TempValue]
+    fieldValues: Map[vt.RecordField, TempValue],
+    stackAllocate: Boolean = false
 ) extends InitRecordLikeStep {
-  val stackAllocate = false
   lazy val inputValues = fieldValues.map(_._2).toSet + entryPoint
   lazy val outputValues = Set(result)
 
   val isUndefined = false
 
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
+
   def renamed(f: (TempValue) => TempValue) =
-    InitProcedure(f(result), recordLikeType, f(entryPoint), fieldValues.mapValues(f)).assignLocationFrom(this)
+    InitProcedure(f(result), recordLikeType, f(entryPoint), fieldValues.mapValues(f), stackAllocate).assignLocationFrom(this)
 }
 
 /** Sets a record as defined */
