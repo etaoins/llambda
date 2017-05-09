@@ -7,21 +7,11 @@ import llambda.llvmir._
 
 
 private[codegen] object GenFunction {
-  // This is effectively the only exception personality on mainstream Unix-likes
-  private val gccPersonalityV0 = GlobalVariable(
-    name="__gcc_personality_v0",
-    irType=PointerType(FunctionType(
-      returnType=IntegerType(32),
-      parameterTypes=Nil,
-      hasVararg=true
-    ))
-  )
-
   def apply(module: IrModuleBuilder, genGlobals: GenGlobals)(nativeSymbol: String, plannedFunction: planner.PlannedFunction) {
     val irSignature = ProcedureSignatureToIr(plannedFunction.signature).irSignature
 
     val attributes = if (plannedFunction.signature.hasWorldArg) {
-      Set[IrFunction.FunctionAttribute](IrFunction.PersonalityFunction(gccPersonalityV0))
+      Set[IrFunction.FunctionAttribute]()
     }
     else {
       Set[IrFunction.FunctionAttribute](IrFunction.NoUnwind)
