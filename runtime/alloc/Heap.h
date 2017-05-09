@@ -118,16 +118,6 @@ public:
 	 */
 	void detach();
 
-#ifdef _LLIBY_ALWAYS_GC
-	/**
-	 * Forces a new segment to be allocated on the next allocation
-	 */
-	void sealCurrentSegment()
-	{
-		m_allocNext = m_allocEnd;
-	}
-#endif
-
 private:
 	ptrdiff_t currentSegmentAllocations() const
 	{
