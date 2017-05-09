@@ -26,11 +26,11 @@ sealed trait Step extends ContextLocated {
     */
   def renamed(f: (TempValue) => TempValue): Step
 
-  /** Indicates a step that can trigger a GC allocation
+  /** Indicates a step that can throw an exception
     *
     * This means the heap state has to be fully in sync - we can have no allocated but uninitialized conses, etc.
     */
-  def canAllocate: Boolean = false
+  def canThrow: Boolean = false
 
   /** Indicates if this step can be discarded if its output values are unused */
   def discardable: Boolean = false
@@ -104,8 +104,8 @@ sealed trait RecordLikeStep extends Step {
 sealed trait InvokeLike extends Step {
   val signature: ProcedureSignature
 
-  // The world arg is required for allocations
-  override def canAllocate = signature.hasWorldArg
+  // The world arg is required to throw an exception
+  override def canThrow = signature.hasWorldArg
 }
 
 /** Invokes an entry point with the given arguments
@@ -158,7 +158,7 @@ case class AllocateHeapCells(count: Int) extends Step {
   val inputValues = Set[TempValue](WorldPtrValue)
   val outputValues = Set[TempValue]()
 
-  override def canAllocate = true
+  override def canThrow = true
 
   def renamed(f: (TempValue) => TempValue) = this
 }
@@ -594,7 +594,7 @@ case class InitVector(
   def renamed(f: (TempValue) => TempValue) =
     InitVector(f(result), elements.map(f)).assignLocationFrom(this)
 
-  override def canAllocate: Boolean =
+  override def canThrow: Boolean =
     true
 }
 
@@ -615,7 +615,7 @@ case class InitFilledVector(
   def renamed(f: (TempValue) => TempValue) =
     InitFilledVector(f(result), f(length), f(fill)).assignLocationFrom(this)
 
-  override def canAllocate: Boolean =
+  override def canThrow: Boolean =
     true
 }
 
@@ -923,7 +923,7 @@ case class CreateParameterProc(
   lazy val inputValues = Set(WorldPtrValue, initialValue)
   lazy val outputValues = Set(result)
 
-  override def canAllocate = true
+  override def canThrow = true
 
   def renamed(f: (TempValue) => TempValue) =
     CreateParameterProc(

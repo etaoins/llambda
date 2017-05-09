@@ -18,28 +18,27 @@ object PlanHeapAllocations {
       ps.AllocateHeapCells(requiredCells) :: otherAcc
   }
 
-  /** Returns true if a step can either consume or allocate cells
+  /** Returns true if a step can either consume cells or throw an exception
     *
     * This is used for ignoring branches that don't use GC when aggregating cell allocations
     */
-  private def stepConsumesOrAllocates(step: ps.Step): Boolean = step match {
+  private def stepConsumesOrThrows(step: ps.Step): Boolean = step match {
     case condBranch: ps.CondBranch =>
       condBranch.innerBranches.exists { case (steps, _) =>
-        steps.exists(stepConsumesOrAllocates)
+        steps.exists(stepConsumesOrThrows)
       }
 
     case otherStep =>
-      (otherStep.requiredHeapCells > 0) || otherStep.canAllocate
+      (otherStep.requiredHeapCells > 0) || otherStep.canThrow
   }
 
   private def placeHeapAllocations(reverseSteps: List[ps.Step], requiredCells: Int, acc: List[ps.Step]): List[ps.Step] = reverseSteps match {
-    case barrierStep :: reverseTail if barrierStep.canAllocate =>
-      // This is a GC barrier - allocations can't cross this
-      // Make our allocation step and then keep processing after resetting our required cell count accumulator
+    case barrierStep :: reverseTail if barrierStep.canThrow =>
+      // This step can throw an exception. This means we cannot have a partially used allocation at this point.
       val newAcc = barrierStep :: prependAllocStep(requiredCells, acc)
       placeHeapAllocations(reverseTail, 0, newAcc)
 
-    case (condBranch: ps.CondBranch) :: reverseTail if stepConsumesOrAllocates(condBranch) =>
+    case (condBranch: ps.CondBranch) :: reverseTail if stepConsumesOrThrows(condBranch) =>
       // Recurse down each of the step's branches
       val newCondBranch = condBranch.mapInnerBranches { (branchSteps, resultTemp) =>
         (placeHeapAllocations(branchSteps.reverse, 0, Nil), resultTemp)
