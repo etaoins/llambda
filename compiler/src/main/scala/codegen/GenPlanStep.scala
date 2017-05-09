@@ -128,7 +128,7 @@ object GenPlanStep {
     case condBranch: ps.CondBranch =>
       GenCondBranch(state, genGlobals)(condBranch)
 
-    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, inputToDispose, _) =>
+    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, _) =>
       val result = ProcedureSignatureToIr(signature)
       val irSignature = result.irSignature
       val metadata = result.callMetadata
@@ -136,8 +136,7 @@ object GenPlanStep {
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map(state.liveTemps)
 
-      val disposedState = state.withDisposedValues(inputToDispose)
-      val block = disposedState.currentBlock
+      val block = state.currentBlock
 
       if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
         // This can't return - terminate the function
@@ -151,10 +150,10 @@ object GenPlanStep {
 
       resultOpt match {
         case Some(resultTemp) =>
-          disposedState.withTempValue(resultTemp -> irRetOpt.get)
+          state.withTempValue(resultTemp -> irRetOpt.get)
 
         case None =>
-          disposedState
+          state
       }
 
     case ps.TailCall(signature, funcPtrTemp, arguments) =>
@@ -369,29 +368,22 @@ object GenPlanStep {
         state.withTempValue(tempValue -> irValue)
       }
 
-    case ps.DisposeValues(disposedTemps) =>
-      state.copy(
-        liveTemps=state.liveTemps -- disposedTemps
-      )
-
     case pushDynamic: ps.PushDynamicState =>
       GenParameter.genPushDynamicState(state)(pushDynamic)
 
     case popDynamic: ps.PopDynamicState =>
       GenParameter.genPopDynamicState(state)(popDynamic)
 
-    case ps.CreateParameterProc(resultTemp, initialValueTemp, inputToDispose) =>
+    case ps.CreateParameterProc(resultTemp, initialValueTemp) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val initialValueIr = state.liveTemps(initialValueTemp)
 
-      val disposedState = state.withDisposedValues(inputToDispose)
-
-      val resultIr = GenParameter.genCreateParameterProc(disposedState)(
+      val resultIr = GenParameter.genCreateParameterProc(state)(
         worldPtrIr,
         initialValueIr
       )
 
-      disposedState.withTempValue(resultTemp -> resultIr)
+      state.withTempValue(resultTemp -> resultIr)
 
     case ps.LoadValueForParameterProc(resultTemp, parameterProcTemp) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)

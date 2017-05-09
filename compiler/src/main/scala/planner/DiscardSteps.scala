@@ -3,19 +3,8 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 
-/** Disposes values after their last use
-  *
-  * This reduces both the computational and memory overhead of garbage collection by discarding values. It has no effect
-  * on generated code for non-GC managed values.
-  */
-object DisposeValues {
-  private def disposeValuesToSteps(toDispose: Set[ps.TempValue]): List[ps.Step] = if (toDispose.isEmpty) {
-    Nil
-  }
-  else {
-    List(ps.DisposeValues(toDispose))
-  }
-
+/** Discard steps with unused results */
+object DiscardSteps {
   def innerOutputValuesForStep(step: ps.Step): Set[ps.TempValue] = step match {
     case condBranch: ps.CondBranch =>
       condBranch.innerBranches.flatMap(_._1).flatMap(innerOutputValuesForStep).toSet
@@ -35,7 +24,7 @@ object DisposeValues {
     * @param  acc                Result accumulator for tail call optmization
     * @return  List of new branch steps in forward order
     */
-  private def discardUnusedValues(
+  private def discardUnusedSteps(
       branchInputValues: Set[ps.TempValue],
       reverseSteps: List[ps.Step],
       usedValues: Set[ps.TempValue],
@@ -64,7 +53,7 @@ object DisposeValues {
         val nestedInputValues = unusedExternalInputValues
         val nestedUsedValues = usedValues ++ outputValues
 
-        (discardUnusedValues(nestedInputValues, branchSteps.reverse, nestedUsedValues, Nil), outputValues)
+        (discardUnusedSteps(nestedInputValues, branchSteps.reverse, nestedUsedValues, Nil), outputValues)
       }
 
       newStep match {
@@ -75,20 +64,13 @@ object DisposeValues {
           // This is arguably out-of-scope for the DisposeValues pass, but:
           // - A CondBranch may only become identical after disposing values
           // - This allows the branch condition to become unused and possibly disposed
-          discardUnusedValues(branchInputValues, condBranch.trueSteps.reverse ++ reverseTail, usedValues, acc)
+          discardUnusedSteps(branchInputValues, condBranch.trueSteps.reverse ++ reverseTail, usedValues, acc)
 
         case _ =>
           val newUsedValues = externalInputValues ++ usedValues
 
-          // Dispose of any values used by phis that come from outside the branches and are no longer used
-          val externalPhiInputValues = usedValuePhis.flatMap { usedPhi =>
-            List(usedPhi.trueValue, usedPhi.falseValue)
-          }.toSet & externalInputValues
-
-          val disposeList = disposeValuesToSteps(externalPhiInputValues -- usedValues)
-          val newAcc = newStep :: (disposeList ++ acc)
-
-          discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+          val newAcc = newStep :: acc
+          discardUnusedSteps(branchInputValues, reverseTail, newUsedValues, newAcc)
       }
 
     case (loadRecordFieldsStep: ps.LoadRecordLikeFields) :: reverseTail =>
@@ -98,58 +80,39 @@ object DisposeValues {
 
       if (usedFieldsToLoad.isEmpty) {
         // Discard completely
-        discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
+        discardUnusedSteps(branchInputValues, reverseTail, usedValues, acc)
       }
       else {
         val newStep = loadRecordFieldsStep
           .copy(fieldsToLoad=usedFieldsToLoad)
           .assignLocationFrom(loadRecordFieldsStep)
 
-        val allStepValues = newStep.inputValues ++ newStep.outputValues
-        val disposeList = disposeValuesToSteps(allStepValues -- usedValues)
         val newUsedValues = usedValues ++ newStep.inputValues
 
-        val newAcc = newStep :: (disposeList ++ acc)
-        discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+        val newAcc = newStep :: acc
+        discardUnusedSteps(branchInputValues, reverseTail, newUsedValues, newAcc)
       }
 
     case discardableStep :: reverseTail
         if discardableStep.discardable && (usedValues & discardableStep.outputValues).isEmpty =>
       // We can drop this step completely
-      discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
-
-    case (inputDisposable: ps.InputDisposableStep) :: reverseTail =>
-      // If this is the last use of any of the input values they should be discarded as part of the step
-      val inputDisposeSet = inputDisposable.inputValues -- usedValues
-      // Any unused output values should be discarded as normal
-      val outputDisposeSteps = disposeValuesToSteps(inputDisposable.outputValues -- usedValues)
-
-      // All the input values are now used
-      val newUsedValues = usedValues ++ inputDisposable.inputValues
-
-      val newAcc = inputDisposable.withDisposedInput(inputDisposeSet) :: (outputDisposeSteps ++ acc)
-      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+      discardUnusedSteps(branchInputValues, reverseTail, usedValues, acc)
 
     case otherStep :: reverseTail =>
-      val allStepValues = otherStep.inputValues ++ otherStep.outputValues
-      val disposeList = disposeValuesToSteps(allStepValues -- usedValues)
       val newUsedValues = usedValues ++ otherStep.inputValues
 
-      val newAcc = otherStep :: (disposeList ++ acc)
-      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
+      val newAcc = otherStep :: acc
+      discardUnusedSteps(branchInputValues, reverseTail, newUsedValues, newAcc)
 
     case Nil =>
       // We've reached the top of the branch
-      // Dispose all unused branch input values
-      val disposeList = disposeValuesToSteps(branchInputValues -- usedValues)
-
-      disposeList ++ acc
+      acc
   }
 
   def apply(function: PlannedFunction): PlannedFunction = {
     val branchInputValues = function.namedArguments.map(_._2).toSet
 
-    val newSteps = discardUnusedValues(
+    val newSteps = discardUnusedSteps(
       branchInputValues,
       function.steps.reverse,
       // Allocating steps don't directly use the world ptr until PlanHeapAllocations runs

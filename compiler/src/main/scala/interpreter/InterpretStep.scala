@@ -95,9 +95,6 @@ object InterpretStep {
       val (newState, _) = runtimeFunction(state, args.map(state.liveTemps))
       newState
 
-    case ps.DisposeValues(toDispose) =>
-      state.copy(state.liveTemps -- toDispose)
-
     case other =>
       throw new UninterpretableException("Unhandled step: " + other.toString)
   }

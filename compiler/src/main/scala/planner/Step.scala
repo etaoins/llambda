@@ -32,10 +32,7 @@ sealed trait Step extends ContextLocated {
     */
   def canAllocate: Boolean = false
 
-  /** Indicates if this step can be disposed if its output values are unused
-    *
-    * These are discarded by ps.DisposeValues
-    */
+  /** Indicates if this step can be discarded if its output values are unused */
   def discardable: Boolean = false
 
   /** Indicates if this step always terminates */
@@ -45,25 +42,12 @@ sealed trait Step extends ContextLocated {
   def requiredHeapCells: Int = 0
 }
 
-/** Step that dispose its input values as part of the step
-  *
-  * This is typically used for steps that are GC barriers so they can avoid rooting input values that will be unused
-  * after the step completes
-  */
-sealed trait InputDisposableStep extends Step {
-  def inputToDispose: Set[TempValue]
-  def withDisposedInput(inputToDispose: Set[TempValue]): InputDisposableStep
-}
-
-/** Step producing a values that can be discard if its output values are unused
-  *
-  * These are discarded by ps.DisposeValues
-  */
+/** Step producing a values that can be discarded if its output values are unused */
 sealed trait DiscardableStep extends Step {
   override def discardable = true
 }
 
-/** Step producing a value that can be disposed or merged with identical instances of itself
+/** Step producing a value that can be discarded or merged with identical instances of itself
   *
   * These must satisfy the following properties:
   * - The step must not depend on global state
@@ -133,14 +117,10 @@ case class Invoke(
     signature: ProcedureSignature,
     entryPoint: TempValue,
     arguments: List[TempValue],
-    inputToDispose: Set[TempValue] = Set(),
     override val discardable: Boolean = false
-) extends InvokeLike with InputDisposableStep {
+) extends InvokeLike {
   lazy val inputValues = arguments.toSet + entryPoint
   lazy val outputValues = result.toSet
-
-  def withDisposedInput(values: Set[TempValue]) =
-    this.copy(inputToDispose=values).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
     Invoke(
@@ -148,7 +128,6 @@ case class Invoke(
       signature=signature,
       entryPoint=f(entryPoint),
       arguments=arguments.map(f),
-      inputToDispose=inputToDispose,
       discardable=discardable
     ).assignLocationFrom(this)
 
@@ -182,19 +161,6 @@ case class AllocateHeapCells(count: Int) extends Step {
   override def canAllocate = true
 
   def renamed(f: (TempValue) => TempValue) = this
-}
-
-/** Permanently forgets about a temp value
-  *
-  * Referencing a TempValue after DisposeValues has been called will fail at compile time. Disposing a GC managed value
-  * will allow it to be garbage collected at the next allocation if there are no other references to it
-  */
-case class DisposeValues(values: Set[TempValue]) extends Step {
-  lazy val inputValues = values
-  val outputValues = Set[TempValue]()
-
-  def renamed(f: (TempValue) => TempValue) =
-    DisposeValues(values.map(f)).assignLocationFrom(this)
 }
 
 /** Represents a value to be phi'ed by a branch
@@ -952,22 +918,17 @@ case class TestRecordLikeClass(
   */
 case class CreateParameterProc(
     result: TempValue,
-    initialValue: TempValue,
-    inputToDispose: Set[TempValue] = Set()
-) extends Step with InputDisposableStep with DiscardableStep {
+    initialValue: TempValue
+) extends Step with DiscardableStep {
   lazy val inputValues = Set(WorldPtrValue, initialValue)
   lazy val outputValues = Set(result)
 
   override def canAllocate = true
 
-  def withDisposedInput(values: Set[TempValue]) =
-    this.copy(inputToDispose=values).assignLocationFrom(this)
-
   def renamed(f: (TempValue) => TempValue) =
     CreateParameterProc(
       f(result),
-      f(initialValue),
-      inputToDispose
+      f(initialValue)
     ).assignLocationFrom(this)
 }
 

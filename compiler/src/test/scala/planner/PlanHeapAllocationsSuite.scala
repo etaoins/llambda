@@ -71,29 +71,6 @@ class PlanHeapAllocationsSuite extends FunSuite {
     assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
   }
 
-  test("allocations happen after dispose") {
-    val disposingTemp = ps.TempValue()
-    val nativeResult = ps.TempValue()
-    val boxedResult = ps.TempValue()
-
-    val testSteps = List(
-      ps.DisposeValues(Set(disposingTemp)),
-      ps.CreateNativeInteger(nativeResult, 25, 64),
-      ps.BoxInteger(boxedResult, nativeResult)
-    )
-
-    val testFunction = functionForSteps(testSteps)
-
-    val expectedSteps = List(
-      ps.DisposeValues(Set(disposingTemp)),
-      ps.AllocateHeapCells(1),
-      ps.CreateNativeInteger(nativeResult, 25, 64),
-      ps.BoxInteger(boxedResult, nativeResult)
-    )
-
-    assert(PlanHeapAllocations(testFunction).steps === expectedSteps)
-  }
-
   test("multiple consuming steps are merged") {
     val nativeResult = ps.TempValue()
     val boxedResult = ps.TempValue()

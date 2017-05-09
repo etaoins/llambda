@@ -8,18 +8,11 @@ import llambda.compiler.planner.{step => ps}
   * This should be the very final pass after planning and conniving
   */
 object PlanHeapAllocations {
-  /** Prepends an allocation step to the front of the accumulator step
-    *
-    * This takes care to allow a DisposeValues step to happen before the AllocateHeapCells to reduce GC pressure
-    */
+  /** Prepends an allocation step to the front of the accumulator step */
   private def prependAllocStep(requiredCells: Int, acc: List[ps.Step]) = acc match {
     case _ if requiredCells == 0 =>
       // We don't need this step at all
       acc
-
-    case (disposeStep: ps.DisposeValues) :: accTail =>
-      // Dispose values before allocating so we don't need to root them across the allocation
-      disposeStep :: ps.AllocateHeapCells(requiredCells) :: accTail
 
     case otherAcc =>
       ps.AllocateHeapCells(requiredCells) :: otherAcc

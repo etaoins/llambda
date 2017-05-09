@@ -49,11 +49,11 @@ object PlanProgram {
       conniver.FindTailCalls(initialUsedFunctions)
     }
 
-    // Dispose any unused values
-    val disposedFunctions = optimisedFunctions.mapValues(DisposeValues(_))
+    // Discard any unused steps
+    val discardedFunctions = optimisedFunctions.mapValues(DiscardSteps(_))
 
     // Prune unused functions again
-    val finalUsedFunctions = FindUsedFunctions(disposedFunctions, LlambdaTopLevelSignature.nativeSymbol)
+    val finalUsedFunctions = FindUsedFunctions(discardedFunctions, LlambdaTopLevelSignature.nativeSymbol)
 
     // Plan our cell allocations after all optimisations have been done
     val allocatedFunctions = finalUsedFunctions.mapValues(PlanHeapAllocations(_))
