@@ -18,8 +18,6 @@ object CostForPlanSteps {
   private val stackCellConsumptionCost = 5L
   /** Cost of consuming a single cell from the GC heap */
   private val heapCellConsumptionCost = 10L
-  /** Cost of a garbage collector barrier */
-  private val gcBarrierCost = 10L
   /** Cost of a function call */
   private val functionCallCost = 10L
 
@@ -78,9 +76,7 @@ object CostForPlanSteps {
       constantCellCost
 
     case condBranch: ps.CondBranch =>
-      // The branch might force a GC barrier
-      // Also, if the branch actually makes it to the assembler it can be fairly expensive
-      (gcBarrierCost / 2) + trivialInstrCost +
+      trivialInstrCost +
         condBranch.innerBranches.flatMap(_._1).map(costForStep).sum
 
     case _: ps.CalcProperListLength =>
@@ -114,30 +110,14 @@ object CostForPlanSteps {
       val allocCost = allocCostForStackAllocable(allocating)
       allocCost + storeCost
 
-    case allocateCells: ps.AllocateHeapCells =>
-      gcBarrierCost
+    case _: ps.AllocateHeapCells | _: ps.AssertPredicate | _: ps.AssertRecordLikeDefined =>
+      // These require a test
+      trivialInstrCost
 
-    case _: ps.AssertPredicate | _: ps.AssertRecordLikeDefined =>
-      // These require a test + a possible GC barrier if the test fails
-      (gcBarrierCost / 2) + trivialInstrCost
-
-    case _: ps.LoadValueForParameterProc | _: ps.PushDynamicState | _: ps.PopDynamicState =>
+    case _: ps.LoadValueForParameterProc | _: ps.PushDynamicState | _: ps.PopDynamicState  | _: ps.CreateParameterProc |
+         _: ps.InvokeLike  =>
       // These are a function call
       functionCallCost
-
-    case _: ps.CreateParameterProc =>
-      // This is an allocating function call
-      functionCallCost + gcBarrierCost
-
-    case invoke: ps.InvokeLike =>
-      functionCallCost + (if (invoke.signature.hasWorldArg) {
-        // This can allocate cells and throw exceptions - this requires a GC barrier
-        gcBarrierCost
-      }
-      else {
-        // This can be invoked without a GC barrier
-        0L
-      })
   }
 
   /** Calculates a cost for a sequence of plan steps
