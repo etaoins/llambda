@@ -9,7 +9,7 @@ import llambda.compiler.planner.{step => ps}
 /** Result of a type check
   *
   * This is similar to an iv.IntermediateValue restricted to naitve booleans with more convenient accessors. Notable
-  * the conversion methods don't require a world pointer as none of the conversions produce GC managed values
+  * the conversion methods don't require a world pointer as none of the conversions produce GC allocated values
   */
 sealed trait CheckResult {
   /** Converts this type check result to an IntermediateValue */

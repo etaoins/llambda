@@ -116,7 +116,7 @@ object DiscardSteps {
       branchInputValues,
       function.steps.reverse,
       // Allocating steps don't directly use the world ptr until PlanHeapAllocations runs
-      // Artifically set it as used - it's not GC managed so there's no real gain in disposing it.
+      // Artifically set it as used
       Set(ps.WorldPtrValue),
       Nil
     )

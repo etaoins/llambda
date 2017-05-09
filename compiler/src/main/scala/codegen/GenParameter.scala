@@ -71,7 +71,6 @@ object GenParameter {
       worldPtrIr: IrValue,
       parameterProcIr: IrValue
   ): IrValue = {
-    // This isn't a GC barrier as we know this is a valid parameter procedure and we aren't passing arguments
     val block = state.currentBlock
 
     // Pass an empty rest argument as valueForParameterDecl needs to be compatible with the top procedure type

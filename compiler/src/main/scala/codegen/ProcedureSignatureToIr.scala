@@ -94,7 +94,6 @@ object ProcedureSignatureToIr {
     }
     else {
       // Non-world functions must not throw exceptions
-      // We don't generate a GC safe point for them
       explicitAttributes + IrFunction.NoUnwind
     }
 

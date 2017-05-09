@@ -102,7 +102,7 @@
     (set! result 'executed))
   result))
 
-(define-test "conditional with garbage collection in only one branch" (expect true
+(define-test "conditional with allocation in only one branch" (expect true
    (define result 'not-executed)
 
    (if (dynamic-true)
@@ -114,7 +114,7 @@
 
    result))
 
-(define-test "conditional with GC root in one branch and termination in the other" (expect test
+(define-test "conditional with allocation in one branch and termination in the other" (expect test
   (import (scheme process-context))
 
   (if (dynamic-false)
@@ -122,7 +122,7 @@
       ; This branch doesn't continue
       (exit #t))
     (begin
-      ; This branch GC roots cells
+      ; This branch GC allocates
       (define new-vector (vector 1 2 3))
       (vector-set! new-vector 1 'test)
       (vector-ref new-vector 1)))))

@@ -934,8 +934,7 @@ case class CreateParameterProc(
 
 /** Loads the current value of a parameter procedure
   *
-  * This equivalent to applying the parameter procedure but can be implemented more efficiently. In particular, this
-  * doesn't require a GC barrier.
+  * This equivalent to applying the parameter procedure but can be implemented more efficiently.
   *
   * @param  result         Location to store the AnyCell value for the parameter procedure
   * @param  parameterProc  Parameter procdure to load the value for. The result of passing another procedure here is
@@ -1129,7 +1128,7 @@ object CompareCond {
 
 /** Compares two integers and stores a predicate with the result
   *
-  * This can also be used to compare two pointers of the same type, GC managed or otherwise.
+  * This can also be used to compare two pointers of the same type
   */
 case class IntegerCompare(
     result: TempValue,

@@ -414,7 +414,7 @@
 (define-test "trivial typed tail recursion" (expect ()
   (import (llambda typed))
 
-  ; This is non-allocating which means it should complete in reasonable time even with GC debugging enabled
+  ; This is non-allocating which means it should complete in reasonable time
   (: list-terminator (-> <list-element> <any>))
   (define (list-terminator head)
     (if (pair? head)
