@@ -77,12 +77,11 @@ object GenErrorSignal {
       module.declareFunction(signalErrorDecl)
     }
 
-    state.terminateFunction(() => {
-      // Call llcore_signal_error
-      block.callDecl(None)(signalErrorDecl, List(worldPtr, categoryIr, messageStartPtr, evidencePtr, fileIr, lineIr))
+    // Call llcore_signal_error
+    block.callDecl(None)(signalErrorDecl, List(worldPtr, categoryIr, messageStartPtr, evidencePtr, fileIr, lineIr))
 
-      // Terminate the failure block
-      block.unreachable
-    })
+    // Terminate the failure block
+    block.unreachable
+    BlockTerminated
   }
 }

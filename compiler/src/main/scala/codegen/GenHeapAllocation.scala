@@ -39,57 +39,32 @@ object GenHeapAllocation {
 
     // Create our child blocks for the upcoming branch
     val directSuccessBlock = irFunction.startChildBlock("directSuccess")
-    val collectGarbageBlock = irFunction.startChildBlock("collectGarbage")
+    val runtimeAllocBlock = irFunction.startChildBlock("collectGarbage")
     val allocFinishedBlock = irFunction.startChildBlock("allocFinished")
 
     // See if we ran out of space
     val directSucceededPred = startBlock.icmp("directSucceeded")(IComparisonCond.LessThanEqual, Some(false), newAllocNextValue, allocEndValue)
 
-    startBlock.condBranch(directSucceededPred, directSuccessBlock, collectGarbageBlock)
+    startBlock.condBranch(directSucceededPred, directSuccessBlock, runtimeAllocBlock)
 
     // In the direct alloc block store our new start pointer
     WorldValue.genStoreToAllocNext(directSuccessBlock)(newAllocNextValue, worldPtrIr)
     directSuccessBlock.uncondBranch(allocFinishedBlock)
 
-    // In the garage collection block first save our GC roots
-    val collectGarbageState = initialState.copy(currentBlock=collectGarbageBlock)
+    // In the runtime alloc block call the runtime
+    val Some(runtimeAllocValue) = runtimeAllocBlock.callDecl(Some("runtimeAlloc"))(allocCellsDecl, List(worldPtrIr, allocCountValue))
 
-    val calcedBarrier = GenGcBarrier.calculateGcBarrier(collectGarbageState)()
-    GenGcBarrier.genSaveGcRoots(collectGarbageState)(calcedBarrier)
-
-    // Now call the runtime
-    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(allocCellsDecl, List(worldPtrIr, allocCountValue))
-
-    // Now restore the GC roots
-    val newIrValues = GenGcBarrier.genRestoreGcRoots(collectGarbageState)(calcedBarrier)
-
-    collectGarbageBlock.uncondBranch(allocFinishedBlock)
+    runtimeAllocBlock.uncondBranch(allocFinishedBlock)
 
     // Phi the two result together
     val allocResultValue = allocFinishedBlock.phi("allocResult")(
       PhiSource(directAllocValue, directSuccessBlock),
-      PhiSource(runtimeAllocValue, collectGarbageBlock)
+      PhiSource(runtimeAllocValue, runtimeAllocBlock)
     )
-
-    // Now phi every restored GC root (ugh)
-    val liveTempsUpdate = calcedBarrier.restoreTemps.zip(newIrValues).map {
-      case (GenGcBarrier.RestoreData(_, directIrValue, restoreToTemp), gcIrValue) =>
-        val phiedGcRoot = allocFinishedBlock.phi("phiedGcRoot")(
-          PhiSource(directIrValue, directSuccessBlock),
-          PhiSource(gcIrValue, collectGarbageBlock)
-        )
-
-        (restoreToTemp -> CollectableIrValue(phiedGcRoot: IrValue, gcRoot=true))
-    }
 
     val allocation = new HeapAllocation(allocResultValue, 0, count)
 
-    // Note we don't update gcRootedTemps here because it happens in a branch
-    (initialState.copy(
-      currentBlock=allocFinishedBlock,
-      liveTemps=initialState.liveTemps.withUpdatedValues(liveTempsUpdate),
-      gcState=GcState.fromBranches(initialState.gcState, List(calcedBarrier.finalGcState))
-    ), allocation)
+    (initialState.copy(currentBlock=allocFinishedBlock), allocation)
   }
 
   def genDeallocation(state: GenerationState)(worldPtrIr: IrValue) {

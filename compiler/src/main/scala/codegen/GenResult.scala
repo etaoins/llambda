@@ -5,33 +5,13 @@ import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 
 
-sealed abstract class GenResult {
-  val gcState: GcState
-}
+sealed abstract class GenResult
 
 case class GenerationState(
-  gcSlotsOpt: Option[GcSlotGenerator],
   currentBlock: IrBlockBuilder,
   currentAllocation: HeapAllocation,
-  gcCleanUpBlockOpt: Option[IrBranchTarget],
-  liveTemps: LiveTemps,
-  gcState: GcState
+  liveTemps: LiveTemps
 ) extends GenResult {
-  def terminateFunction(terminatorProc: () => Unit, needGcCleanup: Boolean = true): BlockTerminated = {
-    gcSlotsOpt match {
-      case Some(gcSlots) if needGcCleanup =>
-        // Make sure to clean up our GC state
-        // terminatorProc will be called by our GC code at the end of codegen for this function
-        gcSlots.unrootAllAndTerminate(currentBlock)(terminatorProc)
-
-      case _ =>
-        // Just terminate
-        terminatorProc()
-    }
-
-    BlockTerminated(gcState)
-  }
-
   def withTempValue(tempTuple: (ps.TempValue, IrValue), gcRoot: Boolean) = {
     val civ = CollectableIrValue(tempTuple._2, gcRoot)
 
@@ -45,4 +25,4 @@ case class GenerationState(
   }
 }
 
-case class BlockTerminated(gcState: GcState) extends GenResult
+case object BlockTerminated extends GenResult

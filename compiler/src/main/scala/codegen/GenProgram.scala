@@ -8,12 +8,19 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenProgram {
-  def resourceAsString(resourcePath: String): String = {
+  private val personalityFunctionDecl = IrFunctionDecl(
+    result=IrFunction.Result(IntegerType(32)),
+    name="__gcc_personality_v0",
+    arguments=Nil,
+    hasVararg=true
+  )
+
+  private def resourceAsString(resourcePath: String): String = {
     val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
     Source.fromInputStream(stream).mkString
   }
 
-  def preludeIr: String = {
+  private def preludeIr: String = {
     List(
       RuntimeBuildFiles.llvmTarget,
       resourceAsString("generated/cellTypes.ll"),
@@ -40,6 +47,11 @@ object GenProgram {
       constantGenerator=constantGenerator,
       targetPlatform=compileConfig.targetPlatform
     )
+
+    // Declare our personality function
+    module.unlessDeclared(personalityFunctionDecl) {
+      module.declareFunction(personalityFunctionDecl)
+    }
 
     // Build each program-supplied function
     val functionGenerator = GenFunction(module, genGlobals)_

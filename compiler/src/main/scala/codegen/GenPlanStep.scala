@@ -151,41 +151,18 @@ object GenPlanStep {
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map(state.liveTemps).map(_.irValue)
 
-      val preBarrierState = state.withDisposedValues(inputToDispose)
+      val disposedState = state.withDisposedValues(inputToDispose)
+      val block = disposedState.currentBlock
 
       if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
-        // This can't return - unroot all of our values and terminate the function
-        return state.terminateFunction(() => {
-          preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
-          preBarrierState.currentBlock.unreachable
-        }, needGcCleanup=invokeStep.canAllocate)
+        // This can't return - terminate the function
+        block.call(None)(irSignature, irFuncPtr, irArguments)
+        block.unreachable
+        return BlockTerminated
       }
 
-      val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
-        // We need a GC barrier
-        GenGcBarrier(preBarrierState) {
-          val invokeBlock = preBarrierState.currentBlock
-          val successBlock = invokeBlock.function.startChildBlock("invokeSuccess")
-
-          val irValue = invokeBlock.invoke(Some("invokeRet"))(
-            signature=irSignature,
-            functionPtr=irFuncPtr,
-            arguments=irArguments,
-            normalBlock=successBlock,
-            exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get,
-            metadata=metadata
-          )
-
-          (successBlock, irValue)
-        }
-      }
-      else {
-        // This call can't allocate or throw exceptions - skip the barrier and invoke
-        val block = preBarrierState.currentBlock
-        val irValue = block.call(Some("ret"))(irSignature, irFuncPtr, irArguments, metadata=metadata)
-
-        (preBarrierState, irValue)
-      }
+      // This call can't allocate or throw exceptions - skip the barrier and invoke
+      val irRetOpt = block.call(Some("ret"))(irSignature, irFuncPtr, irArguments, metadata=metadata)
 
       resultOpt match {
         case Some(resultTemp) =>
@@ -194,10 +171,10 @@ object GenPlanStep {
             case _ => false
           }
 
-          finalState.withTempValue(resultTemp -> irRetOpt.get, gcRoot=gcRoot)
+          disposedState.withTempValue(resultTemp -> irRetOpt.get, gcRoot=gcRoot)
 
         case None =>
-          finalState
+          disposedState
       }
 
     case ps.TailCall(signature, funcPtrTemp, arguments) =>
@@ -208,37 +185,35 @@ object GenPlanStep {
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map(state.liveTemps).map(_.irValue)
 
-      // Always use call - we don't care about exceptions
-      state.terminateFunction({ () =>
-        if (irSignature.result.irType == VoidType) {
-          state.currentBlock.call(None)(irSignature, irFuncPtr, irArguments, tailCall=true)
-          state.currentBlock.retVoid()
-        }
-        else {
-          val block = state.currentBlock
-          val irRetValueOpt = block.call(Some("ret"))(
-            irSignature,
-            irFuncPtr,
-            irArguments,
-            tailCall=true,
-            metadata=metadata
-          )
+      if (irSignature.result.irType == VoidType) {
+        state.currentBlock.call(None)(irSignature, irFuncPtr, irArguments, tailCall=true)
+        state.currentBlock.retVoid()
+      }
+      else {
+        val block = state.currentBlock
+        val irRetValueOpt = block.call(Some("ret"))(
+          irSignature,
+          irFuncPtr,
+          irArguments,
+          tailCall=true,
+          metadata=metadata
+        )
 
-          block.ret(irRetValueOpt.get)
-        }
-      })
+        block.ret(irRetValueOpt.get)
+      }
+
+      BlockTerminated
 
     case ps.Return(None) =>
-      state.terminateFunction(() => {
-        state.currentBlock.retVoid()
-      })
+      state.currentBlock.retVoid()
+
+      BlockTerminated
 
     case ps.Return(Some(returnValueTemp)) =>
       val irRetValue = state.liveTemps(returnValueTemp)
+      state.currentBlock.ret(irRetValue)
 
-      state.terminateFunction(() => {
-        state.currentBlock.ret(irRetValue)
-      })
+      BlockTerminated
 
     case ps.LoadPairCar(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
@@ -275,9 +250,8 @@ object GenPlanStep {
     case ps.InitVector(resultTemp, elements) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
 
-      val (finalState, vectorIr) = GenVector.init(state)(worldPtrIr, elements)
-
-      finalState.withTempValue(resultTemp -> vectorIr, gcRoot=true)
+      val vectorIr = GenVector.init(state)(worldPtrIr, elements)
+      state.withTempValue(resultTemp -> vectorIr, gcRoot=true)
 
     case ps.InitFilledVector(resultTemp, length, fill) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
@@ -438,12 +412,12 @@ object GenPlanStep {
 
       val disposedState = state.withDisposedValues(inputToDispose)
 
-      val (postProcState, resultIr) = GenParameter.genCreateParameterProc(disposedState)(
+      val resultIr = GenParameter.genCreateParameterProc(disposedState)(
         worldPtrIr,
         initialValueIr
       )
 
-      postProcState.withTempValue(resultTemp -> resultIr, gcRoot=true)
+      disposedState.withTempValue(resultTemp -> resultIr, gcRoot=true)
 
     case ps.LoadValueForParameterProc(resultTemp, parameterProcTemp) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)

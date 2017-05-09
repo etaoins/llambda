@@ -13,7 +13,7 @@ object GenVector {
   private def createUninitialised(state: GenerationState)(
       worldPtrIr: IrValue,
       lengthIr: IrValue
-  ): (GenerationState, IrValue) = {
+  ): IrValue = {
     val func = state.currentBlock.function
     val module = func.module
 
@@ -23,38 +23,28 @@ object GenVector {
       module.declareFunction(vectorAllocDecl)
     }
 
-    GenGcBarrier(state) {
-      val entryBlock = state.currentBlock
-      val successBlock = func.startChildBlock("vectorAllocSuccess")
+    val entryBlock = state.currentBlock
 
-      val vectorCellIr = entryBlock.invokeDecl(Some("newVector"))(
-        decl=vectorAllocDecl,
-        arguments=List(worldPtrIr, lengthIr),
-        normalBlock=successBlock,
-        exceptionBlock=state.gcCleanUpBlockOpt.get
-      ).get
-
-      (successBlock, vectorCellIr)
-    }
+    entryBlock.callDecl(Some("newVector"))(vectorAllocDecl, List(worldPtrIr, lengthIr)).get
   }
 
   def init(state: GenerationState)(
       worldPtrIr: IrValue,
       elementTemps: Vector[ps.TempValue]
-  ): (GenerationState, IrValue) = {
+  ): IrValue = {
     val lengthIr = IntegerConstant(ct.VectorCell.lengthIrType, elementTemps.length)
 
-    val (newState, vectorCellIr) = createUninitialised(state)(worldPtrIr, lengthIr)
-    val dataIr = ct.VectorCell.genLoadFromElements(newState.currentBlock)(vectorCellIr)
+    val vectorCellIr = createUninitialised(state)(worldPtrIr, lengthIr)
+    val dataIr = ct.VectorCell.genLoadFromElements(state.currentBlock)(vectorCellIr)
 
     for((elementTemp, index) <- elementTemps.zipWithIndex) {
       val indexIr = IntegerConstant(ct.VectorCell.lengthIrType, index)
-      val elementIr = newState.liveTemps(elementTemp)
+      val elementIr = state.liveTemps(elementTemp)
 
-      storeElement(newState.currentBlock)(dataIr, indexIr, elementIr)
+      storeElement(state.currentBlock)(dataIr, indexIr, elementIr)
     }
 
-    (newState, vectorCellIr)
+    vectorCellIr
   }
 
   def initFilled(state: GenerationState)(
@@ -62,10 +52,10 @@ object GenVector {
       lengthIr: IrValue,
       fillTemp: ps.TempValue
   ): (GenerationState, IrValue) = {
-    val (newState, vectorCellIr) = createUninitialised(state)(worldPtrIr, lengthIr)
-    val dataIr = ct.VectorCell.genLoadFromElements(newState.currentBlock)(vectorCellIr)
+    val vectorCellIr = createUninitialised(state)(worldPtrIr, lengthIr)
+    val dataIr = ct.VectorCell.genLoadFromElements(state.currentBlock)(vectorCellIr)
 
-    val previousBlock = newState.currentBlock
+    val previousBlock = state.currentBlock
     val func = previousBlock.function
 
     // It's impossible for this to wrap
@@ -98,14 +88,14 @@ object GenVector {
     rangeCheckBlock.condBranch(indexExhaustedIr, exitBlock, bodyBlock)
 
     // Set the element
-    val fillIr = newState.liveTemps(fillTemp)
+    val fillIr = state.liveTemps(fillTemp)
     storeElement(bodyBlock)(dataIr, indexIr, fillIr)
 
     // Increment our index
     bodyBlock.add(incedIndex)(wrapBehaviour, indexIr, IntegerConstant(indexType, 1))
     bodyBlock.uncondBranch(rangeCheckBlock)
 
-    (newState.copy(currentBlock=exitBlock), vectorCellIr)
+    (state.copy(currentBlock=exitBlock), vectorCellIr)
   }
 
   def loadElement(block: IrBlockBuilder)(dataIr: IrValue, indexIr: IrValue): IrValue = {

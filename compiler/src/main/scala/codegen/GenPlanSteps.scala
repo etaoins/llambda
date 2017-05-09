@@ -11,9 +11,9 @@ object GenPlanSteps {
           case newState: GenerationState =>
             apply(newState, genGlobals)(stepsTail)
 
-          case terminated: BlockTerminated =>
+          case BlockTerminated =>
             // We've terminated - don't go bother with the rest of the steps
-            terminated
+            BlockTerminated
         }
 
       case Nil =>

@@ -62,24 +62,11 @@ object GenParameter {
   def genCreateParameterProc(state: GenerationState)(
       worldPtrIr: IrValue,
       initialValueIr: IrValue
-  ): (GenerationState, IrValue) = {
+  ): IrValue = {
     val entryBlock = state.currentBlock
-
     declareSupportFunctions(state)
 
-    // This will allocate
-    GenGcBarrier(state) {
-      val successBlock = state.currentBlock.function.startChildBlock("makeParameterSuccess")
-
-      val resultIr = entryBlock.invokeDecl(Some("parameterProc"))(
-        decl=makeParameterDecl,
-        arguments=List(worldPtrIr, initialValueIr),
-        normalBlock=successBlock,
-        exceptionBlock=state.gcCleanUpBlockOpt.get
-      )
-
-      (successBlock, resultIr.get)
-    }
+    entryBlock.callDecl(Some("parameterProc"))(makeParameterDecl, List(worldPtrIr, initialValueIr)).get
   }
 
   def genLoadValueForParameterProc(state: GenerationState)(

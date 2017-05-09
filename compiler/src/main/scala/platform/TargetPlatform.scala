@@ -1,7 +1,6 @@
 package io.llambda.compiler.platform
 import io.llambda
 
-import llambda.compiler.{valuetype => vt}
 import llambda.llvmir.DataLayout
 
 

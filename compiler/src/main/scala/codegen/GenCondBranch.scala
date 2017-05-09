@@ -16,33 +16,15 @@ private[codegen] object GenCondBranch {
       val trueStartBlock = irFunction.startChildBlock("condTrue")
       val falseStartBlock = irFunction.startChildBlock("condFalse")
 
-      // Determine which GC values we'll need to root in both branches so they can be pre-rooted. This has two
-      // advantages:
-      //
-      // 1) After the branch terminates we don't need to attempt to reconcile the values rooted between the two
-      //    branches. In particular, ensuring roots are assigned the same GC slot across mutiple complex branches is
-      //    difficuly unless we just explicitly pre-root them here
-      // 2) It generates less code by hoisting the root flushing out of the branches. This could be done by LLVM in
-      //    some situations but this makes it explicit
-      val liveValueResult = LiveValuesAtBarrier(List(step), state.liveTemps.keySet)
-
-      val postFlushState = liveValueResult match {
-        case LiveValuesAtBarrier.Result.NoBarrier =>
-          state
-
-        case LiveValuesAtBarrier.Result.BarrierEncountered(commonFlushValues) =>
-          GenGcBarrier.flushGcRoots(state)(commonFlushValues)
-      }
-
       // Branch!
       state.currentBlock.condBranch(testIr, trueStartBlock, falseStartBlock)
 
       // Continue generation down both branches after splitting our state
-      val trueStartState = postFlushState.copy(
+      val trueStartState = state.copy(
         currentBlock=trueStartBlock
       )
 
-      val falseStartState = postFlushState.copy(
+      val falseStartState = state.copy(
         currentBlock=falseStartBlock
       )
 
@@ -50,29 +32,22 @@ private[codegen] object GenCondBranch {
       val falseResult = GenPlanSteps(falseStartState, genGlobals)(falseSteps)
 
       (trueResult, falseResult) match {
-        case (BlockTerminated(_), BlockTerminated(_)) =>
+        case (BlockTerminated, BlockTerminated) =>
           // Both branches terminated
-          BlockTerminated(
-            // Even terminated blocks need a GC state so we can know which slots they allocated
-            GcState.fromBranches(postFlushState.gcState, List(trueResult.gcState, falseResult.gcState))
-          )
+          BlockTerminated
 
-        case (trueEndState: GenerationState, BlockTerminated(_)) =>
+        case (trueEndState: GenerationState, BlockTerminated) =>
           // Only true terminated
-          val state = trueEndState.copy(
-            gcState=GcState.fromBranches(trueResult.gcState, List(falseResult.gcState))
-          )
+          val state = trueEndState
 
           valuePhis.foldLeft(state) { case (state, valuePhi) =>
             val trueValueIr = trueEndState.liveTemps(valuePhi.trueValue)
             state.withTempValue(valuePhi.result -> trueValueIr, gcRoot=trueValueIr.gcRoot)
           }
 
-        case (BlockTerminated(_), falseEndState: GenerationState) =>
+        case (BlockTerminated, falseEndState: GenerationState) =>
           // Only false terminated
-          val state = falseEndState.copy(
-            gcState=GcState.fromBranches(falseResult.gcState, List(trueResult.gcState))
-          )
+          val state = falseEndState
 
           valuePhis.foldLeft(state) { case (state, valuePhi) =>
             val falseValueIr = falseEndState.liveTemps(valuePhi.falseValue)
@@ -86,7 +61,7 @@ private[codegen] object GenCondBranch {
           val falseEndBlock = falseEndState.currentBlock
 
           // Make a final block
-          val irFunction = postFlushState.currentBlock.function
+          val irFunction = state.currentBlock.function
 
           val phiBlock = irFunction.startChildBlock("condPhi")
           trueEndBlock.uncondBranch(phiBlock)
@@ -115,10 +90,9 @@ private[codegen] object GenCondBranch {
           }
 
           // Make sure we preserve pointer identities or else the identity count will explode
-          val phiedLiveValuesState = postFlushState.copy(
+          val phiedLiveValuesState = state.copy(
             currentBlock=phiBlock,
-            liveTemps=state.liveTemps.copy(tempValueToCiv=newTempValueToCiv.toMap),
-            gcState=GcState.fromBranches(postFlushState.gcState, List(trueEndState.gcState, falseEndState.gcState))
+            liveTemps=state.liveTemps.copy(tempValueToCiv=newTempValueToCiv.toMap)
           )
 
           valuePhis.foldLeft(phiedLiveValuesState) { case (state, valuePhi) =>
