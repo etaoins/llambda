@@ -6,7 +6,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 
 object GenVector {
-  private val vectorDataTbaaNode = NumberedMetadata(6)
+  private val vectorDataTbaaNode = NumberedMetadata(4)
 
   private def createUninitialised(state: GenerationState)(
       worldPtrIr: IrValue,

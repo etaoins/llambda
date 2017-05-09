@@ -42,8 +42,6 @@ namespace dynamic
 namespace alloc
 {
 
-struct ShadowStackEntry;
-
 
 class CellRefWalker
 {
@@ -165,28 +163,6 @@ public:
 					{
 						visitCell(cellRef, visitor);
 					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Visits a shadow stack
-	 */
-	template<typename T>
-	void visitShadowStack(ShadowStackEntry *head, T visitor)
-	{
-		for(ShadowStackEntry *stackEntry = head;
-			 stackEntry != nullptr;
-			 stackEntry = stackEntry->next)
-		{
-			for(std::uint64_t i = 0; i < stackEntry->cellCount; i++)
-			{
-				auto cellRef = &stackEntry->roots[i];
-
-				if (*cellRef != nullptr)
-				{
-					visitCell(cellRef, visitor);
 				}
 			}
 		}

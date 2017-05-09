@@ -123,9 +123,6 @@ std::size_t collect(World &world, Heap &newHeap)
 	// Visit each runtime GC root
 	walker.visitCellRootList(world.strongRoots(), rootVisitor);
 
-	// Visit each compiler GC root
-	walker.visitShadowStack(world.shadowStackHead, rootVisitor);
-
 	// Visit the dynamic state
 	walker.visitDynamicState(world.activeState(), rootVisitor);
 

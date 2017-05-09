@@ -10,5 +10,5 @@ object GlobalDefines {
   val emptyListIrValue = GlobalVariable("llcore_empty_list_value", PointerType(ct.EmptyListCell.irType))
   val unitIrValue = GlobalVariable("llcore_unit_value", PointerType(ct.UnitCell.irType))
 
-  val emptyMetadataNode = NumberedMetadata(7L)
+  val emptyMetadataNode = NumberedMetadata(1L)
 }

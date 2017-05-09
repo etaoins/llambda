@@ -7,30 +7,19 @@ import llambda.llvmir._
 object WorldValue extends StructureValue("world") {
   val cellPointerIrType = PointerType(UserDefinedType("cell"))
 
-  val shadowStackHeadField = StructureField(
-    name="shadowStackHead",
-    index=0,
-    irType=PointerType(ShadowStackEntryHeaderValue.irType),
-    tbaaNode=NumberedMetadata(1)
-  )
-
   val allocNextField = StructureField(
     name="allocNext",
-    index=1,
+    index=0,
     irType=cellPointerIrType,
     tbaaNode=NumberedMetadata(2)
   )
 
   val allocEndField = StructureField(
     name="allocEnd",
-    index=2,
+    index=1,
     irType=cellPointerIrType,
     tbaaNode=NumberedMetadata(3)
   )
-
-  def genPointerToShadowStackHead = genPointerToField(shadowStackHeadField)_
-  def genLoadFromShadowStackHead = genLoadFromField(shadowStackHeadField)_
-  def genStoreToShadowStackHead = genStoreToField(shadowStackHeadField)_
 
   def genPointerToAllocNext = genPointerToField(allocNextField)_
   def genLoadFromAllocNext = genLoadFromField(allocNextField)_

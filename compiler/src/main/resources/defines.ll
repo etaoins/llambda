@@ -7,21 +7,16 @@
 %cell = type {[32 x i8]}
 
 !0 = !{ !"ROOT" }
-!1 = !{ !"World::shadowStackHead", !0 }
+
+!1 = !{}
+
 !2 = !{ !"World::allocNext", !0 }
 !3 = !{ !"World::allocEnd", !0 }
 
-; {shadowStackHead, allocNext, allocEnd}
-%world = type {%shadowStackEntryHeader*, %cell*, %cell*}
+; {allocNext, allocEnd}
+%world = type {%cell*, %cell*}
 
-!4 = !{ !"ShadowStackEntryHeader::next", !0 }
-!5 = !{ !"ShadowStackEntryHeader::cellCount", !0 }
-
-!6 = !{ !"VectorCell::m_elements", !0 }
-!7 = !{}
-
-; {next, cellCount}
-%shadowStackEntryHeader = type {%shadowStackEntryHeader*, i32}
+!4 = !{ !"VectorCell::m_elements", !0 }
 
 ; {refcount, data}
 %sharedByteArray = type {i32, i32, [0 x i8]}
