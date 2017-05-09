@@ -32,6 +32,8 @@ World::~World()
 	delete m_actorContext;
 	m_actorContext = nullptr;
 
+	// TODO: We should free our cell heap here
+
 	// Wait for our children to stop
 	for(auto weakChildActor : m_childActors)
 	{

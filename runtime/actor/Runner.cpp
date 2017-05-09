@@ -8,6 +8,7 @@
 #include "actor/PoisonPillCell.h"
 
 #include "alloc/StrongRef.h"
+#include "alloc/allocator.h"
 
 #include "sched/Dispatcher.h"
 
@@ -139,6 +140,10 @@ void Runner::wake(World *actorWorld)
 		Message *msg;
 		LifecycleAction requestedAction;
 
+		// TODO: This would be better to do after we go to sleep as the actor would be otherwise idle. This is in the
+		// the critical path to run the actor. However, once we go to sleep we can be woken up again by an arbitrary
+		// thread so we'd need to block until collection completed.
+		alloc::conditionalCollection(*actorWorld);
 		Mailbox::ReceiveResult result = mailbox->receive(actorWorld, &msg, &requestedAction);
 
 		if (result == Mailbox::ReceiveResult::WentToSleep)

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <atomic>
 
+#include "alloc/collector.h"
 #include "core/World.h"
 #include "sched/Dispatcher.h"
 #include "actor/Runner.h"

@@ -22,7 +22,12 @@ AllocCell *allocateCells(World &, std::size_t count = 1);
 RangeAlloc allocateRange(World &, std::size_t count);
 
 /**
- * Forces a major GC collection returning the number of reachable cells
+ * Provide a safe-point to perform a GC allocation
+ */
+void conditionalCollection(World &world);
+
+/**
+ * Forces a GC collection returning the number of reachable cells
  */
 std::size_t forceCollection(World &world);
 

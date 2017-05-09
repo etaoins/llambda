@@ -61,15 +61,6 @@ void reportGlobalLeaks()
 
 AllocCell *allocateCells(World &world, std::size_t count)
 {
-#ifndef _LLIBY_ALWAYS_GC
-	if (world.cellHeap.allocationCounter() > MaxAllocBeforeForceGc)
-	{
-#endif
-		forceCollection(world);
-#ifndef _LLIBY_ALWAYS_GC
-	}
-#endif
-
 	return static_cast<AllocCell*>(world.cellHeap.allocate(count));
 }
 
@@ -79,6 +70,18 @@ RangeAlloc allocateRange(World &world, std::size_t count)
 	auto end = start + count;
 
 	return RangeAlloc(start, end);
+}
+
+void conditionalCollection(World &world)
+{
+#ifndef _LLIBY_ALWAYS_GC
+	if (world.cellHeap.allocationCounter() > MaxAllocBeforeForceGc)
+	{
+#endif
+		forceCollection(world);
+#ifndef _LLIBY_ALWAYS_GC
+	}
+#endif
 }
 
 std::size_t forceCollection(World &world)
