@@ -13,7 +13,6 @@ case class PlannedProgram(
 object PlanProgram {
   private val conniverPasses = List[conniver.Conniver](
     conniver.MergeIdenticalSteps,
-    conniver.UnboxEarly,
     conniver.FindTailCalls,
     // This must happen after FindTailCalls for correctneess
     // Tail calls take over the stack of the calling function and cannot take stack allocated values. FindTailCalls is
