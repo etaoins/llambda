@@ -923,8 +923,6 @@ case class CreateParameterProc(
   lazy val inputValues = Set(WorldPtrValue, initialValue)
   lazy val outputValues = Set(result)
 
-  override def canThrow = true
-
   def renamed(f: (TempValue) => TempValue) =
     CreateParameterProc(
       f(result),

@@ -97,7 +97,8 @@ object RuntimeFunctions {
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
       Argument(PointerType(ct.AnyCell.irType))
-    )
+    ),
+    attributes=Set(NoUnwind)
   )
 
   val isEqvSymbol = "llcore_is_eqv"
