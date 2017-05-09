@@ -4,9 +4,8 @@ import io.llambda
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
 
-private[codegen] object GenCondBranch {
-  import Implicits._
 
+private[codegen] object GenCondBranch {
   def apply(state: GenerationState, genGlobals: GenGlobals)(step: ps.CondBranch): GenResult = step match {
     case ps.CondBranch(testTemp, trueSteps, falseSteps, valuePhis) =>
       val testIr = state.liveTemps(testTemp)
@@ -42,7 +41,7 @@ private[codegen] object GenCondBranch {
 
           valuePhis.foldLeft(state) { case (state, valuePhi) =>
             val trueValueIr = trueEndState.liveTemps(valuePhi.trueValue)
-            state.withTempValue(valuePhi.result -> trueValueIr, gcRoot=trueValueIr.gcRoot)
+            state.withTempValue(valuePhi.result -> trueValueIr)
           }
 
         case (BlockTerminated, falseEndState: GenerationState) =>
@@ -51,7 +50,7 @@ private[codegen] object GenCondBranch {
 
           valuePhis.foldLeft(state) { case (state, valuePhi) =>
             val falseValueIr = falseEndState.liveTemps(valuePhi.falseValue)
-            state.withTempValue(valuePhi.result -> falseValueIr, falseValueIr.gcRoot)
+            state.withTempValue(valuePhi.result -> falseValueIr)
           }
 
         case (trueEndState: GenerationState, falseEndState: GenerationState) =>
@@ -68,11 +67,11 @@ private[codegen] object GenCondBranch {
           falseEndBlock.uncondBranch(phiBlock)
 
           // Find our common temp values in sorted order to ensure we generate stable IR
-          val sortedTrueLiveTemps = trueEndState.liveTemps.tempValueToCiv.toSeq.sortBy(_._2.toIr).map(_._1)
-          val sortedCommonLiveTemps = sortedTrueLiveTemps.filter(falseEndState.liveTemps.tempValueToCiv.contains)
+          val sortedTrueLiveTemps = trueEndState.liveTemps.toSeq.sortBy(_._2.toIr).map(_._1)
+          val sortedCommonLiveTemps = sortedTrueLiveTemps.filter(falseEndState.liveTemps.contains)
 
           // Phi any values that have diverged across branches
-          val newTempValueToCiv = sortedCommonLiveTemps map { liveTemp =>
+          val newTempValueToIr = sortedCommonLiveTemps map { liveTemp =>
             val trueValueIrValue = trueEndState.liveTemps(liveTemp)
             val falseValueIrValue = falseEndState.liveTemps(liveTemp)
 
@@ -83,16 +82,14 @@ private[codegen] object GenCondBranch {
             else {
               // This has diverged due to e.g. GC having happened in one branch
               val phiValueIr = phiBlock.phi("condPhiValue")(PhiSource(trueValueIrValue, trueEndBlock), PhiSource(falseValueIrValue, falseEndBlock))
-              val phiValueCiv = CollectableIrValue(phiValueIr, gcRoot=trueValueIrValue.gcRoot)
-
-              (liveTemp -> phiValueCiv)
+              (liveTemp -> phiValueIr)
             }
           }
 
           // Make sure we preserve pointer identities or else the identity count will explode
           val phiedLiveValuesState = state.copy(
             currentBlock=phiBlock,
-            liveTemps=state.liveTemps.copy(tempValueToCiv=newTempValueToCiv.toMap)
+            liveTemps=newTempValueToIr.toMap
           )
 
           valuePhis.foldLeft(phiedLiveValuesState) { case (state, valuePhi) =>
@@ -104,8 +101,7 @@ private[codegen] object GenCondBranch {
               PhiSource(falseResultIrValue, falseEndBlock)
             )
 
-            val gcRoot = trueResultIrValue.gcRoot || falseResultIrValue.gcRoot
-            state.withTempValue(valuePhi.result -> phiResultIr, gcRoot=gcRoot)
+            state.withTempValue(valuePhi.result -> phiResultIr)
           }
       }
   }

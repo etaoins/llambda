@@ -10,14 +10,10 @@ sealed abstract class GenResult
 case class GenerationState(
   currentBlock: IrBlockBuilder,
   currentAllocation: HeapAllocation,
-  liveTemps: LiveTemps
+  liveTemps: Map[ps.TempValue, IrValue]
 ) extends GenResult {
-  def withTempValue(tempTuple: (ps.TempValue, IrValue), gcRoot: Boolean) = {
-    val civ = CollectableIrValue(tempTuple._2, gcRoot)
-
-    this.copy(
-      liveTemps=liveTemps + (tempTuple._1 -> civ)
-    )
+  def withTempValue(tempTuple: (ps.TempValue, IrValue)) = {
+    this.copy(liveTemps=liveTemps + tempTuple)
   }
 
   def withDisposedValues(disposedValues: Set[ps.TempValue]) = {

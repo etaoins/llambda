@@ -85,7 +85,7 @@ object GenInitRecordLike {
     }
 
     val irValueToRecordField = initStep.fieldValues.toList.map { case (field, valueTemp) =>
-      (state.liveTemps(valueTemp).irValue, field)
+      (state.liveTemps(valueTemp), field)
     }
 
     GenSetRecordLikeFields(block)(castRecordData, generatedType, irValueToRecordField)
