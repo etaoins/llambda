@@ -66,33 +66,9 @@ private[codegen] object GenCondBranch {
           trueEndBlock.uncondBranch(phiBlock)
           falseEndBlock.uncondBranch(phiBlock)
 
-          // Find our common temp values in sorted order to ensure we generate stable IR
-          val sortedTrueLiveTemps = trueEndState.liveTemps.toSeq.sortBy(_._2.toIr).map(_._1)
-          val sortedCommonLiveTemps = sortedTrueLiveTemps.filter(falseEndState.liveTemps.contains)
+          val phiBlockState = state.copy(currentBlock=phiBlock)
 
-          // Phi any values that have diverged across branches
-          val newTempValueToIr = sortedCommonLiveTemps map { liveTemp =>
-            val trueValueIrValue = trueEndState.liveTemps(liveTemp)
-            val falseValueIrValue = falseEndState.liveTemps(liveTemp)
-
-            if (trueValueIrValue == falseValueIrValue) {
-              // This is the same in both branches which means it came from our original state
-              (liveTemp -> trueValueIrValue)
-            }
-            else {
-              // This has diverged due to e.g. GC having happened in one branch
-              val phiValueIr = phiBlock.phi("condPhiValue")(PhiSource(trueValueIrValue, trueEndBlock), PhiSource(falseValueIrValue, falseEndBlock))
-              (liveTemp -> phiValueIr)
-            }
-          }
-
-          // Make sure we preserve pointer identities or else the identity count will explode
-          val phiedLiveValuesState = state.copy(
-            currentBlock=phiBlock,
-            liveTemps=newTempValueToIr.toMap
-          )
-
-          valuePhis.foldLeft(phiedLiveValuesState) { case (state, valuePhi) =>
+          valuePhis.foldLeft(phiBlockState) { case (state, valuePhi) =>
             val trueResultIrValue = trueEndState.liveTemps(valuePhi.trueValue)
             val falseResultIrValue = falseEndState.liveTemps(valuePhi.falseValue)
 
