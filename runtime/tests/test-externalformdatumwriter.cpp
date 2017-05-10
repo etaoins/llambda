@@ -29,7 +29,6 @@
 #include "port/StandardOutputPort.h"
 #include "actor/Mailbox.h"
 
-#include "alloc/cellref.h"
 #include "assertions.h"
 #include "stubdefinitions.h"
 
@@ -186,9 +185,9 @@ void testString(World &world)
 
 void testPair(World &world)
 {
-	alloc::SymbolRef valueA(world, symbolFor(world, "A"));
-	alloc::SymbolRef valueB(world, symbolFor(world, "B"));
-	alloc::SymbolRef valueC(world, symbolFor(world, "C"));
+	SymbolCell *valueA = symbolFor(world, "A");
+	SymbolCell *valueB = symbolFor(world, "B");
+	SymbolCell *valueC = symbolFor(world, "C");
 
 	assertForm(ProperList<AnyCell>::create(world, {}), "()");
 	assertForm(ProperList<AnyCell>::create(world, {valueA}), "(A)");
@@ -219,10 +218,10 @@ void testBytevector(World &world)
 	}
 
 	{
-		alloc::CharRef testChar(world, CharCell::createInstance(world, UnicodeChar(0x03bb)));
+		CharCell *testChar = CharCell::createInstance(world, UnicodeChar(0x03bb));
 
 		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
-		alloc::BytevectorRef testBytevector(world, BytevectorCell::fromData(world, testData, 5));
+		BytevectorCell *testBytevector = BytevectorCell::fromData(world, testData, 5);
 
 		auto *testPair = PairCell::createInstance(world, testChar, testBytevector);
 		assertForm(testPair, "(#\\x3bb . #u8(100 101 202 203 204))");
@@ -237,7 +236,7 @@ void testVector(World &world)
 	}
 
 	{
-		alloc::VectorRef fillVector(world, VectorCell::fromFill(world, 5));
+		VectorCell *fillVector = VectorCell::fromFill(world, 5);
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
@@ -252,8 +251,8 @@ void testVector(World &world)
 void testProcedure(World &world)
 {
 	// Outputting of pointers isn't consistent across C++ standard libraries
-	// This means our null entry point might be output differently on different 
-	// platforms. The entry point output is just for debugging so there's not 
+	// This means our null entry point might be output differently on different
+	// platforms. The entry point output is just for debugging so there's not
 	// point checking it.
 	std::string procedureForm = externalFormFor(ProcedureCell::createInstance(world, 0, true, nullptr, nullptr));
 	const std::string expectedPrefix("#!procedure(");
@@ -287,7 +286,7 @@ void testRecord(World &world)
 
 void testErrorObject(World &world)
 {
-	alloc::StringRef errorString(world, StringCell::fromUtf8StdString(world, u8"Test error"));
+	StringCell *errorString = StringCell::fromUtf8StdString(world, u8"Test error");
 
 	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::asProperList<AnyCell>());
 	assertForm(errorObj, "#!error(Test error)");

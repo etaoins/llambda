@@ -9,7 +9,6 @@
 #include "binding/SymbolCell.h"
 #include "binding/CharCell.h"
 
-#include "alloc/cellref.h"
 #include "assertions.h"
 #include "stubdefinitions.h"
 

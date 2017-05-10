@@ -1,8 +1,6 @@
 #include "core/error.h"
 #include "core/World.h"
 
-#include "alloc/cellref.h"
-
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
@@ -56,7 +54,7 @@ namespace lliby
 void signalError(World &world, ErrorCategory category, const std::string &message, std::initializer_list<AnyCell*> irritants)
 {
 	// Convert our C++ data type to Scheme cells
-	alloc::StrongRef<ProperList<AnyCell>> irritantsCell(world, ProperList<AnyCell>::create(world, irritants));
+	ProperList<AnyCell> *irritantsCell = ProperList<AnyCell>::create(world, irritants);
 
 	StringCell *messageCell = StringCell::fromUtf8StdString(world, message);
 

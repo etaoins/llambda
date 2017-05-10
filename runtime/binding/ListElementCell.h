@@ -2,7 +2,6 @@
 #define _LLIBY_BINDING_LISTELEMENTCELL_H
 
 #include "AnyCell.h"
-#include "alloc/StrongRefVector.h"
 
 #include <vector>
 
@@ -26,13 +25,11 @@ public:
 	 * @param  tail      Tail element of the list. If this is EmptyListCell::instance() this will construct a proper
 	 *                   list; otherwise, the list will improper
 	 */
-	static AnyCell *createList(World &world, alloc::StrongRefVector<AnyCell> &elements, AnyCell *tail);
-
 	static AnyCell *createList(World &world, std::vector<AnyCell*> &elements, AnyCell *tail);
 
 	static AnyCell *createList(World &world, std::initializer_list<AnyCell*> elementsList, AnyCell *tail)
 	{
-		alloc::StrongRefVector<AnyCell> elements(world, elementsList.begin(), elementsList.end());
+		std::vector<AnyCell*> elements(elementsList.begin(), elementsList.end());
 		return createList(world, elements, tail);
 	}
 

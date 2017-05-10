@@ -2,8 +2,6 @@
 
 #include <random>
 
-#include "alloc/cellref.h"
-#include "alloc/StrongRefVector.h"
 #include "binding/IntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
@@ -30,15 +28,15 @@ DatumHashTree* pivotTree(DatumHashTree *&treeLoc, DatumHashTree *tree)
 
 void testBasicImmutable(World &world)
 {
-	alloc::IntegerRef intZero(world, IntegerCell::fromValue(world, 0));
-	alloc::IntegerRef intOne(world, IntegerCell::fromValue(world, 1));
-	alloc::IntegerRef intTwo(world, IntegerCell::fromValue(world, 2));
-	alloc::IntegerRef intThree(world, IntegerCell::fromValue(world, 3));
+	IntegerCell *intZero = IntegerCell::fromValue(world, 0);
+	IntegerCell *intOne = IntegerCell::fromValue(world, 1);
+	IntegerCell *intTwo = IntegerCell::fromValue(world, 2);
+	IntegerCell *intThree = IntegerCell::fromValue(world, 3);
 
-	alloc::StringRef stringZero(world, StringCell::fromUtf8StdString(world, "0"));
-	alloc::StringRef stringOne(world, StringCell::fromUtf8StdString(world, "1"));
-	alloc::StringRef stringTwo(world, StringCell::fromUtf8StdString(world, "2"));
-	alloc::StringRef stringThree(world, StringCell::fromUtf8StdString(world, "3"));
+	StringCell *stringZero = StringCell::fromUtf8StdString(world, "0");
+	StringCell *stringOne = StringCell::fromUtf8StdString(world, "1");
+	StringCell *stringTwo = StringCell::fromUtf8StdString(world, "2");
+	StringCell *stringThree = StringCell::fromUtf8StdString(world, "3");
 
 	DatumHashTree *tree = DatumHashTree::createEmpty();
 	DatumHashTree *emptyTree = DatumHashTree::ref(tree);
@@ -68,7 +66,7 @@ void testBasicImmutable(World &world)
 	auto verifyOneValueTree = [&]
 	{
 		ASSERT_EQUAL(DatumHashTree::size(oneValueTree), 1);
-		ASSERT_EQUAL(DatumHashTree::find(oneValueTree, stringZero), intZero.data());
+		ASSERT_EQUAL(DatumHashTree::find(oneValueTree, stringZero), intZero);
 		ASSERT_NULL(DatumHashTree::find(oneValueTree, stringOne));
 		ASSERT_NULL(DatumHashTree::find(oneValueTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(oneValueTree, stringThree));
@@ -83,7 +81,7 @@ void testBasicImmutable(World &world)
 	auto verifyReplacedOneValueTree = [&]
 	{
 		ASSERT_EQUAL(DatumHashTree::size(replacedOneValueTree), 1);
-		ASSERT_EQUAL(DatumHashTree::find(replacedOneValueTree, stringZero), intZero.data());
+		ASSERT_EQUAL(DatumHashTree::find(replacedOneValueTree, stringZero), intZero);
 		ASSERT_NULL(DatumHashTree::find(replacedOneValueTree, stringOne));
 		ASSERT_NULL(DatumHashTree::find(replacedOneValueTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(replacedOneValueTree, stringThree));
@@ -98,8 +96,8 @@ void testBasicImmutable(World &world)
 	auto verifyTwoValueTree = [&]
 	{
 		ASSERT_EQUAL(DatumHashTree::size(twoValueTree), 2);
-		ASSERT_EQUAL(DatumHashTree::find(twoValueTree, stringZero), intZero.data());
-		ASSERT_EQUAL(DatumHashTree::find(twoValueTree, stringOne), intOne.data());
+		ASSERT_EQUAL(DatumHashTree::find(twoValueTree, stringZero), intZero);
+		ASSERT_EQUAL(DatumHashTree::find(twoValueTree, stringOne), intOne);
 		ASSERT_NULL(DatumHashTree::find(twoValueTree, stringTwo));
 		ASSERT_NULL(DatumHashTree::find(twoValueTree, stringThree));
 	};
@@ -113,9 +111,9 @@ void testBasicImmutable(World &world)
 	auto verifyThreeValueTree = [&]
 	{
 		ASSERT_EQUAL(DatumHashTree::size(threeValueTree), 3);
-		ASSERT_EQUAL(DatumHashTree::find(threeValueTree, stringZero), intZero.data());
-		ASSERT_EQUAL(DatumHashTree::find(threeValueTree, stringOne), intOne.data());
-		ASSERT_EQUAL(DatumHashTree::find(threeValueTree, stringTwo), intTwo.data());
+		ASSERT_EQUAL(DatumHashTree::find(threeValueTree, stringZero), intZero);
+		ASSERT_EQUAL(DatumHashTree::find(threeValueTree, stringOne), intOne);
+		ASSERT_EQUAL(DatumHashTree::find(threeValueTree, stringTwo), intTwo);
 		ASSERT_NULL(DatumHashTree::find(threeValueTree, stringThree));
 	};
 
@@ -128,10 +126,10 @@ void testBasicImmutable(World &world)
 	auto verifyFourValueTree = [&]
 	{
 		ASSERT_EQUAL(DatumHashTree::size(fourValueTree), 4);
-		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringZero), intZero.data());
-		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringOne), intOne.data());
-		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringTwo), intTwo.data());
-		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringThree), intThree.data());
+		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringZero), intZero);
+		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringOne), intOne);
+		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringTwo), intTwo);
+		ASSERT_EQUAL(DatumHashTree::find(fourValueTree, stringThree), intThree);
 
 		bool seenValues[4] = {false};
 		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
@@ -164,10 +162,10 @@ void testBasicImmutable(World &world)
 	auto verifySwappedTree = [&]
 	{
 		ASSERT_EQUAL(DatumHashTree::size(fourValueTree), 4);
-		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringZero), intThree.data());
-		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringOne), intTwo.data());
-		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringTwo), intOne.data());
-		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringThree), intZero.data());
+		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringZero), intThree);
+		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringOne), intTwo);
+		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringTwo), intOne);
+		ASSERT_EQUAL(DatumHashTree::find(swappedTree, stringThree), intZero);
 
 		bool seenValues[4] = {false};
 		DatumHashTree::every(fourValueTree, [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
@@ -190,7 +188,7 @@ void testBasicImmutable(World &world)
 	verifySwappedTree();
 
 	// Remove a key not in the hash tree
-	auto newTree = DatumHashTree::without(tree, intZero.data());
+	auto newTree = DatumHashTree::without(tree, intZero);
 	ASSERT_EQUAL(tree, newTree);
 	DatumHashTree::unref(newTree);
 
@@ -202,9 +200,9 @@ void testBasicImmutable(World &world)
 	{
 		ASSERT_EQUAL(DatumHashTree::size(oneRemovedTree), 3);
 		ASSERT_NULL(DatumHashTree::find(oneRemovedTree, stringZero));
-		ASSERT_EQUAL(DatumHashTree::find(oneRemovedTree, stringOne), intTwo.data());
-		ASSERT_EQUAL(DatumHashTree::find(oneRemovedTree, stringTwo), intOne.data());
-		ASSERT_EQUAL(DatumHashTree::find(oneRemovedTree, stringThree), intZero.data());
+		ASSERT_EQUAL(DatumHashTree::find(oneRemovedTree, stringOne), intTwo);
+		ASSERT_EQUAL(DatumHashTree::find(oneRemovedTree, stringTwo), intOne);
+		ASSERT_EQUAL(DatumHashTree::find(oneRemovedTree, stringThree), intZero);
 	};
 
 	verifyOneRemovedTree();
@@ -218,8 +216,8 @@ void testBasicImmutable(World &world)
 		ASSERT_EQUAL(DatumHashTree::size(twoRemovedTree), 2);
 		ASSERT_NULL(DatumHashTree::find(twoRemovedTree, stringZero));
 		ASSERT_NULL(DatumHashTree::find(twoRemovedTree, stringOne));
-		ASSERT_EQUAL(DatumHashTree::find(twoRemovedTree, stringTwo), intOne.data());
-		ASSERT_EQUAL(DatumHashTree::find(twoRemovedTree, stringThree), intZero.data());
+		ASSERT_EQUAL(DatumHashTree::find(twoRemovedTree, stringTwo), intOne);
+		ASSERT_EQUAL(DatumHashTree::find(twoRemovedTree, stringThree), intZero);
 	};
 
 	verifyTwoRemovedTree();
@@ -234,7 +232,7 @@ void testBasicImmutable(World &world)
 		ASSERT_NULL(DatumHashTree::find(threeRemovedTree, stringZero));
 		ASSERT_NULL(DatumHashTree::find(threeRemovedTree, stringOne));
 		ASSERT_NULL(DatumHashTree::find(threeRemovedTree, stringTwo));
-		ASSERT_EQUAL(DatumHashTree::find(threeRemovedTree, stringThree), intZero.data());
+		ASSERT_EQUAL(DatumHashTree::find(threeRemovedTree, stringThree), intZero);
 	};
 
 	verifyThreeRemovedTree();
@@ -298,8 +296,8 @@ void testLargeImmutableTree(World &world)
 {
 	static const std::size_t testIntegerCount = 2000;
 
-	alloc::StrongRefVector<IntegerCell> intVector(world);
-	alloc::StrongRefVector<FlonumCell> flonumVector(world);
+	std::vector<IntegerCell*> intVector;
+	std::vector<FlonumCell*> flonumVector;
 	intVector.reserve(testIntegerCount);
 
 	std::mt19937 gen;
@@ -477,36 +475,36 @@ void testLargeImmutableTree(World &world)
 
 void testToFromAssocList(World &world)
 {
-	alloc::IntegerRef intZero(world, IntegerCell::fromValue(world, 0));
-	alloc::IntegerRef intOne(world, IntegerCell::fromValue(world, 1));
-	alloc::IntegerRef intTwo(world, IntegerCell::fromValue(world, 2));
-	alloc::IntegerRef intThree(world, IntegerCell::fromValue(world, 2));
-	alloc::IntegerRef intFour(world, IntegerCell::fromValue(world, 4));
+	IntegerCell *intZero = IntegerCell::fromValue(world, 0);
+	IntegerCell *intOne = IntegerCell::fromValue(world, 1);
+	IntegerCell *intTwo = IntegerCell::fromValue(world, 2);
+	IntegerCell *intThree = IntegerCell::fromValue(world, 2);
+	IntegerCell *intFour = IntegerCell::fromValue(world, 4);
 
-	alloc::StringRef stringZero(world, StringCell::fromUtf8StdString(world, "0"));
-	alloc::StringRef stringOne(world, StringCell::fromUtf8StdString(world, "1"));
-	alloc::StringRef stringTwo(world, StringCell::fromUtf8StdString(world, "2"));
-	alloc::StringRef stringThree(world, StringCell::fromUtf8StdString(world, "3"));
-	alloc::StringRef stringFour(world, StringCell::fromUtf8StdString(world, "4"));
+	StringCell *stringZero = StringCell::fromUtf8StdString(world, "0");
+	StringCell *stringOne = StringCell::fromUtf8StdString(world, "1");
+	StringCell *stringTwo = StringCell::fromUtf8StdString(world, "2");
+	StringCell *stringThree = StringCell::fromUtf8StdString(world, "3");
+	StringCell *stringFour = StringCell::fromUtf8StdString(world, "4");
 
-	alloc::PairRef pairZero(world, PairCell::createInstance(world, stringZero, intFour));
-	alloc::PairRef pairOne(world, PairCell::createInstance(world, stringOne, intOne));
-	alloc::PairRef pairTwo(world, PairCell::createInstance(world, stringTwo, intTwo));
-	alloc::PairRef pairThree(world, PairCell::createInstance(world, stringThree, intThree));
-	alloc::PairRef pairFour(world, PairCell::createInstance(world, stringFour, intFour));
-	alloc::PairRef pairFive(world, PairCell::createInstance(world, stringZero, intZero));
-	alloc::PairRef pairSix(world, PairCell::createInstance(world, stringFour, intFour));
+	PairCell *pairZero = PairCell::createInstance(world, stringZero, intFour);
+	PairCell *pairOne = PairCell::createInstance(world, stringOne, intOne);
+	PairCell *pairTwo = PairCell::createInstance(world, stringTwo, intTwo);
+	PairCell *pairThree = PairCell::createInstance(world, stringThree, intThree);
+	PairCell *pairFour = PairCell::createInstance(world, stringFour, intFour);
+	PairCell *pairFive = PairCell::createInstance(world, stringZero, intZero);
+	PairCell *pairSix = PairCell::createInstance(world, stringFour, intFour);
 
 	auto assocList = ProperList<PairCell>::create(world, {pairZero, pairOne, pairTwo, pairThree, pairFour, pairFive, pairSix});
 
 	DatumHashTree *tree = DatumHashTree::fromAssocList(assocList);
 
 	ASSERT_EQUAL(DatumHashTree::size(tree), 5);
-	ASSERT_EQUAL(DatumHashTree::find(tree, stringZero), intZero.data());
-	ASSERT_EQUAL(DatumHashTree::find(tree, stringOne), intOne.data());
-	ASSERT_EQUAL(DatumHashTree::find(tree, stringTwo), intTwo.data());
-	ASSERT_EQUAL(DatumHashTree::find(tree, stringThree), intThree.data());
-	ASSERT_EQUAL(DatumHashTree::find(tree, stringFour), intFour.data());
+	ASSERT_EQUAL(DatumHashTree::find(tree, stringZero), intZero);
+	ASSERT_EQUAL(DatumHashTree::find(tree, stringOne), intOne);
+	ASSERT_EQUAL(DatumHashTree::find(tree, stringTwo), intTwo);
+	ASSERT_EQUAL(DatumHashTree::find(tree, stringThree), intThree);
+	ASSERT_EQUAL(DatumHashTree::find(tree, stringFour), intFour);
 
 	DatumHashTree::unref(tree);
 	ASSERT_EQUAL(DatumHashTree::instanceCount(), 0);

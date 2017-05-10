@@ -29,8 +29,6 @@
 #include "port/StringOutputPort.h"
 #include "actor/Mailbox.h"
 
-#include "alloc/StrongRefVector.h"
-#include "alloc/cellref.h"
 #include "hash/DatumHash.h"
 #include "hash/DatumHashTree.h"
 #include "writer/ExternalFormDatumWriter.h"
@@ -69,7 +67,7 @@ HashMapCell* hashMapCellFromValues(World &world, std::initializer_list<std::pair
 
 void testAll(World &world)
 {
-	alloc::StrongRefVector<AnyCell> testValues(world);
+	std::vector<AnyCell*> testValues;
 
 	auto recordClass = ProcedureCell::registerRuntimeRecordClass(0, {});
 
@@ -209,7 +207,7 @@ void testAll(World &world)
 	testValues.push_back(PortCell::createInstance(world, new StringOutputPort));
 	testValues.push_back(PortCell::createInstance(world, new StringOutputPort));
 
-	alloc::StringRef errorString(world, StringCell::fromUtf8StdString(world, u8"Test error"));
+	StringCell *errorString = StringCell::fromUtf8StdString(world, u8"Test error");
 	testValues.push_back(ErrorObjectCell::createInstance(
 				world,
 				errorString,

@@ -15,7 +15,7 @@
 #include "util/adjustSlice.h"
 
 #include "alloc/allocator.h"
-#include "alloc/cellref.h"
+#include "alloc/Heap.h"
 
 namespace lliby
 {
@@ -148,9 +148,6 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 		return nullptr;
 	}
 
-	// Mark our input strings as GC roots
-	alloc::StrongRoot<StringCell> inputRoots(world, strings.data(), strings.size());
-
 	// Allocate the new string
 	auto newString = StringCell::createUninitialized(world, totalByteLength, totalCharLength);
 
@@ -168,12 +165,11 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 
 StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 {
-	alloc::SymbolRef symbolRef(world, symbol);
 	void *cellPlacement = alloc::allocateCells(world);
 
-	if (symbolRef->dataIsInline())
+	if (symbol->dataIsInline())
 	{
-		auto inlineSymbol = static_cast<InlineSymbolCell*>(symbolRef.data());
+		auto inlineSymbol = static_cast<InlineSymbolCell*>(symbol);
 
 		auto inlineString = new (cellPlacement) InlineStringCell(
 				inlineSymbol->inlineByteLength(),
@@ -188,7 +184,7 @@ StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 	}
 	else
 	{
-		auto heapSymbol = static_cast<HeapSymbolCell*>(symbolRef.data());
+		auto heapSymbol = static_cast<HeapSymbolCell*>(symbol);
 
 		// Share the heap symbols's byte array
 		return new (cellPlacement) HeapStringCell(
@@ -505,11 +501,6 @@ bool StringCell::setCharAt(CharLengthType offset, UnicodeChar unicodeChar)
 
 StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType end)
 {
-	// Allocating a string below can actually change "this"
-	// That is super annoying
-	StringCell *oldThis = const_cast<StringCell*>(this);
-	alloc::StringRef thisRef(world, oldThis);
-
 	CharRange range = charRange(start, end);
 
 	if (range.isNull())
@@ -523,7 +514,7 @@ StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType 
 		// We're copying the whole string
 		// Share our byte array
 		void *cellPlacement = alloc::allocateCells(world);
-		HeapStringCell *heapThis = static_cast<HeapStringCell*>(thisRef.data());
+		HeapStringCell *heapThis = static_cast<HeapStringCell*>(this);
 
 		return new (cellPlacement) HeapStringCell(
 				heapThis->heapByteArray()->ref(),
@@ -536,16 +527,6 @@ StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType 
 
 	// Create the new string
 	auto newString = StringCell::createUninitialized(world, newByteLength, range.charCount);
-
-	if (thisRef->dataIsInline() && (oldThis != thisRef.data()))
-	{
-		// The allocator ran and moved us along with our inline data
-		// We have to update our range
-		ptrdiff_t byteDelta = reinterpret_cast<std::uint8_t*>(thisRef.data()) -
-			                   reinterpret_cast<std::uint8_t*>(oldThis);
-
-		range.relocate(byteDelta);
-	}
 
 	std::uint8_t *newUtf8Data = newString->utf8Data();
 

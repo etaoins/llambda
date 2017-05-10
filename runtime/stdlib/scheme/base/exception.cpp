@@ -5,8 +5,6 @@
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
 
-#include "alloc/cellref.h"
-
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
 
@@ -17,9 +15,8 @@ extern "C"
 
 using HandlerProcedureCell = TypedProcedureCell<AnyCell*, AnyCell*>;
 
-AnyCell* llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
+AnyCell* llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProc, ThunkProcedureCell *thunk)
 {
-	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
 	dynamic::State *handlerState = world.activeState();
 
 	try
@@ -28,14 +25,12 @@ AnyCell* llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw
 	}
 	catch (dynamic::SchemeException &except)
 	{
-		alloc::AnyRef objectRef(world, except.object());
-
 		// Switch to the guard's dynamic state
 		dynamic::State::popUntilState(world, handlerState);
 
 		// Call our guard-aux procedure
 		// This will re-throw if no match is encountered
-		return guardAuxProc->apply(world, objectRef);
+		return guardAuxProc->apply(world, except.object());
 	}
 }
 

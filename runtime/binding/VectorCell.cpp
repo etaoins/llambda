@@ -4,7 +4,6 @@
 #include <limits>
 #include <string.h>
 
-#include "alloc/cellref.h"
 #include "alloc/allocator.h"
 
 #include "util/adjustSlice.h"
@@ -31,16 +30,12 @@ bool VectorCell::fill(AnyCell *fill, SliceIndexType start, SliceIndexType end)
 
 VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, LengthType length)
 {
-	// Make sure our elements array is GC rooted for the next allocation
-	alloc::StrongRoot<AnyCell> newElementsRoot(world, elements, length);
-
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(elements, length);
 }
 
 VectorCell* VectorCell::fromFill(World &world, LengthType length, AnyCell *fill)
 {
-	alloc::AnyRef fillRef(world, fill);
 	AnyCell **newElements;
 
 	try
@@ -55,12 +50,12 @@ VectorCell* VectorCell::fromFill(World &world, LengthType length, AnyCell *fill)
 	void *cellPlacement = alloc::allocateCells(world);
 	auto newVector = new (cellPlacement) VectorCell(newElements, length);
 
-	if (fillRef.isNull())
+	if (fill == nullptr)
 	{
-		fillRef = const_cast<UnitCell*>(UnitCell::instance());
+		fill = const_cast<UnitCell*>(UnitCell::instance());
 	}
 
-	newVector->fill(fillRef, 0, -1);
+	newVector->fill(fill, 0, -1);
 
 	return newVector;
 }
@@ -90,9 +85,6 @@ VectorCell* VectorCell::fromAppended(World &world, const std::vector<const Vecto
 		copyPtr += vector->length();
 	}
 
-	// Root our elements in case allocating the vector cell triggers GC
-	alloc::StrongRoot<AnyCell> newElementsRoot(world, newElements, totalLength);
-
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(newElements, totalLength);
 }
@@ -108,8 +100,6 @@ VectorCell* VectorCell::copy(World &world, SliceIndexType start, SliceIndexType 
 	auto newElements = new AnyCell*[newLength];
 
 	memcpy(newElements, &elements()[start], newLength * sizeof(AnyCell*));
-
-	alloc::StrongRoot<AnyCell> newElementsRoot(world, newElements, newLength);
 
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(newElements, newLength);

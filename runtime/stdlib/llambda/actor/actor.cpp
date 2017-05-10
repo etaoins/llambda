@@ -19,6 +19,7 @@
 #include "sched/TimerList.h"
 
 #include "core/error.h"
+#include "core/World.h"
 
 using namespace lliby;
 

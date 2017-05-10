@@ -5,7 +5,6 @@
 #include "binding/ProperList.h"
 
 #include "core/init.h"
-#include "alloc/AbstractRefVector.h"
 #include "dynamic/State.h"
 
 #include <cstring>
@@ -36,8 +35,8 @@ AnyCell *llprocesscontext_get_environment_variable(World &world, StringCell *nam
 
 ProperList<ProperList<StringCell>>* llprocesscontext_get_environment_variables(World &world)
 {
-	alloc::StrongRefVector<ProperList<StringCell>> parsedVariables(world);
-	alloc::StrongRefVector<StringCell> parsedStrings(world, 2);
+	std::vector<ProperList<StringCell>*> parsedVariables;
+	std::vector<StringCell*> parsedStrings(2);
 
 	char **scanPtr = environ;
 
@@ -70,7 +69,7 @@ ProperList<StringCell>* llprocesscontext_command_line(World &world)
 {
 	CommandLineArguments args(commandLineArguments());
 
-	alloc::StrongRefVector<StringCell> argStrings(world, args.argc);
+	std::vector<StringCell*> argStrings(args.argc);
 
 	for(int i = 0; i < args.argc; i++)
 	{

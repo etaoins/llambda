@@ -7,7 +7,6 @@
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
-#include "alloc/cellref.h"
 
 #include "core/error.h"
 
@@ -79,11 +78,10 @@ std::uint32_t llbase_length(ProperList<AnyCell> *list)
 	return list->size();
 }
 
-ListElementCell* llbase_make_list(World &world, std::uint32_t count, AnyCell *fillRaw)
+ListElementCell* llbase_make_list(World &world, std::uint32_t count, AnyCell *fill)
 {
 	ListElementCell *cdr = EmptyListCell::instance();
 	std::uint32_t tailSize = 0;
-	alloc::AnyRef fill(world, fillRaw);
 
 	// Allocate all the new pairs at once
 	alloc::RangeAlloc allocation(alloc::allocateRange(world, count));
@@ -137,10 +135,8 @@ AnyCell* llbase_append(World &world, RestValues<AnyCell> *argList)
 	return ListElementCell::createList(world, appendedElements, *(argIt++));
 }
 
-ProperList<AnyCell>* llbase_reverse(World &world, ProperList<AnyCell> *sourceListRaw)
+ProperList<AnyCell>* llbase_reverse(World &world, ProperList<AnyCell> *sourceList)
 {
-	alloc::StrongRef<ProperList<AnyCell>> sourceList(world, sourceListRaw);
-
 	alloc::RangeAlloc allocation = alloc::allocateRange(world, sourceList->size());
 	auto allocIt = allocation.end();
 

@@ -1,8 +1,6 @@
 #include <iostream>
 #include <cassert>
 
-#include "alloc/StrongRef.h"
-
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
 #include "binding/IntegerCell.h"

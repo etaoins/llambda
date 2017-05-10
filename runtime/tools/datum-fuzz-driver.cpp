@@ -16,8 +16,6 @@
 #include "binding/VectorCell.h"
 #include "binding/BytevectorCell.h"
 
-#include "alloc/cellref.h"
-
 #include "reader/DatumReader.h"
 #include "reader/ReadErrorException.h"
 
@@ -147,13 +145,13 @@ namespace
 
 		while(true)
 		{
-			alloc::AnyRef firstReadRef(world);
+			AnyCell *firstRead = nullptr;
 
 			try
 			{
 				// Read from stdin
 				AnyCell *parsedDatum = stdinReader.parse();
-				firstReadRef.setData(parsedDatum);
+				firstRead = parsedDatum;
 			}
 			catch(const ReadErrorException &e)
 			{
@@ -170,7 +168,7 @@ namespace
 				continue;
 			}
 
-			if (firstReadRef.data() == EofObjectCell::instance())
+			if (firstRead == EofObjectCell::instance())
 			{
 				// Ran out of input
 				return;
@@ -180,40 +178,40 @@ namespace
 			std::ostringstream outStream;
 			ExternalFormDatumWriter writer(outStream);
 
-			writer.render(firstReadRef);
+			writer.render(firstRead);
 
 			// Re-parse the datum
 			std::istringstream inStream(outStream.str());
 			DatumReader secondReader(world, inStream);
 
-			alloc::AnyRef secondReadRef(world);
+			AnyCell *secondRead;
 
 			try
 			{
-				secondReadRef.setData(secondReader.parse());
+				secondRead = secondReader.parse();
 			}
 			catch(const ReadErrorException &e)
 			{
 				ExternalFormDatumWriter errorWriter(std::cerr);
 
 				std::cerr << "First read:" << std::endl;
-				errorWriter.render(firstReadRef);
+				errorWriter.render(firstRead);
 				std::cerr << std::endl << std::endl;
 			}
 
 			// Make sure they're equal
-			if (!isEqualish(firstReadRef, secondReadRef))
+			if (!isEqualish(firstRead, secondRead))
 			{
 				ExternalFormDatumWriter errorWriter(std::cerr);
 
 				std::cerr << "Datum was not reparsed as same value" << std::endl << std::endl;
 
 				std::cerr << "First read:" << std::endl;
-				errorWriter.render(firstReadRef);
+				errorWriter.render(firstRead);
 				std::cerr << std::endl << std::endl;
 
 				std::cerr << "Second read:" << std::endl;
-				errorWriter.render(secondReadRef);
+				errorWriter.render(secondRead);
 				std::cerr << std::endl;
 
 				std::abort();

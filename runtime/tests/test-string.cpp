@@ -14,8 +14,6 @@
 #include "ucd/ucd.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
-#include "alloc/cellref.h"
-
 namespace
 {
 using namespace lliby;
@@ -163,7 +161,7 @@ void testFromUtf8StdString(World &world)
 void testFromSymbol(World &world)
 {
 	{
-		alloc::SymbolRef asciiInlineSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
+		SymbolCell *asciiInlineSymbol = SymbolCell::fromUtf8StdString(world, "Hello");
 
 		StringCell *testString = StringCell::fromSymbol(world, asciiInlineSymbol);
 
@@ -173,7 +171,7 @@ void testFromSymbol(World &world)
 	}
 
 	{
-		alloc::SymbolRef unicodeInlineSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello ☃!"));
+		SymbolCell *unicodeInlineSymbol = SymbolCell::fromUtf8StdString(world, "Hello ☃!");
 
 		StringCell *testString = StringCell::fromSymbol(world, unicodeInlineSymbol);
 
@@ -183,7 +181,7 @@ void testFromSymbol(World &world)
 	}
 
 	{
-		alloc::SymbolRef asciiHeapSymbol(world, SymbolCell::fromUtf8StdString(world, "Greetings, fellow unit testers!"));
+		SymbolCell *asciiHeapSymbol = SymbolCell::fromUtf8StdString(world, "Greetings, fellow unit testers!");
 
 		StringCell *testString = StringCell::fromSymbol(world, asciiHeapSymbol);
 
@@ -193,7 +191,7 @@ void testFromSymbol(World &world)
 	}
 
 	{
-		alloc::SymbolRef unicodeHeapSymbol(world, SymbolCell::fromUtf8StdString(world, "Look it's a little snowman: ☃!"));
+		SymbolCell *unicodeHeapSymbol = SymbolCell::fromUtf8StdString(world, "Look it's a little snowman: ☃!");
 
 		StringCell *testString = StringCell::fromSymbol(world, unicodeHeapSymbol);
 
@@ -205,16 +203,16 @@ void testFromSymbol(World &world)
 
 void testCompare(World &world)
 {
-	alloc::StringRef hello1(world, StringCell::fromUtf8StdString(world, "Hello"));
-	alloc::StringRef hello2(world, StringCell::fromUtf8Data(world, utf8Bytes("Hello"), 5));
-	alloc::StringRef HELLO(world, StringCell::fromUtf8StdString(world, "HELLO"));
-	alloc::StringRef worldString(world, StringCell::fromUtf8StdString(world, "worldString"));
-	alloc::StringRef nulledHello1(world, StringCell::fromUtf8Data(world, utf8Bytes("Hell\0o"), 6));
-	alloc::StringRef nulledHello2(world, StringCell::fromUtf8Data(world, utf8Bytes("Hell\0o"), 6));
-	alloc::StringRef hell(world, StringCell::fromUtf8StdString(world, "Hell"));
-	alloc::StringRef unicodeValue(world, StringCell::fromUtf8StdString(world, u8"☃🐉"));
-	alloc::StringRef lowercaseUnicode(world, StringCell::fromUtf8StdString(world, u8"сфmmциist gязэtiйgs!"));
-	alloc::StringRef uppercaseUnicode(world, StringCell::fromUtf8StdString(world, u8"СФMMЦИIST GЯЗЭTIЙGS!"));
+	StringCell *hello1 = StringCell::fromUtf8StdString(world, "Hello");
+	StringCell *hello2 = StringCell::fromUtf8Data(world, utf8Bytes("Hello"), 5);
+	StringCell *HELLO = StringCell::fromUtf8StdString(world, "HELLO");
+	StringCell *worldString = StringCell::fromUtf8StdString(world, "worldString");
+	StringCell *nulledHello1 = StringCell::fromUtf8Data(world, utf8Bytes("Hell\0o"), 6);
+	StringCell *nulledHello2 = StringCell::fromUtf8Data(world, utf8Bytes("Hell\0o"), 6);
+	StringCell *hell = StringCell::fromUtf8StdString(world, "Hell");
+	StringCell *unicodeValue = StringCell::fromUtf8StdString(world, u8"☃🐉");
+	StringCell *lowercaseUnicode = StringCell::fromUtf8StdString(world, u8"сфmmциist gязэtiйgs!");
+	StringCell *uppercaseUnicode = StringCell::fromUtf8StdString(world, u8"СФMMЦИIST GЯЗЭTIЙGS!");
 
 	ASSERT_TRUE(*hello1 == *hello1);
 	ASSERT_TRUE(hello1->compare(hello1) == 0);
@@ -333,9 +331,9 @@ void testFromAppended(World &world)
 	}
 
 	{
-		alloc::StringRef part1(world, StringCell::fromUtf8StdString(world, u8"Hello"));
-		alloc::StringRef part2(world, StringCell::fromUtf8StdString(world, u8" "));
-		alloc::StringRef part3(world, StringCell::fromUtf8StdString(world, u8"world!"));
+		StringCell *part1 = StringCell::fromUtf8StdString(world, u8"Hello");
+		StringCell *part2 = StringCell::fromUtf8StdString(world, u8" ");
+		StringCell *part3 = StringCell::fromUtf8StdString(world, u8"world!");
 
 		std::vector<StringCell*> appendParts = {part1, part2, part3};
 
@@ -347,8 +345,8 @@ void testFromAppended(World &world)
 	}
 
 	{
-		alloc::StringRef part1(world, StringCell::fromUtf8StdString(world, u8"Hello "));
-		alloc::StringRef part2(world, StringCell::fromUtf8StdString(world, u8"☃"));
+		StringCell *part1 = StringCell::fromUtf8StdString(world, u8"Hello ");
+		StringCell *part2 = StringCell::fromUtf8StdString(world, u8"☃");
 
 		std::vector<StringCell*> appendParts = {part1, part2};
 
@@ -420,7 +418,7 @@ void testStringCellBuilder(World &world)
 void testStringCopy(World &world)
 {
 	{
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *helloCopy = helloValue->copy(world);
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
@@ -429,7 +427,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *elloCopy = helloValue->copy(world, 1);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
@@ -439,7 +437,7 @@ void testStringCopy(World &world)
 
 	{
 		// Make sure there's no boundry condition on the last character
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *elloCopy = helloValue->copy(world, 1, 5);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
@@ -449,7 +447,7 @@ void testStringCopy(World &world)
 
 	{
 		// Allow empty strings
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *emptyCopy = helloValue->copy(world, 0, 0);
 
 		ASSERT_EQUAL(emptyCopy->byteLength(), 0);
@@ -458,7 +456,7 @@ void testStringCopy(World &world)
 
 	{
 		// Allow empty from the very end
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *emptyCopy = helloValue->copy(world, 5, 5);
 
 		ASSERT_EQUAL(emptyCopy->byteLength(), 0);
@@ -466,7 +464,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *ellCopy = helloValue->copy(world, 1, 4);
 
 		ASSERT_EQUAL(ellCopy->byteLength(), 3);
@@ -476,7 +474,7 @@ void testStringCopy(World &world)
 
 	{
 		// Off the end
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *invalidCopy = helloValue->copy(world, 0, 16);
 
 		ASSERT_NULL(invalidCopy);
@@ -484,14 +482,14 @@ void testStringCopy(World &world)
 
 	{
 		// start > end
-		alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello"));
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
 		StringCell *invalidCopy = helloValue->copy(world, 3, 2);
 
 		ASSERT_NULL(invalidCopy);
 	}
 
 	{
-		alloc::StringRef japanValue(world, StringCell::fromUtf8StdString(world, u8"日本国"));
+		StringCell *japanValue = StringCell::fromUtf8StdString(world, u8"日本国");
 		StringCell *japanCopy = japanValue->copy(world);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 9);
@@ -500,7 +498,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		alloc::StringRef japanValue(world, StringCell::fromUtf8StdString(world, u8"日本国"));
+		StringCell *japanValue = StringCell::fromUtf8StdString(world, u8"日本国");
 		StringCell *japanCopy = japanValue->copy(world, 1);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 6);
@@ -509,7 +507,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		alloc::StringRef japanValue(world, StringCell::fromUtf8StdString(world, u8"日本国"));
+		StringCell *japanValue = StringCell::fromUtf8StdString(world, u8"日本国");
 		// Check for the same boundry in Unicode
 		StringCell *japanCopy = japanValue->copy(world, 1, 3);
 
@@ -519,7 +517,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		alloc::StringRef japanValue(world, StringCell::fromUtf8StdString(world, u8"日本国"));
+		StringCell *japanValue = StringCell::fromUtf8StdString(world, u8"日本国");
 		StringCell *japanCopy = japanValue->copy(world, 1, 2);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 3);
@@ -528,7 +526,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		alloc::StringRef mixedValue(world, StringCell::fromUtf8StdString(world, u8"日Hello国"));
+		StringCell *mixedValue = StringCell::fromUtf8StdString(world, u8"日Hello国");
 		StringCell *helloCopy = mixedValue->copy(world, 1, 6);
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
@@ -720,13 +718,13 @@ void testFill(World &world)
 
 void testReplace(World &world)
 {
-	const alloc::StringRef constWorld(world, StringCell::fromUtf8StdString(world, u8"world"));
-	const alloc::StringRef constJapan(world, StringCell::fromUtf8StdString(world, u8"日本国"));
+	const StringCell *constWorld = StringCell::fromUtf8StdString(world, u8"world");
+	const StringCell *constJapan = StringCell::fromUtf8StdString(world, u8"日本国");
 
 	{
 		// From R7RS
-		alloc::StringRef numbers(world, StringCell::fromUtf8StdString(world, u8"12345"));
-		alloc::StringRef letters(world, StringCell::fromUtf8StdString(world, u8"abcde"));
+		StringCell *numbers = StringCell::fromUtf8StdString(world, u8"12345");
+		StringCell *letters = StringCell::fromUtf8StdString(world, u8"abcde");
 
 		ASSERT_EQUAL(letters->replace(1, numbers, 0, 2), true);
 
@@ -988,7 +986,7 @@ void testUnicodeChars(World &world)
 
 void testToUtf8Bytevector(World &world)
 {
-	alloc::StringRef helloValue(world, StringCell::fromUtf8StdString(world, u8"Hello ☃!"));
+	StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello ☃!");
 
 	{
 		BytevectorCell *byteVectorCell = helloValue->toUtf8Bytevector(world);
@@ -1037,64 +1035,64 @@ void testToUtf8Bytevector(World &world)
 void testConversion(World &world)
 {
 	{
-		alloc::StringRef mixedCaseAsciiString(world, StringCell::fromUtf8StdString(world, u8"Hello, World!"));
+		StringCell *mixedCaseAsciiString = StringCell::fromUtf8StdString(world, u8"Hello, World!");
 
-		alloc::StringRef lowercaseAsciiString(world, mixedCaseAsciiString->toConvertedString(world, ucd::toLowercase));
-		alloc::StringRef uppercaseAsciiString(world, mixedCaseAsciiString->toConvertedString(world, ucd::toUppercase));
-		alloc::StringRef caseFoldedAsciiString(world, mixedCaseAsciiString->toConvertedString(world, ucd::toCaseFolded));
+		StringCell *lowercaseAsciiString = mixedCaseAsciiString->toConvertedString(world, ucd::toLowercase);
+		StringCell *uppercaseAsciiString = mixedCaseAsciiString->toConvertedString(world, ucd::toUppercase);
+		StringCell *caseFoldedAsciiString = mixedCaseAsciiString->toConvertedString(world, ucd::toCaseFolded);
 
-		ASSERT_UTF8_EQUAL(lowercaseAsciiString.data(), u8"hello, world!");
-		ASSERT_UTF8_EQUAL(uppercaseAsciiString.data(), u8"HELLO, WORLD!");
-		ASSERT_UTF8_EQUAL(caseFoldedAsciiString.data(), u8"hello, world!");
+		ASSERT_UTF8_EQUAL(lowercaseAsciiString, u8"hello, world!");
+		ASSERT_UTF8_EQUAL(uppercaseAsciiString, u8"HELLO, WORLD!");
+		ASSERT_UTF8_EQUAL(caseFoldedAsciiString, u8"hello, world!");
 	}
 
 	{
-		alloc::StringRef mixedCaseUnicodeString(world, StringCell::fromUtf8StdString(world, u8"Γεια σας Παγκόσμιο!"));
+		StringCell *mixedCaseUnicodeString = StringCell::fromUtf8StdString(world, u8"Γεια σας Παγκόσμιο!");
 
-		alloc::StringRef lowercaseUnicodeString(world, mixedCaseUnicodeString->toConvertedString(world, ucd::toLowercase));
-		alloc::StringRef uppercaseUnicodeString(world, mixedCaseUnicodeString->toConvertedString(world, ucd::toUppercase));
-		alloc::StringRef caseFoldedUnicodeString(world, mixedCaseUnicodeString->toConvertedString(world, ucd::toCaseFolded));
+		StringCell *lowercaseUnicodeString = mixedCaseUnicodeString->toConvertedString(world, ucd::toLowercase);
+		StringCell *uppercaseUnicodeString = mixedCaseUnicodeString->toConvertedString(world, ucd::toUppercase);
+		StringCell *caseFoldedUnicodeString = mixedCaseUnicodeString->toConvertedString(world, ucd::toCaseFolded);
 
-		ASSERT_UTF8_EQUAL(lowercaseUnicodeString.data(), u8"γεια σας παγκόσμιο!");
-		ASSERT_UTF8_EQUAL(uppercaseUnicodeString.data(), u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
+		ASSERT_UTF8_EQUAL(lowercaseUnicodeString, u8"γεια σας παγκόσμιο!");
+		ASSERT_UTF8_EQUAL(uppercaseUnicodeString, u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
 		// Note that the final sigma folds to a normal sigma here
-		ASSERT_UTF8_EQUAL(caseFoldedUnicodeString.data(), u8"γεια σασ παγκόσμιο!");
+		ASSERT_UTF8_EQUAL(caseFoldedUnicodeString, u8"γεια σασ παγκόσμιο!");
 	}
 
 	{
-		alloc::StringRef hanString(world, StringCell::fromUtf8StdString(world, u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨"));
+		StringCell *hanString = StringCell::fromUtf8StdString(world, u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 
-		alloc::StringRef lowercaseHanString(world, hanString->toConvertedString(world, ucd::toLowercase));
-		alloc::StringRef uppercaseHanString(world, hanString->toConvertedString(world, ucd::toUppercase));
-		alloc::StringRef caseFoldedHanString(world, hanString->toConvertedString(world, ucd::toCaseFolded));
+		StringCell *lowercaseHanString = hanString->toConvertedString(world, ucd::toLowercase);
+		StringCell *uppercaseHanString = hanString->toConvertedString(world, ucd::toUppercase);
+		StringCell *caseFoldedHanString = hanString->toConvertedString(world, ucd::toCaseFolded);
 
-		ASSERT_UTF8_EQUAL(lowercaseHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
-		ASSERT_UTF8_EQUAL(uppercaseHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
-		ASSERT_UTF8_EQUAL(caseFoldedHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(lowercaseHanString, u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(uppercaseHanString, u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(caseFoldedHanString, u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 	}
 
 	{
-		alloc::StringRef symbolString(world, StringCell::fromUtf8StdString(world, u8"🐉☃☙"));
+		StringCell *symbolString = StringCell::fromUtf8StdString(world, u8"🐉☃☙");
 
-		alloc::StringRef lowercaseSymbolString(world, symbolString->toConvertedString(world, ucd::toLowercase));
-		alloc::StringRef uppercaseSymbolString(world, symbolString->toConvertedString(world, ucd::toUppercase));
-		alloc::StringRef caseFoldedSymbolString(world, symbolString->toConvertedString(world, ucd::toCaseFolded));
+		StringCell *lowercaseSymbolString = symbolString->toConvertedString(world, ucd::toLowercase);
+		StringCell *uppercaseSymbolString = symbolString->toConvertedString(world, ucd::toUppercase);
+		StringCell *caseFoldedSymbolString = symbolString->toConvertedString(world, ucd::toCaseFolded);
 
-		ASSERT_UTF8_EQUAL(lowercaseSymbolString.data(), u8"🐉☃☙");
-		ASSERT_UTF8_EQUAL(uppercaseSymbolString.data(), u8"🐉☃☙");
-		ASSERT_UTF8_EQUAL(caseFoldedSymbolString.data(), u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(lowercaseSymbolString, u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(uppercaseSymbolString, u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(caseFoldedSymbolString, u8"🐉☃☙");
 	}
 
 	{
-		alloc::StringRef unusualFoldingString(world, StringCell::fromUtf8StdString(world, u8"µϵẛ"));
+		StringCell *unusualFoldingString = StringCell::fromUtf8StdString(world, u8"µϵẛ");
 
-		alloc::StringRef lowercaseFoldingString(world, unusualFoldingString->toConvertedString(world, ucd::toLowercase));
-		alloc::StringRef uppercaseFoldingString(world, unusualFoldingString->toConvertedString(world, ucd::toUppercase));
-		alloc::StringRef caseFoldedFoldingString(world, unusualFoldingString->toConvertedString(world, ucd::toCaseFolded));
+		StringCell *lowercaseFoldingString = unusualFoldingString->toConvertedString(world, ucd::toLowercase);
+		StringCell *uppercaseFoldingString = unusualFoldingString->toConvertedString(world, ucd::toUppercase);
+		StringCell *caseFoldedFoldingString = unusualFoldingString->toConvertedString(world, ucd::toCaseFolded);
 
-		ASSERT_UTF8_EQUAL(lowercaseFoldingString.data(), u8"µϵẛ");
-		ASSERT_UTF8_EQUAL(uppercaseFoldingString.data(), u8"ΜΕṠ");
-		ASSERT_UTF8_EQUAL(caseFoldedFoldingString.data(), u8"μεṡ");
+		ASSERT_UTF8_EQUAL(lowercaseFoldingString, u8"µϵẛ");
+		ASSERT_UTF8_EQUAL(uppercaseFoldingString, u8"ΜΕṠ");
+		ASSERT_UTF8_EQUAL(caseFoldedFoldingString, u8"μεṡ");
 	}
 }
 

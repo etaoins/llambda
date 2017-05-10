@@ -3,7 +3,6 @@
 #include "core/World.h"
 #include "core/error.h"
 #include "dynamic/ParameterProcedureCell.h"
-#include "alloc/cellref.h"
 #include "alloc/allocator.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"

@@ -22,8 +22,6 @@
 #include "reader/ReadErrorException.h"
 #include "writer/ExternalFormDatumWriter.h"
 
-#include "alloc/cellref.h"
-
 #include "assertions.h"
 #include "stubdefinitions.h"
 
@@ -31,11 +29,10 @@ namespace
 {
 using namespace lliby;
 
-#define ASSERT_PARSES(datumString, expectedRaw) \
+#define ASSERT_PARSES(datumString, expected) \
 { \
 	std::istringstream inputStream(datumString); \
 	DatumReader reader(world, inputStream); \
-	alloc::StrongRef<AnyCell> expected(world, expectedRaw); \
 	\
 	AnyCell *actual; \
 	\
@@ -242,10 +239,10 @@ void testStrings(World &world)
 
 void testProperList(World &world)
 {
-	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
-	alloc::SymbolRef integerSymbol(world, SymbolCell::fromUtf8StdString(world, "integer?"));
-	alloc::IntegerRef negativeOne(world, IntegerCell::fromValue(world, -1));
-	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
+	SymbolCell *helloSymbol = SymbolCell::fromUtf8StdString(world, "Hello");
+	SymbolCell *integerSymbol = SymbolCell::fromUtf8StdString(world, "integer?");
+	IntegerCell *negativeOne = IntegerCell::fromValue(world, -1);
+	FlonumCell *plusTwo = FlonumCell::fromValue(world, 2.0);
 
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
 
@@ -256,16 +253,16 @@ void testImproperList(World &world)
 {
 	ASSERT_PARSES("(. #t)", BooleanCell::trueInstance());
 
-	alloc::SymbolRef oneSymbol(world, SymbolCell::fromUtf8StdString(world, "ONE"));
-	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
-	alloc::FlonumRef plusInf(world, FlonumCell::positiveInfinity(world));
+	SymbolCell *oneSymbol = SymbolCell::fromUtf8StdString(world, "ONE");
+	FlonumCell *plusTwo = FlonumCell::fromValue(world, 2.0);
+	FlonumCell *plusInf = FlonumCell::positiveInfinity(world);
 
 	AnyCell *expectedList = ListElementCell::createList(world, {BooleanCell::falseInstance(), oneSymbol, plusTwo}, plusInf);
 
    	ASSERT_PARSES("(#false ONE 2.0 . +inf.0)", expectedList);
 
-	alloc::SymbolRef twoSymbol(world, SymbolCell::fromUtf8StdString(world, "TWO"));
-	alloc::SymbolRef dotThreeSymbol(world, SymbolCell::fromUtf8StdString(world, ".THREE"));
+	SymbolCell *twoSymbol = SymbolCell::fromUtf8StdString(world, "TWO");
+	SymbolCell *dotThreeSymbol = SymbolCell::fromUtf8StdString(world, ".THREE");
 	expectedList = ProperList<AnyCell>::create(world, {oneSymbol, twoSymbol, dotThreeSymbol});
 
    	ASSERT_PARSES("(ONE TWO .THREE)", expectedList);
@@ -278,10 +275,10 @@ void testImproperList(World &world)
 
 void testSquareProperList(World &world)
 {
-	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
-	alloc::SymbolRef integerSymbol(world, SymbolCell::fromUtf8StdString(world, "integer?"));
-	alloc::IntegerRef negativeOne(world, IntegerCell::fromValue(world, -1));
-	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
+	SymbolCell *helloSymbol = SymbolCell::fromUtf8StdString(world, "Hello");
+	SymbolCell *integerSymbol = SymbolCell::fromUtf8StdString(world, "integer?");
+	IntegerCell *negativeOne = IntegerCell::fromValue(world, -1);
+	FlonumCell *plusTwo = FlonumCell::fromValue(world, 2.0);
 
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
 
@@ -290,9 +287,9 @@ void testSquareProperList(World &world)
 
 void testSquareImproperList(World &world)
 {
-	alloc::SymbolRef oneSymbol(world, SymbolCell::fromUtf8StdString(world, "ONE"));
-	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
-	alloc::FlonumRef plusInf(world, FlonumCell::positiveInfinity(world));
+	SymbolCell *oneSymbol = SymbolCell::fromUtf8StdString(world, "ONE");
+	FlonumCell *plusTwo = FlonumCell::fromValue(world, 2.0);
+	FlonumCell *plusInf = FlonumCell::positiveInfinity(world);
 
 	AnyCell *expectedList = ListElementCell::createList(world, {BooleanCell::falseInstance(), oneSymbol, plusTwo}, plusInf);
 
@@ -301,11 +298,11 @@ void testSquareImproperList(World &world)
 
 void testVector(World &world)
 {
-	alloc::IntegerRef zero(world, IntegerCell::fromValue(world, 0));
-	alloc::IntegerRef two(world, IntegerCell::fromValue(world, 2));
-	alloc::SymbolRef annaSymbol(world, SymbolCell::fromUtf8StdString(world, "Anna"));
+	IntegerCell *zero = IntegerCell::fromValue(world, 0);
+	IntegerCell *two = IntegerCell::fromValue(world, 2);
+	SymbolCell *annaSymbol = SymbolCell::fromUtf8StdString(world, "Anna");
 
-	alloc::AnyRef innerList(world, ProperList<AnyCell>::create(world, {two, two, two, two}));
+	AnyCell *innerList = ProperList<AnyCell>::create(world, {two, two, two, two});
 
 	VectorCell *expectedVector = VectorCell::fromFill(world, 3, UnitCell::instance());
 	expectedVector->setElementAt(0, zero);
@@ -344,8 +341,8 @@ void testComments(World &world)
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::falseInstance(), BooleanCell::trueInstance()});
 	ASSERT_PARSES("(#f ; COMMENT\n #t)", expectedList);
 
-	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
-	alloc::SymbolRef jerkSymbol(world, SymbolCell::fromUtf8StdString(world, "jerk"));
+	SymbolCell *helloSymbol = SymbolCell::fromUtf8StdString(world, "Hello");
+	SymbolCell *jerkSymbol = SymbolCell::fromUtf8StdString(world, "jerk");
 
 	expectedList = ProperList<AnyCell>::create(world, {helloSymbol});
 	ASSERT_PARSES("(Hello #;(you jerk))", expectedList);
@@ -353,8 +350,8 @@ void testComments(World &world)
 	expectedList = ProperList<AnyCell>::create(world, {helloSymbol, jerkSymbol});
 	ASSERT_PARSES("(Hello #;  you jerk)", expectedList);
 
-	alloc::SymbolRef displaySymbol(world, SymbolCell::fromUtf8StdString(world, "display"));
-	alloc::StringRef lolString(world, StringCell::fromUtf8StdString(world, "LOL"));
+	SymbolCell *displaySymbol = SymbolCell::fromUtf8StdString(world, "display");
+	StringCell *lolString = StringCell::fromUtf8StdString(world, "LOL");
 
 	const char *multilineTest = R"(
       #| This is a block comment\
@@ -371,29 +368,29 @@ void testComments(World &world)
 
 void testSymbolShorthand(World &world, std::string shorthand, std::string expansion)
 {
-	alloc::SymbolRef expansionSymbol(world, SymbolCell::fromUtf8StdString(world, expansion));
-	alloc::SymbolRef fooSymbol(world, SymbolCell::fromUtf8StdString(world, "foo"));
+	SymbolCell *expansionSymbol = SymbolCell::fromUtf8StdString(world, expansion);
+	SymbolCell *fooSymbol = SymbolCell::fromUtf8StdString(world, "foo");
 
 	ProperList<AnyCell> *expectedList;
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, fooSymbol});
 	ASSERT_PARSES(shorthand + "foo", expectedList);
 
-	alloc::IntegerRef integerOne(world, IntegerCell::fromValue(world, 1));
-	alloc::IntegerRef integerTwo(world, IntegerCell::fromValue(world, 2));
-	alloc::PairRef oneTwoPair(world, PairCell::createInstance(world, integerOne, integerTwo));
+	IntegerCell *integerOne = IntegerCell::fromValue(world, 1);
+	IntegerCell *integerTwo = IntegerCell::fromValue(world, 2);
+	PairCell *oneTwoPair = PairCell::createInstance(world, integerOne, integerTwo);
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, oneTwoPair});
 	ASSERT_PARSES(shorthand + " (1 . 2)", expectedList);
 
-	alloc::SymbolRef realPSymbol(world, SymbolCell::fromUtf8StdString(world, "rational?"));
-	alloc::FlonumRef flonumOne(world, FlonumCell::fromValue(world, 1.0));
-	alloc::StrongRef<ProperList<AnyCell>> realPList(world, ProperList<AnyCell>::create(world, {realPSymbol, flonumOne}));
+	SymbolCell *realPSymbol = SymbolCell::fromUtf8StdString(world, "rational?");
+	FlonumCell *flonumOne = FlonumCell::fromValue(world, 1.0);
+	ProperList<AnyCell> *realPList = ProperList<AnyCell>::create(world, {realPSymbol, flonumOne});
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, realPList});
 	ASSERT_PARSES(shorthand + "(rational? 1.0)", expectedList);
 
-	alloc::StrongRef<ProperList<AnyCell>> innerList(world, ProperList<AnyCell>::create(world, {expansionSymbol, BooleanCell::trueInstance()}));
+	ProperList<AnyCell> *innerList = ProperList<AnyCell>::create(world, {expansionSymbol, BooleanCell::trueInstance()});
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, innerList});
 	ASSERT_PARSES(shorthand + shorthand + "#true", expectedList);
@@ -446,10 +443,10 @@ void testCharacters(World &world)
 	ASSERT_INVALID_PARSE("#");
 	ASSERT_INVALID_PARSE(R"(#\)");
 
-	alloc::VectorRef expectedVector(world, VectorCell::fromFill(world, 2, UnitCell::instance()));
+	VectorCell *expectedVector = VectorCell::fromFill(world, 2, UnitCell::instance());
 
-	alloc::CharRef oneChar(world, CharCell::createInstance(world, '1'));
-	alloc::SymbolRef moreTimeSymbol(world, SymbolCell::fromUtf8StdString(world, "moretime"));
+	CharCell *oneChar = CharCell::createInstance(world, '1');
+	SymbolCell *moreTimeSymbol = SymbolCell::fromUtf8StdString(world, "moretime");
 
 	expectedVector->setElementAt(0, oneChar);
 	expectedVector->setElementAt(1, moreTimeSymbol);
@@ -461,14 +458,14 @@ void testCharacters(World &world)
 
 void testDatumLabels(World &world)
 {
-	alloc::SymbolRef aSymbol(world, SymbolCell::fromUtf8StdString(world, "a"));
-	alloc::SymbolRef bSymbol(world, SymbolCell::fromUtf8StdString(world, "b"));
-	alloc::SymbolRef cSymbol(world, SymbolCell::fromUtf8StdString(world, "c"));
-	alloc::SymbolRef dSymbol(world, SymbolCell::fromUtf8StdString(world, "d"));
-	alloc::SymbolRef eSymbol(world, SymbolCell::fromUtf8StdString(world, "e"));
+	SymbolCell *aSymbol = SymbolCell::fromUtf8StdString(world, "a");
+	SymbolCell *bSymbol = SymbolCell::fromUtf8StdString(world, "b");
+	SymbolCell *cSymbol = SymbolCell::fromUtf8StdString(world, "c");
+	SymbolCell *dSymbol = SymbolCell::fromUtf8StdString(world, "d");
+	SymbolCell *eSymbol = SymbolCell::fromUtf8StdString(world, "e");
 
-	alloc::StrongRef<ProperList<SymbolCell>> commonList(world, ProperList<SymbolCell>::create(world, {aSymbol, bSymbol, cSymbol}));
-	alloc::StrongRef<ProperList<AnyCell>> nestedList(world, ProperList<AnyCell>::create(world, {dSymbol, eSymbol, commonList}));
+	ProperList<SymbolCell> *commonList = ProperList<SymbolCell>::create(world, {aSymbol, bSymbol, cSymbol});
+	ProperList<AnyCell> *nestedList = ProperList<AnyCell>::create(world, {dSymbol, eSymbol, commonList});
 
     ASSERT_PARSES("(#123=(a b c) . (d e #123#))", PairCell::createInstance(world, commonList, nestedList));
 

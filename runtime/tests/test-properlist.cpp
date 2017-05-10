@@ -9,8 +9,6 @@
 #include "assertions.h"
 #include "stubdefinitions.h"
 
-#include "alloc/cellref.h"
-
 namespace
 {
 
@@ -18,9 +16,9 @@ using namespace lliby;
 
 void testAll(World &world)
 {
-	alloc::StringRef valueA(world, StringCell::fromUtf8StdString(world, "A"));
-	alloc::StringRef valueB(world, StringCell::fromUtf8StdString(world, "B"));
-	alloc::StringRef valueC(world, StringCell::fromUtf8StdString(world, "C"));
+	StringCell *valueA = StringCell::fromUtf8StdString(world, "A");
+	StringCell *valueB = StringCell::fromUtf8StdString(world, "B");
+	StringCell *valueC = StringCell::fromUtf8StdString(world, "C");
 
 	{
 		ProperList<AnyCell> *properList = ProperList<AnyCell>::create(world, {});
@@ -39,11 +37,11 @@ void testAll(World &world)
 
 		auto it = properList->begin();
 		// Be tricky with the increment operators
-		ASSERT_EQUAL(*(it++), valueA.data());
+		ASSERT_EQUAL(*(it++), valueA);
 
-		ASSERT_EQUAL(*it, valueB.data());
+		ASSERT_EQUAL(*it, valueB);
 
-		ASSERT_EQUAL(*(++it), valueC.data());
+		ASSERT_EQUAL(*(++it), valueC);
 
 		it++;
 		ASSERT_TRUE(it == properList->end());

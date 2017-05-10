@@ -7,9 +7,6 @@
 #include "binding/ProperList.h"
 #include "binding/UnitCell.h"
 
-#include "alloc/StrongRefVector.h"
-#include "alloc/cellref.h"
-
 #include "util/StringCellBuilder.h"
 
 #include "core/error.h"
@@ -25,10 +22,10 @@ namespace
 	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, RestValues<CharCell>*>;
 
 	template<typename InitFunction, typename IterFunction, typename FinalFunction>
-	auto abstractVectorIter(World &world, InitFunction initFunc, IterFunction iterFunc, FinalFunction finalFunc, VectorCell *firstVectorRaw, RestValues<VectorCell> *restVectorList)
+	auto abstractVectorIter(World &world, InitFunction initFunc, IterFunction iterFunc, FinalFunction finalFunc, VectorCell *firstVector, RestValues<VectorCell> *restVectorList)
 	{
 		// This is the minimum length of all of our input vectors
-		VectorCell::LengthType minimumLength = firstVectorRaw->length();
+		VectorCell::LengthType minimumLength = firstVector->length();
 
 		for(auto restVector : *restVectorList)
 		{
@@ -36,10 +33,7 @@ namespace
 		}
 
 		// Build our vector of input vector cells
-		alloc::StrongRefVector<VectorCell> restVectors(world, restVectorList->begin(), restVectorList->end());
-
-		// Root the input vector
-		alloc::StrongRef<VectorCell> firstVector(world, firstVectorRaw);
+		std::vector<VectorCell*> restVectors(restVectorList->begin(), restVectorList->end());
 
 		auto container = initFunc(minimumLength);
 
@@ -62,25 +56,23 @@ namespace
 	}
 
 	template<typename InitFunction, typename IterFunction, typename FinalFunction>
-	auto abstractListIter(World &world, InitFunction initFunc, IterFunction iterFunc, FinalFunction finalFunc, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+	auto abstractListIter(World &world, InitFunction initFunc, IterFunction iterFunc, FinalFunction finalFunc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restListsRaw)
 	{
-		alloc::StrongRef<ListElementCell> firstList(world, firstListRaw);
-		alloc::StrongRefVector<ListElementCell> restLists(world);
+		std::vector<ListElementCell*> restLists;
 
 		// This is the minimum length of all of our input lists
-		ProperList<AnyCell>::size_type minimumLength = firstListRaw->size();
+		ProperList<AnyCell>::size_type minimumLength = firstList->size();
 
 		for(auto restList : *restListsRaw)
 		{
-			// Create the strong ref for the rest list
 			restLists.push_back(restList);
-
 			minimumLength = std::min(minimumLength, restList->size());
 		}
 
 		auto container = initFunc(minimumLength);
 
 		std::vector<AnyCell*> restArgVector(restLists.size());
+		ListElementCell *firstListHead = firstList;
 		for(ProperList<AnyCell>::size_type i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
@@ -97,8 +89,8 @@ namespace
 			RestValues<AnyCell> *restArgList = RestValues<AnyCell>::create(world, restArgVector);
 
 			// Extract the first list value and move it forward
-			auto firstListPair = cell_unchecked_cast<PairCell>(firstList.data());
-			firstList.setData(cell_unchecked_cast<ListElementCell>(firstListPair->cdr()));
+			auto firstListPair = cell_unchecked_cast<PairCell>(firstListHead);
+			firstListHead = cell_unchecked_cast<ListElementCell>(firstListPair->cdr());
 
 			iterFunc(container, i, firstListPair->car(), restArgList);
 		}
@@ -145,30 +137,26 @@ namespace
 extern "C"
 {
 
-VectorCell *llbase_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, RestValues<VectorCell> *argHead)
+VectorCell *llbase_vector_map(World &world, AnyMapProcedureCell *mapProc, VectorCell *firstVector, RestValues<VectorCell> *argHead)
 {
-	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
-
 	auto initFunc = [&] (VectorCell::LengthType capacity) {
-		return alloc::VectorRef(world, VectorCell::fromFill(world, capacity, UnitCell::instance()));
+		return VectorCell::fromFill(world, capacity, UnitCell::instance());
 	};
 
-	auto iterFunc = [&] (alloc::VectorRef &outputVector, std::size_t i, AnyCell *firstArg, RestValues<AnyCell> *restArgs) {
+	auto iterFunc = [&] (VectorCell *outputVector, std::size_t i, AnyCell *firstArg, RestValues<AnyCell> *restArgs) {
 		// Use elements() here to skip the bounds check that setElementAt() will perform
 		outputVector->elements()[i] = mapProc->apply(world, firstArg, restArgs);
 	};
 
-	auto finalFunc = [&] (alloc::VectorRef &outputVector) {
-		return outputVector.data();
+	auto finalFunc = [&] (VectorCell *outputVector) {
+		return outputVector;
 	};
 
-	return abstractVectorIter(world, initFunc, iterFunc, finalFunc, firstVectorRaw, argHead);
+	return abstractVectorIter(world, initFunc, iterFunc, finalFunc, firstVector, argHead);
 }
 
-void llbase_vector_for_each(World &world, AnyIteratorProcedureCell *iterProcRaw, VectorCell *firstVectorRaw, RestValues<VectorCell> *argHead)
+void llbase_vector_for_each(World &world, AnyIteratorProcedureCell *iterProc, VectorCell *firstVector, RestValues<VectorCell> *argHead)
 {
-	alloc::StrongRef<AnyIteratorProcedureCell> iterProc(world, iterProcRaw);
-
 	auto initFunc = [&] (VectorCell::LengthType) {
 		return 0;
 	};
@@ -181,32 +169,28 @@ void llbase_vector_for_each(World &world, AnyIteratorProcedureCell *iterProcRaw,
 		return;
 	};
 
-	abstractVectorIter(world, initFunc, iterFunc, finalFunc, firstVectorRaw, argHead);
+	abstractVectorIter(world, initFunc, iterFunc, finalFunc, firstVector, argHead);
 }
 
-ProperList<AnyCell> *llbase_map(World &world, AnyMapProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>>* argHead)
+ProperList<AnyCell> *llbase_map(World &world, AnyMapProcedureCell *mapProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>>* argHead)
 {
-	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
-
 	auto initFunc = [&] (ProperList<AnyCell>::size_type capacity) {
-		return alloc::StrongRefVector<AnyCell>(world, capacity, nullptr);
+		return std::vector<AnyCell*>(capacity, nullptr);
 	};
 
-	auto iterFunc = [&] (alloc::StrongRefVector<AnyCell> &outputVector, std::size_t i, AnyCell *firstArg, RestValues<AnyCell> *restArgs) {
+	auto iterFunc = [&] (std::vector<AnyCell*> &outputVector, std::size_t i, AnyCell *firstArg, RestValues<AnyCell> *restArgs) {
 		outputVector[i] = mapProc->apply(world, firstArg, restArgs);
 	};
 
-	auto finalFunc = [&] (alloc::StrongRefVector<AnyCell> &outputVector) {
+	auto finalFunc = [&] (std::vector<AnyCell*> &outputVector) {
 		return ProperList<AnyCell>::create(world, outputVector);
 	};
 
-	return abstractListIter(world, initFunc, iterFunc, finalFunc, firstListRaw, argHead);
+	return abstractListIter(world, initFunc, iterFunc, finalFunc, firstList, argHead);
 }
 
-void llbase_for_each(World &world, AnyIteratorProcedureCell *iterProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>>* argHead)
+void llbase_for_each(World &world, AnyIteratorProcedureCell *iterProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>>* argHead)
 {
-	alloc::StrongRef<AnyIteratorProcedureCell> iterProc(world, iterProcRaw);
-
 	auto initFunc = [&] (ProperList<AnyCell>::size_type) {
 		return 9;
 	};
@@ -219,13 +203,11 @@ void llbase_for_each(World &world, AnyIteratorProcedureCell *iterProcRaw, Proper
 		return;
 	};
 
-	abstractListIter(world, initFunc, iterFunc, finalFunc, firstListRaw, argHead);
+	abstractListIter(world, initFunc, iterFunc, finalFunc, firstList, argHead);
 }
 
-StringCell *llbase_string_map(World &world, StringMapProcedureCell *mapProcRaw, StringCell *firstString, RestValues<StringCell> *argHead)
+StringCell *llbase_string_map(World &world, StringMapProcedureCell *mapProc, StringCell *firstString, RestValues<StringCell> *argHead)
 {
-	alloc::StrongRef<StringMapProcedureCell> mapProc(world, mapProcRaw);
-
 	auto initFunc = [&] (std::size_t capacity) {
 		return StringCellBuilder(capacity);
 	};
@@ -241,10 +223,8 @@ StringCell *llbase_string_map(World &world, StringMapProcedureCell *mapProcRaw, 
 	return abstractStringIter(world, initFunc, iterFunc, finalFunc, firstString, argHead);
 }
 
-void llbase_string_for_each(World &world, StringIteratorProcedureCell *iterProcRaw, StringCell *firstString, RestValues<StringCell> *argHead)
+void llbase_string_for_each(World &world, StringIteratorProcedureCell *iterProc, StringCell *firstString, RestValues<StringCell> *argHead)
 {
-	alloc::StrongRef<StringIteratorProcedureCell> iterProc(world, iterProcRaw);
-
 	auto initFunc = [&] (std::size_t) {
 		return 0;
 	};

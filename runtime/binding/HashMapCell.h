@@ -19,10 +19,6 @@ public:
 
 	/**
 	 * Creates an empty HashMapCell
-	 *
-	 * It is not possible to directly create non-empty instance as DatumHashMaps can only be GC rooted using a
-	 * HashMapCell. Creating a HashMapCell from a non-empty hash tree could enter the GC and invalidate all of the cell
-	 * references in the existing tree.
 	 */
 	static HashMapCell* createEmptyInstance(World &world);
 

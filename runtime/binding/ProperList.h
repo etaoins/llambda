@@ -6,7 +6,6 @@
 #include "PairCell.h"
 
 #include "alloc/RangeAlloc.h"
-#include "alloc/StrongRef.h"
 
 #include <iterator>
 
@@ -120,20 +119,31 @@ namespace lliby
 		/**
 		 * Creates a new ProperList instance containing the passed elements
 		 */
-		static ProperList<T> *create(World &world, alloc::StrongRefVector<T> &elements)
-		{
-			return createFromGcRooted(world, elements);
-		}
-
 		static ProperList<T> *create(World &world, std::vector<T*> &elements)
 		{
-			alloc::StrongRoot<T> gcRoot(world, elements.data(), elements.size());
-			return createFromGcRooted(world, elements);
+			if (elements.empty())
+			{
+				return EmptyListCell::asProperList<T>();
+			}
+
+			alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
+			auto allocIt = allocation.end();
+
+			auto it = elements.rbegin();
+			AnyCell *cdr = EmptyListCell::instance();
+			std::uint32_t tailSize = 0;
+
+			for(;it != elements.rend(); it++)
+			{
+				cdr = new (*--allocIt) PairCell(*it, cdr, ++tailSize);
+			}
+
+			return static_cast<ProperList<T>*>(cdr);
 		}
 
 		static ProperList<T> *create(World &world, std::initializer_list<T*> elementsList)
 		{
-			alloc::StrongRefVector<T> elements(world, elementsList.begin(), elementsList.end());
+			std::vector<T*> elements(elementsList.begin(), elementsList.end());
 			return create(world, elements);
 		}
 
@@ -198,31 +208,6 @@ namespace lliby
 
 			return true;
 		}
-
-	private:
-		template<class Container>
-		static ProperList<T> *createFromGcRooted(World &world, Container &elements)
-		{
-			if (elements.empty())
-			{
-				return EmptyListCell::asProperList<T>();
-			}
-
-			alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
-			auto allocIt = allocation.end();
-
-			auto it = elements.rbegin();
-			AnyCell *cdr = EmptyListCell::instance();
-			std::uint32_t tailSize = 0;
-
-			for(;it != elements.rend(); it++)
-			{
-				cdr = new (*--allocIt) PairCell(*it, cdr, ++tailSize);
-			}
-
-			return static_cast<ProperList<T>*>(cdr);
-		}
-
 	};
 
 	// This aliases is for code documentation purposes. They use ProperLists for their representation in the ABI

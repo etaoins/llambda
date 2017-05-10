@@ -22,9 +22,6 @@
 #include "binding/CharCell.h"
 #include "binding/ProperList.h"
 
-#include "alloc/cellref.h"
-#include "alloc/StrongRefVector.h"
-
 #include "unicode/utf8.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
@@ -538,7 +535,7 @@ AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)
 	// Consume the shorthand
 	rdbuf()->sbumpc();
 
-	alloc::SymbolRef expandedSymbol(m_world, SymbolCell::fromUtf8StdString(m_world, expanded));
+	SymbolCell *expandedSymbol = SymbolCell::fromUtf8StdString(m_world, expanded);
 	AnyCell *innerDatum = parse();
 
 	if (innerDatum == EofObjectCell::instance())
@@ -823,8 +820,8 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 
 AnyCell* DatumReader::parseList(char closeChar)
 {
-	alloc::PairRef listHead(m_world, nullptr);
-	alloc::PairRef listTail(m_world, nullptr);
+	PairCell *listHead = nullptr;
+	PairCell *listTail = nullptr;
 
 	// Take the ( or [
 	rdbuf()->sbumpc();
@@ -846,7 +843,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 			// Finished as a proper list
 			if (listHead)
 			{
-				return listHead.data();
+				return listHead;
 			}
 			else
 			{
@@ -882,7 +879,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 				else
 				{
 					listTail->setCdr(tailValue);
-					return listHead.data();
+					return listHead;
 				}
 			}
 		}
@@ -896,21 +893,21 @@ AnyCell* DatumReader::parseList(char closeChar)
 		if (!listHead)
 		{
 			// We're the first pair!
-			listHead.setData(tailPair);
-			listTail.setData(tailPair);
+			listHead = tailPair;
+			listTail = tailPair;
 		}
 		else
 		{
 			// Move our tail forward
 			listTail->setCdr(tailPair);
-			listTail.setData(tailPair);
+			listTail = tailPair;
 		}
 	}
 }
 
 AnyCell* DatumReader::parseVector()
 {
-	alloc::StrongRefVector<AnyCell> elementRefs(m_world);
+	std::vector<AnyCell*> elementRefs;
 
 	// The ( is already taken
 
@@ -1007,8 +1004,7 @@ AnyCell* DatumReader::parseDatumLabel(char firstDigit)
 		// We're defining a new datum
 		AnyCell *labelledDatum = parseDatum();
 
-		// Use emplace/piecewise_construct as creating temporary StrongRefs is inefficient
-		m_datumLabels.emplace(std::piecewise_construct, std::forward_as_tuple(labelNumber), std::forward_as_tuple(m_world, labelledDatum));
+		m_datumLabels.emplace(labelNumber, labelledDatum);
 
 		return labelledDatum;
 	}

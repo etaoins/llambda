@@ -133,42 +133,6 @@ public:
 	}
 
 	/**
-	 * Visits a CellRootList by calling a visitor
-	 */
-	template<typename T>
-	void visitCellRootList(const CellRootList &cellRootList, T visitor)
-	{
-		for(auto node = cellRootList.head(); node != nullptr; node = node->next())
-		{
-			if (node->isInternal())
-			{
-				auto intNode = static_cast<InternalRootListNode*>(node);
-
-				// Visit the embedded pointer
-				if (intNode->cell() != nullptr)
-				{
-					visitCell(intNode->cellRef(), visitor);
-				}
-			}
-			else
-			{
-				auto externNode = static_cast<ExternalRootListNode*>(node);
-
-				// Visit each cell in this range
-				for(std::size_t i = 0; i < externNode->cellCount(); i++)
-				{
-					auto cellRef = reinterpret_cast<AnyCell**>(&externNode->basePointer()[i]);
-
-					if (*cellRef != nullptr)
-					{
-						visitCell(cellRef, visitor);
-					}
-				}
-			}
-		}
-	}
-
-	/**
 	 * Visits a dynamic state
 	 */
 	template<typename T>

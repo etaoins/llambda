@@ -5,7 +5,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "alloc/StrongRef.h"
 #include "binding/generated/declaretypes.h"
 
 namespace lliby
@@ -68,7 +67,7 @@ protected:
 	World &m_world;
 	std::istream &m_inStream;
 
-	std::unordered_map<long long, alloc::StrongRef<AnyCell>> m_datumLabels;
+	std::unordered_map<long long, AnyCell*> m_datumLabels;
 };
 
 }

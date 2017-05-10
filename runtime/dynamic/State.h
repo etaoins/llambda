@@ -5,8 +5,6 @@
 #include "binding/ProcedureCell.h"
 #include "binding/TypedProcedureCell.h"
 
-#include "alloc/cellref.h"
-
 #include <unordered_map>
 
 namespace lliby

@@ -8,7 +8,6 @@ object GenerateTypes {
     writer.runtime.WriteDeclaretypes,
     writer.runtime.WriteTypeid,
     writer.runtime.WriteCellMembers,
-    writer.runtime.WriteCellRefs,
 
     writer.compiler.WriteLlvmCellTypes,
     writer.compiler.WriteScalaCellTypes,

@@ -10,8 +10,6 @@
 #include "port/BufferInputPort.h"
 #include "port/BytevectorOutputPort.h"
 
-#include "alloc/WeakRef.h"
-
 #include "core/error.h"
 
 using namespace lliby;
@@ -131,15 +129,8 @@ PortCell* llbase_open_input_bytevector(World &world, BytevectorCell *bytevector)
 
 AnyCell* llbase_call_with_port(World &world, PortCell *portCell, CallWithPortProcedureCell *thunk)
 {
-	alloc::WeakRef<PortCell> portRef(world, portCell);
-
 	AnyCell* returnValue = thunk->apply(world, portCell);
-
-	// If the port hasn't been GCed then close it
-	if (portRef)
-	{
-		portRef->port()->closePort();
-	}
+	portCell->port()->closePort();
 
 	return returnValue;
 

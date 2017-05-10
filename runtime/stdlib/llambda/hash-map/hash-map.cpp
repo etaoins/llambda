@@ -7,7 +7,6 @@
 
 #include "hash/DatumHashTree.h"
 #include "hash/DatumHash.h"
-#include "alloc/cellref.h"
 
 extern "C"
 {
@@ -27,12 +26,8 @@ std::int64_t llhashmap_hash_map_size(HashMapCell *hashMap)
 	return DatumHashTree::size(hashMap->datumHashTree());
 }
 
-HashMapCell *llhashmap_hash_map_assoc(World &world, HashMapCell *basisRaw, AnyCell *rawKey, AnyCell *rawValue)
+HashMapCell *llhashmap_hash_map_assoc(World &world, HashMapCell *basis, AnyCell *key, AnyCell *value)
 {
-	alloc::HashMapRef basis(world, basisRaw);
-	alloc::AnyRef key(world, rawKey);
-	alloc::AnyRef value(world, rawValue);
-
 	HashMapCell *newHashMap = HashMapCell::createEmptyInstance(world);
 
 	newHashMap->setDatumHashTree(DatumHashTree::assoc(basis->datumHashTree(), key, value));
@@ -72,29 +67,25 @@ AnyCell *llhashmap_hash_map_ref(World &world, HashMapCell *hashMap, AnyCell *key
 	}
 }
 
-HashMapCell *llhashmap_hash_map_delete(World &world, HashMapCell *basisRaw, AnyCell *keyRaw)
+HashMapCell *llhashmap_hash_map_delete(World &world, HashMapCell *basis, AnyCell *key)
 {
-	alloc::HashMapRef basis(world, basisRaw);
-	alloc::AnyRef key(world, keyRaw);
 	HashMapCell *newHashMap = HashMapCell::createEmptyInstance(world);
 
 	newHashMap->setDatumHashTree(DatumHashTree::without(basis->datumHashTree(), key));
 	return newHashMap;
 }
 
-HashMapCell *llhashmap_alist_to_hash_map(World &world, ProperList<PairCell> *alistRaw)
+HashMapCell *llhashmap_alist_to_hash_map(World &world, ProperList<PairCell> *alist)
 {
-	alloc::StrongRef<ProperList<PairCell>> alist(world, alistRaw);
 	HashMapCell *newHashMap = HashMapCell::createEmptyInstance(world);
 
 	newHashMap->setDatumHashTree(DatumHashTree::fromAssocList(alist));
 	return newHashMap;
 }
 
-ProperList<PairCell> *llhashmap_hash_map_to_alist(World &world, HashMapCell *hashMapRaw)
+ProperList<PairCell> *llhashmap_hash_map_to_alist(World &world, HashMapCell *hashMap)
 {
-	alloc::HashMapRef hashMap(world, hashMapRaw);
-	alloc::StrongRefVector<PairCell> assocPairs(world);
+	std::vector<PairCell*> assocPairs;
 
 	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
@@ -105,10 +96,9 @@ ProperList<PairCell> *llhashmap_hash_map_to_alist(World &world, HashMapCell *has
 	return ProperList<PairCell>::create(world, assocPairs);
 }
 
-ProperList<AnyCell> *llhashmap_hash_map_keys(World &world, HashMapCell *hashMapRaw)
+ProperList<AnyCell> *llhashmap_hash_map_keys(World &world, HashMapCell *hashMap)
 {
-	alloc::HashMapRef hashMap(world, hashMapRaw);
-	alloc::StrongRefVector<AnyCell> keys(world);
+	std::vector<AnyCell*> keys;
 
 	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
@@ -119,10 +109,9 @@ ProperList<AnyCell> *llhashmap_hash_map_keys(World &world, HashMapCell *hashMapR
 	return ProperList<AnyCell>::create(world, keys);
 }
 
-ProperList<AnyCell> *llhashmap_hash_map_values(World &world, HashMapCell *hashMapRaw)
+ProperList<AnyCell> *llhashmap_hash_map_values(World &world, HashMapCell *hashMap)
 {
-	alloc::HashMapRef hashMap(world, hashMapRaw);
-	alloc::StrongRefVector<AnyCell> values(world);
+	std::vector<AnyCell*> values;
 
 	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
@@ -133,11 +122,8 @@ ProperList<AnyCell> *llhashmap_hash_map_values(World &world, HashMapCell *hashMa
 	return ProperList<AnyCell>::create(world, values);
 }
 
-void llhashmap_hash_map_for_each(World &world, TypedProcedureCell<void, AnyCell *, AnyCell *> *walkerRaw, HashMapCell *hashMapRaw)
+void llhashmap_hash_map_for_each(World &world, TypedProcedureCell<void, AnyCell *, AnyCell *> *walker, HashMapCell *hashMap)
 {
-	alloc::HashMapRef hashMap(world, hashMapRaw);
-	alloc::StrongRef<TypedProcedureCell<void, AnyCell *, AnyCell *>> walker(world, walkerRaw);
-
 	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
 	{
 		walker->apply(world, key, value);
@@ -145,10 +131,8 @@ void llhashmap_hash_map_for_each(World &world, TypedProcedureCell<void, AnyCell 
 	});
 }
 
-AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folderRaw, AnyCell *initialValue, HashMapCell *hashMapRaw)
+AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folder, AnyCell *initialValue, HashMapCell *hashMap)
 {
-	alloc::HashMapRef hashMap(world, hashMapRaw);
-	alloc::StrongRef<FoldProc> folder(world, folderRaw);
 	AnyCell *accum = initialValue;
 
 	DatumHashTree::every(hashMap->datumHashTree(), [&] (AnyCell *key, AnyCell *value, DatumHash::ResultType)
@@ -160,11 +144,8 @@ AnyCell* llhashmap_hash_map_fold(World &world, FoldProc *folderRaw, AnyCell *ini
 	return accum;
 }
 
-HashMapCell* llhashmap_hash_map_merge(World &world, HashMapCell *sourceHashMapRaw, HashMapCell *overrideHashMapRaw)
+HashMapCell* llhashmap_hash_map_merge(World &world, HashMapCell *sourceHashMap, HashMapCell *overrideHashMap)
 {
-	alloc::HashMapRef sourceHashMap(world, sourceHashMapRaw);
-	alloc::HashMapRef overrideHashMap(world, overrideHashMapRaw);
-
 	DatumHashTree *resultTree = DatumHashTree::ref(sourceHashMap->datumHashTree());
 	void *placement = alloc::allocateCells(world);
 

@@ -4,7 +4,6 @@
 #include "binding/ProperList.h"
 
 #include "alloc/allocator.h"
-#include "alloc/cellref.h"
 
 #include "core/error.h"
 
@@ -45,9 +44,6 @@ AnyCell* llbase_apply(World &world, TopProcedureCell *procedure, RestValues<AnyC
 		{
 			signalError(world, ErrorCategory::Type, "Final argument to (apply) must be a proper list", {*applyArgIt});
 		}
-
-		// Root the procedure cell before allocating the argument list
-		alloc::StrongRoot<TopProcedureCell> procedureRoot(world, &procedure);
 
 		// We verified the final arg is a proper list so this must also be a proper list
 		procArgHead = cell_unchecked_cast<RestValues<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));

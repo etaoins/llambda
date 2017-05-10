@@ -7,7 +7,6 @@
 #include "actor/cloneCell.h"
 #include "actor/PoisonPillCell.h"
 
-#include "alloc/StrongRef.h"
 #include "alloc/allocator.h"
 
 #include "sched/Dispatcher.h"

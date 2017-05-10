@@ -9,8 +9,6 @@
 #include "binding/FlonumCell.h"
 #include "binding/IntegerCell.h"
 
-#include "alloc/StrongRefVector.h"
-
 #include "core/error.h"
 
 using namespace lliby;
@@ -26,7 +24,7 @@ namespace
 	SplitResult splitList(World &world, const char *procName, AnyCell *obj, std::uint32_t count)
 	{
 		AnyCell *tail = obj;
-		alloc::StrongRefVector<AnyCell> headElements(world);
+		std::vector<AnyCell*> headElements;
 
 		while(count--)
 		{
@@ -44,9 +42,6 @@ namespace
 			tail = cell_unchecked_cast<AnyCell>(pairTail->cdr());
 		}
 
-		// Root our tail while we allocate the head list
-		alloc::StrongRoot<AnyCell> tailRoot(world, &tail);
-
 		// Build the head list
 		ProperList<AnyCell> *head = ProperList<AnyCell>::create(world, headElements);
 
@@ -62,8 +57,8 @@ namespace
 	template<typename T>
 	SpanResult spanList(World &world, const char *procName, ProperList<AnyCell> *list, T predicate)
 	{
-		alloc::StrongRef<ProperList<AnyCell>> tail(world, list);
-		alloc::StrongRefVector<AnyCell> headElements(world);
+		ProperList<AnyCell> *tail = list;
+		std::vector<AnyCell*> headElements;
 
 		while(true)
 		{
@@ -107,7 +102,7 @@ namespace
 	 * @return Boolean indicating if all of the input lists were non-empty and the procedure was invoked.
 	 */
 	template<typename T>
-	bool consumeInputLists(World &world, alloc::StrongRef<AnyCell> &firstList, alloc::StrongRefVector<AnyCell> &restLists, alloc::StrongRef<TypedProcedureCell<T, AnyCell*, RestValues<AnyCell>*>> proc, T* result)
+	bool consumeInputLists(World &world, ProperList<lliby::AnyCell>* &firstList, std::vector<AnyCell*> &restLists, TypedProcedureCell<T, AnyCell*, RestValues<AnyCell>*> *proc, T* result)
 	{
 		auto firstPair = cell_cast<PairCell>(firstList);
 
@@ -118,7 +113,7 @@ namespace
 		}
 
 		// Advance the list and store the head value
-		firstList.setData(cell_unchecked_cast<ProperList<AnyCell>>(firstPair->cdr()));
+		firstList = cell_unchecked_cast<ProperList<AnyCell>>(firstPair->cdr());
 		AnyCell *firstValue = firstPair->car();
 
 		std::vector<AnyCell*> restValues(restLists.size());
@@ -183,18 +178,16 @@ AnyCell *lllist_cons_star(World &world, AnyCell *headValue, RestValues<AnyCell> 
 	return ListElementCell::createList(world, nonTerminalElements, *tailArgIt);
 }
 
-AnyCell* lllist_fold(World &world, FoldProc *foldProcRaw, AnyCell *initialValue, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+AnyCell* lllist_fold(World &world, FoldProc *foldProc, AnyCell *initialValue, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restLists)
 {
-	alloc::StrongRef<FoldProc> foldProc(world, foldProcRaw);
-	alloc::StrongRef<AnyCell> accum(world, initialValue);
+	AnyCell *accum = initialValue;
 
 	// Collect our input lists
-	alloc::StrongRefVector<ListElementCell> inputLists(world);
-	inputLists.push_back(firstListRaw);
+	std::vector<ListElementCell*> inputLists;
+	inputLists.push_back(firstList);
 
-	for(auto restList : *restListsRaw)
+	for(auto restList : *restLists)
 	{
-		// Create the strong ref for the rest list
 		inputLists.push_back(restList);
 	}
 
@@ -228,17 +221,16 @@ AnyCell* lllist_fold(World &world, FoldProc *foldProcRaw, AnyCell *initialValue,
 		RestValues<AnyCell> *restArgList = RestValues<AnyCell>::create(world, restArgVector);
 
 		auto resultValue = foldProc->apply(world, inputVector[0], inputVector[1], restArgList);
-		accum.setData(resultValue);
+		accum = resultValue;
 	}
 }
 
-PairCell* lllist_partition(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *listHeadRaw)
+PairCell* lllist_partition(World &world, PredicateProc *predicateProc, ProperList<AnyCell> *list)
 {
-	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
-	alloc::StrongRef<ListElementCell> listHead(world, listHeadRaw);
+	ListElementCell *listHead = list;
 
-	alloc::StrongRefVector<AnyCell> trueValues(world);
-	alloc::StrongRefVector<AnyCell> falseValues(world);
+	std::vector<AnyCell*> trueValues;
+	std::vector<AnyCell*> falseValues;
 
 	while(listHead != EmptyListCell::instance())
 	{
@@ -256,19 +248,18 @@ PairCell* lllist_partition(World &world, PredicateProc *predicateProcRaw, Proper
 		}
 
 		auto *nextHead = cell_unchecked_cast<ListElementCell>(headPair->cdr());
-		listHead.setData(nextHead);
+		listHead = nextHead;
 	}
 
-	alloc::StrongRef<ProperList<AnyCell>> trueList(world, ProperList<AnyCell>::create(world, trueValues));
+	ProperList<AnyCell> *trueList(ProperList<AnyCell>::create(world, trueValues));
 	ProperList<AnyCell> *falseList(ProperList<AnyCell>::create(world, falseValues));
 
 	return PairCell::createInstance(world, trueList, falseList);
 }
 
-ProperList<AnyCell>* lllist_list_tabulate(World &world, std::uint32_t count, TabulateProc *initProcRaw)
+ProperList<AnyCell>* lllist_list_tabulate(World &world, std::uint32_t count, TabulateProc *initProc)
 {
-	alloc::StrongRef<TabulateProc> initProc(world, initProcRaw);
-	alloc::StrongRefVector<AnyCell> resultVec(world);
+	std::vector<AnyCell*> resultVec;
 
 	resultVec.reserve(count);
 
@@ -311,10 +302,8 @@ PairCell* lllist_split_at(World &world, AnyCell *obj, std::uint32_t count)
 	return PairCell::createInstance(world, result.head, result.tail);
 }
 
-PairCell* lllist_span(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
+PairCell* lllist_span(World &world, PredicateProc *predicateProc, ProperList<AnyCell> *list)
 {
-	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
-
 	SpanResult result = spanList(world, "(span)", list, [&] (AnyCell *datum) {
 		return predicateProc->apply(world, datum);
 	});
@@ -322,10 +311,8 @@ PairCell* lllist_span(World &world, PredicateProc *predicateProcRaw, ProperList<
 	return PairCell::createInstance(world, result.head, result.tail);
 }
 
-PairCell* lllist_break(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
+PairCell* lllist_break(World &world, PredicateProc *predicateProc, ProperList<AnyCell> *list)
 {
-	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
-
 	SpanResult result = spanList(world, "(break)", list, [&] (AnyCell *datum) {
 		return !predicateProc->apply(world, datum);
 	});
@@ -333,13 +320,9 @@ PairCell* lllist_break(World &world, PredicateProc *predicateProcRaw, ProperList
 	return PairCell::createInstance(world, result.head, result.tail);
 }
 
-AnyCell* lllist_any(World &world, AnyProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+AnyCell* lllist_any(World &world, AnyProc *predicateProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restListsRaw)
 {
-	// GC root everything
-	alloc::StrongRef<AnyProc> predicateProc(world, predicateProcRaw);
-
-	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
-	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+	std::vector<AnyCell*> restLists(restListsRaw->begin(), restListsRaw->end());
 
 	// Run until we get a truth-y value
 	while(true)
@@ -360,12 +343,9 @@ AnyCell* lllist_any(World &world, AnyProc *predicateProcRaw, ProperList<AnyCell>
 	}
 }
 
-AnyCell* lllist_every(World &world, EveryProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+AnyCell* lllist_every(World &world, EveryProc *predicateProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restListsRaw)
 {
-	alloc::StrongRef<EveryProc> predicateProc(world, predicateProcRaw);
-
-	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
-	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+	std::vector<AnyCell*> restLists(restListsRaw->begin(), restListsRaw->end());
 
 	// If all lists are empty we should return #t
 	AnyCell *resultValue = BooleanCell::trueInstance();
@@ -388,12 +368,9 @@ AnyCell* lllist_every(World &world, EveryProc *predicateProcRaw, ProperList<AnyC
 	}
 }
 
-std::int64_t lllist_count(World &world, CountProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+std::int64_t lllist_count(World &world, CountProc *predicateProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restListsRaw)
 {
-	alloc::StrongRef<CountProc> predicateProc(world, predicateProcRaw);
-
-	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
-	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+	std::vector<AnyCell*> restLists(restListsRaw->begin(), restListsRaw->end());
 
 	std::int64_t counter = 0;
 
@@ -414,14 +391,11 @@ std::int64_t lllist_count(World &world, CountProc *predicateProcRaw, ProperList<
 	}
 }
 
-ProperList<AnyCell>* lllist_append_map(World &world, AppendMapProc *mapProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+ProperList<AnyCell>* lllist_append_map(World &world, AppendMapProc *mapProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restListsRaw)
 {
-	alloc::StrongRef<AppendMapProc> mapProc(world, mapProcRaw);
+	std::vector<AnyCell*> restLists(restListsRaw->begin(), restListsRaw->end());
 
-	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
-	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
-
-	alloc::StrongRefVector<AnyCell> resultValues(world);
+	std::vector<AnyCell*> resultValues;
 
 	ProperList<AnyCell> *resultList;
 	while(consumeInputLists(world, firstList, restLists, mapProc, &resultList))
@@ -433,14 +407,11 @@ ProperList<AnyCell>* lllist_append_map(World &world, AppendMapProc *mapProcRaw, 
 	return ProperList<AnyCell>::create(world, resultValues);
 }
 
-ProperList<AnyCell>* lllist_filter_map(World &world, FilterMapProc *mapProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+ProperList<AnyCell>* lllist_filter_map(World &world, FilterMapProc *mapProc, ProperList<AnyCell> *firstList, RestValues<ProperList<AnyCell>> *restListsRaw)
 {
-	alloc::StrongRef<FilterMapProc> mapProc(world, mapProcRaw);
+	std::vector<AnyCell*> restLists(restListsRaw->begin(), restListsRaw->end());
 
-	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
-	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
-
-	alloc::StrongRefVector<AnyCell> resultValues(world);
+	std::vector<AnyCell*> resultValues;
 
 	AnyCell *resultValue;
 	while(consumeInputLists(world, firstList, restLists, mapProc, &resultValue))

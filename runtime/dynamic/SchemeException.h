@@ -2,7 +2,6 @@
 #define _LLIBY_DYNAMIC_SCHEMEEXCEPTION_H
 
 #include "binding/AnyCell.h"
-#include "alloc/cellref.h"
 #include "core/World.h"
 
 namespace lliby

@@ -1,7 +1,5 @@
 #include <cstring>
 
-#include "alloc/cellref.h"
-
 #include "binding/BytevectorCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
@@ -42,10 +40,10 @@ public:
 		const std::size_t sourceLength = 44;
 
 		// Create a source bytevector
-		alloc::BytevectorRef origBv(world, BytevectorCell::fromData(world, sourceString, sourceLength));
+		BytevectorCell *origBv = BytevectorCell::fromData(world, sourceString, sourceLength);
 
 		// Create a direct copy
-		alloc::BytevectorRef copyBv(world, origBv->copy(world));
+		BytevectorCell *copyBv = origBv->copy(world);
 		ASSERT_TRUE(sharedByteArrayFor(origBv) == sharedByteArrayFor(copyBv));
 
 		// Set an byte of the copy
@@ -54,7 +52,7 @@ public:
 		ASSERT_FALSE(sharedByteArrayFor(origBv) == sharedByteArrayFor(copyBv));
 
 		// Create a copy from appending a single bytevector
-		alloc::BytevectorRef appendedBv(world, BytevectorCell::fromAppended(world, {origBv}));
+		BytevectorCell *appendedBv = BytevectorCell::fromAppended(world, {origBv});
 		ASSERT_TRUE(sharedByteArrayFor(origBv) == sharedByteArrayFor(appendedBv));
 
 		// Replace part of the byte array
@@ -63,11 +61,11 @@ public:
 		ASSERT_FALSE(sharedByteArrayFor(origBv) == sharedByteArrayFor(appendedBv));
 
 		// Create a string from the bytevector
-		alloc::StringRef origString(world, origBv->utf8ToString(world));
+		StringCell *origString = origBv->utf8ToString(world);
 		ASSERT_TRUE(sharedByteArrayFor(origBv) == sharedByteArrayFor(origString));
 
 		// Create a string as a copy
-		alloc::StringRef copyString(world, origString->copy(world));
+		StringCell *copyString = origString->copy(world);
 		ASSERT_TRUE(sharedByteArrayFor(origString) == sharedByteArrayFor(copyString));
 
 		// Set a character in the string
@@ -76,7 +74,7 @@ public:
 		ASSERT_FALSE(sharedByteArrayFor(origString) == sharedByteArrayFor(copyString));
 
 		// Create a string from appending a single string
-		alloc::StringRef appendedString(world, StringCell::fromAppended(world, {origString}));
+		StringCell *appendedString = StringCell::fromAppended(world, {origString});
 		ASSERT_TRUE(sharedByteArrayFor(origString) == sharedByteArrayFor(appendedString));
 
 		// Fill the string
@@ -85,7 +83,7 @@ public:
 		ASSERT_FALSE(sharedByteArrayFor(origString) == sharedByteArrayFor(appendedString));
 
 		// Create a symbol from the appended string
-		alloc::SymbolRef symbol(world, SymbolCell::fromString(world, appendedString));
+		SymbolCell *symbol = SymbolCell::fromString(world, appendedString);
 		ASSERT_TRUE(sharedByteArrayFor(appendedString) == sharedByteArrayFor(symbol));
 
 		// Writing to the string again should break sharing
@@ -96,11 +94,11 @@ public:
 		//
 		// Test a grand tour of string ->  symbol -> string -> bytevector -> string
 		//
-		alloc::StringRef firstString(world, StringCell::fromUtf8StdString(world, u8"Hello world everyone! This is very long!"));
-		alloc::SymbolRef firstSymbol(world, SymbolCell::fromString(world, firstString));
-		alloc::StringRef secondString(world, StringCell::fromSymbol(world, firstSymbol));
-		alloc::BytevectorRef firstBv(world, secondString->toUtf8Bytevector(world));
-		alloc::StringRef thirdString(world, firstBv->utf8ToString(world));
+		StringCell *firstString = StringCell::fromUtf8StdString(world, u8"Hello world everyone! This is very long!");
+		SymbolCell *firstSymbol = SymbolCell::fromString(world, firstString);
+		StringCell *secondString = StringCell::fromSymbol(world, firstSymbol);
+		BytevectorCell *firstBv = secondString->toUtf8Bytevector(world);
+		StringCell *thirdString = firstBv->utf8ToString(world);
 
 		ASSERT_TRUE(sharedByteArrayFor(firstString) == sharedByteArrayFor(thirdString));
 	}

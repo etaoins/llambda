@@ -8,7 +8,6 @@
 #include "alloc/GarbageState.h"
 #include "alloc/AllocCell.h"
 #include "alloc/CellRefWalker.h"
-#include "alloc/CellRootList.h"
 #include "alloc/Heap.h"
 
 #include "actor/ActorContext.h"
@@ -45,28 +44,6 @@ namespace
 
 	private:
 		AnyCell *m_newLocation;
-	};
-
-	// For updating weak refs
-	bool weakRefVisitor(AnyCell **cellRef)
-	{
-		AnyCell *oldCellLocation = *cellRef;
-
-		if (oldCellLocation->gcState() == GarbageState::GlobalConstant)
-		{
-			return false;
-		}
-		else if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
-		{
-			// This was moved; updated the reference
-			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation();
-
-			return false;
-		}
-
-		// No longer reachable
-		*cellRef = nullptr;
-		return false;
 	};
 }
 
@@ -120,9 +97,6 @@ std::size_t collect(World &world, Heap &newHeap)
 		return true;
 	};
 
-	// Visit each runtime GC root
-	walker.visitCellRootList(world.strongRoots(), rootVisitor);
-
 	// Visit the dynamic state
 	walker.visitDynamicState(world.activeState(), rootVisitor);
 
@@ -141,9 +115,6 @@ std::size_t collect(World &world, Heap &newHeap)
 			walker.visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->supervisorStrategyRef()), rootVisitor);
 		}
 	}
-
-	// Visit each runtime weak root
-	walker.visitCellRootList(world.weakRoots(), weakRefVisitor);
 
 	return reachableCells;
 }

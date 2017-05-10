@@ -4,7 +4,6 @@
 
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
-#include "alloc/cellref.h"
 
 #include "core/error.h"
 
@@ -39,11 +38,8 @@ ParameterProcedureCell::ParameterProcedureCell(AnyCell *initialValue) :
 {
 }
 
-ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw)
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValue)
 {
-	// Root this across the allocation of the actual procedure cell
-	alloc::AnyRef initialValue(world, initialValueRaw);
-
 	void *placement = alloc::allocateCells(world);
 	return new (placement) ParameterProcedureCell(initialValue);
 }

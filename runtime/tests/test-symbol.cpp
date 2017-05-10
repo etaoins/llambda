@@ -8,8 +8,6 @@
 
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
-#include "alloc/cellref.h"
-
 namespace
 {
 using namespace lliby;
@@ -52,7 +50,7 @@ void testFromUtf8StdString(World &world)
 void testFromString(World &world)
 {
 	{
-		alloc::StringRef asciiInlineString(world, StringCell::fromUtf8StdString(world, "Hello"));
+		StringCell *asciiInlineString = StringCell::fromUtf8StdString(world, "Hello");
 
 		SymbolCell *testSymbol = SymbolCell::fromString(world, asciiInlineString);
 
@@ -61,7 +59,7 @@ void testFromString(World &world)
 	}
 
 	{
-		alloc::StringRef unicodeInlineString(world, StringCell::fromUtf8StdString(world, "Hello ☃!"));
+		StringCell *unicodeInlineString = StringCell::fromUtf8StdString(world, "Hello ☃!");
 
 		SymbolCell *testSymbol = SymbolCell::fromString(world, unicodeInlineString);
 
@@ -70,7 +68,7 @@ void testFromString(World &world)
 	}
 
 	{
-		alloc::StringRef asciiHeapString(world, StringCell::fromUtf8StdString(world, "Greetings, fellow unit testers!"));
+		StringCell *asciiHeapString = StringCell::fromUtf8StdString(world, "Greetings, fellow unit testers!");
 
 		SymbolCell *testSymbol = SymbolCell::fromString(world, asciiHeapString);
 
@@ -79,7 +77,7 @@ void testFromString(World &world)
 	}
 
 	{
-		alloc::StringRef unicodeHeapString(world, StringCell::fromUtf8StdString(world, "Look it's a little snowman: ☃!"));
+		StringCell *unicodeHeapString = StringCell::fromUtf8StdString(world, "Look it's a little snowman: ☃!");
 
 		SymbolCell *testSymbol = SymbolCell::fromString(world, unicodeHeapString);
 

@@ -26,8 +26,8 @@ public:
 	 * Creates a new instance of PairCell
 	 *
 	 * @param  world  World to allocate the pair in
-	 * @param  car    car value of the new pair. This will be GC rooted internally.
-	 * @param  cdr    cdr value of the new pair. This will be GC rooted internally.
+	 * @param  car    car value of the new pair
+	 * @param  cdr    cdr value of the new pair
 	 */
 	static PairCell* createInstance(World &world, AnyCell *car, AnyCell *cdr);
 

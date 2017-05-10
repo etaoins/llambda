@@ -2,18 +2,12 @@
 #define _LLIBY_CORE_WORLD_H
 
 #include "alloc/Heap.h"
-#include "alloc/CellRootList.h"
 
 #include <memory>
 #include <vector>
 
 namespace lliby
 {
-
-namespace alloc
-{
-class CellRootList;
-}
 
 namespace actor
 {
@@ -73,22 +67,6 @@ public: // Normal C++ API
 	}
 
 	/**
-	 * Returns a reference to the strong GC root list
-	 */
-	alloc::CellRootList& strongRoots()
-	{
-		return m_strongRoots;
-	}
-
-	/**
-	 * Returns a reference to the weak GC root list
-	 */
-	alloc::CellRootList& weakRoots()
-	{
-		return m_weakRoots;
-	}
-
-	/**
 	 * Sets the world's actor context
 	 *
 	 * @sa actorContext()
@@ -115,9 +93,6 @@ public: // Normal C++ API
 
 private:
 	dynamic::State *m_activeState;
-
-	alloc::CellRootList m_strongRoots;
-	alloc::CellRootList m_weakRoots;
 
 	actor::ActorContext *m_actorContext = nullptr;
 	std::vector<std::weak_ptr<actor::Mailbox>> m_childActors;

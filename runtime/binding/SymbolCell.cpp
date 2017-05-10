@@ -4,8 +4,8 @@
 #include <limits>
 
 #include "binding/StringCell.h"
-#include "alloc/cellref.h"
 #include "alloc/allocator.h"
+#include "alloc/Heap.h"
 
 #include "unicode/utf8.h"
 
@@ -64,7 +64,6 @@ SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, Byt
 
 SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 {
-	alloc::StringRef stringRef(world, string);
 	void *cellPlacement = alloc::allocateCells(world);
 
 	// Symbols must have the same inlining threshold as strings for the below logic to work
@@ -73,9 +72,9 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 			"Symbols and strings must have the same inlining threshold"
 	);
 
-	if (stringRef->dataIsInline())
+	if (string->dataIsInline())
 	{
-		auto inlineString = static_cast<InlineStringCell*>(stringRef.data());
+		auto inlineString = static_cast<InlineStringCell*>(string);
 
 		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(
 				inlineString->inlineByteLength(),
@@ -90,7 +89,7 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 	}
 	else
 	{
-		auto heapString = static_cast<HeapStringCell*>(stringRef.data());
+		auto heapString = static_cast<HeapStringCell*>(string);
 
 		// Share the heap strings's byte array
 		return new (cellPlacement) HeapSymbolCell(
