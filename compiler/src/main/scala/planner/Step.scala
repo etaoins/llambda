@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.step
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage, ProcedureAttribute}
+import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
@@ -34,9 +34,6 @@ sealed trait Step extends ContextLocated {
 
   /** Indicates if this step can be discarded if its output values are unused */
   def discardable: Boolean = false
-
-  /** Indicates if this step always terminates */
-  def alwaysTerminates: Boolean = false
 
   /** Indicates the number of heap allocated cells this step requires */
   def requiredHeapCells: Int = 0
@@ -130,9 +127,6 @@ case class Invoke(
       arguments=arguments.map(f),
       discardable=discardable
     ).assignLocationFrom(this)
-
-  override def alwaysTerminates =
-    signature.attributes.contains(ProcedureAttribute.NoReturn)
 }
 
 /** Invokes a procedure and immediately returns the value */
@@ -146,8 +140,6 @@ case class TailCall(signature: ProcedureSignature, entryPoint: TempValue, argume
       entryPoint=f(entryPoint),
       arguments=arguments.map(f)
     ).assignLocationFrom(this)
-
-  override def alwaysTerminates = true
 }
 
 /** Allocates a given number of cells from the GC heap at runtime
@@ -752,8 +744,6 @@ case class Return(returnValue: Option[TempValue]) extends Step {
 
   def renamed(f: (TempValue) => TempValue) =
     Return(returnValue.map(f)).assignLocationFrom(this)
-
-  override def alwaysTerminates = true
 }
 
 /** Initialises a new pair with a defined car and cdr */
