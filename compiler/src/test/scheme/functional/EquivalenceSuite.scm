@@ -64,60 +64,60 @@
   (assert-false (eqv? same-value1 'value3))
 
   ; These symbols are all of heap length
-  (define-type <heap-symbol-union> (U 'test-long-heap-symbol-one
-                                      'test-long-heap-symbol-two
-                                      'test-long-heap-symbol-three
-                                      'test-long-heap-symbol-four
-                                      'test-long-heap-symbol-five))
+  (define-type <heap-symbol-union> (U 'test-extra-long-heap-symbol-one
+                                      'test-extra-long-heap-symbol-two
+                                      'test-extra-long-heap-symbol-three
+                                      'test-extra-long-heap-symbol-four
+                                      'test-extra-long-heap-symbol-five))
 
-  (define heap-three (typed-dynamic 'test-long-heap-symbol-three <heap-symbol-union>))
-  (define heap-four  (typed-dynamic 'test-long-heap-symbol-four  <heap-symbol-union>))
-  (define heap-five  (typed-dynamic 'test-long-heap-symbol-five  <heap-symbol-union>))
+  (define heap-three (typed-dynamic 'test-extra-long-heap-symbol-three <heap-symbol-union>))
+  (define heap-four  (typed-dynamic 'test-extra-long-heap-symbol-four  <heap-symbol-union>))
+  (define heap-five  (typed-dynamic 'test-extra-long-heap-symbol-five  <heap-symbol-union>))
 
   ; Three can be distinguished purely by length
-  (assert-true  (eqv? heap-three 'test-long-heap-symbol-three))
-  (assert-false (eqv? heap-three 'test-long-heap-symbol-four))
-  (assert-false (eqv? heap-three 'test-long-heap-symbol-five))
+  (assert-true  (eqv? heap-three 'test-extra-long-heap-symbol-three))
+  (assert-false (eqv? heap-three 'test-extra-long-heap-symbol-four))
+  (assert-false (eqv? heap-three 'test-extra-long-heap-symbol-five))
 
   ; Four and five need to be distinguished with a byte lookup
-  (assert-false (eqv? heap-four 'test-long-heap-symbol-three))
-  (assert-true  (eqv? heap-four 'test-long-heap-symbol-four))
-  (assert-false (eqv? heap-four 'test-long-heap-symbol-five))
+  (assert-false (eqv? heap-four 'test-extra-long-heap-symbol-three))
+  (assert-true  (eqv? heap-four 'test-extra-long-heap-symbol-four))
+  (assert-false (eqv? heap-four 'test-extra-long-heap-symbol-five))
 
-  (assert-false (eqv? heap-five 'test-long-heap-symbol-three))
-  (assert-false (eqv? heap-five 'test-long-heap-symbol-four))
-  (assert-true  (eqv? heap-five 'test-long-heap-symbol-five))
+  (assert-false (eqv? heap-five 'test-extra-long-heap-symbol-three))
+  (assert-false (eqv? heap-five 'test-extra-long-heap-symbol-four))
+  (assert-true  (eqv? heap-five 'test-extra-long-heap-symbol-five))
 
   ; This contains both heap and inline symbols
   (define-type <mixed-symbol-union> (U 'six
-                                       'test-long-heap-symbol-six
+                                       'test-extra-long-heap-symbol-six
                                        'seven
-                                       'test-long-heap-symbol-seven))
+                                       'test-extra-long-heap-symbol-seven))
 
   (define inline-six (typed-dynamic 'six <mixed-symbol-union>))
-  (define heap-six (typed-dynamic 'test-long-heap-symbol-six <mixed-symbol-union>))
+  (define heap-six (typed-dynamic 'test-extra-long-heap-symbol-six <mixed-symbol-union>))
   (define inline-seven (typed-dynamic 'seven <mixed-symbol-union>))
-  (define heap-seven (typed-dynamic 'test-long-heap-symbol-seven <mixed-symbol-union>))
+  (define heap-seven (typed-dynamic 'test-extra-long-heap-symbol-seven <mixed-symbol-union>))
 
   (assert-true  (eqv? inline-six 'six))
-  (assert-false (eqv? inline-six 'test-long-heap-symbol-six))
+  (assert-false (eqv? inline-six 'test-extra-long-heap-symbol-six))
   (assert-false (eqv? inline-six 'seven))
-  (assert-false (eqv? inline-six 'test-long-heap-symbol-seven))
+  (assert-false (eqv? inline-six 'test-extra-long-heap-symbol-seven))
 
   (assert-false (eqv? heap-six 'six))
-  (assert-true  (eqv? heap-six 'test-long-heap-symbol-six))
+  (assert-true  (eqv? heap-six 'test-extra-long-heap-symbol-six))
   (assert-false (eqv? heap-six 'seven))
-  (assert-false (eqv? heap-six 'test-long-heap-symbol-seven))
+  (assert-false (eqv? heap-six 'test-extra-long-heap-symbol-seven))
 
   (assert-false (eqv? inline-seven 'six))
-  (assert-false (eqv? inline-seven 'test-long-heap-symbol-six))
+  (assert-false (eqv? inline-seven 'test-extra-long-heap-symbol-six))
   (assert-true  (eqv? inline-seven 'seven))
-  (assert-false (eqv? inline-seven 'test-long-heap-symbol-seven))
+  (assert-false (eqv? inline-seven 'test-extra-long-heap-symbol-seven))
 
   (assert-false (eqv? heap-seven 'six))
-  (assert-false (eqv? heap-seven 'test-long-heap-symbol-six))
+  (assert-false (eqv? heap-seven 'test-extra-long-heap-symbol-six))
   (assert-false (eqv? heap-seven 'seven))
-  (assert-true  (eqv? heap-seven 'test-long-heap-symbol-seven))))
+  (assert-true  (eqv? heap-seven 'test-extra-long-heap-symbol-seven))))
 
 (define-test "static numeric (eqv?)" (expect-static-success
   (assert-true (eqv? -163 -163))
