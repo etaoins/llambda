@@ -11,10 +11,14 @@ class BooleanCell : public PreconstructedValue<AnyCell>
 {
 #include "generated/BooleanCellMembers.h"
 public:
-	explicit BooleanCell(bool value) :
-		PreconstructedValue(CellTypeId::Boolean),
-		m_value(value)
+	explicit BooleanCell() :
+		PreconstructedValue(CellTypeId::Boolean)
 	{
+	}
+
+	bool value() const
+	{
+		return this == trueInstance();
 	}
 
 	static const BooleanCell* instanceForValue(bool value)

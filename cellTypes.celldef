@@ -92,7 +92,6 @@ variant cell HeapSymbol : Symbol {
 };
 
 preconstructed cell Boolean : Any {
-	const bool value;
 };
 
 abstract cell Number : Any {

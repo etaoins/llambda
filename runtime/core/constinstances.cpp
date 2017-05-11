@@ -17,8 +17,8 @@ using namespace lliby;
 //    this can be used as an optimisation
 // 2) These values can be used without a GC allocation and the associated stress on the garbage collector
 const UnitCell llcore_unit_value;
-const BooleanCell llcore_false_value(false);
-const BooleanCell llcore_true_value(true);
+const BooleanCell llcore_false_value;
+const BooleanCell llcore_true_value;
 const EmptyListCell llcore_empty_list_value;
 const EofObjectCell llcore_eof_object_value;
 

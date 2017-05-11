@@ -3,12 +3,6 @@
  ************************************************************/
 
 public:
-	bool value() const
-	{
-		return m_value;
-	}
-
-public:
 	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
 		return typeId == CellTypeId::Boolean;
@@ -19,5 +13,3 @@ public:
 		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
-private:
-	bool m_value;

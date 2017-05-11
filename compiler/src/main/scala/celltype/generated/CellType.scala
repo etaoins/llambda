@@ -44,7 +44,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 98L
+  val nextMetadataIndex = 97L
 }
 
 sealed trait AnyFields {
@@ -863,35 +863,6 @@ object HeapSymbolCell extends CellTypeVariant with HeapSymbolFields {
 
 sealed trait BooleanFields extends AnyFields {
   val irType: FirstClassType
-
-  val valueIrType = IntegerType(8)
-  val valueTbaaNode: Metadata
-  val valueGepIndices: List[Int]
-
-  def genPointerToValue(block: IrBlockBuilder)(valueCell: IrValue): IrValue = {
-    if (valueCell.irType != PointerType(irType)) {
-      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
-    }
-
-    block.getelementptr("valuePtr")(
-      elementType=valueIrType,
-      basePointer=valueCell,
-      indices=valueGepIndices.map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToValue(block: IrBlockBuilder)(toStore: IrValue, valueCell: IrValue, metadata: Map[String, Metadata] = Map())  {
-    val valuePtr = genPointerToValue(block)(valueCell)
-    val allMetadata = metadata ++ Map("tbaa" -> valueTbaaNode)
-    block.store(toStore, valuePtr, metadata=allMetadata)
-  }
-
-  def genLoadFromValue(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
-    val valuePtr = genPointerToValue(block)(valueCell)
-    val allMetadata = Map("tbaa" -> valueTbaaNode, "invariant.load" -> GlobalDefines.emptyMetadataNode) ++ metadata
-    block.load("value")(valuePtr, metadata=allMetadata)
-  }
 }
 
 object BooleanCell extends PreconstructedCellType with BooleanFields {
@@ -904,11 +875,9 @@ object BooleanCell extends PreconstructedCellType with BooleanFields {
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
-  val valueGepIndices = List(0, 1)
 
   val typeIdTbaaNode = NumberedMetadata(39L)
   val gcStateTbaaNode = NumberedMetadata(40L)
-  val valueTbaaNode = NumberedMetadata(41L)
 }
 
 sealed trait NumberFields extends AnyFields {
@@ -924,8 +893,8 @@ object NumberCell extends CellType with NumberFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(42L)
-  val gcStateTbaaNode = NumberedMetadata(43L)
+  val typeIdTbaaNode = NumberedMetadata(41L)
+  val gcStateTbaaNode = NumberedMetadata(42L)
 
   def createConstant(typeId: Long): StructureConstant = {
     StructureConstant(List(
@@ -979,9 +948,9 @@ object IntegerCell extends ConcreteCellType with IntegerFields {
   val gcStateGepIndices = List(0, 0, 0, 1)
   val valueGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(44L)
-  val gcStateTbaaNode = NumberedMetadata(45L)
-  val valueTbaaNode = NumberedMetadata(46L)
+  val typeIdTbaaNode = NumberedMetadata(43L)
+  val gcStateTbaaNode = NumberedMetadata(44L)
+  val valueTbaaNode = NumberedMetadata(45L)
 
   def createConstant(value: Long): StructureConstant = {
     StructureConstant(List(
@@ -1036,9 +1005,9 @@ object FlonumCell extends ConcreteCellType with FlonumFields {
   val gcStateGepIndices = List(0, 0, 0, 1)
   val valueGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(47L)
-  val gcStateTbaaNode = NumberedMetadata(48L)
-  val valueTbaaNode = NumberedMetadata(49L)
+  val typeIdTbaaNode = NumberedMetadata(46L)
+  val gcStateTbaaNode = NumberedMetadata(47L)
+  val valueTbaaNode = NumberedMetadata(48L)
 
   def createConstant(value: IrConstant): StructureConstant = {
     if (value.irType != valueIrType) {
@@ -1097,9 +1066,9 @@ object CharCell extends ConcreteCellType with CharFields {
   val gcStateGepIndices = List(0, 0, 1)
   val unicodeCharGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(50L)
-  val gcStateTbaaNode = NumberedMetadata(51L)
-  val unicodeCharTbaaNode = NumberedMetadata(52L)
+  val typeIdTbaaNode = NumberedMetadata(49L)
+  val gcStateTbaaNode = NumberedMetadata(50L)
+  val unicodeCharTbaaNode = NumberedMetadata(51L)
 
   def createConstant(unicodeChar: Long): StructureConstant = {
     StructureConstant(List(
@@ -1184,10 +1153,10 @@ object VectorCell extends ConcreteCellType with VectorFields {
   val lengthGepIndices = List(0, 1)
   val elementsGepIndices = List(0, 2)
 
-  val typeIdTbaaNode = NumberedMetadata(53L)
-  val gcStateTbaaNode = NumberedMetadata(54L)
-  val lengthTbaaNode = NumberedMetadata(55L)
-  val elementsTbaaNode = NumberedMetadata(56L)
+  val typeIdTbaaNode = NumberedMetadata(52L)
+  val gcStateTbaaNode = NumberedMetadata(53L)
+  val lengthTbaaNode = NumberedMetadata(54L)
+  val elementsTbaaNode = NumberedMetadata(55L)
 
   def createConstant(length: Long, elements: IrConstant): StructureConstant = {
     if (elements.irType != elementsIrType) {
@@ -1277,10 +1246,10 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val lengthGepIndices = List(0, 1)
   val byteArrayGepIndices = List(0, 2)
 
-  val typeIdTbaaNode = NumberedMetadata(57L)
-  val gcStateTbaaNode = NumberedMetadata(58L)
-  val lengthTbaaNode = NumberedMetadata(59L)
-  val byteArrayTbaaNode = NumberedMetadata(60L)
+  val typeIdTbaaNode = NumberedMetadata(56L)
+  val gcStateTbaaNode = NumberedMetadata(57L)
+  val lengthTbaaNode = NumberedMetadata(58L)
+  val byteArrayTbaaNode = NumberedMetadata(59L)
 
   def createConstant(length: Long, byteArray: IrConstant): StructureConstant = {
     if (byteArray.irType != byteArrayIrType) {
@@ -1428,12 +1397,12 @@ object RecordLikeCell extends CellType with RecordLikeFields {
   val recordClassIdGepIndices = List(0, 3)
   val recordDataGepIndices = List(0, 4)
 
-  val typeIdTbaaNode = NumberedMetadata(61L)
-  val gcStateTbaaNode = NumberedMetadata(62L)
-  val dataIsInlineTbaaNode = NumberedMetadata(63L)
-  val isUndefinedTbaaNode = NumberedMetadata(64L)
-  val recordClassIdTbaaNode = NumberedMetadata(65L)
-  val recordDataTbaaNode = NumberedMetadata(66L)
+  val typeIdTbaaNode = NumberedMetadata(60L)
+  val gcStateTbaaNode = NumberedMetadata(61L)
+  val dataIsInlineTbaaNode = NumberedMetadata(62L)
+  val isUndefinedTbaaNode = NumberedMetadata(63L)
+  val recordClassIdTbaaNode = NumberedMetadata(64L)
+  val recordDataTbaaNode = NumberedMetadata(65L)
 
   def createConstant(dataIsInline: Long, isUndefined: Long, recordClassId: Long, recordData: IrConstant, typeId: Long): StructureConstant = {
     if (recordData.irType != recordDataIrType) {
@@ -1529,14 +1498,14 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val extraDataGepIndices = List(0, 1)
   val entryPointGepIndices = List(0, 2)
 
-  val typeIdTbaaNode = NumberedMetadata(67L)
-  val gcStateTbaaNode = NumberedMetadata(68L)
-  val dataIsInlineTbaaNode = NumberedMetadata(69L)
-  val isUndefinedTbaaNode = NumberedMetadata(70L)
-  val recordClassIdTbaaNode = NumberedMetadata(71L)
-  val recordDataTbaaNode = NumberedMetadata(72L)
-  val extraDataTbaaNode = NumberedMetadata(73L)
-  val entryPointTbaaNode = NumberedMetadata(74L)
+  val typeIdTbaaNode = NumberedMetadata(66L)
+  val gcStateTbaaNode = NumberedMetadata(67L)
+  val dataIsInlineTbaaNode = NumberedMetadata(68L)
+  val isUndefinedTbaaNode = NumberedMetadata(69L)
+  val recordClassIdTbaaNode = NumberedMetadata(70L)
+  val recordDataTbaaNode = NumberedMetadata(71L)
+  val extraDataTbaaNode = NumberedMetadata(72L)
+  val entryPointTbaaNode = NumberedMetadata(73L)
 
   def createConstant(extraData: IrConstant, entryPoint: IrConstant, dataIsInline: Long, isUndefined: Long, recordClassId: Long, recordData: IrConstant): StructureConstant = {
     if (extraData.irType != extraDataIrType) {
@@ -1604,13 +1573,13 @@ object RecordCell extends ConcreteCellType with RecordFields {
   val recordDataGepIndices = List(0, 0, 4)
   val extraDataGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(75L)
-  val gcStateTbaaNode = NumberedMetadata(76L)
-  val dataIsInlineTbaaNode = NumberedMetadata(77L)
-  val isUndefinedTbaaNode = NumberedMetadata(78L)
-  val recordClassIdTbaaNode = NumberedMetadata(79L)
-  val recordDataTbaaNode = NumberedMetadata(80L)
-  val extraDataTbaaNode = NumberedMetadata(81L)
+  val typeIdTbaaNode = NumberedMetadata(74L)
+  val gcStateTbaaNode = NumberedMetadata(75L)
+  val dataIsInlineTbaaNode = NumberedMetadata(76L)
+  val isUndefinedTbaaNode = NumberedMetadata(77L)
+  val recordClassIdTbaaNode = NumberedMetadata(78L)
+  val recordDataTbaaNode = NumberedMetadata(79L)
+  val extraDataTbaaNode = NumberedMetadata(80L)
 
   def createConstant(extraData: IrConstant, dataIsInline: Long, isUndefined: Long, recordClassId: Long, recordData: IrConstant): StructureConstant = {
     if (extraData.irType != extraDataIrType) {
@@ -1729,11 +1698,11 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val messageGepIndices = List(0, 2)
   val irritantsGepIndices = List(0, 3)
 
-  val typeIdTbaaNode = NumberedMetadata(82L)
-  val gcStateTbaaNode = NumberedMetadata(83L)
-  val categoryTbaaNode = NumberedMetadata(84L)
-  val messageTbaaNode = NumberedMetadata(85L)
-  val irritantsTbaaNode = NumberedMetadata(86L)
+  val typeIdTbaaNode = NumberedMetadata(81L)
+  val gcStateTbaaNode = NumberedMetadata(82L)
+  val categoryTbaaNode = NumberedMetadata(83L)
+  val messageTbaaNode = NumberedMetadata(84L)
+  val irritantsTbaaNode = NumberedMetadata(85L)
 
   def createConstant(category: Long, message: IrConstant, irritants: IrConstant): StructureConstant = {
     if (message.irType != messageIrType) {
@@ -1798,9 +1767,9 @@ object PortCell extends ConcreteCellType with PortFields {
   val gcStateGepIndices = List(0, 0, 1)
   val portGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(87L)
-  val gcStateTbaaNode = NumberedMetadata(88L)
-  val portTbaaNode = NumberedMetadata(89L)
+  val typeIdTbaaNode = NumberedMetadata(86L)
+  val gcStateTbaaNode = NumberedMetadata(87L)
+  val portTbaaNode = NumberedMetadata(88L)
 
   def createConstant(port: IrConstant): StructureConstant = {
     if (port.irType != portIrType) {
@@ -1829,8 +1798,8 @@ object EofObjectCell extends PreconstructedCellType with EofObjectFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(90L)
-  val gcStateTbaaNode = NumberedMetadata(91L)
+  val typeIdTbaaNode = NumberedMetadata(89L)
+  val gcStateTbaaNode = NumberedMetadata(90L)
 }
 
 sealed trait MailboxFields extends AnyFields {
@@ -1878,9 +1847,9 @@ object MailboxCell extends ConcreteCellType with MailboxFields {
   val gcStateGepIndices = List(0, 0, 1)
   val mailboxGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(92L)
-  val gcStateTbaaNode = NumberedMetadata(93L)
-  val mailboxTbaaNode = NumberedMetadata(94L)
+  val typeIdTbaaNode = NumberedMetadata(91L)
+  val gcStateTbaaNode = NumberedMetadata(92L)
+  val mailboxTbaaNode = NumberedMetadata(93L)
 
   def createConstant(mailbox: IrConstant): StructureConstant = {
     if (mailbox.irType != mailboxIrType) {
@@ -1939,9 +1908,9 @@ object HashMapCell extends ConcreteCellType with HashMapFields {
   val gcStateGepIndices = List(0, 0, 1)
   val datumHashTreeGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(95L)
-  val gcStateTbaaNode = NumberedMetadata(96L)
-  val datumHashTreeTbaaNode = NumberedMetadata(97L)
+  val typeIdTbaaNode = NumberedMetadata(94L)
+  val gcStateTbaaNode = NumberedMetadata(95L)
+  val datumHashTreeTbaaNode = NumberedMetadata(96L)
 
   def createConstant(datumHashTree: IrConstant): StructureConstant = {
     if (datumHashTree.irType != datumHashTreeIrType) {
