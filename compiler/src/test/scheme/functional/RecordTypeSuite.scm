@@ -282,7 +282,12 @@
   (assert-equal 1 (base-record-field1 instance))
   (assert-equal 2 (base-record-field2 instance))
   (assert-equal 3 (child-record-field3 instance))
-  (assert-equal 4 (child-record-field4 instance))))
+  (assert-equal 4 (child-record-field4 instance))
+
+  (assert-equal 1 (base-record-field1 (typeless-cell instance)))
+  (assert-equal 2 (base-record-field2 (typeless-cell instance)))
+  (assert-equal 3 (child-record-field3 (typeless-cell instance)))
+  (assert-equal 4 (child-record-field4 (typeless-cell instance)))))
 
 (define-test "recursive record types" (expect-success
   (import (llambda typed))
