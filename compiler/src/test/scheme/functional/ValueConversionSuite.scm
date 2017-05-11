@@ -110,6 +110,12 @@
 (define-test "datum can be converted to a list element" (expect 4
   (length (append '(1 2) '(3 4)))))
 
+(define-test "constant flonum can be passed as float" (expect 1.0
+  (import (llambda nfi))
+
+  (define fabsf (native-function system-library "fabsf" (-> <native-float> <native-float>)))
+  (fabsf -1.0)))
+
 (define-test "(make-bytevector) only accepts positive constant lengths" (expect-compile-error type-error?
   (import (llambda nfi))
 
