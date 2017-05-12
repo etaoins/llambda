@@ -6,7 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.typecheck
 import llambda.compiler.planner._
-import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
+import llambda.compiler.ValueNotApplicableException
 import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 
 /** Represents a value boxed in an alloc cell
@@ -20,20 +20,6 @@ class CellValue(
     val boxedValue: BoxedValue
 ) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
-
-  override def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
-    // Find out if we're false
-    val isFalseResult = typecheck.PlanTypeCheck(boxedValue, schemeType, vt.LiteralBooleanType(false))
-    val isFalsePred = isFalseResult.toNativePred()
-
-    // Invert the result
-    val constantZeroPred = ps.TempValue()
-    plan.steps += ps.CreateNativeInteger(constantZeroPred, 0, vt.Predicate.bits)
-
-    val truthyPred = ps.TempValue()
-    plan.steps += ps.IntegerCompare(truthyPred, ps.CompareCond.Equal, None, isFalsePred, constantZeroPred)
-    truthyPred
-  }
 
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =
     boxedValue
@@ -167,7 +153,17 @@ class CellValue(
       }
 
     case vt.Predicate =>
-      throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
+      // Find out if we're false
+      val isFalseResult = typecheck.PlanTypeCheck(boxedValue, schemeType, vt.LiteralBooleanType(false))
+      val isFalsePred = isFalseResult.toNativePred()
+
+      // Invert the result
+      val constantZeroPred = ps.TempValue()
+      plan.steps += ps.CreateNativeInteger(constantZeroPred, 0, vt.Predicate.bits)
+
+      val truthyPred = ps.TempValue()
+      plan.steps += ps.IntegerCompare(truthyPred, ps.CompareCond.Equal, None, isFalsePred, constantZeroPred)
+      truthyPred
   }
 
   override def withSchemeType(newType: vt.SchemeType): IntermediateValue = newType match {

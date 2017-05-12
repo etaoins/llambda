@@ -63,12 +63,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     schemeType.applicableTypeOpt.map(ApplicableTypeToAdaptedSignature)
 
   protected def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue
-  protected def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
-    val trueTemp = ps.TempValue()
-    plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1)
-
-   trueTemp
-  }
 
   protected[intermediatevalue] def toProcedureTempValue(
       targetType: vt.ApplicableType,
@@ -191,9 +185,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       val constantTemp = ps.TempValue()
       plan.steps += ps.CreateUnitCell(constantTemp)
       constantTemp
-
-    case vt.Predicate =>
-      toTruthyPredicate()
 
     case nativeType: vt.NativeType =>
       toNativeTempValue(nativeType, errorMessageOpt)

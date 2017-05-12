@@ -125,16 +125,16 @@ case class ConstantBooleanValue(value: Boolean) extends TrivialConstantValue(ct.
 
   private val intValue = if (value) 1 else 0
 
-  override def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
-    val predTemp = ps.TempValue()
-    plan.steps += ps.CreateNativeInteger(predTemp, intValue, vt.Predicate.bits)
+  def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue = nativeType match {
+    case vt.Predicate =>
+      val predTemp = ps.TempValue()
+      plan.steps += ps.CreateNativeInteger(predTemp, intValue, vt.Predicate.bits)
 
-    predTemp
+      predTemp
+
+    case _ =>
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-predicate native type ${vt.NameForType(nativeType)}")
   }
-
-  def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue =
-    // toTruthyPredicate() will catch our conversion to bool
-    impossibleConversion(s"Cannot convert ${typeDescription} to non-boolean native type ${vt.NameForType(nativeType)}")
 }
 
 case class ConstantBytevectorValue(elements: Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {

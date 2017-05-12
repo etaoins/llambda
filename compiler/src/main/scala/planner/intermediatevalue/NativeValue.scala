@@ -35,10 +35,6 @@ sealed abstract class NativeValue(
 }
 
 class NativePredicateValue(tempValue: ps.TempValue) extends NativeValue(vt.Predicate, ct.BooleanCell, tempValue) {
-  override def toTruthyPredicate()(implicit plan: PlanWriter): ps.TempValue = {
-    tempValue
-  }
-
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =  {
     val boxedTemp = ps.TempValue()
     plan.steps += ps.BoxBoolean(boxedTemp, tempValue)
