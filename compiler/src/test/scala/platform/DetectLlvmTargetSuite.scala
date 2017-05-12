@@ -53,4 +53,10 @@ class DetectLlvmTargetSuite extends FunSuite {
 
     assert(targetPlatform.dataLayout.pointerLayout.sizeBits === 32)
   }
+
+  test("invalid IR throws an exception") {
+    intercept[DetectLlvmTargetFailureException] {
+      DetectLlvmTarget.fromLlvmIr("NONSENSE!")
+    }
+  }
 }
