@@ -28,7 +28,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
     }
 
     if (knownLengthOpt == Some(0L)) {
-      // We can use q constant vector - there's no way to mutate a zero length vector
+      // We can use a constant vector; there's no way to mutate a zero length vector
       return iv.ConstantVectorValue(Vector())
     }
 
@@ -54,16 +54,14 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
-    case ("make-vector", List((_, iv.ConstantIntegerValue(0)))) |
-         ("make-vector", List((_, iv.ConstantIntegerValue(0)), _)) |
-         ("vector", Nil) =>
-      Some(new iv.ConstantVectorValue(Vector()))
-
     case ("make-vector", List(length)) =>
       Some(makeFilledVector(state)(length, iv.UnitValue))
 
     case ("make-vector", List(length, (_, fillValue))) =>
       Some(makeFilledVector(state)(length, fillValue))
+
+    case ("vector", Nil) =>
+      Some(new iv.ConstantVectorValue(Vector()))
 
     case ("vector", initialElements) =>
       val initialElementValues = initialElements.map(_._2)
