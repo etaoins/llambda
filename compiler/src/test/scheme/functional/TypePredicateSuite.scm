@@ -222,3 +222,22 @@
   (define-predicate is-numeric-binary? (-> <number> <number> <number>))
 
   (is-numeric-binary? (typeless-cell #f))))
+
+(define-test "(define-predicate) for hash map types" (expect-success
+  (import (llambda typed))
+  (import (llambda hash-map))
+
+  (define-predicate is-number-assoc? (HashMap <integer> <symbol>))
+
+  (define number-assoc (alist->hash-map '((1 . one) (2 . two))))
+
+  (assert-true (is-number-assoc? number-assoc))
+  (assert-false (is-number-assoc? #f))))
+
+(define-test "hash map type predicates do not support dynamic type checks" (expect-error type-error?
+  (import (llambda typed))
+  (import (llambda hash-map))
+
+  (define-predicate is-number-assoc? (HashMap <integer> <symbol>))
+
+  (is-number-assoc? (typeless-cell #f))))
