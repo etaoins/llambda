@@ -39,7 +39,7 @@ object GenHeapAllocation {
 
     // Create our child blocks for the upcoming branch
     val directSuccessBlock = irFunction.startChildBlock("directSuccess")
-    val runtimeAllocBlock = irFunction.startChildBlock("collectGarbage")
+    val runtimeAllocBlock = irFunction.startChildBlock("runtimeAlloc")
     val allocFinishedBlock = irFunction.startChildBlock("allocFinished")
 
     // See if we ran out of space
