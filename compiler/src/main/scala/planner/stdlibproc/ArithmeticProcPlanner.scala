@@ -208,44 +208,42 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
       staticCalc: StaticIntegerOp,
       numerator: (ContextLocated, iv.IntermediateValue),
       denominator: (ContextLocated, iv.IntermediateValue)
-  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
-    (numerator, denominator) match {
-      case (_, (denomLoc, iv.ConstantIntegerValue(0))) =>
-        // Catch divide by zero first
-        throw new DivideByZeroException(denomLoc, "Attempted integer division by zero")
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (numerator, denominator) match {
+    case (_, (denomLoc, iv.ConstantIntegerValue(0))) =>
+      // Catch divide by zero first
+      throw new DivideByZeroException(denomLoc, "Attempted integer division by zero")
 
-      case ((_, iv.ConstantIntegerValue(Long.MinValue)),
-            (denomLoc, iv.ConstantIntegerValue(-1))) =>
-        throw new IntegerOverflowException(denomLoc, "Integer overflow during division")
+    case ((_, iv.ConstantIntegerValue(Long.MinValue)),
+          (denomLoc, iv.ConstantIntegerValue(-1))) =>
+      throw new IntegerOverflowException(denomLoc, "Integer overflow during division")
 
-      case ((_, iv.ConstantIntegerValue(constantNumerVal)),
-            (_, iv.ConstantIntegerValue(constantDenomVal))) =>
-        val resultValue = staticCalc(constantNumerVal, constantDenomVal)
-        Some(iv.ConstantIntegerValue(resultValue.toLong))
+    case ((_, iv.ConstantIntegerValue(constantNumerVal)),
+          (_, iv.ConstantIntegerValue(constantDenomVal))) =>
+      val resultValue = staticCalc(constantNumerVal, constantDenomVal)
+      Some(iv.ConstantIntegerValue(resultValue.toLong))
 
-      case ((numerLoc, dynamicNumer), (_, knownDenom: iv.KnownInteger)) =>
-        val possibleDenomValues = knownDenom.possibleValues
+    case ((numerLoc, dynamicNumer), (_, knownDenom: iv.KnownInteger)) =>
+      val possibleDenomValues = knownDenom.possibleValues
 
-        if (possibleDenomValues.contains(0) || possibleDenomValues.contains(-1)) {
-          // This could cause a divide-by-zero or overflow at runtime. Punt to the runtime implementation.
-          None
-        }
-        else {
-          val numerTemp = plan.withContextLocation(numerLoc) {
-            dynamicNumer.toTempValue(vt.Int64)
-          }
-
-          val denomTemp = knownDenom.toTempValue(vt.Int64)
-
-          val resultTemp = ps.TempValue()
-          plan.steps += instr(resultTemp, numerTemp, denomTemp)
-
-          Some(new iv.NativeIntegerValue(resultTemp, vt.Int64)())
-        }
-
-      case _ =>
+      if (possibleDenomValues.contains(0) || possibleDenomValues.contains(-1)) {
+        // This could cause a divide-by-zero or overflow at runtime. Punt to the runtime implementation.
         None
-    }
+      }
+      else {
+        val numerTemp = plan.withContextLocation(numerLoc) {
+          dynamicNumer.toTempValue(vt.Int64)
+        }
+
+        val denomTemp = knownDenom.toTempValue(vt.Int64)
+
+        val resultTemp = ps.TempValue()
+        plan.steps += instr(resultTemp, numerTemp, denomTemp)
+
+        Some(new iv.NativeIntegerValue(resultTemp, vt.Int64)())
+      }
+
+    case _ =>
+      None
   }
 
   private def performIntegerDivide(

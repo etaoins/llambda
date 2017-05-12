@@ -226,7 +226,8 @@
   (assert-equal 2 (truncate-quotient (typed-dynamic 5 <integer>) 2))
   (assert-equal -2 (truncate-quotient (typed-dynamic -5 <integer>) 2))
   (assert-equal -2 (truncate-quotient (typed-dynamic 5 <integer>) -2))
-  (assert-equal 2 (truncate-quotient (typed-dynamic -5 <integer>) -2))))
+  (assert-equal 2 (truncate-quotient (typed-dynamic -5 <integer>) -2))
+  (assert-equal 2 (truncate-quotient (typed-dynamic -5 <integer>) (typed-dynamic -2 <integer>)))))
 
 (define-test "(truncate-quotient) by zero fails" (expect-error divide-by-zero-error?
     (truncate-quotient 5 0)))
