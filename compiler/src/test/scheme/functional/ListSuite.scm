@@ -114,6 +114,9 @@
   (assert-equal #f (memv 1.0 dynamic-list))
   (assert-equal #f (memv dynamic-float-1 dynamic-list))
 
+  ; The optimiser will give up if there's too many comparisons to generate
+  (assert-equal '(1 2 3 4 5 6 7 8) (memv dynamic-int-1 '(1 2 3 4 5 6 7 8)))
+
   (define dynamic-symbol (typed-dynamic 'green (U 'red 'green 'blue)))
 
   (assert-equal '(green blue) (memv dynamic-symbol '(red green blue)))))
