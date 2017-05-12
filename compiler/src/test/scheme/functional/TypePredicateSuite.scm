@@ -206,3 +206,19 @@
   (assert-true  (int-list-or-false? untyped-false))
   (assert-true  (int-list-or-false? untyped-int-list))
   (assert-false (int-list-or-false? untyped-improper-int-list))))
+
+(define-test "(define-predicate) for procedure types" (expect-success
+  (import (llambda typed))
+
+  (define-predicate is-numeric-binary? (-> <number> <number> <number>))
+
+  (assert-true (is-numeric-binary? +))
+  (assert-true (is-numeric-binary? -))
+  (assert-false (is-numeric-binary? cons))))
+
+(define-test "procedure type predicates do not support dynamic type checks" (expect-error type-error?
+  (import (llambda typed))
+
+  (define-predicate is-numeric-binary? (-> <number> <number> <number>))
+
+  (is-numeric-binary? (typeless-cell #f))))

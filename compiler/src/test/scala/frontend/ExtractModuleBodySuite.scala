@@ -693,12 +693,6 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
 
-  test("creating type predicate from a procedure type fails") {
-    intercept[BadSpecialFormException] {
-      exprFor("(make-predicate (-> <symbol> <symbol>))")(nfiScope)
-    }
-  }
-
   test("creating type predicate from a Scheme type") {
     assert(exprFor("(make-predicate <symbol>)")(nfiScope) ===
       et.TypePredicate(vt.SymbolType)

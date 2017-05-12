@@ -2,8 +2,8 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler._
-import llambda.compiler.{valuetype => vt}
 import llambda.compiler.frontend.syntax.ExpandMacro
+
 
 private[frontend] object ExtractExpr {
   private def extractInclude(
@@ -132,15 +132,8 @@ private[frontend] object ExtractExpr {
         )
 
       case (Primitives.MakePredicate, List(typeDatum)) =>
-        val nonProcType = ExtractType.extractSchemeType(typeDatum) match {
-          case _: vt.ProcedureType =>
-            throw new BadSpecialFormException(typeDatum, "Creating procedure predicates it not possible; procedures of different types do not have distinct runtime representations")
-
-          case nonProcType =>
-            nonProcType
-        }
-
-        et.TypePredicate(nonProcType)
+        val schemeType = ExtractType.extractSchemeType(typeDatum)
+        et.TypePredicate(schemeType)
 
       case (Primitives.PatternMatch, valueDatum :: clauseData) =>
         val valueExpr = ExtractExpr(valueDatum)
