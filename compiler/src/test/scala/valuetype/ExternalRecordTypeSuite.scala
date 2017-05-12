@@ -17,6 +17,12 @@ class ExternalRecordTypeSuite extends SchemeTypeSuite {
     )
   }
 
+  test("external types definitely don't satisfy other record types") {
+    assert(SatisfiesType(externalType1, recordType1) ===
+      Some(false)
+    )
+  }
+
   test("external types definitely satisfy the record atom") {
     assert(SatisfiesType(recordAtomType, externalType1) ===
       Some(true)

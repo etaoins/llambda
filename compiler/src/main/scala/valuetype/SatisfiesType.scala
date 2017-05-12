@@ -168,6 +168,12 @@ object SatisfiesType {
 
         }
 
+      case (superExternal: ExternalRecordType, testingRecord: RecordType) =>
+        Some(false)
+
+      case (superRecord: RecordType, testingExternal: ExternalRecordType) =>
+        Some(false)
+
       case (superExternal: ExternalRecordType, testingExternal: ExternalRecordType) =>
         Some(superExternal eq testingExternal)
 

@@ -22,7 +22,7 @@ object PlanTypeCheck {
 
   private def flattenType(schemeType: vt.SchemeType): Set[vt.NonUnionSchemeType] = schemeType match {
     case nonUnion: vt.NonUnionSchemeType => Set(nonUnion)
-    case vt.UnionType(memberTypes)        => memberTypes
+    case vt.UnionType(memberTypes)       => memberTypes
   }
 
   private def testRecordClass(

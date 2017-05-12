@@ -310,3 +310,31 @@
 
   (set-dcdr! dodgy-list '())
   (assert-equal '() (dcdr dodgy-list))))
+
+(define-test "external record types with predicate function" (expect-success
+  ; <poison-pill> is provided by the actor library
+  (import (llambda actor))
+
+  (define-record-type <other-record> (other-record) other-record?)
+
+  (define other (other-record))
+  (define pill (poison-pill-object))
+
+  (assert-true  (poison-pill-object? pill))
+  (assert-false (poison-pill-object? '()))
+  (assert-false (poison-pill-object? other))
+  (assert-false (other-record? pill))
+
+  (assert-true  (poison-pill-object? (typeless-cell pill)))
+  (assert-false (poison-pill-object? (typeless-cell '())))
+  (assert-false (poison-pill-object? (typeless-cell other)))
+  (assert-false (other-record? (typeless-cell pill)))))
+
+(define-test "external record types without predicate functions do not support dynamic type checks" (expect-compile-error type-error?
+  (import (llambda typed))
+
+  (define-type <external-record> (ExternalRecord))
+  (define-predicate external-record? <external-record>)
+
+  (external-record? (typeless-cell '()))))
+
