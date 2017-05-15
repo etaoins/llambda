@@ -58,7 +58,7 @@ class Evaluator(targetPlatform: platform.TargetPlatform) {
   var scope: Scope = new Scope(mutable.Map(initialBindings: _*))
 
   private def exprsToOutputString(exprs: List[et.Expr]): String = {
-    val result = Compiler.runExprs(exprs, compileConfig, Nil)
+    val result = Compiler.runExprs(exprs, compileConfig, Nil, None)
 
     if (result.exitValue != 0) {
       throw new ReplProcessNonZeroExitException(result.exitValue, result.stdout, result.stderr)

@@ -84,7 +84,8 @@ object Compiler {
       plannedProgram: PlannedProgram,
       output: File,
       config: CompileConfig,
-      entryFilenameOpt: Option[String]
+      entryFilenameOpt: Option[String],
+      irOutputFileOpt: Option[File]
   ): Unit = {
     // Generate the LLVM IR
     val irString = codegen.GenProgram(
@@ -94,6 +95,12 @@ object Compiler {
     )
 
     val irBytes = irString.getBytes("UTF-8")
+
+    for(irOutputFile <- irOutputFileOpt) {
+      val outputStream = new FileOutputStream(irOutputFile);
+      outputStream.write(irBytes);
+      outputStream.close();
+    }
 
     if (!config.emitLlvm) {
       val nativeLibraries = plannedProgram.requiredNativeLibraries
@@ -113,12 +120,17 @@ object Compiler {
   )(input: T, output: File, config: CompileConfig, entryFilenameOpt: Option[String]): Unit = {
     val plannedProgram = planInput(input, config)
 
-    compilePlanToFile(plannedProgram, output, config, entryFilenameOpt)
+    compilePlanToFile(plannedProgram, output, config, entryFilenameOpt, None)
   }
 
   private def abstractRun[T](
       planInput: (T, CompileConfig) => PlannedProgram
-  )(input: T, config: CompileConfig, extraEnv: List[(String, String)]): RunResult = {
+  )(
+      input: T,
+      config: CompileConfig,
+      extraEnv: List[(String, String)],
+      irOutputFileOpt: Option[File]
+  ): RunResult = {
     val plannedProgram = planInput(input, config)
 
     try {
@@ -132,7 +144,7 @@ object Compiler {
     outputFile.deleteOnExit()
 
     try {
-      compilePlanToFile(plannedProgram, outputFile, config, None)
+      compilePlanToFile(plannedProgram, outputFile, config, None, irOutputFileOpt)
 
       // Create our output streams
       var stdout: Option[InputStream] = None

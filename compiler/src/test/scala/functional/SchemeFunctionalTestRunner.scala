@@ -26,6 +26,10 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
 
   private val targetPlatform = platform.DetectLlvmTarget()
 
+  // Define this to dump the test IR to a directory. This is useful determining how compiler changes affected LLVM IR
+  // and assembler output
+  private val irOutputDirOpt: Option[String] = None
+
   private case class ExecutionResult(
       success: Boolean,
       output: List[ast.Datum],
@@ -57,7 +61,7 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
       for(optimiseLevel <- optimiseLevels) {
         // Start a nested test
         test(s"$name (-O ${optimiseLevel})") {
-          runSingleCondition(condition, optimiseLevel)
+          runSingleCondition(name, condition, optimiseLevel)
         }
       }
 
@@ -65,10 +69,10 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
       fail("Unable to parse test: " + other.toString)
   }
 
-  private def runSingleCondition(condition: ast.Datum, optimiseLevel: Int) {
+  private def runSingleCondition(name: String, condition: ast.Datum, optimiseLevel: Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
-        val result = executeProgram(wrapForPrinting(program), optimiseLevel)
+        val result = executeProgram(name, wrapForPrinting(program), optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -83,7 +87,7 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
         assert(result.output === List(expectedValue))
 
       case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, optimiseLevel)
+        val result = executeProgram(name, program, optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -102,7 +106,7 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
         val canaryValue = ast.Symbol("test-completed")
         val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue))
 
-        val result = executeProgram(wrapForPrinting(programWithCanary), optimiseLevel)
+        val result = executeProgram(name, wrapForPrinting(programWithCanary), optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -124,13 +128,13 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
 
       case ast.ProperList(ast.Symbol("expect-exit-value") :: ast.Integer(exitValue) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, optimiseLevel)
+        val result = executeProgram(name, program, optimiseLevel)
         assert(result.exitValue == exitValue)
 
       case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
           val wrappedProgram = wrapForAssertRaises(errorPredicate, program)
-          val result = executeProgram(wrappedProgram, optimiseLevel)
+          val result = executeProgram(name, wrappedProgram, optimiseLevel)
 
           if (!result.success) {
             if (result.errorString.isEmpty) {
@@ -148,7 +152,7 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
 
       case ast.ProperList(ast.Symbol("expect-compile-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
-          executeProgram(program, optimiseLevel)
+          executeProgram(name, program, optimiseLevel)
         }
         catch {
           case _: SemanticException if errorPredicate == "error-object?" =>
@@ -191,7 +195,7 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
       ast.ProperList(ast.Symbol("assert-raises") :: ast.Symbol(errorPredicate) :: testExprs)
   }
 
-  private def executeProgram(program: List[ast.Datum], optimiseLevel: Int): ExecutionResult = {
+  private def executeProgram(name: String, program: List[ast.Datum], optimiseLevel: Int): ExecutionResult = {
     val finalProgram = testImportDecl :: program
 
     // Compile the program
@@ -210,7 +214,16 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
       "LLAMBDA_TEST_FILES_BASE" -> testFilesBaseDir
     )
 
-    val result = Compiler.runData(finalProgram, compileConfig, extraEnv)
+    val irOutputFileOpt = irOutputDirOpt
+      // We don't care about code generation at -O0
+      .filter(_ => optimiseLevel == 2)
+      .map { irOutputDir =>
+        // Forward slash is a reserved character for Unix paths
+        val replacedName = name.replaceAllLiterally("/", "-slash-")
+        new File(irOutputDir, s"${replacedName}.ll")
+      }
+
+    val result = Compiler.runData(finalProgram, compileConfig, extraEnv, irOutputFileOpt)
 
     val errorString = result.stderr
     val exitValue = result.exitValue
