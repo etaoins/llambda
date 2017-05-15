@@ -11,7 +11,7 @@ object GenLoadSymbolByte {
       symbolByteLength: Long,
       possibleValuesOpt: Option[Set[Byte]]
   ): IrValue = {
-    val bytePtr = if (symbolByteLength <= ct.SymbolCellConstants.maximumInlineSymbolBytes) {
+    val bytePtr = if (symbolByteLength <= ct.SymbolCellConstants.maxInlineSymbolBytes) {
       val inlineSymbolIr = ct.InlineSymbolCell.genPointerBitcast(block)(symbolIr)
 
       // We can use GEP to directly index our byte

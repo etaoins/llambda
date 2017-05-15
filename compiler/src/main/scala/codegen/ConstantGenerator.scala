@@ -258,7 +258,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     val stringCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
-    val inlineUtf8Bytes = ct.StringCellConstants.maximumInlineStringBytes
+    val inlineUtf8Bytes = ct.StringCellConstants.maxInlineStringBytes
 
     val stringCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
@@ -294,7 +294,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     val symbolCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
-    val inlineUtf8Bytes = ct.SymbolCellConstants.maximumInlineSymbolBytes
+    val inlineUtf8Bytes = ct.SymbolCellConstants.maxInlineSymbolBytes
 
     val symbolCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline

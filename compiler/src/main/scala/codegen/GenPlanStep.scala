@@ -221,8 +221,17 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> byteIr)
 
     case ps.LoadBytevectorLength(resultTemp, bytevectorTemp) =>
+      val rangeMetadata = RangeMetadata(
+        ct.BytevectorCell.lengthIrType,
+        (
+          ct.BytevectorCellConstants.minPossibleLength,
+          ct.BytevectorCellConstants.maxPossibleLength(genGlobals.targetPlatform) + 1
+        )
+      )
+
+      val block = state.currentBlock
       val bytevectorIr = state.liveTemps(bytevectorTemp)
-      val lengthIr = ct.BytevectorCell.genLoadFromLength(state.currentBlock)(bytevectorIr)
+      val lengthIr = ct.BytevectorCell.genLoadFromLength(block)(bytevectorIr, Map("range" -> rangeMetadata))
 
       state.withTempValue(resultTemp -> lengthIr)
 
@@ -247,8 +256,17 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> elementsIr)
 
     case ps.LoadVectorLength(resultTemp, vectorTemp) =>
+      val rangeMetadata = RangeMetadata(
+        ct.VectorCell.lengthIrType,
+        (
+          ct.VectorCellConstants.minPossibleLength,
+          ct.VectorCellConstants.maxPossibleLength(genGlobals.targetPlatform) + 1
+        )
+      )
+
+      val block = state.currentBlock
       val vectorIr = state.liveTemps(vectorTemp)
-      val lengthIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
+      val lengthIr = ct.VectorCell.genLoadFromLength(block)(vectorIr, Map("range" ->  rangeMetadata))
 
       state.withTempValue(resultTemp -> lengthIr)
 

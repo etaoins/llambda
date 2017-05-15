@@ -15,7 +15,7 @@ object GenLoadSymbolByteLength {
 
     val possibleInlineLengthsOpt = possibleLengthsOpt map { possibleLengths =>
       possibleLengths map { possibleLength =>
-        if (possibleLength > ct.SymbolCellConstants.maximumInlineSymbolBytes) {
+        if (possibleLength > ct.SymbolCellConstants.maxInlineSymbolBytes) {
           // This is a heap length. We will record the inline heap length as heapSymbolInlineByteLength
           ct.SymbolCellConstants.heapSymbolInlineByteLength
         }
@@ -38,7 +38,7 @@ object GenLoadSymbolByteLength {
     }
 
     val possibleHeapLengthsOpt = possibleLengthsOpt map { possibleLengths =>
-      possibleLengths filter (_ > ct.SymbolCellConstants.maximumInlineSymbolBytes)
+      possibleLengths filter (_ > ct.SymbolCellConstants.maxInlineSymbolBytes)
     }
 
     val entryBlock = initialState.currentBlock
