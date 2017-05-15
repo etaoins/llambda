@@ -40,7 +40,7 @@ AnyCell* llbase_vector_ref(World &world, VectorCell *vector, std::int64_t index)
 {
 	assertIndexValid(world,"(vector-ref)", vector, vector->length(), index);
 
-	return vector->elementAt(index);
+	return vector->elements()[index];
 }
 
 void llbase_vector_set(World &world, VectorCell *vector, std::int64_t index, AnyCell *obj)
@@ -52,7 +52,7 @@ void llbase_vector_set(World &world, VectorCell *vector, std::int64_t index, Any
 		signalError(world, ErrorCategory::MutateLiteral, "(vector-set!) on vector literal", {vector});
 	}
 
-	vector->setElementAt(index, obj);
+	vector->elements()[index] = obj;
 }
 
 VectorCell *llbase_vector(World &world, RestValues<AnyCell> *argList)
