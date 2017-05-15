@@ -8,7 +8,7 @@ extern "C"
 
 using namespace lliby;
 
-void *llcore_record_data_alloc(std::uint64_t size)
+void *llcore_record_data_alloc(std::uint32_t size)
 {
 	return RecordLikeCell::allocateRecordData(size);
 }

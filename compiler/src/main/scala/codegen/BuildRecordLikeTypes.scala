@@ -29,6 +29,7 @@ object TypeDataStorage extends Enumeration {
   * @param  storageType              Storage type of the record data
   * @param  hasOutOfLineDescendants  Indicates if any descendant classes have out-of-line data storage. This is used to
   *                                  determine if dataIsInline needs to be consulted when loading record-like data.
+  * @param  sizeBytes                Size of the record data in bytes.
   */
 case class GeneratedType(
     recordLikeType: vt.RecordLikeType,
@@ -39,7 +40,8 @@ case class GeneratedType(
     fieldToTbaaNode: Map[vt.RecordField, Metadata],
     fieldToGepIndices: Map[vt.RecordField, List[Int]],
     storageType: TypeDataStorage.Value,
-    hasOutOfLineDescendants: Boolean
+    hasOutOfLineDescendants: Boolean,
+    sizeBytes: Long
 )
 
 private[codegen] object BuildRecordLikeTypes {
@@ -176,7 +178,8 @@ private[codegen] object BuildRecordLikeTypes {
       fieldToTbaaNode=fieldToTbaaNode,
       fieldToGepIndices=fieldToGepIndices,
       storageType=storageType,
-      hasOutOfLineDescendants=false
+      hasOutOfLineDescendants=false,
+      sizeBytes=packedRecord.sizeBytes
     )
 
     val childrenResult = childTypes.foldLeft(IntermediateResult(incrementedClassId)) {
@@ -229,7 +232,7 @@ private[codegen] object BuildRecordLikeTypes {
       }
 
       // Total size of the record. This is needed to implement cloning records with native values.
-      val recordSize = GenSizeOf(generatedType.irType, offsetIrType)
+      val recordSize = IntegerConstant(offsetIrType, generatedType.sizeBytes)
 
       val cellOffsetCount = IntegerConstant(offsetIrType, cellOffsets.length)
 

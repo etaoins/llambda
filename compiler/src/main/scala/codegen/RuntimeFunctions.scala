@@ -77,7 +77,7 @@ object RuntimeFunctions {
     result=IrFunction.Result(PointerType(IntegerType(8))),
     name="llcore_record_data_alloc",
     arguments=List(
-      IrFunction.Argument(IntegerType(64))
+      IrFunction.Argument(IntegerType(32))
     ),
     attributes=Set(IrFunction.NoUnwind)
   )

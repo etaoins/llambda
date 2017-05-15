@@ -68,7 +68,7 @@ object GenInitRecordLike {
         }
 
         // Find the size of the record data
-        val irSize = GenSizeOf(recordDataIrType)
+        val irSize = IntegerConstant(IntegerType(32), generatedType.sizeBytes)
 
         // Allocate it using llcore_record_data_alloc
         val voidRecordData = block.callDecl(Some("rawRecordData"))(recordDataAllocDecl, List(irSize)).get
