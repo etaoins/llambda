@@ -175,17 +175,12 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
 
     generatedType.storageType match {
       case TypeDataStorage.Empty =>
-        val recordDataNullPtrIr = NullPointerConstant(ct.RecordCell.recordDataIrType)
-        val extraDataNullIr = ArrayConstant(IntegerType(8),
-          List.fill(ct.RecordCell.extraDataIrType.elements)(IntegerConstant(IntegerType(8), 0))
-        )
-
         val recordCell = ct.RecordCell.createConstant(
-          extraData=extraDataNullIr,
+          extraData=UndefConstant(ct.RecordCell.extraDataIrType),
           dataIsInline=1,
           isUndefined=if (isUndefined) 1 else 0,
           recordClassId=generatedType.classId,
-          recordData=recordDataNullPtrIr
+          recordData=UndefConstant(ct.RecordCell.recordDataIrType)
         )
 
         defineConstantData(module)(recordCellName, recordCell)
@@ -208,17 +203,13 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
         BitcastToConstant(packedCellDef, PointerType(ct.RecordCell.irType))
 
       case TypeDataStorage.OutOfLine =>
-        val extraDataNullIr = ArrayConstant(IntegerType(8),
-          List.fill(ct.RecordCell.extraDataIrType.elements)(IntegerConstant(IntegerType(8), 0))
-        )
-
         val recordDataName = baseName + ".data"
 
         val recordData = genRecordLikeData(module, genGlobals)(recordType, fieldTemps)
         val recordDataDef = defineConstantData(module)(recordDataName, recordData)
 
         val recordCell = ct.RecordCell.createConstant(
-          extraData=extraDataNullIr,
+          extraData=UndefConstant(ct.RecordCell.extraDataIrType),
           dataIsInline=0,
           isUndefined=if (isUndefined) 1 else 0,
           recordClassId=generatedType.classId,
@@ -235,17 +226,11 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     // Find the class ID for the empty closure type
     val generatedType = generatedTypes(vt.EmptyClosureType)
 
-    val extraDataNullIr = ArrayConstant(IntegerType(8),
-      List.fill(ct.ProcedureCell.extraDataIrType.elements)(IntegerConstant(IntegerType(8), 0))
-    )
-
     val procCell = ct.ProcedureCell.createConstant(
-      extraData=extraDataNullIr,
+      extraData=UndefConstant(ct.ProcedureCell.extraDataIrType),
       entryPoint=entryPoint,
       recordClassId=generatedType.classId,
-      // This can be anything as it's unused. Dynamic record cells leave this uninitialized to be instruction thrifty
-      // but we have to supply a value here
-      recordData=NullPointerConstant(ct.ProcedureCell.recordDataIrType),
+      recordData=UndefConstant(ct.ProcedureCell.recordDataIrType),
       dataIsInline=1,
       isUndefined=0
     )

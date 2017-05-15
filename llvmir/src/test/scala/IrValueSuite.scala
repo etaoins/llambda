@@ -65,6 +65,10 @@ class IrValueSuite extends FunSuite {
     assert(NullPointerConstant(PointerType(IntegerType(8))).toIr === "null")
   }
 
+  test("undef constant") {
+    assert(UndefConstant(PointerType(IntegerType(8))).toIr === "undef")
+  }
+
   test("anonymous structure constant") {
     val testConstant = StructureConstant(List(FalseConstant, IntegerConstant(IntegerType(32), 5), NullPointerConstant(PointerType(IntegerType(32)))))
 
