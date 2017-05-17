@@ -2,6 +2,7 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.planner.AdapterProcType
 
 
 object CanStackAllocateRecordLikeType {
@@ -16,9 +17,14 @@ object CanStackAllocateRecordLikeType {
       // values.
       recordType.fieldsWithInherited.size <= 2
 
-    case closureType: vt.ClosureType =>
+    case AdapterProcType =>
       // We have 8 bytes of extra data + one pointer. This is at least 12 bytes so we can pack at least one 64bit
       // value.
-      closureType.fieldsWithInherited.size <= 1
+      AdapterProcType.fieldsWithInherited.size <= 1
+
+    case closureType: vt.ClosureType =>
+      // We have 8 bytes of extra data + two pointer. This is at least 16 bytes so we can pack at least two 64bit
+      // values.
+      closureType.fieldsWithInherited.size <= 2
   }
 }

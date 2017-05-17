@@ -77,13 +77,9 @@ private[planner] object PlanLambda {
       // Save the closure values from the parent's scope
       val cellTemp = ps.TempValue()
 
-      // Create our entry point
-      val entryPointTemp = ps.TempValue()
-      parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, plannedFunction.signature, nativeSymbol)
-
       // Create our closure
       val closureFields = closureFieldValues(closureType, capturedVariables)(parentPlan)
-      parentPlan.steps += ps.InitProcedure(cellTemp, closureType, entryPointTemp, closureFields)
+      parentPlan.steps += ps.InitInternalProc(cellTemp, closureType, closureFields)
 
       Some(cellTemp)
     }

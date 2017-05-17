@@ -302,7 +302,12 @@ object GenPlanStep {
 
       initedState.withTempValue(initStep.result -> resultIr)
 
-    case initStep: ps.InitProcedure =>
+    case initStep: ps.InitInternalProc =>
+      val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
+
+      initedState.withTempValue(initStep.result -> resultIr)
+
+    case initStep: ps.InitAdapterProc =>
       val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
 
       // Store the entry point

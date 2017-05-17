@@ -7,6 +7,7 @@ import llambda.compiler.planner
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.planner.AdapterProcType
 import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._
 
@@ -90,8 +91,12 @@ private[codegen] object BuildRecordLikeTypes {
     val inlineDataStruct = StructureType(recordLikeType match {
       case _: vt.RecordType =>
         List(ct.RecordLikeCell.recordDataIrType, ct.RecordCell.extraDataIrType)
-      case _: vt.ClosureType =>
+      case AdapterProcType =>
+        // Adapters use the entry point
         List(ct.RecordLikeCell.recordDataIrType, ct.ProcedureCell.extraDataIrType)
+      case _: vt.ClosureType =>
+        // Internal closures do not use the entry point
+        List(ct.RecordLikeCell.recordDataIrType, ct.ProcedureCell.extraDataIrType, ct.ProcedureCell.entryPointIrType)
     })
 
     val inlineDataBytes = LayoutForIrType(config.targetPlatform.dataLayout)(inlineDataStruct).sizeBits / 8

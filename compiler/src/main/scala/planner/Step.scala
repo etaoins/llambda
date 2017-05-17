@@ -4,6 +4,8 @@ import io.llambda
 import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.planner.{AdapterProcType, AdapterProcField}
+
 
 class TempValue {
   override def toString = s"%${this.hashCode.toHexString}"
@@ -811,14 +813,13 @@ case class InitRecord(
   *
   * @param  entryPoint  Entry point for the procedure cell. This can be constructed with CreateNamedEntryPoint.
   */
-case class InitProcedure(
+case class InitInternalProc(
     result: TempValue,
     recordLikeType: vt.ClosureType,
-    entryPoint: TempValue,
     fieldValues: Map[vt.RecordField, TempValue],
     stackAllocate: Boolean = false
 ) extends InitRecordLikeStep {
-  lazy val inputValues = fieldValues.map(_._2).toSet + entryPoint
+  lazy val inputValues = fieldValues.map(_._2).toSet
   lazy val outputValues = Set(result)
 
   val isUndefined = false
@@ -826,7 +827,27 @@ case class InitProcedure(
   def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
 
   def renamed(f: (TempValue) => TempValue) =
-    InitProcedure(f(result), recordLikeType, f(entryPoint), fieldValues.mapValues(f), stackAllocate).assignLocationFrom(this)
+    InitInternalProc(f(result), recordLikeType, fieldValues.mapValues(f), stackAllocate).assignLocationFrom(this)
+}
+
+case class InitAdapterProc(
+    result: TempValue,
+    entryPoint: TempValue,
+    adaptedClosure: TempValue,
+    stackAllocate: Boolean = false
+) extends InitRecordLikeStep {
+  lazy val inputValues = Set(adaptedClosure, entryPoint)
+  lazy val outputValues = Set(result)
+
+  val isUndefined = false
+
+  val recordLikeType = AdapterProcType
+  val fieldValues = Map(AdapterProcField -> adaptedClosure)
+
+  def asStackAllocated = this.copy(stackAllocate=true).assignLocationFrom(this)
+
+  def renamed(f: (TempValue) => TempValue) =
+    InitAdapterProc(f(result), f(entryPoint), f(adaptedClosure), stackAllocate).assignLocationFrom(this)
 }
 
 /** Sets a record as defined */

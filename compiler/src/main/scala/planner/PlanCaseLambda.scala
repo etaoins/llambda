@@ -227,10 +227,7 @@ private[planner] object PlanCaseLambda {
         }
       }).toMap
 
-      val entryPointTemp = ps.TempValue()
-
-      parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
-      parentPlan.steps += ps.InitProcedure(cellTemp, closureType, entryPointTemp, fieldValues)
+      parentPlan.steps += ps.InitInternalProc(cellTemp, closureType, fieldValues)
 
       Some(cellTemp)
     }

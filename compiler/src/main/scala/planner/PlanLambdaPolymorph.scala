@@ -234,8 +234,8 @@ object PlanLambdaPolymorph {
         }
         else {
           val primarySelfTemp = ps.TempValue()
-          val fieldsToLoad = List((AdapterProcField -> primarySelfTemp))
-          procPlan.steps += ps.LoadRecordLikeFields(innerSelfTemp, AdapterProcType, fieldsToLoad)
+          val fieldsToLoad = List((SecondaryPolymorphField -> primarySelfTemp))
+          procPlan.steps += ps.LoadRecordLikeFields(innerSelfTemp, SecondaryPolymorphType, fieldsToLoad)
 
           primarySelfTemp
         }
