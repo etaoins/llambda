@@ -28,7 +28,7 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
 
   // Define this to dump the test IR to a directory. This is useful determining how compiler changes affected LLVM IR
   // and assembler output
-  private val irOutputDirOpt: Option[String] = None
+  private val irOutputDirOpt: Option[String] = sys.env.get("LLAMBDA_FUNCTIONAL_TEST_LLVMIR_DIR")
 
   private case class ExecutionResult(
       success: Boolean,
@@ -54,7 +54,11 @@ abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boole
   private val allTestSource = Source.fromInputStream(stream, "UTF-8").mkString
   private val allTests = SchemeParser.parseStringAsData(allTestSource, Some(s":/${resourcePath}"))
 
-  private val optimiseLevels = if (onlyOptimised) List(2) else List(0, 2)
+  private val forceOnlyOptimised = sys.env.get("LLAMBDA_FUNCTIONAL_TEST_ONLY_OPTIMISED").map { value =>
+    !List("0", "no").contains(value)
+  } getOrElse(false)
+
+  private val optimiseLevels = if (forceOnlyOptimised || onlyOptimised) List(2) else List(0, 2)
 
   allTests.foreach {
     case ast.ProperList(ast.Symbol("define-test") :: ast.String(name) :: condition :: Nil) =>
