@@ -249,12 +249,6 @@ object GenPlanStep {
 
       finalState.withTempValue(resultTemp -> vectorIr)
 
-    case ps.LoadVectorElementsData(resultTemp, vectorTemp) =>
-      val vectorIr = state.liveTemps(vectorTemp)
-      val elementsIr = ct.VectorCell.genLoadFromElements(state.currentBlock)(vectorIr)
-
-      state.withTempValue(resultTemp -> elementsIr)
-
     case ps.LoadVectorLength(resultTemp, vectorTemp) =>
       val rangeMetadata = RangeMetadata(
         ct.VectorCell.lengthIrType,
@@ -270,19 +264,24 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> lengthIr)
 
-    case ps.LoadVectorElement(resultTemp, _, elementsTemp, indexTemp) =>
-      val elementsIr = state.liveTemps(elementsTemp)
+    case ps.LoadVectorElement(resultTemp, vectorTemp, indexTemp) =>
       val indexIr = state.liveTemps(indexTemp)
+      val vectorIr = state.liveTemps(vectorTemp)
 
-      val elementIr = GenVector.loadElement(state.currentBlock)(elementsIr, indexIr)
+      val block = state.currentBlock
+      val elementsIr = ct.VectorCell.genLoadFromElements(block)(vectorIr)
+      val elementIr = GenVector.loadElement(block)(elementsIr, indexIr)
+
       state.withTempValue(resultTemp -> elementIr)
 
-    case ps.StoreVectorElement(_, elementsTemp, indexTemp, newValueTemp) =>
-      val elementsIr = state.liveTemps(elementsTemp)
+    case ps.StoreVectorElement(vectorTemp, indexTemp, newValueTemp) =>
+      val vectorIr = state.liveTemps(vectorTemp)
       val indexIr = state.liveTemps(indexTemp)
       val newValueIr = state.liveTemps(newValueTemp)
 
-      GenVector.storeElement(state.currentBlock)(elementsIr, indexIr, newValueIr)
+      val block = state.currentBlock
+      val elementsIr = ct.VectorCell.genLoadFromElements(block)(vectorIr)
+      GenVector.storeElement(block)(elementsIr, indexIr, newValueIr)
       state
 
     case ps.LoadProcedureEntryPoint(resultTemp, procTemp, signature) =>

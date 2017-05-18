@@ -613,18 +613,6 @@ case class InitFilledVector(
     true
 }
 
-/** Loads the pointer to the vector element data */
-case class LoadVectorElementsData(
-    result: TempValue,
-    vectorCell: TempValue
-) extends DiscardableStep with MergeableStep {
-  lazy val inputValues = Set(vectorCell)
-  lazy val outputValues = Set(result)
-
-  def renamed(f: (TempValue) => TempValue) =
-    LoadVectorElementsData(f(result), f(vectorCell)).assignLocationFrom(this)
-}
-
 /** Loads the length of a vector as an Int64 */
 case class LoadVectorLength(
     result: TempValue,
@@ -640,40 +628,36 @@ case class LoadVectorLength(
 /** Loads an element from a vector
   *
   * @param  vectorCell  Vector to load an element from
-  * @param  elements    Vector elements pointer
   * @param  index       Index of the element to load as an Int64. This value must be determined to be in range
   */
 case class LoadVectorElement(
     result: TempValue,
     vectorCell: TempValue,
-    elements: TempValue,
     index: TempValue
 ) extends Step with DiscardableStep {
-  lazy val inputValues = Set(vectorCell, elements, index)
+  lazy val inputValues = Set(vectorCell, index)
   lazy val outputValues = Set(result)
 
   def renamed(f: (TempValue) => TempValue) =
-    LoadVectorElement(f(result), f(vectorCell), f(elements), f(index)).assignLocationFrom(this)
+    LoadVectorElement(f(result), f(vectorCell), f(index)).assignLocationFrom(this)
 }
 
 /** Store an element in a vector
   *
   * @param  vectorCell  Vector to load an element from
-  * @param  elements    Vector elements pointer
   * @param  index       Index of the element to load as a Int64. This value must be determined to be in range
   * @param  newValue    Boxed value to store at the element index
   */
 case class StoreVectorElement(
     vectorCell: TempValue,
-    elements: TempValue,
     index: TempValue,
     newValue: TempValue
 ) extends Step {
-  lazy val inputValues = Set(vectorCell, elements, index, newValue)
+  lazy val inputValues = Set(vectorCell, index, newValue)
   val outputValues = Set[TempValue]()
 
   def renamed(f: (TempValue) => TempValue) =
-    StoreVectorElement(f(vectorCell), f(elements), f(index), f(newValue)).assignLocationFrom(this)
+    StoreVectorElement(f(vectorCell), f(index), f(newValue)).assignLocationFrom(this)
 }
 
 /** Indicates a step that boxes a native value

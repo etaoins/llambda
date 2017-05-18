@@ -98,15 +98,11 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
 
       val vectorTemp = knownVector.toTempValue(knownVector.schemeType)
 
-      // Load the vector elements pointer
-      val elementsTemp = ps.TempValue()
-      plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
-
       // Load the element
       val resultTemp = ps.TempValue()
       val indexTemp = constantInt.toTempValue(vt.Int64)
 
-      plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, elementsTemp, indexTemp)
+      plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, indexTemp)
 
       Some(TempValueToIntermediate(vt.AnySchemeType, resultTemp))
 
@@ -120,18 +116,13 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       assertIndexValid("(vector-set!)", vectorCellValue.vectorLength, index)
 
       val vectorTemp = vectorCellValue.toTempValue(vectorCellValue.schemeType)
-
-      // Load the vector elements pointer
-      val elementsTemp = ps.TempValue()
-
-      // Store the element
-      plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
       val indexTemp = constantInt.toTempValue(vt.Int64)
 
       // Convert the object to a temp value
       val objectTemp = objectValue.toTempValue(vt.AnySchemeType)
 
-      plan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, indexTemp, objectTemp)
+      // Store the element
+      plan.steps += ps.StoreVectorElement(vectorTemp,indexTemp, objectTemp)
 
       Some(iv.UnitValue)
 
