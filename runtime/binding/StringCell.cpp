@@ -20,7 +20,7 @@
 namespace lliby
 {
 
-StringCell* StringCell::createUninitialized(World &world, ByteLengthType byteLength, CharLengthType charLength)
+StringCell* StringCell::createUninitialised(World &world, ByteLengthType byteLength, CharLengthType charLength)
 {
 	void *cellPlacement = alloc::allocateCells(world);
 
@@ -42,7 +42,7 @@ StringCell* StringCell::createUninitialized(World &world, ByteLengthType byteLen
 	else
 	{
 		// Allocate a new shared byte array
-		SharedByteArray *newByteArray = SharedByteArray::createInstance(byteLength);
+		SharedByteArray *newByteArray = SharedByteArray::createUninitialised(byteLength);
 
 #ifndef NDEBUG
 		if (newByteArray->capacity(byteLength) > byteLength)
@@ -84,7 +84,7 @@ StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArr
 
 StringCell* StringCell::fromValidatedUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength, CharLengthType charLength)
 {
-	auto newString = StringCell::createUninitialized(world, byteLength, charLength);
+	auto newString = StringCell::createUninitialised(world, byteLength, charLength);
 
 	std::uint8_t *utf8Data = newString->utf8Data();
 	memcpy(utf8Data, data, byteLength);
@@ -112,7 +112,7 @@ StringCell* StringCell::fromFill(World &world, CharLengthType length, UnicodeCha
 	const ByteLengthType byteLength = encodedCharSize * length;
 
 	// Allocate the string
-	auto newString = StringCell::createUninitialized(world, byteLength, length);
+	auto newString = StringCell::createUninitialised(world, byteLength, length);
 
 	std::uint8_t *utf8Data = newString->utf8Data();
 
@@ -149,7 +149,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	}
 
 	// Allocate the new string
-	auto newString = StringCell::createUninitialized(world, totalByteLength, totalCharLength);
+	auto newString = StringCell::createUninitialised(world, totalByteLength, totalCharLength);
 
 	std::uint8_t *copyPtr = newString->utf8Data();
 
@@ -387,7 +387,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 		{
 			std::size_t byteArraySize = newByteLength;
 
-			newByteArray = SharedByteArray::createInstance(byteArraySize);
+			newByteArray = SharedByteArray::createUninitialised(byteArraySize);
 			destString = newByteArray->data();
 			copySource = pattern;
 
@@ -526,7 +526,7 @@ StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType 
 	const ByteLengthType newByteLength = range.byteCount();
 
 	// Create the new string
-	auto newString = StringCell::createUninitialized(world, newByteLength, range.charCount);
+	auto newString = StringCell::createUninitialised(world, newByteLength, range.charCount);
 
 	std::uint8_t *newUtf8Data = newString->utf8Data();
 
@@ -685,7 +685,7 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, SliceIndexType start,
 	else
 	{
 		// Create a new byte array and initialize it
-		byteArray = SharedByteArray::createInstance(newLength);
+		byteArray = SharedByteArray::createUninitialised(newLength);
 		memcpy(byteArray->data(), range.startPointer, newLength);
 	}
 

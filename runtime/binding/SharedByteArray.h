@@ -30,9 +30,14 @@ public:
 	}
 
 	/**
-	 * Creates a new SharedByteArray instance of the exactly the given size
+	 * Creates a new SharedByteArray instance of the exactly the given size with undefined contents
 	 */
-	static SharedByteArray* createInstance(std::size_t bytes);
+	static SharedByteArray* createUninitialised(std::size_t bytes);
+
+	/**
+	 * Creates a new SharedByteArray instance of the exactly the given size with zeroed
+	 */
+	static SharedByteArray* createZeroed(std::size_t bytes);
 
 	/**
 	 * Returns the capacity of the SharedByteArray instance in bytes

@@ -56,7 +56,7 @@ void llbase_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::int
 BytevectorCell *llbase_bytevector(World &world, RestValues<IntegerCell> *argList)
 {
 	auto length = argList->size();
-	SharedByteArray *byteArray = SharedByteArray::createInstance(length);
+	SharedByteArray *byteArray = SharedByteArray::createUninitialised(length);
 	unsigned int byteIndex = 0;
 
 	// Fill out the new elements from the list

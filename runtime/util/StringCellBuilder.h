@@ -81,7 +81,7 @@ public:
 		assert(totalByteLength <= StringCell::maximumByteLength());
 
 		// Create a new string to write in to
-		auto newString = StringCell::createUninitialized(world, totalByteLength, m_expectedChars);
+		auto newString = StringCell::createUninitialised(world, totalByteLength, m_expectedChars);
 
 		std::uint8_t *utf8Data = newString->utf8Data();
 		memcpy(utf8Data, m_outputBuffer, totalByteLength);

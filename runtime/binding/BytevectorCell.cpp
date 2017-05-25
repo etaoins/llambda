@@ -19,7 +19,7 @@ BytevectorCell* BytevectorCell::withByteArray(World &world, SharedByteArray *byt
 
 BytevectorCell* BytevectorCell::fromData(World &world, const std::uint8_t *data, LengthType length)
 {
-	SharedByteArray *newByteArray = SharedByteArray::createInstance(length);
+	SharedByteArray *newByteArray = SharedByteArray::createUninitialised(length);
 	memcpy(newByteArray->data(), data, length);
 
 	return BytevectorCell::withByteArray(world, newByteArray, length);
@@ -27,14 +27,28 @@ BytevectorCell* BytevectorCell::fromData(World &world, const std::uint8_t *data,
 
 BytevectorCell* BytevectorCell::fromFill(World &world, LengthType length, std::uint8_t fill)
 {
-	SharedByteArray *newByteArray = SharedByteArray::createInstance(length);
+	SharedByteArray *newByteArray;
 
-	if (newByteArray == nullptr)
+	if (fill == 0)
 	{
-		return nullptr;
-	}
+		newByteArray = SharedByteArray::createZeroed(length);
 
-	memset(newByteArray->data(), fill, length);
+		if (newByteArray == nullptr)
+		{
+			return nullptr;
+		}
+	}
+	else
+	{
+		newByteArray = SharedByteArray::createUninitialised(length);
+
+		if (newByteArray == nullptr)
+		{
+			return nullptr;
+		}
+
+		memset(newByteArray->data(), fill, length);
+	}
 
 	return BytevectorCell::withByteArray(world, newByteArray, length);
 }
@@ -59,7 +73,7 @@ BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const
 		return nullptr;
 	}
 
-	SharedByteArray *newByteArray = SharedByteArray::createInstance(totalLength);
+	SharedByteArray *newByteArray = SharedByteArray::createUninitialised(totalLength);
 	std::uint8_t *copyPtr = newByteArray->data();
 
 	for(auto byteVector : byteVectors)
@@ -85,7 +99,7 @@ BytevectorCell* BytevectorCell::copy(World &world, SliceIndexType start, SliceIn
 	}
 
 	const LengthType newLength = end - start;
-	SharedByteArray *newByteArray = SharedByteArray::createInstance(newLength);
+	SharedByteArray *newByteArray = SharedByteArray::createUninitialised(newLength);
 
 	memcpy(newByteArray->data(), &byteArray()->data()[start], newLength);
 

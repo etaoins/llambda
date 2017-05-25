@@ -55,7 +55,7 @@ SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, Byt
 	}
 	else
 	{
-		SharedByteArray *newByteArray = SharedByteArray::createInstance(byteLength);
+		SharedByteArray *newByteArray = SharedByteArray::createUninitialised(byteLength);
 		memcpy(newByteArray->data(), data, byteLength);
 
 		return new (cellPlacement) HeapSymbolCell(newByteArray, byteLength, charLength);

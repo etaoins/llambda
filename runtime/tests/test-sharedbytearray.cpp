@@ -10,7 +10,7 @@ using lliby::SharedByteArray;
 int main(int argc, char *argv[])
 {
 	{
-		SharedByteArray *handle1 = SharedByteArray::createInstance(5);
+		SharedByteArray *handle1 = SharedByteArray::createUninitialised(5);
 
 		// We should be exclusive
 		ASSERT_TRUE(handle1->isExclusive());
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
 	{
 		// Create a byte array
-		SharedByteArray *handle1 = SharedByteArray::createInstance(5);
+		SharedByteArray *handle1 = SharedByteArray::createUninitialised(5);
 		// Create another reference to it
 		SharedByteArray *handle2 = handle1->ref();
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		const std::size_t testDataSize = 5;
 
 		// Create a byte array
-		SharedByteArray *handle1 = SharedByteArray::createInstance(5);
+		SharedByteArray *handle1 = SharedByteArray::createUninitialised(5);
 		// Create another reference to it
 		SharedByteArray *handle2 = handle1->ref();
 
@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
 		// Both handles are now exclusive
 		ASSERT_TRUE(handle1->isExclusive());
 		ASSERT_TRUE(handle2->isExclusive());
-		
-		// Neither handle is a shared constant 
+
+		// Neither handle is a shared constant
 		ASSERT_FALSE(handle1->isSharedConstant());
 		ASSERT_FALSE(handle2->isSharedConstant());
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	{
 		const std::size_t minimumByteCount = 17;
 
-		SharedByteArray *handle1 = SharedByteArray::createInstance(minimumByteCount);
+		SharedByteArray *handle1 = SharedByteArray::createUninitialised(minimumByteCount);
 
 		ASSERT_TRUE(handle1->capacity(minimumByteCount) >= minimumByteCount);
 

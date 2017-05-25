@@ -169,7 +169,7 @@ protected:
 	std::uint8_t* utf8Data();
 
 	// Creates an uninitialized cell with the given size
-	static StringCell* createUninitialized(World &world, ByteLengthType byteLength, CharLengthType charLength);
+	static StringCell* createUninitialised(World &world, ByteLengthType byteLength, CharLengthType charLength);
 
 	const std::uint8_t *charPointer(CharLengthType charOffset, const std::uint8_t *startFrom, ByteLengthType startOffset);
 	const std::uint8_t *charPointer(CharLengthType charOffset);

@@ -34,12 +34,17 @@ SharedByteArray::SharedByteArray(RefCountType initialRefCount) :
 	incrementInstanceCount();
 }
 
-SharedByteArray* SharedByteArray::createInstance(std::size_t bytes)
+SharedByteArray* SharedByteArray::createUninitialised(std::size_t bytes)
 {
 	// This is tricky because we're a variable length object
 	// Calculate our required length and then place the object
 	void *allocPlacement = malloc(objectSizeForBytes(bytes));
+	return new (allocPlacement) SharedByteArray(1);
+}
 
+SharedByteArray* SharedByteArray::createZeroed(std::size_t bytes)
+{
+	void *allocPlacement = calloc(1, objectSizeForBytes(bytes));
 	return new (allocPlacement) SharedByteArray(1);
 }
 
@@ -67,7 +72,7 @@ SharedByteArray* SharedByteArray::asWritable(std::size_t bytes)
 	else
 	{
 		// We need to fork this
-		SharedByteArray *duplicateCopy = createInstance(bytes);
+		SharedByteArray *duplicateCopy = createUninitialised(bytes);
 		memcpy(duplicateCopy->m_data, m_data, bytes);
 
 		// Unref ourselves

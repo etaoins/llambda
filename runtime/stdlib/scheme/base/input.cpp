@@ -179,7 +179,7 @@ AnyCell *llbase_read_bytevector(World &world, std::int64_t requestedBytes, PortC
 	assertLengthValid(world, "(read-bytevector)", "bytevector length", BytevectorCell::maximumLength(), requestedBytes);
 
 	// Read in to a SharedByteArray so BytevectorCell can use it directly
-	auto byteArray = SharedByteArray::createInstance(requestedBytes);
+	auto byteArray = SharedByteArray::createUninitialised(requestedBytes);
 	portStream->read(reinterpret_cast<char*>(byteArray->data()), requestedBytes);
 
 	const auto readBytes = portStream->gcount();
