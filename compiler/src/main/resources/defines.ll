@@ -17,6 +17,7 @@
 %world = type {%cell*, %cell*}
 
 !4 = !{ !"VectorCell::m_elements", !0 }
+!5 = !{ !"SharedByteArray::m_data", !0 }
 
 ; {refcount, cached hash value, data}
 %sharedByteArray = type {i32, i32, [0 x i8]}

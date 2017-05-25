@@ -91,6 +91,25 @@ object RuntimeFunctions {
     )
   )
 
+  val bytevectorAlloc = IrFunctionDecl(
+    result=IrFunction.Result(PointerType(ct.BytevectorCell.irType)),
+    name="llcore_bytevector_alloc",
+    arguments=List(
+      Argument(PointerType(WorldValue.irType)),
+      IrFunction.Argument(IntegerType(64))
+    )
+  )
+
+  val bytevectorAllocFilled = IrFunctionDecl(
+    result=IrFunction.Result(PointerType(ct.BytevectorCell.irType)),
+    name="llcore_bytevector_alloc_filled",
+    arguments=List(
+      Argument(PointerType(WorldValue.irType)),
+      IrFunction.Argument(IntegerType(64)),
+      IrFunction.Argument(IntegerType(8))
+    )
+  )
+
   val makeParameter = IrFunctionDecl(
     result=Result(PointerType(ct.ProcedureCell.irType)),
     name="llcore_make_parameter",

@@ -137,8 +137,9 @@ case class ConstantBooleanValue(value: Boolean) extends TrivialConstantValue(ct.
   }
 }
 
-case class ConstantBytevectorValue(elements: Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {
+case class ConstantBytevectorValue(elements: Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue with KnownBytevector {
   val typeDescription = "constant bytevector"
+  val bytevectorLength = elements.size
 }
 
 case class ConstantPairValue(car: ConstantValue, cdr: ConstantValue) extends ConstantValue(ct.PairCell) with BoxedOnlyValue with KnownPair {

@@ -220,6 +220,28 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> byteIr)
 
+    case ps.InitStaticBytevector(resultTemp, elements) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
+
+      val (newState, bytevectorIr) = GenBytevector.initStatic(state)(worldPtrIr, elements)
+      newState.withTempValue(resultTemp -> bytevectorIr)
+
+    case ps.InitDynamicBytevector(resultTemp, elementTemps) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
+      val elementIrs = elementTemps.map(state.liveTemps)
+
+      val bytevectorIr = GenBytevector.initDynamic(state)(worldPtrIr, elementIrs)
+      state.withTempValue(resultTemp -> bytevectorIr)
+
+    case ps.InitFilledBytevector(resultTemp, length, fill) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
+      val lengthIr = state.liveTemps(length)
+      val fillIr = state.liveTemps(fill)
+
+      val vectorIr = GenBytevector.initFilled(state)(worldPtrIr, lengthIr, fillIr)
+
+      state.withTempValue(resultTemp -> vectorIr)
+
     case ps.LoadBytevectorLength(resultTemp, bytevectorTemp) =>
       val rangeMetadata = RangeMetadata(
         ct.BytevectorCell.lengthIrType,
@@ -234,6 +256,16 @@ object GenPlanStep {
       val lengthIr = ct.BytevectorCell.genLoadFromLength(block)(bytevectorIr, Map("range" -> rangeMetadata))
 
       state.withTempValue(resultTemp -> lengthIr)
+
+    case ps.LoadBytevectorElement(resultTemp, bytevectorTemp, indexTemp) =>
+      val indexIr = state.liveTemps(indexTemp)
+      val bytevectorIr = state.liveTemps(bytevectorTemp)
+
+      val block = state.currentBlock
+      val byteArrayIr = ct.BytevectorCell.genLoadFromByteArray(block)(bytevectorIr)
+      val elementIr = GenBytevector.loadElement(block)(byteArrayIr, indexIr)
+
+      state.withTempValue(resultTemp -> elementIr)
 
     case ps.InitVector(resultTemp, elementTemps) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)

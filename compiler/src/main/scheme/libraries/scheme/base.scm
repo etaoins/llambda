@@ -453,7 +453,7 @@
     (define native-utf8->string (world-function llbase "llbase_utf8_to_string" (-> <bytevector> <native-int64> <native-int64> <string>)))
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 
-    (define native-make-bytevector (world-function llbase "llbase_make_bytevector" (-> <native-int64> <native-uint8> <bytevector>)))
+    (define native-make-bytevector (world-function llbase "llcore_bytevector_alloc_filled" (-> <native-int64> <native-uint8> <bytevector>)))
     (define-stdlib (make-bytevector [len : <integer>] [fill : <integer> 0])
       (native-make-bytevector len fill))
 

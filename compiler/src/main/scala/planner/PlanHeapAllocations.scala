@@ -49,8 +49,8 @@ object PlanHeapAllocations {
       placeHeapAllocations(reverseTail, 0, newAcc)
 
     case otherStep :: reverseTail =>
-     val newAcc = otherStep :: acc
-     placeHeapAllocations(reverseTail, requiredCells + otherStep.requiredHeapCells, newAcc)
+      val newAcc = otherStep :: acc
+      placeHeapAllocations(reverseTail, requiredCells + otherStep.requiredHeapCells, newAcc)
 
     case Nil =>
       // We've reached the top of the branch - allocate any cells we need and terminate

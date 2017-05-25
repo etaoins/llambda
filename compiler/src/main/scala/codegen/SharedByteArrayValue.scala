@@ -8,6 +8,8 @@ object SharedByteArrayValue {
   // Maximum value of a 32bit unsigned integer
   private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
 
+  val irType = UserDefinedType("sharedByteArray")
+
   val refCountIrType = IntegerType(32)
 
   val cachedHashValueIrType = IntegerType(32)
@@ -41,5 +43,10 @@ object SharedByteArrayValue {
   def genPointerToDataByte(block: IrBlockBuilder)(structureValue: IrValue, indexIr: IrValue) = {
     val gepIndices = List(0, 2).map(IntegerConstant(IntegerType(32), _)) :+ indexIr
     block.getelementptr("bytePtr")(IntegerType(8), structureValue, gepIndices, inbounds=true)
+  }
+
+  def genLoadFromDataByte(block: IrBlockBuilder)(structureValue: IrValue, indexIr: IrValue) = {
+    val bytePtr = genPointerToDataByte(block)(structureValue, indexIr)
+    block.load("byte")(bytePtr, metadata=Map("tbaa" -> dataTbaaNode))
   }
 }

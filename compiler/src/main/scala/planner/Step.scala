@@ -561,6 +561,65 @@ case class LoadSymbolByte(
       .assignLocationFrom(this)
 }
 
+/** Creates an allocated bytevector with specified constnt elements
+  *
+  * @param  result    Result value as ByteectorCell
+  * @param  elements  Elements to initialise the bytevector with
+  */
+case class InitStaticBytevector(
+    result: TempValue,
+    elements: Vector[Short]
+) extends DiscardableStep {
+  lazy val inputValues = Set(WorldPtrValue)
+  lazy val outputValues = Set(result)
+  override def requiredHeapCells = 1
+
+  def renamed(f: (TempValue) => TempValue) =
+    InitStaticBytevector(f(result), elements).assignLocationFrom(this)
+}
+
+/** Creates an allocated bytevector with specific TempValue elements
+  *
+  * This is less efficient than InitStaticBytevector
+  *
+  * @param  result    Result value as ByteectorCell
+  * @param  elements  Elements to initialise the bytevector with as UInt8
+  */
+case class InitDynamicBytevector(
+    result: TempValue,
+    elements: Vector[TempValue]
+) extends DiscardableStep {
+  lazy val inputValues = elements.toSet + WorldPtrValue
+  lazy val outputValues = Set(result)
+
+  def renamed(f: (TempValue) => TempValue) =
+    InitDynamicBytevector(f(result), elements.map(f)).assignLocationFrom(this)
+
+  override def canThrow: Boolean =
+    true
+}
+
+/** Creates a new dynamically allocated bytevector with a fill value
+  *
+  * @param  result  Result value as ByteectorCell
+  * @param  length  Length of the new vector as Int64
+  * @param  fill    Value to fill the vector with as UInt8
+  */
+case class InitFilledBytevector(
+    result: TempValue,
+    length: TempValue,
+    fill: TempValue
+) extends DiscardableStep {
+  lazy val inputValues = Set(length, fill, WorldPtrValue)
+  lazy val outputValues = Set(result)
+
+  def renamed(f: (TempValue) => TempValue) =
+    InitFilledBytevector(f(result), f(length), f(fill)).assignLocationFrom(this)
+
+  override def canThrow: Boolean =
+    true
+}
+
 /** Loads the length of a bytevector as an Int64 */
 case class LoadBytevectorLength(
     result: TempValue,
@@ -571,6 +630,23 @@ case class LoadBytevectorLength(
 
   def renamed(f: (TempValue) => TempValue) =
     LoadBytevectorLength(f(result), f(boxed)).assignLocationFrom(this)
+}
+
+/** Loads an element from a bytevector
+  *
+  * @param  bytevectorCell  Bytevector to load an element from
+  * @param  index           Index of the element to load as an Int64. This value must be determined to be in range
+  */
+case class LoadBytevectorElement(
+    result: TempValue,
+    bytevectorCell: TempValue,
+    index: TempValue
+) extends Step with DiscardableStep {
+  lazy val inputValues = Set(bytevectorCell, index)
+  lazy val outputValues = Set(result)
+
+  def renamed(f: (TempValue) => TempValue) =
+    LoadBytevectorElement(f(result), f(bytevectorCell), f(index)).assignLocationFrom(this)
 }
 
 /** Creates a new dynamically allocated vector with specific elements

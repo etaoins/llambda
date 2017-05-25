@@ -39,6 +39,7 @@ add_library(llcore
 	binding/generated/ErrorCategory.cpp
 	core/World.cpp
 	core/alloc.cpp
+	core/bytevector.cpp
 	core/constinstances.cpp
 	core/dynamic.cpp
 	core/eqv.cpp

@@ -52,7 +52,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     val innerConstantInitializer = SharedByteArrayValue.createUtf8StringConstant(utf8Data)
 
     val innerConstant = defineConstantData(module)(innerConstantName, innerConstantInitializer)
-    BitcastToConstant(innerConstant, PointerType(UserDefinedType("sharedByteArray")))
+    BitcastToConstant(innerConstant, PointerType(SharedByteArrayValue.irType))
   }
 
   private def genInlineUtf8Constant(module: IrModuleBuilder)(utf8Data: Array[Byte], constantLength: Int): IrConstant = {
@@ -85,7 +85,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     val bytevectorCellName = baseName + ".cell"
     val bytevectorCell = ct.BytevectorCell.createConstant(
       length=elements.length,
-      byteArray=BitcastToConstant(elementsValue, PointerType(UserDefinedType("sharedByteArray")))
+      byteArray=BitcastToConstant(elementsValue, PointerType(SharedByteArrayValue.irType))
     )
 
     defineConstantData(module)(bytevectorCellName, bytevectorCell)

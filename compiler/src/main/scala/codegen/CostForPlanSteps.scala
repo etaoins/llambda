@@ -51,8 +51,8 @@ object CostForPlanSteps {
       floatMathCost
 
     case _: ps.UnboxValue | _: ps.LoadPairCar | _: ps.LoadPairCdr | _: ps.LoadProcedureEntryPoint |
-         _: ps.LoadVectorLength |_: ps.LoadVectorElement | _: ps.LoadBytevectorLength | _: ps.LoadSymbolByteLength |
-         _: ps.LoadSymbolByte =>
+         _: ps.LoadVectorLength |_: ps.LoadVectorElement | _: ps.LoadBytevectorLength | _: ps.LoadBytevectorElement |
+         _: ps.LoadSymbolByteLength | _: ps.LoadSymbolByte =>
       // This is a load from memory
       loadCost
 
@@ -93,7 +93,13 @@ object CostForPlanSteps {
     case ps.InitVector(_, elements) =>
       heapCellConsumptionCost + (elements.length * storeCost)
 
-    case _: ps.InitFilledVector =>
+    case ps.InitStaticBytevector(_, _) =>
+      heapCellConsumptionCost
+
+    case ps.InitDynamicBytevector(_, elements) =>
+      heapCellConsumptionCost + (elements.length * storeCost)
+
+    case _: ps.InitFilledVector | _: ps.InitFilledBytevector =>
       // Assume the average vector is 8 elements long
       heapCellConsumptionCost + (8 * storeCost)
 
