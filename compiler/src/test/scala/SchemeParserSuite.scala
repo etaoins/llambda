@@ -295,7 +295,7 @@ newline""", "Bare\nnewline")
 
   test("bytevectors") {
     assertReflexiveParse("#u8(+0 10. 5 #xff #d0)", List(
-      ast.Bytevector(Vector(0, 10, 5, 255, 0))
+      ast.Bytevector(Vector(0, 10, 5, 255, 0).map(_.toByte))
     ))
 
     assertReflexiveParse("#u8()", List(ast.Bytevector(Vector())))

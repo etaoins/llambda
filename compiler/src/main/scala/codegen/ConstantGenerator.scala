@@ -29,7 +29,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
   private val integerCache = new mutable.LongMap[IrConstant]
   private val flonumCache = new mutable.LongMap[IrConstant]
   private val characterCache = new mutable.LongMap[IrConstant]
-  private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
+  private val bytevectorCache = new mutable.HashMap[Vector[Byte], IrConstant]
   private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
   private val vectorCache = new mutable.HashMap[Vector[IrConstant], IrConstant]
   private val recordCache = new mutable.HashMap[(vt.RecordType, Map[vt.RecordField, IrConstant], Boolean), IrConstant]
@@ -73,12 +73,12 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     stringValue.codePointCount(0, stringValue.length)
   }
 
-  private def genBytevectorCell(module: IrModuleBuilder)(elements: Seq[Short]): IrConstant = {
+  private def genBytevectorCell(module: IrModuleBuilder)(elements: Seq[Byte]): IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeBytevector")
 
     val elementsName = baseName + ".elementsByteArray"
-    val elementsInitializer = SharedByteArrayValue.createShortArrayConstant(elements)
+    val elementsInitializer = SharedByteArrayValue.createArrayConstant(elements)
 
     val elementsValue = defineConstantData(module)(elementsName, elementsInitializer)
 

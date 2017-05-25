@@ -21,14 +21,14 @@ object GenBytevector {
 
   def initStatic(state: GenerationState)(
     worldPtrIr: IrValue,
-    elements: Vector[Short]
+    elements: Vector[Byte]
   ): (GenerationState, IrValue) = {
     val block = state.currentBlock
     val module = block.function.module
 
     // Make a constant shared byte array
     val sharedByteArrayName = module.nameSource.allocate("staticElementsByteArray")
-    val sharedByteArrayInitialiser = SharedByteArrayValue.createShortArrayConstant(elements)
+    val sharedByteArrayInitialiser = SharedByteArrayValue.createArrayConstant(elements)
 
     val constantDataDef = IrGlobalVariableDef(
       name=sharedByteArrayName,

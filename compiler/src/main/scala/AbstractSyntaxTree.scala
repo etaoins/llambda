@@ -176,7 +176,7 @@ case class Vector(elements: ScalaVector[Datum]) extends Datum {
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class Bytevector(elements: ScalaVector[Short]) extends NonSymbolLeaf {
+case class Bytevector(elements: ScalaVector[Byte]) extends NonSymbolLeaf {
   val schemeType = vt.BytevectorType
 
   override def toString =

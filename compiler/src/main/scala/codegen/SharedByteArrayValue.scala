@@ -26,16 +26,19 @@ object SharedByteArrayValue {
     ))
   }
 
-  /** Creates a onstant SharedByteArray from an array of shorts
-    *
-    * Shorts are used to emulate unsigned bytes. They are expected to be in the range 0-255
-    */
-  def createShortArrayConstant(elements: Seq[Short]): StructureConstant = {
-    val elementIrs = elements.map(IntegerConstant(IntegerType(8), _))
+  /** Creates a onstant SharedByteArray from a sequence of bytes */
+  def createArrayConstant(elements: Seq[Byte]): StructureConstant = {
+    val elementIrs = elements.map { byteValue =>
+      // Manually zero extend the bytes to prevent bytes >127 from being rendered as negative numbers. This is purely
+      // aesthetic
+      val longValue = if (byteValue < 0) byteValue.toLong + 256 else byteValue.toLong
+
+      IntegerConstant(IntegerType(8), longValue)
+    }
 
     StructureConstant(List(
       IntegerConstant(refCountIrType, sharedConstantRefCount),
-      IntegerConstant(cachedHashValueIrType, SharedByteArrayHash.fromShorts(elements)),
+      IntegerConstant(cachedHashValueIrType, SharedByteArrayHash.fromBytes(elements)),
       ArrayConstant(IntegerType(8), elementIrs)
     ))
   }

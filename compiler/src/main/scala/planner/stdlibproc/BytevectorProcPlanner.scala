@@ -71,7 +71,7 @@ object BytevectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHel
       // in executable code
       val constantElementValues = initialElementValues.collect({
         case iv.ConstantIntegerValue(value) if (value >= 0) && (value <= 255) =>
-          value.toShort
+          value.toByte
       }).toVector
 
       val bytevectorTemp = ps.TempValue()
@@ -101,7 +101,12 @@ object BytevectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHel
     case ("bytevector-u8-ref", List((_, iv.ConstantBytevectorValue(elements)), (_, iv.ConstantIntegerValue(index)))) =>
       assertIndexValid("(bytevector-ref)", elements.size, index)
 
-      Some(new iv.ConstantIntegerValue(elements(index.toInt)))
+      // Java bytes are signed while Scheme bytes are unsigned
+      // Manually zero extend the Java value
+      val byteValue = elements(index.toInt)
+      val longValue = if (byteValue < 0) byteValue.toLong + 256 else byteValue.toLong
+
+      Some(new iv.ConstantIntegerValue(longValue))
 
     case ("bytevector-u8-ref", List((_, knownBytevector: iv.KnownBytevector), (_, constantInt: iv.ConstantIntegerValue))) =>
       val index = constantInt.value

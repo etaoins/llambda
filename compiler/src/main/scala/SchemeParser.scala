@@ -359,7 +359,7 @@ class SchemeParser(sourceString: String, filenameOpt: Option[String]) extends Pa
   // Bytevectors
   def BytevectorDatum = rule {
     "#u8(" ~ zeroOrMore(Byte) ~ ")" ~> ({ elements =>
-      ast.Bytevector(elements.map(_.toShort).toVector)
+      ast.Bytevector(elements.map(_.toByte).toVector)
     })
   }
 

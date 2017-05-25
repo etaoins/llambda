@@ -371,7 +371,7 @@ case class CreateBooleanCell(result: TempValue, value: Boolean) extends CreateCo
     CreateBooleanCell(f(result), value).assignLocationFrom(this)
 }
 
-case class CreateBytevectorCell(result: TempValue, elements: Vector[Short]) extends CreateConstantCell {
+case class CreateBytevectorCell(result: TempValue, elements: Vector[Byte]) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
 
   def renamed(f: (TempValue) => TempValue) =
@@ -568,7 +568,7 @@ case class LoadSymbolByte(
   */
 case class InitStaticBytevector(
     result: TempValue,
-    elements: Vector[Short]
+    elements: Vector[Byte]
 ) extends DiscardableStep {
   lazy val inputValues = Set(WorldPtrValue)
   lazy val outputValues = Set(result)
