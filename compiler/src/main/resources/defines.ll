@@ -18,5 +18,5 @@
 
 !4 = !{ !"VectorCell::m_elements", !0 }
 
-; {refcount, data}
+; {refcount, cached hash value, data}
 %sharedByteArray = type {i32, i32, [0 x i8]}

@@ -34,9 +34,6 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
   private val vectorCache = new mutable.HashMap[Vector[IrConstant], IrConstant]
   private val recordCache = new mutable.HashMap[(vt.RecordType, Map[vt.RecordField, IrConstant], Boolean), IrConstant]
 
-  // Maximum value of a 32bit unsigned integer
-  private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
-
   def defineConstantData(module: IrModuleBuilder)(name: String, initializer: IrConstant): GlobalVariable = {
     val constantDataDef = IrGlobalVariableDef(
       name=name,
@@ -50,29 +47,9 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     constantDataDef.variable
   }
 
-  private val uninitialisedHashValue = 0
-  private val uninitialisedHashRemapValue = 0x86b2bb0d
-
-  private val FNV1APrime = 0x1000193
-  private val FNV1AOffsetBasis = -0x7EE3623B // 0x811C9DC5 as signed 32bit
-
-  private def sharedShortHash(bytes: Seq[Short]): Int = {
-    val hash = bytes.foldLeft(FNV1AOffsetBasis) { (hash, byte) => (hash ^ (byte & 0xff)) * FNV1APrime }
-    if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
-  }
-
-  private def sharedByteHash(bytes: Seq[Byte]): Int = {
-    val hash = bytes.foldLeft(FNV1AOffsetBasis) { (hash, byte) => (hash ^ (byte & 0xff)) * FNV1APrime }
-    if (hash == uninitialisedHashValue) uninitialisedHashRemapValue else hash
-  }
-
   private def genHeapUtf8Constant(module: IrModuleBuilder)(baseName: String, utf8Data: Array[Byte]): IrConstant = {
     val innerConstantName = baseName + ".strByteArray"
-    val innerConstantInitializer = StructureConstant(List(
-      IntegerConstant(IntegerType(32), sharedConstantRefCount),
-      IntegerConstant(IntegerType(32), sharedByteHash(utf8Data)),
-      StringConstant(utf8Data)
-    ))
+    val innerConstantInitializer = SharedByteArrayValue.createUtf8StringConstant(utf8Data)
 
     val innerConstant = defineConstantData(module)(innerConstantName, innerConstantInitializer)
     BitcastToConstant(innerConstant, PointerType(UserDefinedType("sharedByteArray")))
@@ -100,14 +77,8 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeBytevector")
 
-    val elementIrs = elements.map(IntegerConstant(IntegerType(8), _))
-
     val elementsName = baseName + ".elementsByteArray"
-    val elementsInitializer = StructureConstant(List(
-      IntegerConstant(IntegerType(32), sharedConstantRefCount),
-      IntegerConstant(IntegerType(32), sharedShortHash(elements)),
-      ArrayConstant(IntegerType(8), elementIrs)
-    ))
+    val elementsInitializer = SharedByteArrayValue.createShortArrayConstant(elements)
 
     val elementsValue = defineConstantData(module)(elementsName, elementsInitializer)
 
