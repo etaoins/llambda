@@ -3,15 +3,12 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.planner.{step => ps}
+
 
 object GenVector {
   private val vectorDataTbaaNode = NumberedMetadata(4)
 
-  private def createUninitialised(state: GenerationState)(
-      worldPtrIr: IrValue,
-      lengthIr: IrValue
-  ): IrValue = {
+  private def createUninitialised(state: GenerationState)(worldPtrIr: IrValue, lengthIr: IrValue): IrValue = {
     val func = state.currentBlock.function
     val module = func.module
 
@@ -21,24 +18,17 @@ object GenVector {
       module.declareFunction(vectorAllocDecl)
     }
 
-    val entryBlock = state.currentBlock
-
-    entryBlock.callDecl(Some("newVector"))(vectorAllocDecl, List(worldPtrIr, lengthIr)).get
+    state.currentBlock.callDecl(Some("newVector"))(vectorAllocDecl, List(worldPtrIr, lengthIr)).get
   }
 
-  def init(state: GenerationState)(
-      worldPtrIr: IrValue,
-      elementTemps: Vector[ps.TempValue]
-  ): IrValue = {
-    val lengthIr = IntegerConstant(ct.VectorCell.lengthIrType, elementTemps.length)
+  def init(state: GenerationState)(worldPtrIr: IrValue, elementIrs: Vector[IrValue]): IrValue = {
+    val lengthIr = IntegerConstant(ct.VectorCell.lengthIrType, elementIrs.length)
 
     val vectorCellIr = createUninitialised(state)(worldPtrIr, lengthIr)
     val dataIr = ct.VectorCell.genLoadFromElements(state.currentBlock)(vectorCellIr)
 
-    for((elementTemp, index) <- elementTemps.zipWithIndex) {
+    for((elementIr, index) <- elementIrs.zipWithIndex) {
       val indexIr = IntegerConstant(ct.VectorCell.lengthIrType, index)
-      val elementIr = state.liveTemps(elementTemp)
-
       storeElement(state.currentBlock)(dataIr, indexIr, elementIr)
     }
 
@@ -48,7 +38,7 @@ object GenVector {
   def initFilled(state: GenerationState)(
       worldPtrIr: IrValue,
       lengthIr: IrValue,
-      fillTemp: ps.TempValue
+      fillIr: IrValue
   ): (GenerationState, IrValue) = {
     val vectorCellIr = createUninitialised(state)(worldPtrIr, lengthIr)
     val dataIr = ct.VectorCell.genLoadFromElements(state.currentBlock)(vectorCellIr)
@@ -86,7 +76,6 @@ object GenVector {
     rangeCheckBlock.condBranch(indexExhaustedIr, exitBlock, bodyBlock)
 
     // Set the element
-    val fillIr = state.liveTemps(fillTemp)
     storeElement(bodyBlock)(dataIr, indexIr, fillIr)
 
     // Increment our index

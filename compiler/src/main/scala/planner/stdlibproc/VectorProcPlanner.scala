@@ -8,6 +8,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 import llambda.compiler.{celltype => ct}
 
+
 object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers {
   private def makeFilledVector(state: PlannerState)(
       length: (ContextLocated, iv.IntermediateValue),
@@ -122,7 +123,7 @@ object VectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers
       val objectTemp = objectValue.toTempValue(vt.AnySchemeType)
 
       // Store the element
-      plan.steps += ps.StoreVectorElement(vectorTemp,indexTemp, objectTemp)
+      plan.steps += ps.StoreVectorElement(vectorTemp, indexTemp, objectTemp)
 
       Some(iv.UnitValue)
 
