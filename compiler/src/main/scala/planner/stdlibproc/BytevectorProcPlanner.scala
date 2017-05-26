@@ -1,6 +1,8 @@
 package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
+import scala.io.Codec
+
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.ContextLocated
 import llambda.compiler.planner.{step => ps}
@@ -122,6 +124,23 @@ object BytevectorProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHel
       plan.steps += ps.LoadBytevectorElement(resultTemp, bytevectorTemp, indexTemp)
 
       Some(TempValueToIntermediate(vt.UInt8, resultTemp))
+
+    case ("bytevector-copy", List((_, iv.ConstantBytevectorValue(elements)))) =>
+      val bytevectorTemp = ps.TempValue()
+      plan.steps += ps.InitStaticBytevector(bytevectorTemp, elements)
+
+      Some(new iv.KnownBytevectorCellValue(elements.length, bytevectorTemp))
+
+    case ("string->utf8", List((_, iv.ConstantStringValue("")))) =>
+      Some(new iv.ConstantBytevectorValue(Vector()))
+
+    case ("string->utf8", List((_, iv.ConstantStringValue(str)))) =>
+      val utf8Data = Codec.toUTF8(str).toVector
+
+      val bytevectorTemp = ps.TempValue()
+      plan.steps += ps.InitStaticBytevector(bytevectorTemp, utf8Data)
+
+      Some(new iv.KnownBytevectorCellValue(utf8Data.length, bytevectorTemp))
 
     case _ =>
       None
