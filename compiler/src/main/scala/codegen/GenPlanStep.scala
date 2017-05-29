@@ -206,6 +206,12 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> cdrIr)
 
+    case ps.LoadStringCharLength(resultTemp, stringTemp) =>
+      val stringIr = state.liveTemps(stringTemp)
+      val (newState, resultIr) = GenLoadStringCharLength(state)(stringIr)
+
+      newState.withTempValue(resultTemp -> resultIr)
+
     case ps.LoadSymbolByteLength(resultTemp, symbolTemp, possibleLengthsOpt) =>
       val symbolIr = state.liveTemps(symbolTemp)
       val (newState, resultIr) = GenLoadSymbolByteLength(state)(symbolIr, possibleLengthsOpt)

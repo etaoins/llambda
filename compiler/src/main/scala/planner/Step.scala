@@ -561,6 +561,22 @@ case class LoadSymbolByte(
       .assignLocationFrom(this)
 }
 
+/** Loads the length of a string in chars as a UInt32
+  *
+  * This is nullipotent as a string's char length is immutable
+  */
+case class LoadStringCharLength(
+    result: TempValue,
+    boxed: TempValue
+) extends DiscardableStep with MergeableStep {
+  lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
+
+  def renamed(f: (TempValue) => TempValue) =
+    LoadStringCharLength(f(result), f(boxed))
+      .assignLocationFrom(this)
+}
+
 /** Creates an allocated bytevector with specified constnt elements
   *
   * @param  result    Result value as ByteectorCell

@@ -4,8 +4,8 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
+
 object GenLoadSymbolByteLength {
-  /** Loads the length of a symbol from a symbol cell */
   def apply(initialState: GenerationState)(
       symbolIr: IrValue,
       possibleLengthsOpt: Option[Set[Int]]
