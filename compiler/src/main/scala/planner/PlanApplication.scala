@@ -149,9 +149,8 @@ private[planner] object PlanApplication {
             // Is this the only use of the lambda?
             val isOnlyUse = procExpr match {
               case et.VarRef(storageLoc) =>
-                // Does this only have a single use, including its self procedure cell?
-                (plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1) &&
-                 !schemeProc.selfTempOpt.isDefined
+                // Does this only have a single use?
+                plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1
 
               case _ =>
                 false
