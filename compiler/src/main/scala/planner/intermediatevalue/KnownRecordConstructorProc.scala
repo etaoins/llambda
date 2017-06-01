@@ -22,7 +22,7 @@ class KnownRecordConstructorProc(recordType: vt.RecordType, initializedFields: L
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "")
 
-  def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
+  def planFunction(parentPlan: PlanWriter): PlannedFunction = {
     val plan = parentPlan.forkPlan()
 
     val fieldToTempValue = (initializedFields.map { field =>

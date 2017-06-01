@@ -18,7 +18,7 @@ abstract class KnownArtificialProc(polySignature: PolymorphicSignature) extends 
   def nativeSymbol(implicit plan: PlanWriter): String = {
     if (!plannedNativeSymbolOpt.isDefined) {
       val allocedSymbol = plan.allocSymbol(symbolHint)
-      plan.plannedFunctions += (allocedSymbol -> planFunction(plan, allocedSymbol))
+      plan.plannedFunctions += (allocedSymbol -> planFunction(plan))
 
       plannedNativeSymbolOpt = Some(allocedSymbol)
     }
@@ -26,7 +26,7 @@ abstract class KnownArtificialProc(polySignature: PolymorphicSignature) extends 
     plannedNativeSymbolOpt.get
   }
 
-  protected def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction
+  protected def planFunction(parentPlan: PlanWriter): PlannedFunction
 
   override def withSelfTemp(selfTemp: ps.TempValue) = {
     // We have no self value so we don't need be to captured and therefore restored

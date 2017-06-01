@@ -23,7 +23,7 @@ class KnownRecordAccessorProc(recordType: vt.RecordType, field: vt.RecordField) 
       .replaceAllLiterally(">", "") +
       "-" + field.name
 
-  def planFunction(parentPlan: PlanWriter, allocedSymbol: String): PlannedFunction = {
+  def planFunction(parentPlan: PlanWriter): PlannedFunction = {
     val recordCellTemp = ps.TempValue()
 
     val plan = parentPlan.forkPlan()
