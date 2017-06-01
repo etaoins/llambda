@@ -12,8 +12,8 @@ import llambda.compiler.codegen.RuntimeFunctions
   * @param polySignature  Polymorphic signature of the procedure
   * @param plannedSymbol  Native symbol of the direct entry point to the procedure
   * @param selfTempOpt    For procedures with closures a procedure cell containing the procedure's closure. The entry
-  *                       point does not have to be initialized; it will be set dynamically to a generated trampoline
-  *                       if this value is explicitly converted to a ct.ProcedureCell
+  *                       point does not have to be initialized; this procedure will be wrapped in a generated
+  *                       trampoline if this value is explicitly converted to a ct.ProcedureCell
   * @param stdlibNameOpt  Name of this procedure in the standard library. This is used as a tag to implement certain
   *                       optimisations in the planner.
   */
