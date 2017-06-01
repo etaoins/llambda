@@ -101,19 +101,19 @@ private[planner] object PlanCaseLambda {
       val argListBoxed = BoxedValue(ct.ListElementCell, argListHeadTemp)
       val argListValue = new iv.CellValue(argListType, argListBoxed)
 
-      val trueValues = PlanInvokeApply.withArgumentList(restoredProcValue, argListValue)(truePlan)
+      val trueValue = PlanInvokeApply.withArgumentList(restoredProcValue, argListValue)(truePlan)
 
       if (tailClauses.isEmpty) {
         // We have to use this clause - assert then use the true values directly
         entryPlan.steps += ps.AssertPredicate(matchesPred, noMatchingClauseRuntimeErrorMessage)
         entryPlan.steps ++= truePlan.steps
 
-        trueValues
+        trueValue
       }
       else {
         // If the clause doesn't match then recurse
         val falsePlan = entryPlan.forkPlan()
-        val falseValues = planClauseTests(
+        val falseValue = planClauseTests(
           plannedClauses=tailClauses,
           innerSelfTempOpt=innerSelfTempOpt,
           closureType=closureType,
@@ -122,7 +122,7 @@ private[planner] object PlanCaseLambda {
         )(falsePlan)
 
         // Now phi them together
-        val phiResult = PlanValuePhi(truePlan, trueValues, falsePlan, falseValues)
+        val phiResult = PlanValuePhi(truePlan, trueValue, falsePlan, falseValue)
 
         entryPlan.steps += ps.CondBranch(
           test=matchesPred,
