@@ -347,7 +347,7 @@ sealed trait StringFields extends AnyFields {
 
   def genLoadFromInlineByteLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineByteLengthPtr = genPointerToInlineByteLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> inlineByteLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> inlineByteLengthTbaaNode, "invariant.load" -> GlobalDefines.emptyMetadataNode) ++ metadata
     block.load("inlineByteLength")(inlineByteLengthPtr, metadata=allMetadata)
   }
 }
@@ -433,7 +433,7 @@ sealed trait InlineStringFields extends StringFields {
 
   def genLoadFromInlineData(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val inlineDataPtr = genPointerToInlineData(block)(valueCell)
-    val allMetadata = Map("tbaa" -> inlineDataTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> inlineDataTbaaNode, "invariant.load" -> GlobalDefines.emptyMetadataNode) ++ metadata
     block.load("inlineData")(inlineDataPtr, metadata=allMetadata)
   }
 }
@@ -503,7 +503,7 @@ sealed trait HeapStringFields extends StringFields {
 
   def genLoadFromHeapByteLength(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapByteLengthPtr = genPointerToHeapByteLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> heapByteLengthTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> heapByteLengthTbaaNode, "invariant.load" -> GlobalDefines.emptyMetadataNode) ++ metadata
     block.load("heapByteLength")(heapByteLengthPtr, metadata=allMetadata)
   }
 
@@ -553,7 +553,7 @@ sealed trait HeapStringFields extends StringFields {
 
   def genLoadFromHeapByteArray(block: IrBlockBuilder)(valueCell: IrValue, metadata: Map[String, Metadata] = Map()): IrValue = {
     val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
-    val allMetadata = Map("tbaa" -> heapByteArrayTbaaNode) ++ metadata
+    val allMetadata = Map("tbaa" -> heapByteArrayTbaaNode, "invariant.load" -> GlobalDefines.emptyMetadataNode) ++ metadata
     block.load("heapByteArray")(heapByteArrayPtr, metadata=allMetadata)
   }
 }

@@ -39,34 +39,6 @@
 (define-test "(string-ref) with negative index fails" (expect-error range-error?
   (string-ref "Hell☃!" -1)))
 
-(define-test "(string-set!) of ASCII character" (expect "*!*"
-  (define test-string (make-string 3 #\*))
-  (string-set! test-string 1 #\!)
-  test-string))
-
-(define-test "(string-set!) on string literal fails" (expect-error mutate-literal-error?
-  (string-set! "I'm constant" 1 #\!)))
-
-(define-test "(string-set!) of Unicode character" (expect "**☃"
-  (define test-string (make-string 3 #\*))
-  (string-set! test-string 2 #\x2603)
-  test-string))
-
-(define-test "(string-set!) on an inline string creating a heap string" (expect "☃his-string-is-28-bytes-long"
-  (define test-string (string-copy "this-string-is-28-bytes-long"))
-  (string-set! test-string 0 #\x2603)
-  test-string))
-
-(define-test "(string-set!) past end of string fails" (expect-error range-error?
-  (define test-string (make-string 3 #\*))
-  (string-set! test-string 4 #\x2603)
-  test-string))
-
-(define-test "(string-set!) with negative index fails" (expect-error range-error?
-  (define test-string (make-string 3 #\*))
-  (string-set! test-string -1 #\x2603)
-  test-string))
-
 (define-test "(string-append)" (expect-success
   (assert-equal "" (string-append))
   (assert-equal "Hello" (string-append "Hello"))
@@ -100,18 +72,7 @@
   (assert-equal "☃3" (string-copy "1☃3" 1))
   (assert-equal "☃" (string-copy "1☃3" 1 2))
   (assert-equal "" (string-copy "1☃3" 0 0))
-  (assert-equal "" (string-copy "1☃3" 3 3))
-
-  (define a "18☃8") ; a may be immutable
-  (define b (string-copy a))
-  (string-set! b 0 #\Я) ; b is mutable
-
-  ; Make sure a was preserved
-  (assert-equal "18☃8" a)
-
-  (assert-equal "Я8☃8" b)
-  (define c (string-copy b 1 3))
-  (assert-equal "8☃" c)))
+  (assert-equal "" (string-copy "1☃3" 3 3))))
 
 (define-test "(string-copy) with backwards slice fails" (expect-error range-error?
   (string-copy "1☃3" 2 1)))
@@ -242,77 +203,6 @@
   (assert-true  (string-ci>=? "hello!" "hello"))
   (assert-true  (string-ci>=? "日本国" "日本国"))))
 
-(define-test "(string-copy!)" (expect-success
-  (define a "12345")
-  (define b (string-copy "abcde"))
-  (string-copy! b 1 a 0 2)
-
-  (assert-equal "a12de" b)
-
-  (string-copy! b 1 a 0 0)
-  (string-copy! b 1 a 5)
-  (assert-equal "a12de" b)
-
-  (string-copy! b 0 a)
-  (assert-equal "12345" b)))
-
-(define-test "(string-copy!) on string literal fails" (expect-error mutate-literal-error?
-  (define a "12345")
-  (define b "abcde")
-  (string-copy! b 1 a 0 2)
-
-  (assert-equal "a12de" b)))
-
-(define-test "(string-copy!) with negative start index fails" (expect-error range-error?
-  (define a "12345")
-  (define b (string-copy "abcde"))
-
-  (string-copy! b 1 a -1 2)))
-
-(define-test "(string-copy!) with backwards slice fails" (expect-error range-error?
-  (define a "12345")
-  (define b (string-copy "abcde"))
-  (string-copy! b 1 a 2 0)))
-
-(define-test "(string-copy!) past end of from fails" (expect-error range-error?
-  (define a "12345")
-  (define b (string-copy "abcde"))
-  (string-copy! b 2 a 4 6)))
-
-(define-test "(string-copy!) past end of to fails" (expect-error range-error?
-  (define a "12345")
-  (define b (string-copy "abcde"))
-  (string-copy! b 2 a 1)))
-
-(define-test "(string-fill!)" (expect-success
-  (define test-string (string-copy "01234567"))
-
-  (string-fill! test-string #\☃ 0 0)
-  (string-fill! test-string #\☃ 4 6)
-  (assert-equal "0123☃☃67" test-string)
-
-  (string-fill! test-string #\λ 8 8)
-  (string-fill! test-string #\λ 6)
-  (assert-equal "0123☃☃λλ" test-string)
-
-  (string-fill! test-string #\ℵ)
-  (assert-equal "ℵℵℵℵℵℵℵℵ" test-string)
-
-  (string-fill! test-string #\0 2 5)
-  (assert-equal "ℵℵ000ℵℵℵ" test-string)))
-
-(define-test "(string-fill!) with backward slice fails" (expect-error range-error?
-  (define test-string (string-copy "01234567"))
-  (string-fill! test-string #\☃ 6 4)))
-
-(define-test "(string-fill!) with negative start index fails" (expect-error range-error?
-  (define test-string (string-copy "01234567"))
-  (string-fill! test-string #\☃ -1 1)))
-
-(define-test "(string-fill!) past end of string fails" (expect-error range-error?
-  (define test-string (string-copy "01234567"))
-  (string-fill! test-string #\☃ 9)))
-
 (define-test "string (hash)" (expect-success
   (import (llambda hash-map))
 
@@ -320,7 +210,4 @@
 
   ; Calculate a hash value and make sure its stable
   (define first-hash-value (hash test-string))
-  (assert-equal first-hash-value (hash test-string))
-
-  (string-set! test-string 0 #\b)
-  (assert-false (equal? first-hash-value (hash test-string)))))
+  (assert-equal first-hash-value (hash test-string))))

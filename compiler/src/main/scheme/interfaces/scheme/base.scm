@@ -24,8 +24,8 @@
         vector-copy vector-copy! vector-fill! string->vector vector->string)
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append
         utf8->string string->utf8 bytevector-copy bytevector-copy!)
-(export string? make-string string string-length string-ref string-set! string-append list->string string->list
-        string-copy string-copy! substring string-fill! string=? string<? string>? string<=? string>=?)
+(export string? make-string string string-length string-ref string-append list->string string->list string-copy
+        substring string=? string<? string>? string<=? string>=?)
 (export procedure? apply vector-map vector-for-each map for-each string-map string-for-each)
 (export make-parameter)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port input-port-open?

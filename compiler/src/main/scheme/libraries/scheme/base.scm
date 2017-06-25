@@ -463,7 +463,6 @@
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-stdlib list->string (world-function llbase "llbase_string" (-> (Listof <char>) <string>) nocapture))
     (define-stdlib string-ref (world-function llbase "llbase_string_ref" (-> <string> <native-int64> <native-unicode-char>)))
-    (define-stdlib string-set! (world-function llbase "llbase_string_set" (-> <string> <native-int64> <native-unicode-char> <unit>)))
     (define-stdlib string-append (world-function llbase "llbase_string_append" (-> <string> * <string>)))
 
     (define native-string->list (world-function llbase "llbase_string_to_list" (-> <string> <native-int64> <native-int64> (Listof <char>))))
@@ -476,13 +475,6 @@
        name defined in R7RS |#
     (define-stdlib substring (world-function llbase "llbase_substring" (-> <string> <native-int64> <native-int64> <string>)))
     (define-slice-proc string-copy substring <string> string-length)
-
-    (define native-string-copy! (world-function llbase "llbase_string_mutating_copy" (-> <string> <native-int64> <string> <native-int64> <native-int64> <unit>)))
-    (define-mutating-copy-proc string-copy! native-string-copy! <string> string-length)
-
-    (define native-string-fill! (world-function llbase "llbase_string_mutating_fill" (-> <string> <native-unicode-char> <native-int64> <native-int64> <unit>)))
-    (define-stdlib (string-fill! [target : <string>] [fill : <char>] [start : <integer> 0] [end : <integer> (string-length target)])
-      (native-string-fill! target fill start end))
 
     (define-stdlib string=? (native-function llbase "llbase_string_equal" (-> <string> <string> <string> * <native-bool>) nocapture))
     (define-stdlib string<? (native-function llbase "llbase_string_lt" (-> <string> <string> <string> * <native-bool>) nocapture))

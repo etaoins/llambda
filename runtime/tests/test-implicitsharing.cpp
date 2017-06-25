@@ -64,32 +64,9 @@ public:
 		StringCell *origString = origBv->utf8ToString(world);
 		ASSERT_TRUE(sharedByteArrayFor(origBv) == sharedByteArrayFor(origString));
 
-		// Create a string as a copy
-		StringCell *copyString = origString->copy(world);
-		ASSERT_TRUE(sharedByteArrayFor(origString) == sharedByteArrayFor(copyString));
-
-		// Set a character in the string
-		ASSERT_TRUE(copyString->setCharAt(5, UnicodeChar('!')));
-		// Sharing should now be broken
-		ASSERT_FALSE(sharedByteArrayFor(origString) == sharedByteArrayFor(copyString));
-
-		// Create a string from appending a single string
-		StringCell *appendedString = StringCell::fromAppended(world, {origString});
-		ASSERT_TRUE(sharedByteArrayFor(origString) == sharedByteArrayFor(appendedString));
-
-		// Fill the string
-		ASSERT_TRUE(appendedString->fill(UnicodeChar(4)));
-		// Sharing should now be broken
-		ASSERT_FALSE(sharedByteArrayFor(origString) == sharedByteArrayFor(appendedString));
-
-		// Create a symbol from the appended string
-		SymbolCell *symbol = SymbolCell::fromString(world, appendedString);
-		ASSERT_TRUE(sharedByteArrayFor(appendedString) == sharedByteArrayFor(symbol));
-
-		// Writing to the string again should break sharing
-		// Symbols are immutable so breaking cannot happen from the symbol side
-		appendedString->replace(1, origString, 0, 1);
-		ASSERT_FALSE(sharedByteArrayFor(appendedString) == sharedByteArrayFor(symbol));
+		// Create a symbol from the string
+		SymbolCell *symbol = SymbolCell::fromString(world, origString);
+		ASSERT_TRUE(sharedByteArrayFor(origString) == sharedByteArrayFor(symbol));
 
 		//
 		// Test a grand tour of string ->  symbol -> string -> bytevector -> string

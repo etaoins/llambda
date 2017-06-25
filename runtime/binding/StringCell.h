@@ -60,12 +60,6 @@ public:
 		{
 			return endPointer - startPointer;
 		}
-
-		void relocate(ptrdiff_t byteDelta)
-		{
-			startPointer += byteDelta;
-			endPointer += byteDelta;
-		}
 	};
 
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
@@ -95,10 +89,6 @@ public:
 	StringCell* copy(alloc::Heap &heap);
 
 	UnicodeChar charAt(CharLengthType offset) const;
-	bool setCharAt(CharLengthType offset, UnicodeChar unicodeChar);
-
-	bool fill(UnicodeChar unicodeChar, SliceIndexType start = 0, SliceIndexType end = -1);
-	bool replace(CharLengthType offset, const StringCell *from, SliceIndexType fromStart = 0, SliceIndexType fromEnd = -1);
 
 	std::vector<UnicodeChar> unicodeChars(SliceIndexType start = 0, SliceIndexType end = -1) const;
 
@@ -173,9 +163,6 @@ protected:
 
 	const std::uint8_t *charPointer(CharLengthType charOffset, const std::uint8_t *startFrom, ByteLengthType startOffset);
 	const std::uint8_t *charPointer(CharLengthType charOffset);
-
-	void setLengths(ByteLengthType newByteLength, CharLengthType newCharLength);
-	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count);
 
 	static std::size_t inlineDataSize();
 	bool dataIsInline() const;

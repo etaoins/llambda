@@ -62,18 +62,18 @@ preconstructed cell EmptyList : ListElement {
 };
 
 concrete cell String : Any {
-	uint8 inlineByteLength;
+	const uint8 inlineByteLength;
 };
 
 variant cell InlineString : String {
 	const uint8 inlineCharLength;
-	uint8 inlineData[28];
+	const uint8 inlineData[28];
 };
 
 variant cell HeapString : String {
-	uint32 heapByteLength;
+	const uint32 heapByteLength;
 	const uint32 heapCharLength;
-	SharedByteArray* heapByteArray;
+	const SharedByteArray* heapByteArray;
 };
 
 concrete cell Symbol : Any {
