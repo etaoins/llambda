@@ -274,11 +274,11 @@ const std::uint8_t* StringCell::charPointer(CharLengthType charOffset, const std
 	return scanPtr;
 }
 
-StringCell::CharRange StringCell::charRange(SliceIndexType start, SliceIndexType end)
+CharRange StringCell::charRange(SliceIndexType start, SliceIndexType end)
 {
 	if (!adjustSlice(start, end, charLength()))
 	{
-		return CharRange { 0 };
+		return CharRange();
 	}
 
 	const CharLengthType charCount = end - start;
@@ -286,7 +286,7 @@ StringCell::CharRange StringCell::charRange(SliceIndexType start, SliceIndexType
 	const std::uint8_t *startPointer = charPointer(start);
 	const std::uint8_t *endPointer = charPointer(end, startPointer, start);
 
-	return CharRange { startPointer, endPointer, charCount };
+	return CharRange(startPointer, endPointer, charCount);
 }
 
 UnicodeChar StringCell::charAt(CharLengthType offset) const
@@ -304,26 +304,26 @@ StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType 
 {
 	CharRange range = charRange(start, end);
 
-	if (range.isNull())
+	if (!range.valid())
 	{
 		// Invalid range
 		return nullptr;
 	}
 
-	if (range.charCount == charLength())
+	if (range.size() == charLength())
 	{
 		// We're copying the whole string
 		return this;
 	}
 
-	const ByteLengthType newByteLength = range.byteCount();
+	const ByteLengthType newByteLength = range.byteSize();
 
 	// Create the new string
-	auto newString = StringCell::createUninitialised(world, newByteLength, range.charCount);
+	auto newString = StringCell::createUninitialised(world, newByteLength, range.size());
 
 	std::uint8_t *newUtf8Data = newString->utf8Data();
 
-	memcpy(newUtf8Data, range.startPointer, newByteLength);
+	memcpy(newUtf8Data, range.byteBegin(), newByteLength);
 
 	return newString;
 }
@@ -344,40 +344,6 @@ StringCell* StringCell::copy(alloc::Heap &heap)
 		auto heapThis = static_cast<HeapStringCell*>(this);
 		return new (cellPlacement) HeapStringCell(heapThis->heapByteArray()->ref(), byteLength(), charLength());
 	}
-}
-
-std::vector<UnicodeChar> StringCell::unicodeChars(SliceIndexType start, SliceIndexType end) const
-{
-	if (end == -1)
-	{
-		end = charLength();
-	}
-
-	if ((end > charLength()) || (end < start))
-	{
-		// Invalid range
-		return std::vector<UnicodeChar>();
-	}
-
-	const std::uint8_t *scanPtr = const_cast<StringCell*>(this)->charPointer(start);
-
-	if (scanPtr == nullptr)
-	{
-		return std::vector<UnicodeChar>();
-	}
-
-	const CharLengthType charCount = end - start;
-
-	std::vector<UnicodeChar> ret;
-	ret.reserve(charCount);
-
-	while(ret.size() < charCount)
-	{
-		const UnicodeChar unicodeChar = utf8::decodeChar(&scanPtr);
-		ret.push_back(unicodeChar);
-	}
-
-	return ret;
 }
 
 bool StringCell::operator==(const StringCell &other) const
@@ -462,12 +428,12 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, SliceIndexType start,
 {
 	CharRange range = charRange(start, end);
 
-	if (range.isNull())
+	if (!range.valid())
 	{
 		return nullptr;
 	}
 
-	ByteLengthType newLength = range.endPointer - range.startPointer;
+	ByteLengthType newLength = range.byteSize();
 	SharedByteArray *byteArray;
 
 	if ((newLength == byteLength()) && !dataIsInline())
@@ -479,7 +445,7 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, SliceIndexType start,
 	{
 		// Create a new byte array and initialize it
 		byteArray = SharedByteArray::createUninitialised(newLength);
-		memcpy(byteArray->data(), range.startPointer, newLength);
+		memcpy(byteArray->data(), range.byteBegin(), newLength);
 	}
 
 	return BytevectorCell::withByteArray(world, byteArray, newLength);

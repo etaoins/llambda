@@ -546,91 +546,6 @@ void testStringCopy(World &world)
 	}
 }
 
-void testUnicodeChars(World &world)
-{
-	StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello ☃!");
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars();
-
-		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({
-				UnicodeChar('H'),
-				UnicodeChar('e'),
-				UnicodeChar('l'),
-				UnicodeChar('l'),
-				UnicodeChar('o'),
-				UnicodeChar(' '),
-				UnicodeChar(0x2603),
-				UnicodeChar('!')
-		}));
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(0, 8);
-
-		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({
-				UnicodeChar('H'),
-				UnicodeChar('e'),
-				UnicodeChar('l'),
-				UnicodeChar('l'),
-				UnicodeChar('o'),
-				UnicodeChar(' '),
-				UnicodeChar(0x2603),
-				UnicodeChar('!')
-		}));
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(0, 0);
-
-		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({}));
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(8, 8);
-
-		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({}));
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(2);
-
-		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({
-				UnicodeChar('l'),
-				UnicodeChar('l'),
-				UnicodeChar('o'),
-				UnicodeChar(' '),
-				UnicodeChar(0x2603),
-				UnicodeChar('!')
-		}));
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(2, 5);
-
-		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({
-				UnicodeChar('l'),
-				UnicodeChar('l'),
-				UnicodeChar('o')
-		}));
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(2, 19);
-		ASSERT_TRUE(unicodeChars.empty());
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(19);
-		ASSERT_TRUE(unicodeChars.empty());
-	}
-
-	{
-		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(19, 24);
-		ASSERT_TRUE(unicodeChars.empty());
-	}
-}
-
 void testToUtf8Bytevector(World &world)
 {
 	StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello ☃!");
@@ -757,8 +672,6 @@ void testAll(World &world)
 	testStringCellBuilder(world);
 
 	testStringCopy(world);
-
-	testUnicodeChars(world);
 
 	testToUtf8Bytevector(world);
 

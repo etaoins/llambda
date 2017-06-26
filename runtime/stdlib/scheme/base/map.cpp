@@ -102,32 +102,35 @@ namespace
 	auto abstractStringIter(World &world, InitFunction initFunc, IterFunction iterFunc, FinalFunction finalFunc, StringCell *firstString, RestValues<StringCell> *restStringList)
 	{
 		// Extract the code points from the string argument. Once this is done we no longer need the original strings
-		std::vector<UnicodeChar> firstCharVector(firstString->unicodeChars());
+		CharRange firstCharRange(firstString->charRange());
 
-		std::size_t minimumLength = firstCharVector.size();
+		CharRange::size_type minimumLength = firstCharRange.size();
+		CharRange::Iterator firstCharIt = firstCharRange.begin();
 
-		std::vector<std::vector<UnicodeChar>> restCharVectors;
+		std::vector<CharRange::Iterator> restCharIts;
 		for(auto restString : *restStringList)
 		{
-			auto newVectorIt = restCharVectors.emplace(restCharVectors.end(), restString->unicodeChars());
-			minimumLength = std::min(minimumLength, newVectorIt->size());
+			CharRange restCharRange(restString->charRange());
+
+			minimumLength = std::min(minimumLength, restCharRange.size());
+			restCharIts.emplace(restCharIts.end(), restCharRange.begin());
 		}
 
 		auto container = initFunc(minimumLength);
 
-		std::vector<UnicodeChar> restArgVector(restCharVectors.size());
+		std::vector<UnicodeChar> restArgVector(restCharIts.size());
 		for(std::size_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			for(std::size_t j = 0; j < restCharVectors.size(); j++)
+			for(std::size_t j = 0; j < restCharIts.size(); j++)
 			{
-				restArgVector[j] = restCharVectors[j][i];
+				restArgVector[j] = restCharIts[j].next();
 			}
 
 			// Create the rest argument list
 			RestValues<CharCell> *restArgList = RestValues<CharCell>::emplaceValues(world, restArgVector);
 
-			iterFunc(container, i, firstCharVector[i], restArgList);
+			iterFunc(container, i, firstCharIt.next(), restArgList);
 		}
 
 		return finalFunc(container);

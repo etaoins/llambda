@@ -122,7 +122,7 @@ VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::int64
 {
 	assertSliceValid(world, "(string->vector)", string, string->charLength(), start, end);
 
-	std::vector<UnicodeChar> unboxedChars(string->unicodeChars(start, end));
+	CharRange unboxedChars(string->charRange(start, end));
 	const std::size_t charCount = unboxedChars.size();
 
 	alloc::RangeAlloc allocation = alloc::allocateRange(world, charCount);
@@ -133,7 +133,7 @@ VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::int64
 
 	for(std::size_t i = 0; i < charCount; i++)
 	{
-		boxedChars[i] = new (*allocIt++) CharCell(*unboxedIt++);
+		boxedChars[i] = new (*allocIt++) CharCell(unboxedIt.next());
 	}
 
 	return VectorCell::fromElements(world, boxedChars, charCount);

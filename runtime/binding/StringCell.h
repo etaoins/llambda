@@ -3,6 +3,7 @@
 
 #include "AnyCell.h"
 #include "SharedByteArray.h"
+#include "CharRange.h"
 
 #include <list>
 #include <vector>
@@ -45,23 +46,6 @@ public:
 		return std::numeric_limits<ByteLengthType>::max();
 	}
 
-	struct CharRange
-	{
-		const std::uint8_t *startPointer;
-		const std::uint8_t *endPointer;
-		CharLengthType charCount;
-
-		bool isNull() const
-		{
-			return startPointer == nullptr;
-		};
-
-		unsigned int byteCount() const
-		{
-			return endPointer - startPointer;
-		}
-	};
-
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
 
 	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength);
@@ -90,8 +74,6 @@ public:
 
 	UnicodeChar charAt(CharLengthType offset) const;
 
-	std::vector<UnicodeChar> unicodeChars(SliceIndexType start = 0, SliceIndexType end = -1) const;
-
 	bool operator==(const StringCell &other) const;
 
 	bool operator!=(const StringCell &other) const
@@ -116,7 +98,7 @@ public:
 	/**
 	 * Returns information about a range of characters
 	 */
-	CharRange charRange(SliceIndexType start, SliceIndexType end = -1);
+	CharRange charRange(SliceIndexType start = 0, SliceIndexType end = -1);
 
 	/**
 	 * Returns the length of the string's UTF-8 data in bytes

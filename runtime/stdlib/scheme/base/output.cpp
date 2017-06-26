@@ -45,12 +45,12 @@ void llbase_write_string(World &world, StringCell *stringCell, PortCell *portCel
 {
 	assertSliceValid(world, "(write-string)", stringCell, stringCell->charLength(), start, end);
 
-	StringCell::CharRange range = stringCell->charRange(start, end);
-	assert(!range.isNull());
+	CharRange range = stringCell->charRange(start, end);
+	assert(range.valid());
 
 	// Write directly from the string's memory
 	std::ostream *portStream = portCellToOutputStream(world, portCell);
-	portStream->write(reinterpret_cast<const char *>(range.startPointer), range.endPointer - range.startPointer);
+	portStream->write(reinterpret_cast<const char *>(range.byteBegin()), range.byteSize());
 }
 
 void llbase_write_bytevector(World &world, BytevectorCell *bytevectorCell, PortCell *portCell, std::int64_t start, std::int64_t end)

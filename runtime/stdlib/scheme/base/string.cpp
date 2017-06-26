@@ -55,10 +55,7 @@ ProperList<CharCell>* llbase_string_to_list(World &world, StringCell *sourceStri
 {
 	assertSliceValid(world, "(string->list)", sourceString, sourceString->charLength(), start, end);
 
-	// Get the unboxed Unicode chars
-	std::vector<UnicodeChar> unboxedChars(sourceString->unicodeChars(start, end));
-
-	return ProperList<CharCell>::emplaceValues(world, unboxedChars);
+	return ProperList<CharCell>::emplaceValues(world, sourceString->charRange(start, end));
 }
 
 // This is also used to implement (string-copy)
