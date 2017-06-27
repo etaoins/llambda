@@ -129,8 +129,8 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 {
 	if (strings.size() == 1)
 	{
-		// This allows implicit data sharing while the below always allocates
-		return strings.front()->copy(world);
+		// Reuse the existing string instead of allocating a new one
+		return strings.front();
 	}
 
 	std::uint64_t totalByteLength = 0;
