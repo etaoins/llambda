@@ -27,7 +27,7 @@
   (assert-equal 6 (string-length "Hell☃!"))
   (assert-equal 6 (string-length "Hell🏂!"))))
 
-(define-test "(string-ref)" (expect-success
+(define-test "(string-ref)" (expect-static-success
   (assert-equal #\e (string-ref "Hell☃!" 1))
   (assert-equal #\x2603 (string-ref "Hell☃!" 4))
   (assert-equal #\x1f3c2 (string-ref "Hell🏂 !" 4))

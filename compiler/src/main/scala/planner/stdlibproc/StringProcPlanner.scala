@@ -9,7 +9,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.{step => ps}
 
 
-object StringProcPlanner extends StdlibProcPlanner {
+object StringProcPlanner extends StdlibProcPlanner with StdlibProcPlannerHelpers {
   override def planWithValue(state: PlannerState)(
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
@@ -27,6 +27,25 @@ object StringProcPlanner extends StdlibProcPlanner {
       plan.steps += ps.LoadStringCharLength(resultTemp, stringTemp)
 
       Some(TempValueToIntermediate(vt.UInt32, resultTemp))
+
+    case ("string-ref", List((_, iv.ConstantStringValue(str)), (_, iv.ConstantIntegerValue(index)))) =>
+      val size = str.codePointCount(0, str.length)
+      assertIndexValid("(string-ref)", size, index)
+
+      val charIndex = str.offsetByCodePoints(0, index.toInt)
+      Some(iv.ConstantCharValue(str.codePointAt(charIndex)))
+
+    case ("string-append", List()) =>
+      Some(iv.ConstantStringValue(""))
+
+    case ("string-append", List((_, stringValue))) =>
+      Some(stringValue)
+
+    case ("string-copy", List((_, stringValue))) =>
+      Some(stringValue)
+
+    case ("string-copy", List((_, stringValue), (_, iv.ConstantIntegerValue(0)))) =>
+      Some(stringValue)
 
     case _ =>
       None
