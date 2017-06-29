@@ -8,7 +8,7 @@
   (assert-true  (number? (typeless-cell -5.0)))
   (assert-false (number? (typeless-cell '())))))
 
-(define-test "(rational?)" (expect-success
+(define-test "(rational?)" (expect-static-success
   (assert-true  (rational? 4))
   (assert-true  (rational? -5.0))
   (assert-false (rational? +inf.0))

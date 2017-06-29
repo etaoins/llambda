@@ -14,11 +14,11 @@
   (import (llambda typed))
   (ann 50 <flonum>)))
 
-(define-test "(cast) can convert int to unit" (expect-success
+(define-test "(cast) can convert int to unit" (expect-static-success
   (import (llambda typed))
   (cast 50 <unit>)))
 
-(define-test "(ann) can convert int to unit" (expect-success
+(define-test "(ann) can convert int to unit" (expect-static-success
   (import (llambda typed))
   (ann 50 <unit>)))
 
@@ -30,11 +30,11 @@
   (import (llambda typed))
   (ann #t <integer>)))
 
-(define-test "(ann) on a procedure" (expect-success
+(define-test "(ann) on a procedure" (expect-static-success
   (import (llambda typed))
   (ann + (-> <number> <number> <number>))))
 
-(define-test "dynamically impossible (cast) fails at runtime" (expect-success
+(define-test "dynamically impossible (cast) fails at runtime" (expect-static-success
   (import (llambda typed))
   (import (llambda error))
 

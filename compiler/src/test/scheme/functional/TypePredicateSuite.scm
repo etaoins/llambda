@@ -1,4 +1,4 @@
-(define-test "(make-predicate) for intrinsic types" (expect-success
+(define-test "(make-predicate) for intrinsic types" (expect-static-success
   (import (llambda typed))
 
   (assert-true ((make-predicate <integer>) 10))
@@ -9,7 +9,7 @@
   (assert-false ((make-predicate <number>) 'test))
   (assert-true ((make-predicate <any>) 'test))))
 
-(define-test "(make-predicate) for record types" (expect-success
+(define-test "(make-predicate) for record types" (expect-static-success
   (import (llambda typed))
 
   ; Create the type with an initial predicate
@@ -23,7 +23,7 @@
   (assert-true ((make-predicate <single-value>) instance))
   (assert-false ((make-predicate <single-value>) 4))))
 
-(define-test "(define-predicate)" (expect-success
+(define-test "(define-predicate)" (expect-static-success
   (import (llambda typed))
 
   (define-predicate my-string? <string>)
@@ -57,7 +57,7 @@
   (assert-false (custom-union? (typeless-cell (record3))))
   (assert-false (custom-union? #f))))
 
-(define-test "(define-predicate) for boolean constants" (expect-success
+(define-test "(define-predicate) for boolean constants" (expect-static-success
   (import (llambda typed))
 
   (define-predicate false? #f)
@@ -140,7 +140,7 @@
   (assert-false (string-tree? untyped-symbol-tree))
   (assert-false (string-tree? untyped-symbol-list))))
 
-(define-test "(define-predicate) for associative lists" (expect-success
+(define-test "(define-predicate) for associative lists" (expect-static-success
   (import (llambda typed))
 
   (define symbol-list '(one two))
@@ -207,7 +207,7 @@
   (assert-true  (int-list-or-false? untyped-int-list))
   (assert-false (int-list-or-false? untyped-improper-int-list))))
 
-(define-test "(define-predicate) for procedure types" (expect-success
+(define-test "(define-predicate) for procedure types" (expect-static-success
   (import (llambda typed))
 
   (define-predicate is-numeric-binary? (-> <number> <number> <number>))
