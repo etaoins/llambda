@@ -34,7 +34,7 @@
   (import (llambda typed))
   (ann + (-> <number> <number> <number>))))
 
-(define-test "dynamically impossible (cast) fails at runtime" (expect-static-success
+(define-test "dynamically impossible (cast) fails at runtime" (expect-success
   (import (llambda typed))
   (import (llambda error))
 
