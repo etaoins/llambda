@@ -102,6 +102,12 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 
 bool SymbolCell::operator==(const SymbolCell &other) const
 {
+	if (isGlobalConstant() && other.isGlobalConstant())
+	{
+		// Constant folding guarantees this works
+		return this == &other;
+	}
+
 	if (byteLength() != other.byteLength())
 	{
 		return false;

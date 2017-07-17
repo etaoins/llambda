@@ -131,8 +131,7 @@ bool AnyCell::isEqv(const AnyCell *other) const
 	else if (auto thisString = cell_cast<StringCell>(this))
 	{
 		// R7RS doesn't require us to compare string contents so this isn't strictly required
-		// However, we're already required to do this with symbols which have the exact same comparison logic. This also
-		// makes eqv? on constant strings consistent between -O2 (which folds constants) and -O0 (which doesn't)
+		// However, we're already required to do this with symbols which have the exact same comparison logic.
 		if (auto otherString = cell_cast<StringCell>(other))
 		{
 			return *thisString == *otherString;
@@ -196,12 +195,7 @@ bool AnyCell::isEqual(const AnyCell *other) const
 	{
 		if (auto otherBytevector = cell_cast<BytevectorCell>(other))
 		{
-			if (thisBytevector->length() != otherBytevector->length())
-			{
-				return false;
-			}
-
-			return thisBytevector->byteArray()->isEqual(otherBytevector->byteArray(), thisBytevector->length());
+			return *thisBytevector == *otherBytevector;
 		}
 	}
 	else if (auto thisMailboxCell = cell_cast<MailboxCell>(this))

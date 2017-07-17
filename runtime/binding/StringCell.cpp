@@ -348,6 +348,12 @@ StringCell* StringCell::copy(alloc::Heap &heap)
 
 bool StringCell::operator==(const StringCell &other) const
 {
+	if (isGlobalConstant() && other.isGlobalConstant())
+	{
+		// Constant folding guarantees this works
+		return this == &other;
+	}
+
 	if (byteLength() != other.byteLength())
 	{
 		return false;

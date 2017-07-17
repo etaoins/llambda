@@ -19,15 +19,19 @@
   (assert-false (eqv? 'one '()))))
 
 (define-test "dynamic symbol (eqv?)" (expect-success
-  (assert-true (eqv? (string->symbol "test") (string->symbol "test")))
-  (assert-true (eqv? 'test (string->symbol "test")))
-  (assert-true (eqv?  (typed-dynamic 'test <symbol>) (typed-dynamic 'test <symbol>)))
-  (assert-false (eqv?  (typed-dynamic 'one <symbol>) (typed-dynamic 'two <symbol>)))))
+  (assert-true  (eqv? (string->symbol "test") (string->symbol "test")))
+  (assert-true  (eqv? 'test (string->symbol "test")))
+  (assert-true  (eqv? (typed-dynamic 'test <symbol>) (typed-dynamic 'test <symbol>)))
+  (assert-false (eqv? (typed-dynamic 'one <symbol>) (typed-dynamic 'two <symbol>)))))
 
 (define-test "static string (eqv?)" (expect-static-success
   (assert-true  (eqv? "one" "one"))
   (assert-false (eqv? "one" "two"))
   (assert-false (eqv? "one" '()))))
+
+(define-test "dynamic string (eqv?)" (expect-success
+  (assert-true  (eqv? (typed-dynamic "test" <string>) (typed-dynamic "test" <string>)))
+  (assert-false (eqv? (typed-dynamic "one" <string>) (typed-dynamic "two" <string>)))))
 
 (define-test "symbol union (eqv?)" (expect-success
   (import (llambda typed))
@@ -272,9 +276,12 @@
   (assert-false (equal? #u8(1 2 3 4) #f))))
 
 (define-test "dynamic bytevector (equal?)" (expect-success
-  (assert-true (equal? (make-bytevector 5 200) (make-bytevector 5 200)))
+  (assert-true  (equal? (make-bytevector 5 200) (make-bytevector 5 200)))
   (assert-false (equal? (make-bytevector 5 200) (make-bytevector 6 200)))
-  (assert-false (equal? (make-bytevector 5 100) (make-bytevector 5 200)))))
+  (assert-false (equal? (make-bytevector 5 100) (make-bytevector 5 200)))
+
+  (assert-true  (equal? (typed-dynamic #u8(1 2 3) <bytevector>) (typed-dynamic #u8(1 2 3) <bytevector>)))
+  (assert-false (equal? (typed-dynamic #u8(1 2 3) <bytevector>) (typed-dynamic #u8(4 5 6) <bytevector>)))))
 
 (define-test "dynamic error object (equal?)" (expect-success
   (import (llambda error))

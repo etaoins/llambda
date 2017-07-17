@@ -70,6 +70,13 @@ public:
 
 	static BytevectorCell* fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors);
 
+	bool operator==(const BytevectorCell &other) const;
+
+	bool operator!=(const BytevectorCell &other) const
+	{
+		return !(*this == other);
+	}
+
 	BytevectorCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1) const;
 	bool replace(LengthType offset, const BytevectorCell *from, SliceIndexType fromStart = 0, SliceIndexType fromEnd = -1);
 

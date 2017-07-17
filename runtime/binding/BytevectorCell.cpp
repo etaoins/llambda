@@ -85,6 +85,22 @@ BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const
 	return BytevectorCell::withByteArray(world, newByteArray, totalLength);
 }
 
+bool BytevectorCell::operator==(const BytevectorCell &other) const
+{
+	if (isGlobalConstant() && other.isGlobalConstant())
+	{
+		// Constant folding guarantees this works
+		return this == &other;
+	}
+
+	if (length() != other.length())
+	{
+		return false;
+	}
+
+	return byteArray()->isEqual(other.byteArray(), length());
+}
+
 BytevectorCell* BytevectorCell::copy(World &world, SliceIndexType start, SliceIndexType end) const
 {
 	if (!adjustSlice(start, end, length()))
