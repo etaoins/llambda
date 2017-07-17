@@ -143,14 +143,24 @@
   (assert-true  (input-port? input-bytevector))
   (assert-false (input-port-open? input-bytevector))))
 
-(define-test "simple (call-with-port)" (expect-success
-  (define simple-port (open-input-string ""))
+(define-test "(call-with-port)" (expect-success
+  (define normal-return-port (open-input-string ""))
 
   ; If the procedure returns we should close the port
-  (define result-value (call-with-port simple-port
+  (define result-value (call-with-port normal-return-port
                                        (lambda (port)
                                          (assert-true (input-port-open? port))
                                          'success)))
 
   (assert-equal result-value 'success)
-  (assert-false (input-port-open? simple-port))))
+  (assert-false (input-port-open? normal-return-port))
+
+  (define throw-exception-port (open-input-string ""))
+
+  (guard (obj
+           (else #f))
+         (call-with-port throw-exception-port
+                         (lambda (port)
+                           (raise "THROWING!"))))
+
+  (assert-false (input-port-open? throw-exception-port))))

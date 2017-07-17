@@ -10,6 +10,7 @@
 #include "port/BufferInputPort.h"
 #include "port/BytevectorOutputPort.h"
 
+#include "dynamic/SchemeException.h"
 #include "core/error.h"
 
 using namespace lliby;
@@ -129,11 +130,20 @@ PortCell* llbase_open_input_bytevector(World &world, BytevectorCell *bytevector)
 
 AnyCell* llbase_call_with_port(World &world, PortCell *portCell, CallWithPortProcedureCell *thunk)
 {
-	AnyCell* returnValue = thunk->apply(world, portCell);
+	AnyCell* returnValue;
+
+	try
+	{
+		returnValue = thunk->apply(world, portCell);
+	}
+	catch(const dynamic::SchemeException &)
+	{
+		portCell->port()->closePort();
+		throw;
+	}
+
 	portCell->port()->closePort();
-
 	return returnValue;
-
 }
 
 }
