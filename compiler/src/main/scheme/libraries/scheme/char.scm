@@ -2,8 +2,9 @@
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
 
-  ; char library
-  (include-library-declarations "../../interfaces/scheme/char.scm")
+  (export char-alphabetic? char-numeric? char-whitespace? char-upper-case? char-lower-case? digit-value char-upcase
+          char-downcase char-foldcase string-upcase string-downcase string-foldcase string-ci=? string-ci<? string-ci>?
+          string-ci<=? string-ci>=? char-ci=? char-ci<? char-ci>? char-ci<=? char-ci>=?)
 
   (begin
     (define-native-library llchar (static-library "ll_scheme_char"))

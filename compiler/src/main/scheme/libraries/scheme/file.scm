@@ -3,7 +3,8 @@
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
   (import (only (scheme base) call-with-port current-input-port current-output-port))
 
-  (include-library-declarations "../../interfaces/scheme/file.scm")
+  (export file-exists? open-input-file open-binary-input-file open-output-file open-binary-output-file
+          call-with-input-file call-with-output-file with-input-from-file with-output-to-file delete-file)
 
   (begin
     (define-native-library llfile (static-library "ll_scheme_file"))

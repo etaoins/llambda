@@ -3,8 +3,7 @@
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
   (import (only (scheme base) current-input-port))
 
-  (include-library-declarations "../../interfaces/scheme/read.scm")
-  (export <readable>)
+  (export read <readable>)
 
   (begin
     (define-type <readable> (U <pair> <empty-list> <string> <symbol> <boolean> <number> <char> <vector> <bytevector>

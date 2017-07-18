@@ -68,7 +68,7 @@ class EvaluatorSuite extends FunSuite {
     val eval = testEvaluator()
 
     assert(eval(datum"""(import (llambda typed))""") === "loaded")
-    assert(eval(datum"""(import (scheme read))""") === "loaded")
+    assert(eval(datum"""(import (llambda read))""") === "loaded")
 
     intercept[ReplProcessNonZeroExitException] {
       // 1.5 isn't an integer

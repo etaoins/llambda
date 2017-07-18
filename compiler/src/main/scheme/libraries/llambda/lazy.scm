@@ -2,10 +2,7 @@
   (import (scheme base))
   (import (llambda typed))
 
-  ; R7RS lazy library
-  (include-library-declarations "../../interfaces/scheme/lazy.scm")
-  ; Also export the <promise> type if we're included directly
-  (export <promise>)
+  (export delay force promise? delay-force make-promise <promise>)
 
   (begin
     (define-record-type <promise-data> (make-promise-data done? value) promise-data?

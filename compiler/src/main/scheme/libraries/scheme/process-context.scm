@@ -3,8 +3,8 @@
   (import (only (scheme base) cond eqv? else))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
 
-  ; process-context library
-  (include-library-declarations "../../interfaces/scheme/process-context.scm")
+  (export exit get-environment-variable get-environment-variables command-line)
+
   (begin
     (define-native-library llprocesscontext (static-library "ll_scheme_processcontext"))
 

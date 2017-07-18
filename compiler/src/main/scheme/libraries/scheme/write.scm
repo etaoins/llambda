@@ -3,8 +3,8 @@
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
   (import (only (scheme base) current-output-port))
 
-  ; write library
-  (include-library-declarations "../../interfaces/scheme/write.scm")
+  (export write display)
+
   (begin
     (define-native-library llwrite (static-library "ll_scheme_write"))
 

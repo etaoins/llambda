@@ -1,32 +1,32 @@
 (define-test "trivial immediate (force)" (expect 3
-  (import (scheme lazy))
+  (import (llambda lazy))
 
   (define p (delay (+ 1 2)))
   (assert-true (promise? p))
   (force p)))
 
 (define-test "trivial (make-promise)" (expect 3
-  (import (scheme lazy))
+  (import (llambda lazy))
 
   (define p (make-promise 3))
   (assert-true (promise? p))
   (force p)))
 
 (define-test "trivial (delay-force)" (expect 3
-  (import (scheme lazy))
+  (import (llambda lazy))
 
   (define p (delay-force (delay (+ 1 2))))
   (assert-true (promise? p))
   (force p)))
 
 (define-test "(force)ing twice produces the same value" (expect (3 3)
-  (import (scheme lazy))
+  (import (llambda lazy))
 
   (let ((p (delay (+ 1 2))))
     (list (force p) (force p)))))
 
 (define-test "recursive promises and streaming" (expect-success
-  (import (scheme lazy))
+  (import (llambda lazy))
 
   (define integers
     (letrec ((next
@@ -52,7 +52,7 @@
   (assert-equal 5 (head (tail (tail (stream-filter odd? integers)))))))
 
 (define-test "(force) only computes a value once" (expect-success
-  (import (scheme lazy))
+  (import (llambda lazy))
   (define count 0)
   (define x 5)
   (define p
@@ -75,7 +75,7 @@
   (assert-true ((make-predicate <promise>) p))))
 
 (define-test "SRFI-45 memoization test 1" (expect-output (hello)
-  (import (scheme lazy))
+  (import (llambda lazy))
   (import (scheme write))
 
   (define s (delay (begin (write 'hello) 1)))
@@ -84,14 +84,14 @@
   (force s)))
 
 (define-test "SRFI-45 memoization test 2" (expect-output (bonjour)
-  (import (scheme lazy))
+  (import (llambda lazy))
   (import (scheme write))
 
   (let ((s (delay (begin (display 'bonjour) 2))))
     (+ (force s) (force s)))))
 
 (define-test "SRFI-45 memoization test 3" (expect-output (hi)
-  (import (scheme lazy))
+  (import (llambda lazy))
   (import (scheme write))
 
   (define r (delay (begin (display 'hi) 1)))
@@ -104,7 +104,7 @@
 ; SRFI-45 reentry test 1 is essentially the same as "(force) only computes a value once"
 
 (define-test "SRFI-45 reentrancy test 2" (expect-success
-  (import (scheme lazy))
+  (import (llambda lazy))
   (import (scheme write))
 
   (define f
@@ -119,7 +119,7 @@
   (assert-equal 'second (force f))))
 
 (define-test "SRFI-45 reentrancy test 3" (expect-success
-  (import (scheme lazy))
+  (import (llambda lazy))
   (import (scheme write))
 
   (define q
@@ -140,7 +140,7 @@
   (assert-equal 10 (get-count))))
 
 (define-test "SRFI-45 example procedures" (expect-success
-  (import (scheme lazy))
+  (import (llambda lazy))
 
   (define-syntax match
     (syntax-rules ()

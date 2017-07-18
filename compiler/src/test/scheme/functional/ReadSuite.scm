@@ -1,5 +1,5 @@
 (define-test "(read)" (expect-success
-  (import (scheme read))
+  (import (llambda read))
   (import (llambda error))
 
   (define (open-input-port source)
