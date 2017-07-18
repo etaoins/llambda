@@ -91,12 +91,12 @@ private[frontend] object ExtractExpr {
         ExtractNativeFunction(appliedSymbol, true, operands)
 
       case (Primitives.Quasiquote, sst.ProperList(listData) :: Nil) =>
-        val schemeBase = context.libraryLoader.loadSchemeBase(context.config)
-        (new ListQuasiquotationExpander(ExtractExpr.apply, schemeBase))(listData)
+        val llambdaBase = context.libraryLoader.loadLlambdaBase(context.config)
+        (new ListQuasiquotationExpander(ExtractExpr.apply, llambdaBase))(listData)
 
       case (Primitives.Quasiquote, sst.Vector(elements) :: Nil) =>
-        val schemeBase = context.libraryLoader.loadSchemeBase(context.config)
-        (new VectorQuasiquotationExpander(ExtractExpr.apply, schemeBase))(elements.toList)
+        val llambdaBase = context.libraryLoader.loadLlambdaBase(context.config)
+        (new VectorQuasiquotationExpander(ExtractExpr.apply, llambdaBase))(elements.toList)
 
       case (Primitives.Unquote, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation")

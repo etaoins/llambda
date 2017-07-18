@@ -7,17 +7,17 @@
   (ann (eof-object) <eof-object>)))
 
 (define-test "written strings can be read" (expect-output ("Hello!")
-  (import (scheme write))
+  (import (llambda write))
   (write "Hello!")))
 
 (define-test "writing consecutive numbers does not introduce whitespace" (expect-output (123)
-  (import (scheme write))
+  (import (llambda write))
   (write 1)
   (write 2)
   (write 3)))
 
 (define-test "writing consecutive numbers with newlines introduces whitespace" (expect-output (1 2 3)
-  (import (scheme write))
+  (import (llambda write))
   (write 1)
   (newline)
   (write 2)
@@ -25,13 +25,13 @@
   (write 3)))
 
 (define-test "(display) does not quote strings or characters" (expect-output ("Hello!")
-  (import (scheme write))
+  (import (llambda write))
   (display #\")
   (display "Hello!")
   (display #\")))
 
 (define-test "(display) does not quote symbols" (expect-output ("Hello!")
-  (import (scheme write))
+  (import (llambda write))
   (display #\")
   (display '|Hello!|)
   (display #\")))
@@ -339,7 +339,7 @@
   (write-bytevector #u8(1 2 3) output-port -1)))
 
 (define-test "(flush-output-port)" (expect-output (ABC)
-  (import (scheme process-context))
+  (import (llambda process-context))
 
   ; This isn't guaranteed to fail if (flush-output-port) is a no-op. However, it's likely to on most buffered
   ; implementations

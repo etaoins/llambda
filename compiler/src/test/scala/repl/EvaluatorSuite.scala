@@ -29,7 +29,7 @@ class EvaluatorSuite extends FunSuite {
     val eval = testEvaluator()
 
     // Try renaming (define)
-    assert(eval(datum"""(import (rename (scheme base) (define my-define)))""") === "loaded")
+    assert(eval(datum"""(import (rename (llambda base) (define my-define)))""") === "loaded")
 
     assert(eval(datum"""(my-define x 2)""") === "x => 2")
     assert(eval(datum"""2""") === "2")
@@ -134,7 +134,7 @@ class EvaluatorSuite extends FunSuite {
   test("non-zero exit code") {
     val eval = testEvaluator()
 
-    assert(eval(datum"""(import (scheme process-context))""") === "loaded")
+    assert(eval(datum"""(import (llambda process-context))""") === "loaded")
 
     try {
       eval(datum"""(begin (write 'hello-world) (exit 5))""")

@@ -47,8 +47,8 @@ class Evaluator(targetPlatform: platform.TargetPlatform) {
   implicit val frontendContext = frontend.FrontendContext(frontendConfig, loader, debug.UnknownContext)
 
   val initialLibraries = List(
-    List("scheme", "base"),
-    List("scheme", "write"),
+    List("llambda", "base"),
+    List("llambda", "write"),
     List("llambda", "internal", "repl"),
     List("llambda", "nfi")
   )

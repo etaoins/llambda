@@ -273,7 +273,7 @@
   (assert-equal 720 (result-message-count result))))
 
 (define-test "procedures capturing ports can be used inside actors" (expect-success
-  (import (scheme write))
+  (import (llambda write))
   (import (llambda actor))
   (import (llambda duration))
 

@@ -1,7 +1,7 @@
 (define-test "(random-integer)" (expect-success
   (import (llambda random))
   (import (llambda list))
-  (import (scheme write))
+  (import (llambda write))
 
   (assert-equal 0 (random-integer 1))
 

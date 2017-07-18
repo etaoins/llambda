@@ -25,7 +25,7 @@ object ExtractPatternMatch {
     */
   private def expectedVarLoc(
       locName: String,
-      libraryName: Seq[String]= List("scheme", "base")
+      libraryName: Seq[String]= List("llambda", "base")
   )(implicit context: FrontendContext): StorageLocation = {
     val bindings = context.libraryLoader.load(libraryName, NoSourceLocation)(context.config)
 

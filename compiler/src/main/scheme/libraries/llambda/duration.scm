@@ -1,5 +1,5 @@
 (define-library (llambda duration)
-	(import (scheme base))
+	(import (llambda base))
 	(import (llambda typed))
 
   (export microseconds milliseconds seconds minutes hours <duration>)

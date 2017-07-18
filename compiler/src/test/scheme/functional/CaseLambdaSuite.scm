@@ -1,5 +1,5 @@
 (define-test "static (case-lambda)" (expect-static-success
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda r7rs-case-lambda))
 
   (define case-function
@@ -16,7 +16,7 @@
   (assert-equal 19 (+ (r7rs-case-function 4 5) (r7rs-case-function 1)))))
 
 (define-test "simple (case-lambda)" (expect ((0 1 2) . (3 4))
- (import (scheme case-lambda))
+ (import (llambda case-lambda))
 
  (define range
    (case-lambda
@@ -37,7 +37,7 @@
   (cons (range 3) (range 3 5))))
 
 (define-test "(case-lambda) with rest args" (expect (2 3 4)
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
 
   (define rest-lambda
     (case-lambda
@@ -47,7 +47,7 @@
   (rest-lambda 0 1 2 3 4)))
 
 (define-test "(case-lambda) cell" (expect-success
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
 
   ; This ensures our generated top-level (case-lambda) function works correctly
   (define case-cell (typeless-cell (case-lambda
@@ -62,7 +62,7 @@
   (assert-equal '(1 2 3 4) (case-cell 1 2 3 4))))
 
 (define-test "(case-lambda) with wrong arity fails at compile time" (expect-compile-error arity-error?
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
 
   (define fixed-lambda
     (case-lambda
@@ -71,7 +71,7 @@
   (fixed-lambda 0 1 2)))
 
 (define-test "(case-lambda) with type fails at compile time" (expect-compile-error type-error?
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda typed))
 
   (define fixed-lambda
@@ -81,7 +81,7 @@
   (fixed-lambda 0 1)))
 
 (define-test "(case-lambda) returns value with case-> type" (expect-success
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda typed))
 
   (define fixed-lambda
@@ -92,7 +92,7 @@
   (ann fixed-lambda (case-> (-> <integer> <any>) (-> <integer> <symbol> <any>)))))
 
 (define-test "(case-lambda) cannot be annotated with incompatible case-> type" (expect-compile-error type-error?
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda typed))
 
   (define fixed-lambda
@@ -112,7 +112,7 @@
   (fixed-lambda 0 1 2)))
 
 (define-test "recursive (case-lambda)" (expect 5
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda typed))
 
   (define my-gcd (case-lambda
@@ -126,7 +126,7 @@
   (my-gcd 15 25)))
 
 (define-test "converting case lambdas to specific procedure types" (expect-success
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda typed))
 
   (define sum-args (case-lambda
@@ -144,7 +144,7 @@
   (assert-equal 5 (int-mapper 5 sum-args))))
 
 (define-test "(apply) selects the correct clause" (expect-success
-  (import (scheme case-lambda))
+  (import (llambda case-lambda))
   (import (llambda typed))
 
   (define count-args (case-lambda

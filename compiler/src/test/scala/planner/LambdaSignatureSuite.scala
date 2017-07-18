@@ -12,7 +12,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   private def retypingProcedureName = "retyping-procedure"
 
   private def signatureFor(scheme: String): ProcedureSignature = {
-    val importDecl = datum"(import (scheme base) (llambda typed) (llambda test-util))"
+    val importDecl = datum"(import (llambda base) (llambda typed) (llambda test-util))"
 
     // Give the procedure a distinctive name so we can find it later
     val procedureDatum = ast.ProperList(List(

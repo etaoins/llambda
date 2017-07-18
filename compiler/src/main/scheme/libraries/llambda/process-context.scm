@@ -1,12 +1,12 @@
-(define-library (scheme process-context)
+(define-library (llambda process-context)
   (import (llambda nfi))
-  (import (only (scheme base) cond eqv? else))
+  (import (only (llambda base) cond eqv? else))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
 
   (export exit get-environment-variable get-environment-variables command-line)
 
   (begin
-    (define-native-library llprocesscontext (static-library "ll_scheme_processcontext"))
+    (define-native-library llprocesscontext (static-library "ll_llambda_processcontext"))
 
     (define native-exit (native-function system-library "exit" (-> <native-int32> <unit>) noreturn))
 

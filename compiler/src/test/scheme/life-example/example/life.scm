@@ -1,7 +1,7 @@
 (define-library (example life)
                 (export life)
-                (import (except (scheme base) set!)
-                        (scheme write)
+                (import (except (llambda base) set!)
+                        (llambda write)
                         (example grid))
                 (begin
                   (define (life-count grid i j)

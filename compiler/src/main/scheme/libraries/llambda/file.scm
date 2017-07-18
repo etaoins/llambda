@@ -1,13 +1,13 @@
-(define-library (scheme file)
+(define-library (llambda file)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
-  (import (only (scheme base) call-with-port current-input-port current-output-port))
+  (import (only (llambda base) call-with-port current-input-port current-output-port))
 
   (export file-exists? open-input-file open-binary-input-file open-output-file open-binary-output-file
           call-with-input-file call-with-output-file with-input-from-file with-output-to-file delete-file)
 
   (begin
-    (define-native-library llfile (static-library "ll_scheme_file"))
+    (define-native-library llfile (static-library "ll_llambda_file"))
 
     (define-stdlib file-exists? (native-function llfile "llfile_file_exists" (-> <string> <native-bool>) nocapture))
 

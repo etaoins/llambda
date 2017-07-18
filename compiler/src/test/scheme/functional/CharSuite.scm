@@ -3,7 +3,7 @@
   (assert-false (char? 3))))
 
 (define-test "(digit-value)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal 3 (digit-value #\3))
   (assert-equal 4 (digit-value #\x0664))
@@ -11,7 +11,7 @@
   (assert-equal #f (digit-value #\x0EA6))))
 
 (define-test "(char-alphabetic?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-alphabetic? #\space))
 
@@ -31,7 +31,7 @@
   (assert-false (char-alphabetic? #\x1f3c2))))
 
 (define-test "(char-numeric?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-numeric? #\space))
   (assert-false (char-numeric? #\a))
@@ -43,7 +43,7 @@
   (assert-false (char-numeric? #\x1f3c2))))
 
 (define-test "(char-whitespace?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-true  (char-whitespace? #\space))
   (assert-false (char-whitespace? #\a))
@@ -55,7 +55,7 @@
   (assert-false (char-whitespace? #\x1f3c2))))
 
 (define-test "(char-upper-case?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-upper-case? #\space))
   (assert-false (char-upper-case? #\a))
@@ -67,7 +67,7 @@
   (assert-false (char-upper-case? #\x1f3c2))))
 
 (define-test "(char-lower-case?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-lower-case? #\space))
   (assert-true  (char-lower-case? #\a))
@@ -79,7 +79,7 @@
   (assert-false (char-lower-case? #\x1f3c2))))
 
 (define-test "(char-upcase)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal #\A (char-upcase #\a))
   (assert-equal #\Z (char-upcase #\Z))
@@ -90,7 +90,7 @@
   (assert-equal #\S (char-upcase #\x017F))))
 
 (define-test "(char-downcase)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal #\a (char-downcase #\a))
   (assert-equal #\z (char-downcase #\Z))
@@ -101,7 +101,7 @@
   (assert-equal #\x017F (char-downcase #\x017F))))
 
 (define-test "(char-foldcase)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal #\a (char-foldcase #\a))
   (assert-equal #\z (char-foldcase #\Z))
@@ -197,7 +197,7 @@
   (assert-true  (char>=? (typed-dynamic #\c <char>) (typed-dynamic #\b <char>) (typed-dynamic #\a <char>)))))
 
 (define-test "(char-ci=?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-ci=? #\a #\b))
   (assert-true  (char-ci=? #\a #\a))
@@ -208,7 +208,7 @@
   (assert-false (char-ci=? #\a #\a #\b))))
 
 (define-test "(char-ci<?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-true  (char-ci<? #\a #\b))
   (assert-false (char-ci<? #\a #\a))
@@ -220,7 +220,7 @@
   (assert-false (char-ci<? #\c #\b #\a))))
 
 (define-test "(char-ci>?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-ci>? #\a #\b))
   (assert-false (char-ci>? #\a #\a))
@@ -232,7 +232,7 @@
   (assert-true  (char-ci>? #\c #\b #\a))))
 
 (define-test "(char-ci<=?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-true  (char-ci<=? #\a #\b))
   (assert-true  (char-ci<=? #\a #\a))
@@ -244,7 +244,7 @@
   (assert-false (char-ci<=? #\c #\b #\a))))
 
 (define-test "(char-ci>=?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (char-ci>=? #\a #\b))
   (assert-true  (char-ci>=? #\a #\a))

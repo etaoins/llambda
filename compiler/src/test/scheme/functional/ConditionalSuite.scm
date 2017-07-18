@@ -115,7 +115,7 @@
    result))
 
 (define-test "conditional with allocation in one branch and termination in the other" (expect test
-  (import (scheme process-context))
+  (import (llambda process-context))
 
   (if (dynamic-false)
     (begin

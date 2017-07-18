@@ -129,8 +129,8 @@ class LibraryLoader {
     }
   }
 
-  def loadSchemeBase(implicit frontendConfig: FrontendConfig) =
-    load(List("scheme", "base"), NoSourceLocation)
+  def loadLlambdaBase(implicit frontendConfig: FrontendConfig) =
+    load(List("llambda", "base"), NoSourceLocation)
 
   def libraryExprs: List[et.Expr] =
     exprBuffer.toList

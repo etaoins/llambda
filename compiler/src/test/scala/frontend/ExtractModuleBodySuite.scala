@@ -602,7 +602,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("cond-expand with one true clause") {
-    assert(bodyFor("""(cond-expand ((library (scheme base)) 1 2 3))""")(primitiveScope) ===
+    assert(bodyFor("""(cond-expand ((library (llambda base)) 1 2 3))""")(primitiveScope) ===
       List(
         et.Literal(ast.Integer(1)),
         et.Literal(ast.Integer(2)),

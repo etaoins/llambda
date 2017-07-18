@@ -1,5 +1,5 @@
 (define-library (llambda lazy)
-  (import (scheme base))
+  (import (llambda base))
   (import (llambda typed))
 
   (export delay force promise? delay-force make-promise <promise>)

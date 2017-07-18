@@ -1,7 +1,7 @@
 (define-library (example grid)
                 (export make rows cols ref each
                         (rename put! set!))
-                (import (scheme base))
+                (import (llambda base))
                 (begin
                   ;; Create an NxM grid.
                   (define (make n m)

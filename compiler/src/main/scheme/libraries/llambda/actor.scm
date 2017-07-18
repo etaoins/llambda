@@ -1,5 +1,5 @@
 (define-library (llambda actor)
-  (import (scheme base))
+  (import (llambda base))
   (import (llambda nfi))
   (import (llambda typed))
   (import (llambda duration))

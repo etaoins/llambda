@@ -90,7 +90,7 @@
   (assert-equal "" (substring "日本国" 3 3))))
 
 (define-test "(string-upcase)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal "" (string-upcase ""))
   (assert-equal "HELL☃ WORLDS" (string-upcase "hell☃ worldſ"))
@@ -98,7 +98,7 @@
   (assert-equal "日本国" (string-upcase "日本国"))))
 
 (define-test "(string-downcase)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal "" (string-downcase ""))
   (assert-equal "hell☃ worldſ" (string-downcase "hell☃ worldſ"))
@@ -106,7 +106,7 @@
   (assert-equal "日本国" (string-downcase "日本国"))))
 
 (define-test "(string-foldcase)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-equal "" (string-foldcase ""))
   (assert-equal "hell☃ worlds" (string-foldcase "hell☃ worldſ"))
@@ -154,7 +154,7 @@
   (assert-true  (string>=? "日本国" "日本国"))))
 
 (define-test "(string-ci=?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-true  (string-ci=? "hello" "hello"))
   (assert-true  (string-ci=? "hello" "HELLO"))
@@ -164,7 +164,7 @@
   (assert-true  (string-ci=? "日本国" "日本国"))))
 
 (define-test "(string-ci<?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (string-ci<? "hello" "hello"))
   (assert-false (string-ci<? "hello" "HELLO"))
@@ -174,7 +174,7 @@
   (assert-false (string-ci<? "日本国" "日本国"))))
 
 (define-test "(string-ci>?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-false (string-ci>? "hello" "hello"))
   (assert-false (string-ci>? "hello" "HELLO"))
@@ -184,7 +184,7 @@
   (assert-false (string-ci>? "日本国" "日本国"))))
 
 (define-test "(string-ci<=?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-true  (string-ci<=? "hello" "hello"))
   (assert-true  (string-ci<=? "hello" "HELLO"))
@@ -194,7 +194,7 @@
   (assert-true  (string-ci<=? "日本国" "日本国"))))
 
 (define-test "(string-ci>=?)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
 
   (assert-true  (string-ci>=? "hello" "hello"))
   (assert-true  (string-ci>=? "hello" "HELLO"))

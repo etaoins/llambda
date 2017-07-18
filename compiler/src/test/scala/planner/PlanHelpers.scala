@@ -44,7 +44,7 @@ trait PlanHelpers extends FunSuite with Inside {
   }
 
   protected def nativeLibrariesFor(scheme: String): Set[NativeLibrary] = {
-    val importDecl = datum"""(import (scheme base) (llambda nfi) (llambda typed) (scheme process-context))"""
+    val importDecl = datum"""(import (llambda base) (llambda nfi) (llambda typed) (llambda process-context))"""
 
     val data = importDecl :: SchemeParser.parseStringAsData(scheme)
 

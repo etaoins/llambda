@@ -76,7 +76,7 @@
 
 (define-test "SRFI-45 memoization test 1" (expect-output (hello)
   (import (llambda lazy))
-  (import (scheme write))
+  (import (llambda write))
 
   (define s (delay (begin (write 'hello) 1)))
 
@@ -85,14 +85,14 @@
 
 (define-test "SRFI-45 memoization test 2" (expect-output (bonjour)
   (import (llambda lazy))
-  (import (scheme write))
+  (import (llambda write))
 
   (let ((s (delay (begin (display 'bonjour) 2))))
     (+ (force s) (force s)))))
 
 (define-test "SRFI-45 memoization test 3" (expect-output (hi)
   (import (llambda lazy))
-  (import (scheme write))
+  (import (llambda write))
 
   (define r (delay (begin (display 'hi) 1)))
   (define s (delay-force r))
@@ -105,7 +105,7 @@
 
 (define-test "SRFI-45 reentrancy test 2" (expect-success
   (import (llambda lazy))
-  (import (scheme write))
+  (import (llambda write))
 
   (define f
     (let ((first? #t))
@@ -120,7 +120,7 @@
 
 (define-test "SRFI-45 reentrancy test 3" (expect-success
   (import (llambda lazy))
-  (import (scheme write))
+  (import (llambda write))
 
   (define q
     (let ((count 5))

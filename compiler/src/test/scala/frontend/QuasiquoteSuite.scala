@@ -5,10 +5,10 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
-  implicit val baseScope = new ImmutableScope(collection.mutable.Map(schemeBaseBindings.toSeq: _*))
+  implicit val baseScope = new ImmutableScope(collection.mutable.Map(llambdaBaseBindings.toSeq: _*))
 
-  def schemeBaseProcedure(name: String): et.Expr =
-    schemeBaseBindings(name) match {
+  def llambdaBaseProcedure(name: String): et.Expr =
+    llambdaBaseBindings(name) match {
       case storageLoc: StorageLocation =>
         et.VarRef(storageLoc)
 
@@ -16,13 +16,13 @@ class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
         throw new Exception("Attempted to get reference to non-storage loc")
     }
 
-  val plusProc = schemeBaseProcedure("+")
+  val plusProc = llambdaBaseProcedure("+")
 
-  val listProc = schemeBaseProcedure("list")
-  val appendProc = schemeBaseProcedure("append")
+  val listProc = llambdaBaseProcedure("list")
+  val appendProc = llambdaBaseProcedure("append")
 
-  val vectorProc = schemeBaseProcedure("vector")
-  val listToVectorProc = schemeBaseProcedure("list->vector")
+  val vectorProc = llambdaBaseProcedure("vector")
+  val listToVectorProc = llambdaBaseProcedure("list->vector")
 
   test("unquoting outside of a quasiquote fails") {
     intercept[BadSpecialFormException] {

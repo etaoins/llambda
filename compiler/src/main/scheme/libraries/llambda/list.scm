@@ -1,5 +1,5 @@
 (define-library (llambda list)
-  (import (scheme base))
+  (import (llambda base))
   (import (llambda typed))
   (import (llambda nfi))
 

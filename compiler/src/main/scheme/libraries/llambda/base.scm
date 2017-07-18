@@ -1,10 +1,10 @@
-(define-library (scheme base)
+(define-library (llambda base)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
   (import (llambda internal features))
   (import (llambda error))
 
-  ; export (llambda internal primitives) that occur in (scheme base)
+  ; export (llambda internal primitives) that occur in (llambda base)
   ; these are virtual definitions provided by the compiler
   (export lambda quote if else set! syntax-error include quasiquote unquote unquote-splicing define define-syntax
           syntax-rules define-record-type cond-expand parameterize)
@@ -255,7 +255,7 @@
          (define-stdlib (name [to : <type>] [at : <integer>] [from : <type>] [start : <integer> 0] [end : <integer> (length-proc from)])
            (native-proc to at from start end)))))
 
-    (define-native-library llbase (static-library "ll_scheme_base"))
+    (define-native-library llbase (static-library "ll_llambda_base"))
 
     ; Define the length accessors for slicing values
     (define-stdlib vector-length (native-function llbase "llbase_vector_length" (-> <vector> <native-int64>) nocapture))

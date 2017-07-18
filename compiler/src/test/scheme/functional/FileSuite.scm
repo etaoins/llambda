@@ -1,11 +1,11 @@
 (define-test "(file-exists?)" (expect-success
-  (import (scheme file))
+  (import (llambda file))
 
   (assert-true (file-exists? (path-for-test-file "empty-file")))
   (assert-false (file-exists? (path-for-test-file "path/does-not-exist")))))
 
 (define-test "(open-input-file)" (expect-success
-  (import (scheme file))
+  (import (llambda file))
 
   (define missing-path (path-for-test-file "path/does-not-exist"))
 
@@ -43,7 +43,7 @@
     (assert-equal "溮煡煟 鍹餳駷 厊圪妀 輠 轈鄻" (read-line))))))
 
 (define-test "(open-output-file)" (expect-success
-  (import (scheme file))
+  (import (llambda file))
 
   (define missing-path (path-for-test-file "path/does-not-exist"))
 
@@ -78,7 +78,7 @@
     (write-string "HELLO!")))))
 
 (define-test "(delete-file)" (expect-success
-  (import (scheme file))
+  (import (llambda file))
 
   (assert-raises file-error?
                  (delete-file (path-for-test-file "path/does-not-exist")))))

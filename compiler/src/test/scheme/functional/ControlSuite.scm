@@ -67,7 +67,7 @@
   (assert-equal 15 acc)))
 
 (define-test "(string-map)" (expect-success
-  (import (scheme char))
+  (import (llambda char))
   (assert-equal "abdegh" (string-map char-foldcase "AbdEgH"))
 
   (assert-equal "IBM" (string-map

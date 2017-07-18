@@ -131,7 +131,7 @@ class CondExpanderSuite extends FunSuite {
   test("trivial existing library expansion") {
     val data = expansionFor(
       List(
-        """((library (scheme base)) 1 2 3)"""
+        """((library (llambda base)) 1 2 3)"""
       ),
       Set(
         """my-feature"""
@@ -145,7 +145,7 @@ class CondExpanderSuite extends FunSuite {
     val data = expansionFor(
       List(
         """((library (not a library)) 1 2 3)""",
-        """((library (scheme base)) 4 5 6)"""
+        """((library (llambda base)) 4 5 6)"""
       ),
       Set(
         """my-feature"""
@@ -275,7 +275,7 @@ class CondExpanderSuite extends FunSuite {
   test("nested conditionals") {
     val data = expansionFor(
       List(
-        """((and feature-1 (not (library (scheme base)))) 1 2 3)""",
+        """((and feature-1 (not (library (llambda base)))) 1 2 3)""",
         """((or (not feature-1) (and feature-2)) 4 5 6)"""
       ),
       Set(

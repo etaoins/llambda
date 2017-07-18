@@ -1,7 +1,7 @@
 (define-library (llambda flonum)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
-  (import (only (scheme base) flonum eqv?))
+  (import (only (llambda base) flonum eqv?))
 
   (export infinite? finite? nan? cos sin tan asin acos atan sqrt exp log)
 

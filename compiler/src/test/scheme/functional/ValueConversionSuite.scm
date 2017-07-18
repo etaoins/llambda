@@ -76,7 +76,7 @@
   (flonum->double -53)))
 
 (define-test "#\\3 can be unboxed as a character" (expect 3
-  (import (scheme char))
+  (import (llambda char))
   ; This assumes (digit-value) takes an native Unicode character
   (digit-value (typeless-cell #\3))))
 

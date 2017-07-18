@@ -11,7 +11,7 @@ import llambda.compiler.SchemeStringImplicits._
 
 abstract class SchemeFunctionalTestRunner(testName: String, onlyOptimised: Boolean = false) extends FunSuite {
   // Implicit import decl every test gets
-  private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
+  private val testImportDecl = datum"(import (llambda nfi) (llambda base) (llambda test-util))"
 
   private val AbnormalExitCodes = List(
     // SIGILL

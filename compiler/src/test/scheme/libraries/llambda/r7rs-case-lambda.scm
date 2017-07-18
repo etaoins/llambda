@@ -1,6 +1,6 @@
 (define-library (llambda r7rs-case-lambda)
 
-(import (scheme base))
+(import (llambda base))
 (export r7rs-case-lambda)
 
 (begin

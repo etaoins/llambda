@@ -1,4 +1,4 @@
-(define-library (scheme char)
+(define-library (llambda char)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-stdlib-procedure define-stdlib)))
 
@@ -7,7 +7,7 @@
           string-ci<=? string-ci>=? char-ci=? char-ci<? char-ci>? char-ci<=? char-ci>=?)
 
   (begin
-    (define-native-library llchar (static-library "ll_scheme_char"))
+    (define-native-library llchar (static-library "ll_llambda_char"))
 
     (define-stdlib char-alphabetic? (native-function llchar "llchar_char_is_alphabetic" (-> <native-unicode-char> <native-bool>)))
     (define-stdlib char-numeric? (native-function llchar "llchar_char_is_numeric" (-> <native-unicode-char> <native-bool>)))

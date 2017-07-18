@@ -98,44 +98,44 @@ add_library(ll_llambda_flonum
 	stdlib/llambda/flonum/flonum.cpp
 )
 
-add_library(ll_scheme_base
-	stdlib/scheme/base/arithmetic.cpp
-	stdlib/scheme/base/boolean.cpp
-	stdlib/scheme/base/bytevector.cpp
-	stdlib/scheme/base/char.cpp
-	stdlib/scheme/base/control.cpp
-	stdlib/scheme/base/exception.cpp
-	stdlib/scheme/base/input.cpp
-	stdlib/scheme/base/list.cpp
-	stdlib/scheme/base/map.cpp
-	stdlib/scheme/base/number.cpp
-	stdlib/scheme/base/numberio.cpp
-	stdlib/scheme/base/port.cpp
-	stdlib/scheme/base/output.cpp
-	stdlib/scheme/base/string.cpp
-	stdlib/scheme/base/symbol.cpp
-	stdlib/scheme/base/vector.cpp
+add_library(ll_llambda_base
+	stdlib/llambda/base/arithmetic.cpp
+	stdlib/llambda/base/boolean.cpp
+	stdlib/llambda/base/bytevector.cpp
+	stdlib/llambda/base/char.cpp
+	stdlib/llambda/base/control.cpp
+	stdlib/llambda/base/exception.cpp
+	stdlib/llambda/base/input.cpp
+	stdlib/llambda/base/list.cpp
+	stdlib/llambda/base/map.cpp
+	stdlib/llambda/base/number.cpp
+	stdlib/llambda/base/numberio.cpp
+	stdlib/llambda/base/port.cpp
+	stdlib/llambda/base/output.cpp
+	stdlib/llambda/base/string.cpp
+	stdlib/llambda/base/symbol.cpp
+	stdlib/llambda/base/vector.cpp
 )
 
-add_library(ll_scheme_char
-	stdlib/scheme/char/char.cpp
+add_library(ll_llambda_char
+	stdlib/llambda/char/char.cpp
 	ucd/ucd.cpp
 )
 
-add_library(ll_scheme_file
-	stdlib/scheme/file/file.cpp
+add_library(ll_llambda_file
+	stdlib/llambda/file/file.cpp
 )
 
-add_library(ll_scheme_processcontext
-	stdlib/scheme/process-context/process.cpp
+add_library(ll_llambda_processcontext
+	stdlib/llambda/process-context/process.cpp
 )
 
-add_library(ll_scheme_read
-	stdlib/scheme/read/read.cpp
+add_library(ll_llambda_read
+	stdlib/llambda/read/read.cpp
 )
 
-add_library(ll_scheme_write
-	stdlib/scheme/write/write.cpp
+add_library(ll_llambda_write
+	stdlib/llambda/write/write.cpp
 )
 
 include_directories(${lliby_SOURCE_DIR})
@@ -212,7 +212,7 @@ set(ALL_TEST_NAMES
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(test-${test_name} tests/test-${test_name}.cpp)
-	target_link_libraries(test-${test_name} llcore ll_scheme_char ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(test-${test_name} llcore ll_llambda_char ${CMAKE_THREAD_LIBS_INIT})
 
 	add_test(${test_name} test-${test_name})
 endforeach()

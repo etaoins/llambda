@@ -1,6 +1,5 @@
 (define-library (llambda test-util)
-  (import (scheme base) (scheme write) (scheme process-context))
-  (import (llambda typed))
+  (import (llambda base) (llambda write) (llambda process-context) (llambda typed))
   (export dynamic-false dynamic-true typeless-cell typed-dynamic force-evaluation assert-equal assert-true assert-false
           assert-raises assert-within path-for-test-file)
   (begin

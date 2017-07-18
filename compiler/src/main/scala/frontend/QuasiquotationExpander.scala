@@ -5,7 +5,7 @@ import llambda.compiler._
 
 // This handles quasiquotion based on a few premises:
 //
-// - Only (scheme base) procedures can be used. It would be nice to have both a (lists->vector) and a version of (list)
+// - Only (llambda base) procedures can be used. It would be nice to have both a (lists->vector) and a version of (list)
 //   that can return a constant list. However, it seems overkill to micro-optimise quasiquotion by introducing custom
 //   runtime procedures at this point
 //
@@ -30,20 +30,20 @@ import llambda.compiler._
 // quasiquotation. The fallback case simply converts every segment to a list, appends them to a final list, and then
 // calls createFromList
 //
-abstract class QuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, schemeBase: Map[String, BoundValue]) {
+abstract class QuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, llambdaBase: Map[String, BoundValue]) {
   protected sealed abstract class QuasiquoteSegment
   protected case class ConstantSegment(data: List[ast.Datum]) extends QuasiquoteSegment
   protected case class DynamicSegment(exprs: List[et.Expr]) extends QuasiquoteSegment
   protected case class SplicedSegment(generator: et.Expr) extends QuasiquoteSegment
 
-  protected def schemeBaseProcedure(name: String) = schemeBase(name) match {
+  protected def llambdaBaseProcedure(name: String) = llambdaBase(name) match {
     case storageLoc: StorageLocation => et.VarRef(storageLoc)
     case _ =>
       throw new InternalCompilerErrorException("Procedure name passed that does not correspond to a storage location")
   }
 
-  protected val listProc = schemeBaseProcedure("list")
-  protected val listAppendProc = schemeBaseProcedure("append")
+  protected val listProc = llambdaBaseProcedure("list")
+  protected val listAppendProc = llambdaBaseProcedure("append")
 
   // Makes a constant literal
   protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum
@@ -138,7 +138,7 @@ abstract class QuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, s
   }
 }
 
-class ListQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, schemeBase: Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, schemeBase) {
+class ListQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, llambdaBase: Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, llambdaBase) {
   protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum =
     ast.ProperList(elements)
 
@@ -150,9 +150,9 @@ class ListQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, scheme
     et.Apply(listProc, elements)
 }
 
-class VectorQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, schemeBase: Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, schemeBase) {
-  private val listToVectorProc = schemeBaseProcedure("list->vector")
-  private val vectorProc = schemeBaseProcedure("vector")
+class VectorQuasiquotationExpander(extractExpr: sst.ScopedDatum => et.Expr, llambdaBase: Map[String, BoundValue]) extends QuasiquotationExpander(extractExpr, llambdaBase) {
+  private val listToVectorProc = llambdaBaseProcedure("list->vector")
+  private val vectorProc = llambdaBaseProcedure("vector")
 
   protected def createConstantLiteral(elements: List[ast.Datum]): ast.Datum =
     ast.Vector(elements.toVector)

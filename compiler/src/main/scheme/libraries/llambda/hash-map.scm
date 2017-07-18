@@ -2,7 +2,7 @@
   (import (llambda internal primitives))
   (import (llambda nfi))
   (import (llambda error))
-  (import (only (scheme base) expt))
+  (import (only (llambda base) expt))
 
   (export hash-map? make-hash-map alist->hash-map hash-map-size hash-map-assoc hash-map-delete hash-map-exists?
           hash-map-ref/default hash-map-ref hash-map->alist hash-map-keys hash-map-values hash-map-for-each

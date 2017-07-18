@@ -22,11 +22,11 @@ trait ExprHelpers extends FunSuite with OptionValues {
       featureIdentifiers=FeatureIdentifiers()
     )
 
-  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
-  def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq: _*))
+  val llambdaBaseBindings = libraryLoader.loadLlambdaBase(frontendConfig)
+  def llambdaBaseScope = new Scope(collection.mutable.Map(llambdaBaseBindings.toSeq: _*))
 
   val typedLambdaBindings = libraryLoader.load(List("llambda", "typed"), NoSourceLocation)(frontendConfig)
-  def typedLambdaScope = new Scope(collection.mutable.Map((schemeBaseBindings ++ typedLambdaBindings).toSeq: _*))
+  def typedLambdaScope = new Scope(collection.mutable.Map((llambdaBaseBindings ++ typedLambdaBindings).toSeq: _*))
 
   def exprFor(scheme: String)(implicit scope: Scope) = {
     val (expr :: Nil) = bodyFor(scheme)(scope)

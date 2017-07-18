@@ -12,7 +12,7 @@ import scala.collection.concurrent.TrieMap
 
 private[frontend] object IncludeLoader {
   // This is a hack to prevent us from constantly re-parsing the same file during unit tests. This was especially
-  // becoming a problem as (scheme base) grew in size. This ends up halving the time the unit tests take
+  // becoming a problem as (llambda base) grew in size. This ends up halving the time the unit tests take
   private val parsedCache = new TrieMap[String, Option[List[ast.Datum]]]
 
   private def attemptLoad(rootDir: URL, includeName: String): Option[List[ast.Datum]] = {

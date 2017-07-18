@@ -1,6 +1,6 @@
-(import (scheme base))
-(import (scheme write))
-(import (scheme file))
+(import (llambda base))
+(import (llambda write))
+(import (llambda file))
 
 (import (llambda typed))
 (import (llambda list))

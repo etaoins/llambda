@@ -43,8 +43,8 @@ Usage
 
 Llambda takes Scheme source files as input and produces standalone statically linked executables. A trivial "Hello, World" application would look like:
 ```racket
-(import (scheme base))
-(import (scheme write))
+(import (llambda base))
+(import (llambda write))
 
 (write "Hello, world!")
 (newline)
