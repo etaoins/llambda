@@ -42,7 +42,7 @@ with open(path.join(ucd_directory, 'UnicodeData.txt'), 'r') as f:
 
         if (name.endswith(", First>")):
             # This is a range
-            next_line = f.__next__()
+            next_line = next(f)
             end_code_point = parse_code_point(parse_ucd_line(next_line)[0])
         else:
             end_code_point = start_code_point
@@ -59,7 +59,7 @@ with open(path.join(ucd_directory, 'UnicodeData.txt'), 'r') as f:
 
         if lowercase_mapping is not None:
             set_dict_range(tolower_dict, code_range, lowercase_mapping)
-        
+
         if uppercase_mapping is not None:
             set_dict_range(toupper_dict, code_range, uppercase_mapping)
 
