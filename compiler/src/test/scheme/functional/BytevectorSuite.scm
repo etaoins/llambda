@@ -7,7 +7,11 @@
   (assert-equal #u8() (make-bytevector 0))
   (assert-equal #u8() (make-bytevector 0 0))
   (assert-equal #u8(0 0 0) (make-bytevector 3))
-  (assert-equal #u8(5 5 5) (make-bytevector 3 5))))
+
+  (assert-equal #u8(5 5 5) (make-bytevector 3 5))
+  (assert-equal #u8(5 5 5) (make-bytevector (typed-dynamic 3 <integer>) 5))
+  (assert-equal #u8(5 5 5) (make-bytevector 3 (typed-dynamic 5 <integer>)))
+  (assert-equal #u8(5 5 5) (make-bytevector (typed-dynamic 3 <integer>) (typed-dynamic 5 <integer>)))))
 
 (define-test "(make-bytevector) with a flonum fill fails" (expect-error type-error?
   (make-bytevector 3 5.0)))
@@ -17,7 +21,9 @@
 
 (define-test "(bytevector)" (expect-success
   (assert-equal #u8() (bytevector))
-  (assert-equal #u8(1 3 5 1 3 5) (bytevector 1 3 5 1 3 5))))
+
+  (assert-equal #u8(1 3 5 1 3 5) (bytevector 1 3 5 1 3 5))
+  (assert-equal #u8(1 3 5 1 3 5) (bytevector 1 (typed-dynamic 3 <integer>) 5 1 3 (typed-dynamic 5 <integer>)))))
 
 (define-test "static (bytevector) length" (expect-static-success
   (assert-equal 3 (bytevector-length #u8(1 2 3)))
