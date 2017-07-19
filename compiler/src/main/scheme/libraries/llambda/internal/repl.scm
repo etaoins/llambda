@@ -3,9 +3,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export write-stdout print-thunk-result)
+  (export write-stdout)
 
   (begin
-    (define write-stdout (native-function system-library "llcore_write_stdout" (-> <any> <unit>) nocapture))
-    (define (print-thunk-result [thunk : (-> <any>)])
-      (write-stdout (thunk)))))
+    (define write-stdout (native-function system-library "llcore_write_stdout" (-> <any> <unit>) nocapture))))

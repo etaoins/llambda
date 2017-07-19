@@ -184,12 +184,8 @@ class Evaluator(targetPlatform: platform.TargetPlatform) {
     case _ =>
       val printingDatum =
         ast.ProperList(List(
-          ast.Symbol("print-thunk-result"),
-          ast.ProperList(List(
-            ast.Symbol("lambda"),
-            ast.ProperList(Nil),
-            userDatum
-          ))
+          ast.Symbol("write-stdout"),
+          userDatum
         ))
 
       val printingExprs = frontend.ExtractModuleBody(List(printingDatum), scope)
