@@ -481,29 +481,19 @@ object GenPlanStep {
 
       newState.withTempValue(resultTemp -> resultIr)
 
-    case ps.IntegerDiv(resultTemp, signed, val1Temp, val2Temp) =>
+    case ps.IntegerDiv(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val resultIr = if (signed) {
-        state.currentBlock.sdiv("sdivResult")(false, val1Ir, val2Ir)
-      }
-      else {
-        state.currentBlock.udiv("udivResult")(false, val1Ir, val2Ir)
-      }
+      val resultIr = state.currentBlock.sdiv("sdivResult")(false, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
 
-    case ps.IntegerRem(resultTemp, signed, val1Temp, val2Temp) =>
+    case ps.IntegerRem(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val resultIr = if (signed) {
-        state.currentBlock.srem("sremResult")(val1Ir, val2Ir)
-      }
-      else {
-        state.currentBlock.urem("uremResult")(val1Ir, val2Ir)
-      }
+      val resultIr = state.currentBlock.srem("sremResult")(val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
 

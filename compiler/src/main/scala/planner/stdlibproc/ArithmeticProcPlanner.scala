@@ -250,7 +250,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
       numerator: (ContextLocated, iv.IntermediateValue),
       denominator: (ContextLocated, iv.IntermediateValue)
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] =
-    performIntegerDivOp(ps.IntegerDiv(_, true, _, _), _ / _, numerator, denominator)
+    performIntegerDivOp(ps.IntegerDiv(_, _, _), _ / _, numerator, denominator)
 
   private def performIntegerRemainder(
       numerator: (ContextLocated, iv.IntermediateValue),
@@ -261,7 +261,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
       Some(iv.ConstantIntegerValue(0))
 
     case _ =>
-      performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
+      performIntegerDivOp(ps.IntegerRem(_, _, _), _ % _, numerator, denominator)
   }
 
   override def planWithValue(state: PlannerState)(

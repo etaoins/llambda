@@ -1121,10 +1121,9 @@ case class CheckedIntegerMul(
     CheckedIntegerMul(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
 
-/** Performs truncating division on two integers of the same type */
+/** Performs truncating signed division on two integers of the same type */
 case class IntegerDiv(
     result: TempValue,
-    signed: Boolean,
     val1: TempValue,
     val2: TempValue
 ) extends DiscardableStep with MergeableStep {
@@ -1132,13 +1131,12 @@ case class IntegerDiv(
   lazy val outputValues = Set[TempValue](result)
 
   def renamed(f: (TempValue) => TempValue) =
-    IntegerDiv(f(result), signed, f(val1), f(val2)).assignLocationFrom(this)
+    IntegerDiv(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
-/** Calculates the remainder of truncating division on two integers of the same type */
+/** Calculates the remainder of truncating signed division on two integers of the same type */
 case class IntegerRem(
     result: TempValue,
-    signed: Boolean,
     val1: TempValue,
     val2: TempValue
 ) extends DiscardableStep with MergeableStep {
@@ -1146,7 +1144,7 @@ case class IntegerRem(
   lazy val outputValues = Set[TempValue](result)
 
   def renamed(f: (TempValue) => TempValue) =
-    IntegerRem(f(result), signed, f(val1), f(val2)).assignLocationFrom(this)
+    IntegerRem(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Adds two floats of the same type */
