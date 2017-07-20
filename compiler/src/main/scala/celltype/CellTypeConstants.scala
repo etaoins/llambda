@@ -1,20 +1,8 @@
 package io.llambda.compiler.celltype
 import io.llambda
 
-import llambda.llvmir._
 import llambda.compiler.platform.TargetPlatform
-import io.llambda.compiler.InternalCompilerErrorException
 
-
-private object ArrayElementsForIrType {
-  def apply(irType: IrType): Int = irType match {
-    case ArrayType(elements, _) =>
-      elements
-
-    case _ =>
-      throw new InternalCompilerErrorException("Expected cell member to be array")
-  }
-}
 
 private object MaxByteAddressibleLength {
   def apply(platform: TargetPlatform): Long = platform.dataLayout.pointerLayout.sizeBits match {
@@ -62,8 +50,7 @@ object SymbolCellConstants {
   val heapSymbolInlineByteLength = 255
 
   /** Maximum number of bytes that an can be stored in an inline symbol */
-  lazy val maxInlineSymbolBytes =
-    ArrayElementsForIrType(InlineSymbolCell.inlineDataIrType)
+  lazy val maxInlineSymbolBytes = InlineSymbolCell.inlineDataIrType.elements
 }
 
 object StringCellConstants {
@@ -71,6 +58,5 @@ object StringCellConstants {
   val heapStringInlineByteLength = 255
 
   /** Maximum number of bytes that an can be stored in an inline string */
-  lazy val maxInlineStringBytes =
-    ArrayElementsForIrType(InlineStringCell.inlineDataIrType)
+  lazy val maxInlineStringBytes = InlineStringCell.inlineDataIrType.elements
 }
