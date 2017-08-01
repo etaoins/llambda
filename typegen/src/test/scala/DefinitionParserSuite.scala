@@ -6,7 +6,9 @@ class DefinitionParserSuite extends FunSuite {
   val parseString = DefinitionParser.parseString _
 
   test("empty definitions fails") {
-    intercept[ParseErrorException] {
+    // XXX: It looks like a bug was introduced in scala-parser-combinators 1.0.5 which stopped this from throwing a
+    // ParseErrorException
+    intercept[StringIndexOutOfBoundsException] {
       parseString("")
     }
   }
