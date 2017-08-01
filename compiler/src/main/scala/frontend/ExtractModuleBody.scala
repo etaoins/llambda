@@ -19,7 +19,7 @@ object ExtractModuleBody {
   private def handleExtractedDefine(
       located: SourceLocated,
       extractedDefine: ExtractedVarDefine
-  ): List[et.Expr] = extractedDefine match {
+  ): et.TopLevelDefine = extractedDefine match {
     case ExtractedVarDefine(valueTarget, exprBlock) =>
       val symbol = valueTarget.definedSymbol
 
@@ -30,7 +30,7 @@ object ExtractModuleBody {
         case None =>
           // This is a fresh binding
           val boundValue = valueTarget.bindStorageLoc(vt.AnySchemeType)
-          List(et.TopLevelDefine(et.Binding(boundValue, exprBlock())))
+          et.TopLevelDefine(et.Binding(boundValue, exprBlock()))
       }
   }
 
@@ -54,7 +54,7 @@ object ExtractModuleBody {
           extractInclude(appliedSymbol, scope, includeNames)
 
         case (definePrimitive: PrimitiveDefineExpr, sst.ProperList(operands)) =>
-          ExtractDefine(datum, definePrimitive, operands).flatMap { define =>
+          ExtractDefine(datum, definePrimitive, operands).map { define =>
             handleExtractedDefine(datum, define)
           }
 
