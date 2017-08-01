@@ -1,24 +1,19 @@
-# Use Ubuntu 15.04
-FROM ubuntu:15.04
+# Use Ubuntu 17.04
+FROM ubuntu:17.04
 
 # Install packages
 RUN \
   apt-get update && \
   apt-get -y upgrade && \
-  apt-get -y install clang clang-3.6 llvm-3.6 openjdk-7-jre-headless cmake ninja-build curl
+  apt-get -y install clang llvm openjdk-8-jre-headless cmake ninja-build curl && \
+  apt-get clean
 
 # Install sbt
 RUN \
   cd /opt && \
-  curl -L https://dl.bintray.com/sbt/native-packages/sbt/0.13.8/sbt-0.13.8.tgz | tar -zxv
+  curl -L https://cocl.us/sbt01316tgz | tar -zx
 
-# Alias llc and opt to their 3.5 versions
-RUN \
-  mkdir /opt/bin && \
-  ln -s /usr/bin/llc-3.6 /opt/bin/llc && \
-  ln -s /usr/bin/opt-3.6 /opt/bin/opt
-
-ENV PATH $PATH:/opt/sbt/bin:/opt/bin
+ENV PATH $PATH:/opt/sbt/bin
 
 # Copy Llambda in to the image
 ADD . /root/llambda
