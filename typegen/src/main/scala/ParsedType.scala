@@ -21,10 +21,6 @@ case class ParsedPointerType(pointeeType: ParsedType) extends ParsedIndirectionT
   override def toString = pointeeType + "*"
 }
 
-case class ParsedReferenceType(pointeeType: ParsedType) extends ParsedIndirectionType {
-  override def toString = pointeeType + "&"
-}
-
 case class ParsedArrayType(dimensions: List[Int], elementType: ParsedType) extends ParsedType {
   override def toString = elementType.toString + dimensions.map("[" + _.toString + "]")
 }

@@ -8,9 +8,6 @@ object ResolveParsedType {
       case ParsedPointerType(pointeeType) =>
         PointerFieldType(recursiveResolve(pointeeType))
 
-      case ParsedReferenceType(pointeeType) =>
-        ReferenceFieldType(recursiveResolve(pointeeType))
-
       case ParsedArrayType(dimensions, elementType) =>
         ArrayFieldType(dimensions, recursiveResolve(elementType))
 

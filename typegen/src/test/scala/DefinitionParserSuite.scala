@@ -180,11 +180,11 @@ class DefinitionParserSuite extends FunSuite {
 
       variant cell InlineProcedure : Procedure {
         uint32 inlineField1;
-        uint64*& inlineField2;
+        uint64** inlineField2;
       };
 
       variant cell HeapProcedure : Procedure {
-        double& heapField;
+        double* heapField;
       };
     """)
 
@@ -212,7 +212,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(inlineField1.initializer === None)
 
     assert(inlineField2.name === "inlineField2")
-    assert(inlineField2.fieldType === ParsedReferenceType(ParsedPointerType(ParsedTypeName("uint64"))))
+    assert(inlineField2.fieldType === ParsedPointerType(ParsedPointerType(ParsedTypeName("uint64"))))
     assert(inlineField2.initializer === None)
 
     assert(heapVariant.name === "HeapProcedure")
@@ -220,7 +220,7 @@ class DefinitionParserSuite extends FunSuite {
 
     val List(heapField) = heapVariant.fields
     assert(heapField.name === "heapField")
-    assert(heapField.fieldType === ParsedReferenceType(ParsedTypeName("double")))
+    assert(heapField.fieldType === ParsedPointerType(ParsedTypeName("double")))
     assert(heapField.initializer === None)
   }
 

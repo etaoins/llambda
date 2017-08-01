@@ -9,7 +9,7 @@ class FieldTypeToLlvmSuite extends FunSuite {
     llvmir.IntegerType(32),
     "std::int32_t"
   )
-  
+
   private val uint8Type = PrimitiveFieldType(
     Some(false),
     llvmir.IntegerType(8),
@@ -27,31 +27,25 @@ class FieldTypeToLlvmSuite extends FunSuite {
 
     assert(FieldTypeToLlvm(testType) === llvmir.IntegerType(32))
   }
-  
+
   test("pointer to double") {
     val testType = PointerFieldType(doubleType)
 
     assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.DoubleType))
   }
-  
-  test("reference to double") {
-    val testType = ReferenceFieldType(doubleType)
 
-    assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.DoubleType))
-  }
-  
   test("array of doubles") {
     val testType = ArrayFieldType(List(10), doubleType)
 
     assert(FieldTypeToLlvm(testType) === llvmir.ArrayType(10, llvmir.DoubleType))
   }
-  
+
   test("multidimensional array of doubles") {
     val testType = ArrayFieldType(List(5, 10), doubleType)
-    
+
     assert(FieldTypeToLlvm(testType) === llvmir.ArrayType(5, llvmir.ArrayType(10, llvmir.DoubleType)))
   }
-  
+
   test("aliased type with explicit C++ name") {
     val aliasedType = PointerFieldType(doubleType)
 
@@ -64,7 +58,7 @@ class FieldTypeToLlvmSuite extends FunSuite {
     // LLVM doesn't care about the C++ name
     assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.DoubleType))
   }
-  
+
   test("aliased type without C++ name") {
     val aliasedType = PointerFieldType(uint8Type)
 
@@ -76,7 +70,7 @@ class FieldTypeToLlvmSuite extends FunSuite {
 
     assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.IntegerType(8)))
   }
-  
+
   test("pointer to aliased type with explicit C++ name") {
     val aliasedType = PointerFieldType(doubleType)
 
@@ -90,7 +84,7 @@ class FieldTypeToLlvmSuite extends FunSuite {
 
     assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.PointerType(llvmir.DoubleType)))
   }
-  
+
   test("function pointer returning non-void") {
     val testType = FunctionPointerFieldType(
       Some(PointerFieldType(doubleType)),
@@ -107,7 +101,7 @@ class FieldTypeToLlvmSuite extends FunSuite {
       )
     ))
   }
-  
+
   test("function pointer returning void") {
     val testType = FunctionPointerFieldType(
       None,

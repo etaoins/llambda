@@ -17,9 +17,6 @@ object FieldTypeToCpp {
       case PointerFieldType(pointeeType) =>
         apply(pointeeType, None, isReturnType) + "*" + definedNameSuffix
 
-      case ReferenceFieldType(pointeeType) =>
-        apply(pointeeType, None, isReturnType) + "&" + definedNameSuffix
-
       case FunctionPointerFieldType(returnType, arguments) =>
         // Convert our inner types recursively
         val argumentsCpp = arguments.map(apply(_, None)).mkString(", ")

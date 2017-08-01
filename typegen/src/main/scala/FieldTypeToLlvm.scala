@@ -9,9 +9,6 @@ object FieldTypeToLlvm {
       case PointerFieldType(pointeeType) =>
         llvmir.PointerType(apply(pointeeType))
 
-      case ReferenceFieldType(pointeeType) =>
-        llvmir.PointerType(apply(pointeeType))
-
       case FunctionPointerFieldType(returnType, arguments) =>
         // Convert our inner types recursively
         val returnTypeLlvm = returnType.map(apply).getOrElse(llvmir.VoidType)

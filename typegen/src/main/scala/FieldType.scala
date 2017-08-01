@@ -7,25 +7,11 @@ import io.llambda.llvmir
 /** Type for a cell class field */
 sealed abstract class FieldType
 
-/** Indirection to another field type
-  *
-  * @param pointeeType  Type pointed to by this type.
-  */
-sealed abstract class IndirectionFieldType extends FieldType {
-  val pointeeType: FieldType
-}
-
 /** Pointer type based on another field type
   *
   * @param pointeeType  Type pointed to by this type.
   */
-case class PointerFieldType(pointeeType: FieldType) extends IndirectionFieldType
-
-/** Reference type based on another field type
-  *
-  * @param pointeeType  Type pointed to by this type.
-  */
-case class ReferenceFieldType(pointeeType: FieldType) extends IndirectionFieldType
+case class PointerFieldType(pointeeType: FieldType) extends FieldType
 
 /** Function pointer field type
   *

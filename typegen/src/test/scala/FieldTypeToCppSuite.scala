@@ -9,7 +9,7 @@ class FieldTypeToCppSuite extends FunSuite {
     llvmir.IntegerType(32),
     "std::int32_t"
   )
-  
+
   private val uint8Type = PrimitiveFieldType(
     Some(false),
     llvmir.IntegerType(8),
@@ -28,21 +28,14 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, None) === "std::int32_t")
     assert(FieldTypeToCpp(testType, Some("member")) === "std::int32_t member")
   }
-  
+
   test("pointer to double") {
     val testType = PointerFieldType(doubleType)
 
     assert(FieldTypeToCpp(testType, None) === "double*")
     assert(FieldTypeToCpp(testType, Some("member")) === "double* member")
   }
-  
-  test("reference to double") {
-    val testType = ReferenceFieldType(doubleType)
 
-    assert(FieldTypeToCpp(testType, None) === "double&")
-    assert(FieldTypeToCpp(testType, Some("member")) === "double& member")
-  }
-  
   test("array of doubles") {
     val testType = ArrayFieldType(List(10), doubleType)
 
@@ -50,7 +43,7 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, Some("member")) === "double member[10]")
     assert(FieldTypeToCpp(testType, None, true) === "double*")
   }
-  
+
   test("multidimensional array of doubles") {
     val testType = ArrayFieldType(List(5, 10), doubleType)
 
@@ -58,7 +51,7 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, Some("member")) === "double member[5][10]")
     assert(FieldTypeToCpp(testType, None, true) === "double**")
   }
-  
+
   test("aliased type with explicit C++ name") {
     val aliasedType = PointerFieldType(doubleType)
 
@@ -71,7 +64,7 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, None) === "DoublePtr")
     assert(FieldTypeToCpp(testType, Some("member")) === "DoublePtr member")
   }
-  
+
   test("aliased type without C++ name") {
     val aliasedType = PointerFieldType(uint8Type)
 
@@ -84,7 +77,7 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, None) === "std::uint8_t*")
     assert(FieldTypeToCpp(testType, Some("member")) === "std::uint8_t* member")
   }
-  
+
   test("pointer to aliased type with explicit C++ name") {
     val aliasedType = PointerFieldType(doubleType)
 
@@ -99,7 +92,7 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, None) === "DoublePtr*")
     assert(FieldTypeToCpp(testType, Some("member")) === "DoublePtr* member")
   }
-  
+
   test("function pointer returning non-void") {
     val testType = FunctionPointerFieldType(
       Some(PointerFieldType(doubleType)),
@@ -109,7 +102,7 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, None) === "double* (*)(std::uint8_t, std::int32_t)")
     assert(FieldTypeToCpp(testType, Some("member")) === "double* (*member)(std::uint8_t, std::int32_t)")
   }
-  
+
   test("function pointer returning void") {
     val testType = FunctionPointerFieldType(
       None,
