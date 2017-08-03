@@ -32,10 +32,6 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
-fieldtype State : untypedptr {
-	extern cppname = dynamic::State;
-};
-
 fieldtype MailboxRef : untypedptr {
 	extern cppname = std::weak_ptr<actor::Mailbox>;
 };
