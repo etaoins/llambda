@@ -21,7 +21,7 @@ sealed abstract class ParsedCellClassDefinition extends ParsedCellClassDeclarati
   val name: String
   val instanceType: CellClass.InstanceType
   val fields: List[ParsedCellField]
-  val visibility: CellClass.Visibility
+  val visibleFromScheme: Boolean
   val parentOption: Option[String]
 }
 
@@ -35,7 +35,7 @@ case class ParsedTaggedClassDefinition(
     instanceType: CellClass.InstanceType,
     parent: String,
     fields: List[ParsedCellField],
-    visibility: CellClass.Visibility
+    visibleFromScheme: Boolean
   ) extends ParsedParentedClassDefinition
 
 case class ParsedVariantClassDefinition(
@@ -44,14 +44,14 @@ case class ParsedVariantClassDefinition(
     fields: List[ParsedCellField]
   ) extends ParsedParentedClassDefinition {
   val instanceType = CellClass.Variant
-  val visibility = CellClass.Internal
+  val visibleFromScheme = false
 }
 
 case class ParsedRootClassDefinition(
     name: String,
     typeTagField: String,
     fields: List[ParsedCellField],
-    visibility: CellClass.Visibility
+    visibleFromScheme: Boolean
   ) extends ParsedCellClassDefinition {
   val instanceType = CellClass.Abstract
   val parentOption = None

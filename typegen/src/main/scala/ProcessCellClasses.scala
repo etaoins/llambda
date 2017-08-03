@@ -150,7 +150,7 @@ object ProcessCellClasses {
             name=rootClass.name,
             typeTagField=typeTagField,
             fields=processedFields,
-            visibility=rootClass.visibility,
+            visibleFromScheme=rootClass.visibleFromScheme,
             fieldTbaaNodes=fieldTbaaNodes
           )
 
@@ -167,7 +167,7 @@ object ProcessCellClasses {
             instanceType=taggedClass.instanceType,
             parent=parentCellClass,
             fields=processedFields,
-            visibility=taggedClass.visibility,
+            visibleFromScheme=taggedClass.visibleFromScheme,
             typeId=typeId,
             fieldTbaaNodes=fieldTbaaNodes
           )

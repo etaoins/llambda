@@ -33,33 +33,6 @@ object CellClass {
     * list, boolean, etc) to reduce GC pressure
     */
   object Preconstructed extends InstanceType
-
-  sealed abstract class Visibility {
-    val fromScheme: Boolean
-    val fromCompiler: Boolean
-    val fromRuntime: Boolean
-  }
-
-  /** Cell class should be visible to Scheme, the compiler and the runtime */
-  object Public extends Visibility {
-    val fromScheme = true
-    val fromCompiler = true
-    val fromRuntime = true
-  }
-
-  /** Cell class should be visible to the compiler and runtime */
-  object Internal extends Visibility {
-    val fromScheme = false
-    val fromCompiler = true
-    val fromRuntime = true
-  }
-
-  /** Cell class should only be visible to the runtime */
-  object RuntimeOnly extends Visibility {
-    val fromScheme = false
-    val fromCompiler = false
-    val fromRuntime = true
-  }
 }
 
 /** Top-level types for cell classes
@@ -85,8 +58,8 @@ sealed abstract class CellClass extends Positional {
 
   val instanceType: CellClass.InstanceType
 
-  /** Visibility of this cell class */
-  val visibility: CellClass.Visibility
+  /** Indicates if this class is visible from Schene */
+  val visibleFromScheme: Boolean
 
   /** Optional parent of the cell class
     *
@@ -115,7 +88,7 @@ case class RootCellClass(
     name: String,
     typeTagField: CellField,
     fields: List[CellField],
-    visibility: CellClass.Visibility,
+    visibleFromScheme: Boolean,
     fieldTbaaNodes: ListMap[CellField, llvmir.NumberedMetadataDef]
   ) extends CellClass {
   val instanceType = CellClass.Abstract
@@ -129,7 +102,7 @@ case class TaggedCellClass(
     instanceType: CellClass.InstanceType,
     parent: CellClass,
     fields: List[CellField],
-    visibility: CellClass.Visibility,
+    visibleFromScheme: Boolean,
     typeId: Option[Int],
     fieldTbaaNodes: ListMap[CellField, llvmir.NumberedMetadataDef]
   ) extends ParentedCellClass
@@ -146,6 +119,6 @@ case class VariantCellClass(
     fieldTbaaNodes: ListMap[CellField, llvmir.NumberedMetadataDef]
   ) extends ParentedCellClass {
   val instanceType = CellClass.Variant
-  val visibility = CellClass.Internal
+  val visibleFromScheme = false
   val typeId = None
 }

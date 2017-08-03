@@ -110,7 +110,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     inside(classes("Datum")) { case (datumClass: RootCellClass) =>
       assert(datumClass.name === "Datum")
       assert(datumClass.fields.size === 1)
-      assert(datumClass.visibility === CellClass.Public)
+      assert(datumClass.visibleFromScheme === true)
       assert(datumClass.typeId === None)
       assert(datumClass.fieldTbaaNodes.size === 1)
 
@@ -128,21 +128,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     val classes = processedTypes.cellClasses
 
     inside(classes("Datum")) { case (datumClass: RootCellClass) =>
-      assert(datumClass.visibility === CellClass.Internal)
-    }
-  }
-
-  test("minimal runtime-only root class") {
-    val processedTypes = processString("""
-      root runtime cell Datum typetag typeId {
-        int32 typeId;
-      };
-    """)
-
-    val classes = processedTypes.cellClasses
-
-    inside(classes("Datum")) { case (datumClass: RootCellClass) =>
-      assert(datumClass.visibility === CellClass.RuntimeOnly)
+      assert(datumClass.visibleFromScheme === false)
     }
   }
 
@@ -160,7 +146,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     inside(classes("Datum")) { case (datumClass: RootCellClass) =>
       assert(datumClass.name === "Datum")
       assert(datumClass.instanceType === CellClass.Abstract)
-      assert(datumClass.visibility === CellClass.Public)
+      assert(datumClass.visibleFromScheme === true)
       assert(datumClass.typeId === None)
 
       val List(typeIdField, gcStateField) = datumClass.fields
@@ -218,7 +204,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
     inside(classes("StringLike")) { case (stringLikeClass: TaggedCellClass) =>
       assert(stringLikeClass.name === "StringLike")
-      assert(stringLikeClass.visibility === CellClass.Public)
+      assert(stringLikeClass.visibleFromScheme === true)
       assert(stringLikeClass.typeId === None)
       assert(stringLikeClass.instanceType === CellClass.Abstract)
       assert(stringLikeClass.parent === datumClass)
@@ -308,7 +294,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
     inside(classes("Boolean")) { case (booleanClass: TaggedCellClass) =>
       assert(booleanClass.name === "Boolean")
-      assert(booleanClass.visibility === CellClass.Public)
+      assert(booleanClass.visibleFromScheme === true)
       assert(booleanClass.typeId === Some(1))
       assert(booleanClass.instanceType === CellClass.Preconstructed)
       assert(booleanClass.parent === datumClass)
@@ -316,7 +302,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
     inside(classes("Character")) { case (characterClass: TaggedCellClass) =>
       assert(characterClass.name === "Character")
-      assert(characterClass.visibility === CellClass.Public)
+      assert(characterClass.visibleFromScheme === true)
       assert(characterClass.typeId === Some(2))
       assert(characterClass.instanceType === CellClass.Concrete)
       assert(characterClass.parent === datumClass)
@@ -350,7 +336,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     inside((classes("String"), classes("InlineString"), classes("HeapString"))) {
       case (stringClass: TaggedCellClass, inlineVariant: VariantCellClass, heapVariant: VariantCellClass) =>
         assert(stringClass.name === "String")
-        assert(stringClass.visibility === CellClass.Public)
+        assert(stringClass.visibleFromScheme === true)
         assert(stringClass.typeId === Some(1))
         assert(stringClass.instanceType === CellClass.Concrete)
         assert(stringClass.parent === datumClass)

@@ -277,7 +277,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
 
         // Get all of our subclasses
         val subtypes = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil)
-        val subtypeParts = subtypes filter(_.visibility.fromCompiler) map { taggedClass =>
+        val subtypeParts = subtypes map { taggedClass =>
           taggedClass.names.scalaCellTypeName
         }
 
@@ -341,7 +341,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     scalaBuilder.appendRaw(expandedTemplate)
     scalaBuilder.sep()
 
-    for(cellClass <- processedTypes.cellClasses.values if cellClass.visibility.fromCompiler) {
+    for(cellClass <- processedTypes.cellClasses.values) {
       // Write the fields trait
       writeFieldTrait(scalaBuilder, cellClass)
 

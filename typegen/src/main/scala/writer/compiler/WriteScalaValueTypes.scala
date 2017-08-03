@@ -20,7 +20,7 @@ object WriteScalaValueTypes extends writer.OutputWriter {
     scalaBuilder.sep()
 
     processedTypes.cellClasses.values collect {
-      case cellClass: TaggedCellClass if cellClass.visibility.fromScheme =>
+      case cellClass: TaggedCellClass if cellClass.visibleFromScheme =>
         val allNodes = allTaggedTreeNodes(processedTypes, cellClass)
         val concreteNodes = allNodes.filter(_.typeId.isDefined)
         val valueTypeName = cellClass.names.scalaValueTypeName
@@ -48,7 +48,7 @@ object WriteScalaValueTypes extends writer.OutputWriter {
       scalaBuilder += "def apply(): Map[String, SchemeType] = Map("
       scalaBuilder.indented {
         val mapLines = processedTypes.cellClasses.values collect {
-          case cellClass: TaggedCellClass if cellClass.visibility.fromScheme =>
+          case cellClass: TaggedCellClass if cellClass.visibleFromScheme =>
             s"""(ct.${cellClass.names.scalaCellTypeName}.schemeName -> ${cellClass.names.scalaValueTypeName})"""
         }
 
