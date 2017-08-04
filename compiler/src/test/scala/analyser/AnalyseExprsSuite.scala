@@ -32,10 +32,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(AnalyseExprs(testExprs) === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(),
-      constantTopLevelBindings=List(
-        (testLocA -> et.Literal(ast.Boolean(true))),
-        (testLocA -> et.Literal(ast.Boolean(false)))
-      ),
       varUses=Map(
         testLocA -> 1,
         testLocB -> 2
@@ -104,7 +100,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=expectedUsedExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Nil,
       varUses=Map(
         testLocA -> 1
       )
@@ -143,7 +138,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Nil,
       varUses=Map(
         testLocA -> 1
       )
@@ -175,7 +169,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Nil,
       varUses=Map(
         testLocA -> 1
       )
@@ -205,7 +198,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Nil,
       varUses=Map(
         testLocA -> 1
       )
@@ -232,7 +224,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Nil,
       varUses=Map(
         testLocA -> 1
       )
@@ -255,9 +246,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=List(
-        testLocB -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
-      ),
       varUses=Map(
         testLocB -> 1
       )
@@ -278,8 +266,7 @@ class AnalyseExprsSuite extends FunSuite {
 
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
-      mutableVars=Set(testLocA, testLocB),
-      constantTopLevelBindings=Nil
+      mutableVars=Set(testLocA, testLocB)
     ))
   }
 
@@ -299,10 +286,6 @@ class AnalyseExprsSuite extends FunSuite {
     assert(AnalyseExprs(testExprs) === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(),
-      constantTopLevelBindings=List(
-        (testLocA -> et.Literal(ast.Boolean(true))),
-        (testLocA -> et.Literal(ast.Boolean(false)))
-      ),
       varUses=Map(
         testLocA -> 2,
         testLocB -> 1

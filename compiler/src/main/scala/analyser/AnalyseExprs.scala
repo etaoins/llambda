@@ -7,7 +7,6 @@ import llambda.compiler.InternalCompilerErrorException
 case class AnalysedExprs(
   usedTopLevelExprs: List[et.Expr] = List(),
   mutableVars: Set[StorageLocation] = Set(),
-  constantTopLevelBindings: List[(StorageLocation, et.Expr)] = Nil,
   varUses: Map[StorageLocation, Int] = Map(),
   nativeSymbols: Set[String] = Set(),
   parameterized: Boolean = false
@@ -67,21 +66,8 @@ object AnalyseExprs  {
           usedTopLevelExprs=expr :: acc.usedTopLevelExprs
         )
 
-        // Deal with the initialisers
-        val accWithBinding = if (accWithUsedDefine.mutableVars.contains(storageLoc)) {
-          // Don't record the initialisers for mutable top-level bindings
-          // They provide no actionable information on the value of the storage location
-          accWithUsedDefine
-        }
-        else {
-          // Record our initialiser
-          accWithUsedDefine.copy(
-            constantTopLevelBindings=(storageLoc -> initialiser) :: accWithUsedDefine.constantTopLevelBindings
-          )
-        }
-
         // Recurse down our initialiser
-        handleNestedExpr(initialiser, accWithBinding)
+        handleNestedExpr(initialiser, accWithUsedDefine)
       }
 
     case _ =>
