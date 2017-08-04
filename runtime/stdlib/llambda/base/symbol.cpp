@@ -34,8 +34,6 @@ StringCell *llbase_symbol_to_string(World &world, SymbolCell *symbol)
 
 SymbolCell *llbase_string_to_symbol(World &world, StringCell *string)
 {
-	assertLengthValid(world, "(string->symbol)", "symbol byte length", SymbolCell::maximumByteLength(), string->byteLength());
-
 	return SymbolCell::fromString(world, string);
 }
 
