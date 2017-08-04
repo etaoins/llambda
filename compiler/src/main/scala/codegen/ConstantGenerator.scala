@@ -33,6 +33,7 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
   private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
   private val vectorCache = new mutable.HashMap[Vector[IrConstant], IrConstant]
   private val recordCache = new mutable.HashMap[(vt.RecordType, Map[vt.RecordField, IrConstant], Boolean), IrConstant]
+  private val emptyClosureCache = new mutable.HashMap[GlobalVariable, IrConstant]
 
   def defineConstantData(module: IrModuleBuilder)(name: String, initializer: IrConstant): GlobalVariable = {
     val constantDataDef = IrGlobalVariableDef(
@@ -407,15 +408,17 @@ class ConstantGenerator(generatedTypes: Map[vt.RecordLikeType, GeneratedType]) {
         GlobalDefines.emptyListIrValue
 
       case ps.CreateEmptyClosure(_, entryPointTemp) =>
-        val entryPointConstant = state.liveTemps(entryPointTemp) match {
-          case constant: IrConstant => constant
+        val entryPointGlobalVar = state.liveTemps(entryPointTemp) match {
+          case globalVar: GlobalVariable => globalVar
           case other =>
-            throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")
+            throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-global variable entry point: ${other}")
         }
 
-        // Cast to an untyped entry point
-        val castEntryPoint = BitcastToConstant(entryPointConstant, ct.ProcedureCell.entryPointIrType)
-        genEmptyClosure(module)(castEntryPoint)
+        emptyClosureCache.getOrElseUpdate(entryPointGlobalVar, {
+          // Cast to an untyped entry point
+          val castEntryPoint = BitcastToConstant(entryPointGlobalVar, ct.ProcedureCell.entryPointIrType)
+          genEmptyClosure(module)(castEntryPoint)
+        })
 
       case ps.CreateNativeInteger(_, value, bits) =>
         IntegerConstant(IntegerType(bits), value)
