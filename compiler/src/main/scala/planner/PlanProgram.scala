@@ -23,7 +23,14 @@ object PlanProgram {
   def apply(exprs: List[et.Expr])(planConfig: PlanConfig): PlannedProgram = {
     val plan = PlanWriter(planConfig)
 
-    PlanExpr(PlannerState())(et.Begin(exprs))(plan)
+    val simplifiedExprs = if (planConfig.optimise) {
+      SimplifyDynamicStates(exprs)
+    }
+    else {
+      exprs
+    }
+
+    PlanExpr(PlannerState())(et.Begin(simplifiedExprs))(plan)
 
     // __llambda_top_level is a void function
     plan.steps += ps.Return(None)
