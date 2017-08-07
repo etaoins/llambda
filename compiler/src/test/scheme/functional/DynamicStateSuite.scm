@@ -1,14 +1,13 @@
-(define-test "parameters are procedures" (expect #t
-  (define param (make-parameter 18))
-  (procedure? param)))
+(define-test "non-parameterized parameters" (expect-success
+  (assert-equal 'foo ((make-parameter 'foo)))
 
-(define-test "parameters return constant initial value if not parameterized" (expect 18
-  (define param (make-parameter 18))
-  (param)))
+  (define static-val-param (make-parameter 5))
+  (assert-true (procedure? static-val-param))
+  (assert-equal 5 (static-val-param))
 
-(define-test "parameters return non-constant initial value if not parameterized" (expect (1 2 3)
-  (define param (make-parameter (list 1 2 3)))
-  (param)))
+  (define dynamic-val-param (make-parameter (list (typed-dynamic 10 <integer>))))
+  (assert-true (procedure? dynamic-val-param))
+  (assert-equal '(10) (dynamic-val-param))))
 
 (define-test "trivial parameterize" (expect 50
   (define param (make-parameter 0))
@@ -42,12 +41,18 @@
   (assert-raises arity-error?
                  (param 10))))
 
+(define-test "parameters cannot be cast to the value they contain" (expect-compile-error type-error?
+  (import (llambda typed))
+  (define param : <integer> (make-parameter 5))))
+
 (define-test "multiple parameter parameterize" (expect (newOne two newThree)
   (define param1 (make-parameter 'one))
   (define param2 (make-parameter 'two))
   (define param3 (make-parameter 'three))
+  (define param4 (make-parameter 'four))
+  (define param5 (make-parameter 'five))
 
-  (parameterize ((param1 'newOne) (param3 'newThree))
+  (parameterize ((param1 'newOne) (param3 'newThree) (param4 'newFour))
     (list (param1) (param2) (param3)))))
 
 (define-test "parameterize restores dynamic environment afterwards" (expect 0
@@ -72,3 +77,9 @@
 
   (parameterize ((param (lambda () 'world)))
     ((param)))))
+
+(define-test "recursive parameter definition" (expect-success
+  (define param (make-parameter (lambda () param)))
+  (define inner-param ((param)))
+
+  (assert-equal param inner-param)))
