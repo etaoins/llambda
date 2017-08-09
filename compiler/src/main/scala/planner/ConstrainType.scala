@@ -78,9 +78,14 @@ object ConstrainType {
       conditionValue: iv.IntermediateValue,
       condAction: CondAction
   ): PlannerState = {
-    val oldConstraintState = state.typeConstraintState
+    if (condAction.trueConstraint.definiteNoop && condAction.falseConstraint.definiteNoop) {
+      // This is useless
+      return state
+    }
 
     // Add this action on to the list of actions for the condition value
+    val oldConstraintState = state.typeConstraintState
+
     val existingActions = oldConstraintState.condActions.getOrElse(conditionValue, Nil)
     val updatedActions = oldConstraintState.condActions + (conditionValue -> (condAction :: existingActions))
 
@@ -137,7 +142,7 @@ object ConstrainType {
       value: iv.IntermediateValue,
       constraint: TypeConstraint
   )(planConfig: PlanConfig): PlannerState = {
-    // We do some O(n) operations below so abort early for noop constraints
+    // We do some O(n) operations below so abort early
     if (constraint.definiteNoop) {
       return state
     }
@@ -149,8 +154,17 @@ object ConstrainType {
     // We have to be careful to make storage locations with "stable" types in case they can be mutated
     val stableNewType = vt.StabiliseType(rawNewType)
 
+    // Use eq here for speed. This is an optimisation so can miss matching types without affecting correctness.
+    if (existingType eq stableNewType) {
+      return state
+    }
+
     // Create a new intermediate value with the constrained type
     val constrainedValue = value.withSchemeType(stableNewType)
+
+    if (value eq constrainedValue) {
+      return state
+    }
 
     def valueMapper(inputValue: iv.IntermediateValue) =
       if (inputValue eq value) constrainedValue else inputValue
