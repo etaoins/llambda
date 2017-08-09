@@ -218,7 +218,7 @@
                           (lambda ([var : <type>] ...)
                             (if test
                               (begin
-                                (if #f #f)
+                                #!unit
                                 expr ...)
                               (begin
                                 command
