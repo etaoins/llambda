@@ -292,7 +292,6 @@ object PlanLambdaPolymorph {
     val planResult = PlanExpr(postSelfState)(body)(procPlan)
 
     val finalReturnType = if (!canRefineSignature) {
-      // Return an arbitrary number of values with arbitrary types
       initialSignature.returnType
     }
     else {

@@ -39,7 +39,7 @@ object RangeMetadata {
       rangesFromSortedValues(intBits, newTailValues, (minimumValue, endValueExclusive) :: acc)
   }
 
-  /** Joins the first and last range together if they are continugous modulo the integer size
+  /** Joins the first and last range together if they are continuous modulo the integer size
     *
     * For example, (0, 2) (5, 10) (255, 0) will become (255, 2) (5, 10). This is the exact form required by LLVM.
     */
