@@ -48,6 +48,8 @@
 (define-test "static (=)" (expect-static-success
   (assert-true  (= 4.0 4))
   (assert-true  (= 0.0 -0.0))
+  (assert-true  (= 0.0 0))
+  (assert-true  (= 0 -0.0))
   (assert-true  (= 4.0 4 4.0))
   (assert-false (= 4.0 5.6))
   (assert-false (= 4.0 4 5.6))
@@ -57,7 +59,16 @@
   (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
 
   (assert-false (= dynamic-nan +nan.0))
-  (assert-false (= dynamic-nan 0))))
+  (assert-false (= dynamic-nan 0))
+
+  (define dynamic-minus-zero (typed-dynamic -0.0 <flonum>))
+  (define zero-is-equal (= 0.0 dynamic-minus-zero))
+
+  (assert-true zero-is-equal)
+
+  (when zero-is-equal
+    ; Make sure we didn't replace -0.0 with +0.0 when propagating constants in this branch
+    (assert-equal dynamic-minus-zero -0.0))))
 
 (define-test "equality of two numbers and boolean false is an error" (expect-error type-error?
   (= 4.0 4 #f)))

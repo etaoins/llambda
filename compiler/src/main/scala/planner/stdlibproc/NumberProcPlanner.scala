@@ -125,28 +125,24 @@ object NumberProcPlanner extends StdlibProcPlanner {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
-    val pairwiseResults = args.sliding(2).toList map {
-      case List(left, right) =>
-        compareArgs(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
+    val pairwiseNativePreds = args.sliding(2).toList flatMap { case List(left, right) =>
+      compareArgs(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan) match {
+        case UnplannableCompare =>
+          // We can't compare this at compile time
+          return None
+
+        case StaticCompare(false) =>
+          // This is false - the whole expression must be false!
+          return Some(iv.ConstantBooleanValue(false))
+
+        case StaticCompare(true) =>
+          // We don't need to include constant true values
+          None
+
+        case DynamicCompare(nativePred) =>
+          Some(nativePred)
+      }
     }
-
-    // Now filter out all the static results
-    val pairwiseNativePreds = pairwiseResults flatMap {
-      case UnplannableCompare =>
-        // We can't compare this at compile time
-        return None
-
-      case StaticCompare(false) =>
-        // This is false - the whole expression must be false!
-        return Some(iv.ConstantBooleanValue(false))
-
-      case StaticCompare(true) =>
-        // We don't need to include constant true values
-        None
-
-      case DynamicCompare(nativePred) =>
-        Some(nativePred)
-    }: List[ps.TempValue]
 
     if (pairwiseNativePreds.isEmpty) {
       // This is statically true
@@ -229,13 +225,77 @@ object NumberProcPlanner extends StdlibProcPlanner {
     Some(definiteResult)
   }
 
+  /** Creates value constraints for numeric equality
+    *
+    * If at least one constant is being tested for equality we can propagate that constant's value to the other
+    * arguments if the test returns true. There are a few tricky bits:
+    *
+    * - We can never replace a flonum value with a constant zero as `(=)` does not distinguish between +0.0 and -0.0.
+    *   Integers only have one type of zero so they are not impacted.
+    *
+    * - NaNs are never considered `(=)`. This represents a missed opportunity to propagate NaN constants but does not
+    *   impact correctness.
+    *
+    * - Integer constants can be used as a basis for flonum constants and vice versa. This is because their comparison
+    *   happens by promoting both to a double and comparing for exact equality. The comparison will only succeed if the
+    *   flonum has a bitwise identical value to the integer's promoted value.
+    */
+  private def constrainEqualArgsWithConstants(initialState: PlannerState)(
+    predicateValue: iv.IntermediateValue,
+    argValues: List[iv.IntermediateValue]
+  ): PlannerState = argValues.collectFirst {
+    case constantNumber: iv.ConstantNumberValue =>
+      argValues.foldLeft(initialState) { case (state, argValue) =>
+        val trueConstraint = if (argValue.hasDefiniteType(vt.IntegerType)) {
+          ConstrainValue.SubstituteWithConstant(iv.ConstantIntegerValue(constantNumber.longValue))
+        }
+        else if (argValue.hasDefiniteType(vt.FlonumType) && (constantNumber.longValue != 0)) {
+          ConstrainValue.SubstituteWithConstant(iv.ConstantFlonumValue(constantNumber.doubleValue))
+        }
+        else {
+          ConstrainValue.PreserveValue
+        }
+
+        ConstrainValue.addCondAction(state)(
+          conditionValue=predicateValue,
+          ConstrainValue.CondAction(
+            subjectValue=argValue,
+            trueConstraint=trueConstraint,
+            falseConstraint=ConstrainValue.PreserveValue
+          )
+        )
+      }
+  } getOrElse(initialState)
+
+  override def planWithResult(initialState: PlannerState)(
+      reportName: String,
+      args: List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan: PlanWriter): Option[PlanResult] = (reportName, args) match {
+    case ("=", args) if args.length >= 2 =>
+      val argValues = args.map(_._2)
+
+      compareArgList(ps.CompareCond.Equal, _ == _, _ == _, argValues).map { predicateValue =>
+        val constrainedState = constrainEqualArgsWithConstants(initialState)(predicateValue, argValues)
+
+        PlanResult(
+          state=constrainedState,
+          value=predicateValue
+        )
+      }
+
+    case _ =>
+      planWithValue(initialState)(reportName, args) map { value =>
+        PlanResult(
+          state=initialState,
+          value=value
+        )
+      }
+  }
+
   override def planWithValue(state: PlannerState)(
       reportName: String,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = (reportName, args) match {
-    case ("=", args) if args.length >= 2 =>
-      compareArgList(ps.CompareCond.Equal, _ == _, _ == _, args.map(_._2))
-
     case (">", args) if args.length >= 2 =>
       compareArgList(ps.CompareCond.GreaterThan, _ > _, _ > _, args.map(_._2))
 

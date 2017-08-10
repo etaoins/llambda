@@ -59,7 +59,7 @@ private[stdlibproc] object DynamicValueEqv {
         ConstrainValue.IntersectType(comparedValueType)
     }
 
-    val falseContraint = if (comparedValueType.isInstanceOf[vt.LiteralValueType]) {
+    val falseConstraint = if (comparedValueType.isInstanceOf[vt.LiteralValueType]) {
       // This is an exact value - we can safely subtract it
       ConstrainValue.SubtractType(comparedValueType)
     }
@@ -73,7 +73,7 @@ private[stdlibproc] object DynamicValueEqv {
       ConstrainValue.CondAction(
         subjectValue=subjectValue,
         trueConstraint=trueConstaint,
-        falseConstraint=falseContraint
+        falseConstraint=falseConstraint
       )
     )
   }

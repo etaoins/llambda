@@ -42,6 +42,7 @@ case class ConstantSymbolValue(value: String) extends TrivialConstantValue(ct.Sy
 }
 
 trait ConstantNumberValue extends ConstantValue with UnboxedValue {
+  def longValue: Long
   def doubleValue: Double
 }
 
@@ -67,6 +68,9 @@ case class ConstantIntegerValue(value: Long) extends TrivialConstantValue(ct.Int
       impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(nativeType)}")
   }
 
+  def longValue: Long =
+    value
+
   def doubleValue: Double =
     value.toDouble
 
@@ -89,6 +93,9 @@ case class ConstantFlonumValue(value: Double) extends TrivialConstantValue(ct.Fl
     case _ =>
       impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${vt.NameForType(nativeType)}")
   }
+
+  def longValue: Long =
+    value.toLong
 
   def doubleValue: Double =
     value
