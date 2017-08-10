@@ -390,3 +390,28 @@
   (assert-false (equal? mutable1 mutable2))
   (set-mutable-inline-field1! mutable1 2)
   (assert-true (equal? mutable1 mutable2))))
+
+(define-test "branching on (eqv?) or (equal?) propagates immutable values" (expect-success
+  (import (llambda typed))
+
+  (define typeless-four (typeless-cell 4))
+
+  (when (eqv? 4 typeless-four)
+    (ann (equal? typeless-four 4) #t))
+
+  (when (equal? typeless-four 5)
+    (ann (eqv? 4 typeless-four) #f))
+
+  ; Pairs are immutable but they can refer to mutable values. Ensure (equal?) doesn't try to replace a distinct pair
+  ; with another constant pair
+  (define constant-pair '(#(1 2 3)))
+  (define dynamic-pair (list (vector 1 2 3)))
+
+  (define pairs-are-equal (equal? constant-pair dynamic-pair))
+
+  (assert-true pairs-are-equal)
+
+  (when pairs-are-equal
+    (define inner-vec (car dynamic-pair))
+    (vector-set! inner-vec 0 2)
+    (assert-equal #(2 2 3) inner-vec))))

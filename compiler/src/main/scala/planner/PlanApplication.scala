@@ -48,14 +48,14 @@ private[planner] object PlanApplication {
       procValue: iv.IntermediateValue,
       args: List[iv.IntermediateValue]
   )(implicit plan: PlanWriter): PlannerState = {
-    val constraint = ConstrainType.IntersectType(procedureType)
-    val postProcState = ConstrainType(state)(procValue, constraint)(plan.config)
+    val constraint = ConstrainValue.IntersectType(procedureType)
+    val postProcState = ConstrainValue(state)(procValue, constraint)(plan.config)
 
     val fixedArgTypes = procedureType.mandatoryArgTypes ++ procedureType.optionalArgTypes
     val postFixedArgState = args.zip(fixedArgTypes).foldLeft(postProcState) {
       case (state, (fixedArgValue, argType)) =>
-        val constraint = ConstrainType.IntersectType(argType)
-        ConstrainType(state)(fixedArgValue, constraint)(plan.config)
+        val constraint = ConstrainValue.IntersectType(argType)
+        ConstrainValue(state)(fixedArgValue, constraint)(plan.config)
     }
 
     val restArgValues = args.drop(fixedArgTypes.length)
@@ -63,8 +63,8 @@ private[planner] object PlanApplication {
       case (state, restArgValue) =>
         val restArgMemberType = procedureType.restArgMemberTypeOpt.get
 
-        val constraint = ConstrainType.IntersectType(restArgMemberType)
-        ConstrainType(state)(restArgValue, constraint)(plan.config)
+        val constraint = ConstrainValue.IntersectType(restArgMemberType)
+        ConstrainValue(state)(restArgValue, constraint)(plan.config)
     }
   }
 

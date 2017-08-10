@@ -19,7 +19,7 @@ final class ParameterIdentity
 case class PlannerState(
   values: Map[StorageLocation, LocationValue] = Map(),
   parameterValues: Map[ParameterIdentity, ParameterValue] = Map(),
-  typeConstraintState: ConstrainType.State = ConstrainType.State(),
+  valueConstraintState: ConstrainValue.State = ConstrainValue.State(),
   inlineDepth: Int = 0
 ) {
   def withValues(newValues: Map[StorageLocation, LocationValue]): PlannerState  =

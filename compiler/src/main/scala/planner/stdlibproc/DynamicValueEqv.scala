@@ -34,25 +34,45 @@ private[stdlibproc] object DynamicValueEqv {
     vt.BytevectorType
   )): Set[vt.NonUnionSchemeType]
 
+  // All instances of these types are immutable and cannot contain references to mutable types
+  private lazy val recursivelyImmutableTypeUnion = vt.UnionType(preconstructedTypes ++ (Set(
+    vt.IntegerType,
+    vt.FlonumType,
+    vt.StringType,
+    vt.SymbolType,
+    vt.CharType
+  )))
+
   private def registerCond(state: PlannerState)(
     conditionValue: iv.IntermediateValue,
     subjectValue: iv.IntermediateValue,
-    comparedValueType: vt.SchemeType
+    comparedValue: iv.IntermediateValue
   ): PlannerState = {
+    val comparedValueType = comparedValue.schemeType
+
+    val trueConstaint = comparedValue match {
+      case constantValue: iv.ConstantValue
+          if vt.SatisfiesType(recursivelyImmutableTypeUnion, constantValue.schemeType) == Some(true) =>
+        ConstrainValue.SubstituteWithConstant(constantValue)
+
+      case _ =>
+        ConstrainValue.IntersectType(comparedValueType)
+    }
+
     val falseContraint = if (comparedValueType.isInstanceOf[vt.LiteralValueType]) {
       // This is an exact value - we can safely subtract it
-      ConstrainType.SubtractType(comparedValueType)
+      ConstrainValue.SubtractType(comparedValueType)
     }
     else {
       // Just because the values aren't equal doesn't mean their types aren't
-      ConstrainType.PreserveType
+      ConstrainValue.PreserveValue
     }
 
-    ConstrainType.addCondAction(state)(
+    ConstrainValue.addCondAction(state)(
       conditionValue=conditionValue,
-      ConstrainType.CondAction(
+      ConstrainValue.CondAction(
         subjectValue=subjectValue,
-        trueConstraint=ConstrainType.IntersectType(comparedValueType),
+        trueConstraint=trueConstaint,
         falseConstraint=falseContraint
       )
     )
@@ -177,9 +197,9 @@ private[stdlibproc] object DynamicValueEqv {
       invokeCompare(runtimeCompareSymbol, val1, val2)
     }
 
-    // Register our type constraints for occurrence typing
-    val val1RegisteredState = registerCond(state)(resultValue, val1, val2.schemeType)
-    val val2RegisteredState = registerCond(val1RegisteredState)(resultValue, val2, val1.schemeType)
+    // Register our value constraints for occurrence typing
+    val val1RegisteredState = registerCond(state)(resultValue, val1, val2)
+    val val2RegisteredState = registerCond(val1RegisteredState)(resultValue, val2, val1)
 
     PlanResult(
       state=val2RegisteredState,

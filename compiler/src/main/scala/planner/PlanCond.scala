@@ -27,7 +27,7 @@ object PlanCond {
     falseValue: iv.IntermediateValue,
     resultValue: iv.IntermediateValue
   ): PlannerState = {
-    import ConstrainType._
+    import ConstrainValue._
 
     val condActions = if (vt.SatisfiesType(vt.LiteralBooleanType(false), trueValue.schemeType) == Some(true)) {
       List(
@@ -46,7 +46,7 @@ object PlanCond {
       ) ++
       condActionsForConditionValue(falseState)(falseValue).map { condAction =>
         // If (if testExpr #f falseExpr) is not false then falseExpr's true actions should be run
-        condAction.copy(falseConstraint=PreserveType)
+        condAction.copy(falseConstraint=PreserveValue)
       }
     }
     else if (vt.SatisfiesType(vt.LiteralBooleanType(false), falseValue.schemeType) == Some(true)) {
@@ -66,7 +66,7 @@ object PlanCond {
       ) ++
       condActionsForConditionValue(trueState)(trueValue).map { condAction =>
         // If (if testExpr trueExpr #f) is not false then trueExpr's true actions should be run
-        condAction.copy(falseConstraint=PreserveType)
+        condAction.copy(falseConstraint=PreserveValue)
       }
     }
     else {
@@ -74,7 +74,7 @@ object PlanCond {
     }
 
     condActions.foldLeft(resultState) { case (state, condAction) =>
-      ConstrainType.addCondAction(state)(resultValue, condAction)
+      ConstrainValue.addCondAction(state)(resultValue, condAction)
     }
   }
 
@@ -100,15 +100,15 @@ object PlanCond {
 
         val trueWriter = plan.forkPlan()
         // The test expression is definitely not false in this branch
-        val trueConstraint = ConstrainType.SubtractType(vt.LiteralBooleanType(false))
-        val initialTrueState = ConstrainType(testResult.state)(testValue, trueConstraint)(plan.config)
+        val trueConstraint = ConstrainValue.SubtractType(vt.LiteralBooleanType(false))
+        val initialTrueState = ConstrainValue(testResult.state)(testValue, trueConstraint)(plan.config)
         val trueResult = PlanExpr(initialTrueState)(trueExpr)(trueWriter)
         val trueValue = trueResult.value
 
         val falseWriter = plan.forkPlan()
         // The test expression is definitely false in this branch
-        val falseConstraint = ConstrainType.IntersectType(vt.LiteralBooleanType(false))
-        val initialFalseState = ConstrainType(testResult.state)(testValue, falseConstraint)(plan.config)
+        val falseConstraint = ConstrainValue.IntersectType(vt.LiteralBooleanType(false))
+        val initialFalseState = ConstrainValue(testResult.state)(testValue, falseConstraint)(plan.config)
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
         val falseValue = falseResult.value
 
