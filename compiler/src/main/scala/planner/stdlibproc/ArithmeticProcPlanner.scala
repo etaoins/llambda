@@ -8,32 +8,12 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
+
 object ArithmeticProcPlanner extends StdlibProcPlanner {
   private type UncheckedInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
   private type CheckedInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue, RuntimeErrorMessage) => ps.Step
   private type StaticIntegerOp = (BigInt, BigInt) => BigInt
   private type StaticDoubleOp = (Double, Double) => Double
-
-  private def numberToDoubleTemp(
-      value: iv.IntermediateValue,
-      isFlonum: Boolean
-  )(implicit plan: PlanWriter): ps.TempValue =
-    if (isFlonum) {
-      value.toTempValue(vt.Double)
-    }
-    else {
-      val intTemp = value.toTempValue(vt.Int64)
-      val convertTemp = ps.TempValue()
-      plan.steps += ps.ConvertNativeIntegerToFloat(convertTemp, intTemp, true, vt.Double)
-
-      convertTemp
-    }
-
-  sealed abstract class KnownOperandType
-  case object KnownInt extends KnownOperandType
-  case object KnownFlonum extends KnownOperandType
-
-  case class TypedOperand(value: iv.IntermediateValue, knownType: KnownOperandType)
 
   private def performBinaryMixedOp(
       intInstr: CheckedInstrBuilder,
@@ -45,90 +25,67 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val typedOperands = operands map { operand =>
-      if (operand.hasDefiniteType(vt.IntegerType)) {
-        TypedOperand(operand, KnownInt)
-      }
-      else if (operand.hasDefiniteType(vt.FlonumType)) {
-        TypedOperand(operand, KnownFlonum)
-      }
-      else {
-        // We don't know the precise type - we can't continue
-        return None
-      }
+    val typedOperands = operands.map(TypedNumberValue.fromIntermediateValue)
+
+    if (typedOperands.exists(_.isInstanceOf[TypedNumberValue.Unknown])) {
+      // We don't have enough type information to continue
+      return None
     }
 
     // Determine if our result is a flonum
-    val resultIsFlonum = typedOperands.exists { typedArg =>
-      typedArg.knownType == KnownFlonum
-    }
+    val resultIsFlonum = typedOperands.exists(_.isInstanceOf[TypedNumberValue.Flonum])
 
-    val resultValue = typedOperands.reduceLeft { (op1: TypedOperand, op2: TypedOperand) => (op1, op2) match {
-      case (TypedOperand(iv.ConstantIntegerValue(constantIntVal1), _),
-            TypedOperand(iv.ConstantIntegerValue(constantIntVal2), _)) =>
-        val intResult = staticIntCalc(BigInt(constantIntVal1), BigInt(constantIntVal2))
+    val resultValue = typedOperands.reduceLeft { (op1: TypedNumberValue, op2: TypedNumberValue) => (op1, op2) match {
+      case (TypedNumberValue.ConstantInteger(constantIntVal1), TypedNumberValue.ConstantInteger(constantIntVal2)) =>
+        val bigIntResult = staticIntCalc(BigInt(constantIntVal1), BigInt(constantIntVal2))
 
-        if (intResult.isValidLong) {
-          TypedOperand(iv.ConstantIntegerValue(intResult.toLong), KnownInt)
+        if (bigIntResult.isValidLong) {
+          TypedNumberValue.ConstantInteger(bigIntResult.toLong)
         }
         else if (resultIsFlonum) {
-          // Promote this to a double
-          TypedOperand(iv.ConstantFlonumValue(intResult.toDouble), KnownFlonum)
+          // Promote this to a flonum
+          TypedNumberValue.ConstantFlonum(bigIntResult.toDouble)
         }
         else {
           // Integer result was expected!
           throw new IntegerOverflowException(plan.activeContextLocated, intOverflowMessage.text)
         }
 
-      case (TypedOperand(iv.ConstantFlonumValue(constantFlonumVal1), _),
-            TypedOperand(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
-        TypedOperand(
-          iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantFlonumVal2)),
-          KnownFlonum
-        )
+      case (TypedNumberValue.ConstantFlonum(constantFlonumVal1), TypedNumberValue.ConstantFlonum(constantFlonumVal2)) =>
+        TypedNumberValue.ConstantFlonum(staticFlonumCalc(constantFlonumVal1, constantFlonumVal2))
 
-      case (TypedOperand(iv.ConstantIntegerValue(constantIntVal1), _),
-            TypedOperand(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
-        TypedOperand(
-          iv.ConstantFlonumValue(staticFlonumCalc(constantIntVal1.toDouble, constantFlonumVal2)),
-          KnownFlonum
-        )
+      case (TypedNumberValue.ConstantInteger(constantIntVal1), TypedNumberValue.ConstantFlonum(constantFlonumVal2)) =>
+        TypedNumberValue.ConstantFlonum(staticFlonumCalc(constantIntVal1.toDouble, constantFlonumVal2))
 
-      case (TypedOperand(iv.ConstantFlonumValue(constantFlonumVal1), _),
-            TypedOperand(iv.ConstantIntegerValue(constantIntVal2), _)) =>
-        TypedOperand(
-          iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantIntVal2.toDouble)),
-          KnownFlonum
-        )
+      case (TypedNumberValue.ConstantFlonum(constantFlonumVal1), TypedNumberValue.ConstantInteger(constantIntVal2)) =>
+        TypedNumberValue.ConstantFlonum(staticFlonumCalc(constantFlonumVal1, constantIntVal2.toDouble))
 
-      case (TypedOperand(other1, type1), TypedOperand(other2, type2)) =>
-        if ((type1 == KnownInt) && (type2 == KnownInt)) {
-          if (resultIsFlonum) {
-            // We expect a flonum result - this requires re-trying this computation as flonum on overflow
-            // This is tricky and rare so just let the runtime handle it
-            return None
-          }
-
-          // Both integers
-          val intTemp1 = other1.toTempValue(vt.Int64)(inlinePlan)
-          val intTemp2 = other2.toTempValue(vt.Int64)(inlinePlan)
-
-          val resultTemp = ps.TempValue()
-
-          inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
-
-          TypedOperand(new iv.NativeIntegerValue(resultTemp, vt.Int64)(), KnownInt)
+      case (TypedNumberValue.Integer(other1), TypedNumberValue.Integer(other2)) =>
+        if (resultIsFlonum) {
+          // We expect a flonum result - this requires re-trying this computation as flonum on overflow
+          // This is tricky and rare so just let the runtime handle it
+          return None
         }
-        else {
-          // At least one is a double
-          val doubleTemp1 = numberToDoubleTemp(other1, type1 == KnownFlonum)(inlinePlan)
-          val doubleTemp2 = numberToDoubleTemp(other2, type2 == KnownFlonum)(inlinePlan)
 
-          val resultTemp = ps.TempValue()
-          inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2)
+        // Both integers
+        val intTemp1 = other1.toTempValue(vt.Int64)(inlinePlan)
+        val intTemp2 = other2.toTempValue(vt.Int64)(inlinePlan)
 
-          TypedOperand(new iv.NativeFlonumValue(resultTemp, vt.Double), KnownFlonum)
-        }
+        val resultTemp = ps.TempValue()
+
+        inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
+
+        TypedNumberValue.Integer(new iv.NativeIntegerValue(resultTemp, vt.Int64)())
+
+      case (known1: TypedNumberValue.Known, known2: TypedNumberValue.Known) =>
+        // At least one is a double
+        val doubleTemp1 = known1.toDoubleTemp()(inlinePlan)
+        val doubleTemp2 = known2.toDoubleTemp()(inlinePlan)
+
+        val resultTemp = ps.TempValue()
+        inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2)
+
+        TypedNumberValue.Flonum(new iv.NativeFlonumValue(resultTemp, vt.Double))
     }}
 
     // We need the inline plan now
@@ -147,7 +104,7 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
         // This would cause an integer overflow
         iv.ConstantFlonumValue(Long.MinValue.toDouble / -1.toDouble)
 
-      case (iv.ConstantIntegerValue(numerInt),  iv.ConstantIntegerValue(denomInt)) =>
+      case (iv.ConstantIntegerValue(numerInt), iv.ConstantIntegerValue(denomInt)) =>
         if (denomInt == 0) {
           throw new DivideByZeroException(plan.activeContextLocated, "Attempted (/) by integer zero")
         }
@@ -171,31 +128,30 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
         iv.ConstantFlonumValue(numerNumValue.doubleValue / denomFlonumVal)
 
       case (dynamicNumer, dynamicDenom) =>
-        val dynamicNumerIsInt = dynamicNumer.hasDefiniteType(vt.IntegerType)
-        val dynamicNumerIsFlonum = dynamicNumer.hasDefiniteType(vt.FlonumType)
+        val typedNumer = TypedNumberValue.fromIntermediateValue(dynamicNumer)
+        val typedDenom = TypedNumberValue.fromIntermediateValue(dynamicDenom)
 
-        val dynamicDenomIsInt = dynamicDenom.hasDefiniteType(vt.IntegerType)
-        val dynamicDenomIsFlonum = dynamicDenom.hasDefiniteType(vt.FlonumType)
+        (typedNumer, typedDenom) match {
+          case (_, TypedNumberValue.Integer(_)) =>
+            // This could be an integer divide by zero. Even if the denominator is non-zero if the numerator is also
+            // an integer we don't know the flonumness of our result. Let the library handle this.
+            return None
 
-        if (!(dynamicNumerIsInt || dynamicNumerIsFlonum) || !(dynamicDenomIsInt || dynamicDenomIsFlonum)) {
-          // We don't have definite types; abort
-          return None
+          case (knownNumer: TypedNumberValue.Known, knownDenom: TypedNumberValue.Known) =>
+            val doubleNumerTemp = knownNumer.toDoubleTemp()(inlinePlan)
+            val doubleDenomTemp = knownDenom.toDoubleTemp()(inlinePlan)
+
+            val resultTemp = ps.TempValue()
+            inlinePlan.steps += ps.FloatDiv(resultTemp, doubleNumerTemp, doubleDenomTemp)
+
+            new iv.NativeFlonumValue(resultTemp, vt.Double)
+
+          case _ =>
+            // We don't have definite types; abort
+            return None
         }
-        else if (dynamicDenomIsInt) {
-          // This could be an integer divide by zero. Even if the denominator is non-zero if the numerator is also
-          // an integer we don't know the flonumness of our result. Let the library handle this.
-          return None
-        }
-        else  {
-          val doubleTemp1 = numberToDoubleTemp(dynamicNumer, dynamicNumerIsFlonum)(inlinePlan)
-          val doubleTemp2 = numberToDoubleTemp(dynamicDenom, dynamicDenomIsFlonum)(inlinePlan)
-
-          val resultTemp = ps.TempValue()
-          inlinePlan.steps += ps.FloatDiv(resultTemp, doubleTemp1, doubleTemp2)
-
-          new iv.NativeFlonumValue(resultTemp, vt.Double)
-        }
-    }}
+      }
+    }
 
     // We need the inline plan now
     plan.steps ++= inlinePlan.steps

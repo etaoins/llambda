@@ -71,16 +71,18 @@ object NumberProcPlanner extends StdlibProcPlanner {
       val1: iv.IntermediateValue,
       val2: iv.IntermediateValue
   )(implicit plan: PlanWriter): CompareResult = {
-    (val1, val2) match {
-      case (iv.ConstantIntegerValue(constIntegerVal1), iv.ConstantIntegerValue(constIntegerVal2)) =>
+    val List(typedVal1, typedVal2) = List(val1, val2).map(TypedNumberValue.fromIntermediateValue)
+
+    (typedVal1, typedVal2) match {
+      case (TypedNumberValue.ConstantInteger(constIntegerVal1), TypedNumberValue.ConstantInteger(constIntegerVal2)) =>
         val compareResult = staticIntCalc(constIntegerVal1, constIntegerVal2)
         StaticCompare(compareResult)
 
-      case (constNum1: iv.ConstantNumberValue, constNum2: iv.ConstantNumberValue) =>
+      case (TypedNumberValue.ConstantNumber(constNum1), TypedNumberValue.ConstantNumber(constNum2)) =>
         val compareResult = staticFlonumCalc(constNum1.doubleValue, constNum2.doubleValue)
         StaticCompare(compareResult)
 
-      case (integer1, integer2) if integer1.hasDefiniteType(vt.IntegerType) && integer2.hasDefiniteType(vt.IntegerType) =>
+      case (TypedNumberValue.Integer(integer1), TypedNumberValue.Integer(integer2)) =>
         val val1Temp = integer1.toTempValue(vt.Int64)
         val val2Temp = integer2.toTempValue(vt.Int64)
 
@@ -98,9 +100,9 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
         DynamicCompare(predicateTemp)
 
-      case (flonum1, flonum2) if flonum1.hasDefiniteType(vt.FlonumType) && flonum2.hasDefiniteType(vt.FlonumType) =>
-        val val1Temp = flonum1.toTempValue(vt.Double)
-        val val2Temp = flonum2.toTempValue(vt.Double)
+      case (known1: TypedNumberValue.Known, known2: TypedNumberValue.Known) =>
+        val val1Temp = known1.toDoubleTemp()
+        val val2Temp = known2.toDoubleTemp()
 
         val predicateTemp = ps.TempValue()
 
