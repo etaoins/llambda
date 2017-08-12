@@ -12,7 +12,7 @@ private[planner] object AttemptInlineApply {
   private case class DirectSource(storageLoc: StorageLocation, value: LocationValue) extends ValueSource
   private case class ClosureSource(storageLoc: StorageLocation) extends ValueSource
 
-  private def attemptInline(parentState: PlannerState, inlineState: PlannerState)(
+  private def attemptInline(enclosingState: PlannerState, applyState: PlannerState)(
       lambdaExpr: et.Lambda,
       args: List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt: Option[ps.TempValue] = None,
@@ -37,16 +37,16 @@ private[planner] object AttemptInlineApply {
 
     val procType = lambdaExpr.polyType.typeForArgs(args.map(_._2.schemeType))
 
-    val closedVars = FindClosedVars(parentState, lambdaExpr, None)
+    val closedVars = FindClosedVars(enclosingState, lambdaExpr, None)
 
     val valueSources = closedVars map {
       case ImportedImmutable(storageLoc, parentIntermediate) =>
         DirectSource(storageLoc, ImmutableValue(parentIntermediate))
 
-      case commonCapture: CapturedVariable if inlineState.values.contains(commonCapture.storageLoc) =>
+      case commonCapture: CapturedVariable if applyState.values.contains(commonCapture.storageLoc) =>
         // This is captured variable the lambda expression and our inline state have in common
         // We can just import it directly for the purposes of inlining
-        DirectSource(commonCapture.storageLoc, inlineState.values(commonCapture.storageLoc))
+        DirectSource(commonCapture.storageLoc, applyState.values(commonCapture.storageLoc))
 
       case closureCapture: CapturedVariable =>
         ClosureSource(closureCapture.storageLoc)
@@ -80,8 +80,8 @@ private[planner] object AttemptInlineApply {
     val postClosureState = PlannerState(
       values=(directValues ++ closureValues).toMap,
       // It's very important we get our parameter values from where we're inlined, not where we're defined
-      parameterValues=inlineState.parameterValues,
-      inlineDepth=inlineState.inlineDepth + 1
+      parameterValues=applyState.parameterValues,
+      inlineDepth=applyState.inlineDepth + 1
     )
 
     // Add our provided fixed arguments to the state
@@ -131,9 +131,9 @@ private[planner] object AttemptInlineApply {
 
     // Make sure our return type is of the declared type
     val stableReturnType = vt.StabiliseReturnType(procType.returnType)
-    val castValues = planResult.value.castToSchemeType(stableReturnType.schemeType)
+    val castValue = planResult.value.castToSchemeType(stableReturnType.schemeType)
 
-    Some(castValues)
+    Some(castValue)
   }
 
   /** Attempts to inline a self-executing lambda
@@ -154,19 +154,19 @@ private[planner] object AttemptInlineApply {
 
   /** Attempts to inline an already planned lambda from its manifest
     *
-    * @param  inlineState  State the lambda in being inlined in to. This is used to avoid loading values from the
-    *                      procedure's closure that also exist in the inlining environment.
+    * @param  applyState   State the lambda in being applied in. This is used to avoid loading values from the
+    *                      procedure's closure that also exist in the applying environment.
     * @param  manifest     Manifest for the planned procedure
     * @param  selfTempOpt  Self value for the inlining procedure if it captured variables. This is used to access the
     *                      closure for the procedure.
     * @return Result values if inlining was successful, None otherwise
     */
-  def fromManifiest(inlineState: PlannerState)(
+  def fromManifiest(applyState: PlannerState)(
       manifest: LambdaManifest,
       args: List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt: Option[ps.TempValue] = None
   )(implicit plan: PlanWriter): Option[iv.IntermediateValue] =
-    attemptInline(manifest.parentState, inlineState)(
+    attemptInline(manifest.parentState, applyState)(
       lambdaExpr=manifest.lambdaExpr,
       args=args,
       selfTempOpt=selfTempOpt,
