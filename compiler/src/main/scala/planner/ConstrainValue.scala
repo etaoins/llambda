@@ -109,17 +109,22 @@ object ConstrainValue {
   def addCondAction(state: PlannerState)(
       conditionValue: iv.IntermediateValue,
       condAction: CondAction
+  ): PlannerState =
+    addCondActions(state)(conditionValue, List(condAction))
+
+  def addCondActions(state: PlannerState)(
+      conditionValue: iv.IntermediateValue,
+      condActions: List[CondAction]
   ): PlannerState = {
-    if (condAction.trueConstraint.definiteNoop && condAction.falseConstraint.definiteNoop) {
-      // This is useless
-      return state
+    val usefulCondActions = condActions.filter { condAction =>
+      !condAction.trueConstraint.definiteNoop || !condAction.falseConstraint.definiteNoop
     }
 
     // Add this action on to the list of actions for the condition value
     val oldConstraintState = state.valueConstraintState
 
     val existingActions = oldConstraintState.condActions.getOrElse(conditionValue, Nil)
-    val updatedActions = oldConstraintState.condActions + (conditionValue -> (condAction :: existingActions))
+    val updatedActions = oldConstraintState.condActions + (conditionValue -> (usefulCondActions ++ existingActions))
 
     val newConstraintState = state.valueConstraintState.copy(
       condActions=updatedActions

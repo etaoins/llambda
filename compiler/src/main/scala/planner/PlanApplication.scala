@@ -78,11 +78,8 @@ private[planner] object PlanApplication {
     procExpr match {
       case lambdaExpr: et.Lambda =>
         // We can apply this inline!
-        for(inlineValue <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
-          return PlanResult(
-            state=initialState,
-            value=inlineValue
-          )
+        for(inlineResult <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
+          return inlineResult
         }
 
       case _ =>
@@ -136,13 +133,13 @@ private[planner] object PlanApplication {
           // Try to plan this as in inline app[lication
           val inlinePlan = plan.forkPlan()
 
-          val inlineValueOpt = AttemptInlineApply.fromManifiest(procResult.state)(
+          val inlineResultOpt = AttemptInlineApply.fromManifiest(procResult.state)(
             manifest=schemeProc.manifest,
             args=args,
             selfTempOpt=schemeProc.selfTempOpt
           )(inlinePlan)
 
-          for(inlineValue <- inlineValueOpt) {
+          for(inlineResult <- inlineResultOpt) {
             val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
             val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
@@ -159,13 +156,7 @@ private[planner] object PlanApplication {
             if (isOnlyUse || (inlineCost <= invokeCost)) {
               // Use the inline plan
               plan.steps ++= inlinePlan.steps
-
-              return PlanResult(
-                // No need to register types here - inlining wouldn't have succeeded if the types weren't already
-                // matches
-                state=procResult.state,
-                value=inlineValue
-              )
+              return inlineResult
             }
           }
 
