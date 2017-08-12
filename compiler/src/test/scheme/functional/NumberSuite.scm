@@ -30,8 +30,11 @@
   (assert-equal -32 (integer -32.0))
   (assert-equal 64 (integer 64))))
 
-(define-test "(integer 112.5) fails" (expect-error invalid-argument-error?
+(define-test "static (integer 112.5) fails" (expect-error invalid-argument-error?
   (integer 112.5)))
+
+(define-test "dynamic (integer 112.5) fails" (expect-error invalid-argument-error?
+  (integer (typed-dynamic 112.5 <flonum>))))
 
 (define-test "static (flonum)" (expect-static-success
   (assert-equal 567.0 (flonum 567))

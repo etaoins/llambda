@@ -1,11 +1,13 @@
 package io.llambda.compiler.planner.stdlibproc
 import io.llambda
 
+import llambda.compiler.planner._
+import llambda.compiler.{ContextLocated, InvalidArgumentException}
+
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.ContextLocated
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.planner._
+
 
 object NumberProcPlanner extends StdlibProcPlanner {
   private type IntegerCompartor = (Long, Long) => Boolean
@@ -19,51 +21,47 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
   private def integerValue(
       value: iv.IntermediateValue
-  ): Option[iv.IntermediateValue] = {
-      value match  {
-        case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
-          // Already an  int
-          Some(knownInt)
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = value match {
+    case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
+      // Already an int
+      Some(knownInt)
 
-        case iv.ConstantFlonumValue(constFlonumVal) =>
-          val longValue = constFlonumVal.toLong
+    case iv.ConstantFlonumValue(constFlonumVal) =>
+      val longValue = constFlonumVal.toLong
 
-          // Make sure this was lossless
-          if (longValue.toDouble == constFlonumVal) {
-            Some(iv.ConstantIntegerValue(longValue))
-          }
-          else {
-            None
-          }
-
-        case _ =>
-          None
+      // Make sure this was lossless
+      if (longValue.toDouble == constFlonumVal) {
+        Some(iv.ConstantIntegerValue(longValue))
       }
+      else {
+        throw new InvalidArgumentException(plan.activeContextLocated, "Attempted to convert non-integral flonum to integer")
+      }
+
+    case _ =>
+      None
   }
 
   private def flonumValue(
       value: iv.IntermediateValue
-  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = {
-      value match  {
-        case knownFlonum if knownFlonum.hasDefiniteType(vt.FlonumType) =>
-          // Already a flonum
-          Some(knownFlonum)
+  )(implicit plan: PlanWriter): Option[iv.IntermediateValue] = value match {
+    case knownFlonum if knownFlonum.hasDefiniteType(vt.FlonumType) =>
+      // Already a flonum
+      Some(knownFlonum)
 
-        case iv.ConstantIntegerValue(constIntegerVal) =>
-          // Statically convert it to a double
-          Some(iv.ConstantFlonumValue(constIntegerVal.toDouble))
+    case iv.ConstantIntegerValue(constIntegerVal) =>
+      // Statically convert it to a double
+      Some(iv.ConstantFlonumValue(constIntegerVal.toDouble))
 
-        case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
-          val intTemp = knownInt.toTempValue(vt.Int64)
-          val doubleTemp = ps.TempValue()
+    case knownInt if knownInt.hasDefiniteType(vt.IntegerType) =>
+      val intTemp = knownInt.toTempValue(vt.Int64)
+      val doubleTemp = ps.TempValue()
 
-          plan.steps += ps.ConvertNativeIntegerToFloat(doubleTemp, intTemp, true, vt.Double)
+      plan.steps += ps.ConvertNativeIntegerToFloat(doubleTemp, intTemp, true, vt.Double)
 
-          Some(new iv.NativeFlonumValue(doubleTemp, vt.Double))
+      Some(new iv.NativeFlonumValue(doubleTemp, vt.Double))
 
-        case _ =>
-          None
-      }
+    case _ =>
+      None
   }
 
   private def compareArgs(
