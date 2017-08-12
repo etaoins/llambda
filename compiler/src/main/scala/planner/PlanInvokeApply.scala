@@ -48,17 +48,11 @@ object PlanInvokeApply {
           iv.UnitValue
         }
 
-      case otherType =>
+      case vt.ReturnType.Reachable(valueType) =>
         val resultTemp = ps.TempValue()
         plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, argTemps, discardable=discardable)
 
-        otherType match {
-          case vt.ReturnType.Unreachable =>
-            iv.UnreachableValue
-
-          case vt.ReturnType.Reachable(valueType) =>
-            TempValueToIntermediate(valueType, resultTemp)
-        }
+        TempValueToIntermediate(valueType, resultTemp)
     }
   }
 

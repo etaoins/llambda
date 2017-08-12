@@ -26,10 +26,7 @@ object ReturnType {
     def schemeReturnType: ReturnType[SchemeType]
   }
 
-  /** Represents a single value returned from a procedure
-    *
-    * This is the normal case. Single values are represented by the their native type without any wrapping
-    */
+  /** Represents a value returned from a procedure */
    case class Reachable[+T >: SchemeType <: ValueType](valueType: T) extends ReturnType[T] {
     def representationTypeOpt = valueType match {
       case UnitType =>
