@@ -56,7 +56,9 @@ object PlanProgram {
     }
 
     // Discard any unused steps
-    val discardedFunctions = optimisedFunctions.mapValues(DiscardSteps(_))
+    val discardedFunctions = optimisedFunctions.mapValues { function =>
+      function.copy(steps=DiscardSteps(function.steps))
+    }
 
     // Prune unused functions again
     val finalUsedFunctions = FindUsedFunctions(discardedFunctions, LlambdaTopLevelSignature.nativeSymbol)

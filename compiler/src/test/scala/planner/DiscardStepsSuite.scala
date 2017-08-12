@@ -1,80 +1,53 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, RuntimeErrorMessage, ErrorCategory}
+import llambda.compiler.{RuntimeErrorMessage, ErrorCategory}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
 import org.scalatest.FunSuite
 
-class DiscardStepsSuite extends FunSuite {
-  val testSignature = ProcedureSignature(
-    hasWorldArg=true,
-    hasSelfArg=true,
-    mandatoryArgTypes=List(vt.IntegerType),
-    optionalArgTypes=Nil,
-    restArgMemberTypeOpt=Some(vt.SymbolType),
-    returnType=vt.ReturnType.Reachable(vt.PortType),
-    attributes=Set()
-  )
 
-  def namedTemp(name: String): ps.TempValue = new ps.TempValue {
+class DiscardStepsSuite extends FunSuite {
+  private val temp1 = ps.TempValue()
+  private val temp2 = ps.TempValue()
+
+  private def namedTemp(name: String): ps.TempValue = new ps.TempValue {
     override def toString = name
   }
 
-  val selfTemp = namedTemp("self")
-  val fixedArgTemp = namedTemp("fixedArg")
-  val restArgTemp = namedTemp("restArg")
-
-  val runtimeErrorMessage = RuntimeErrorMessage(
+  private val runtimeErrorMessage = RuntimeErrorMessage(
     category=ErrorCategory.Arity,
     name="name",
     text="text"
   )
 
-  def functionForSteps(steps: List[ps.Step]): PlannedFunction =
-    PlannedFunction(
-      signature=testSignature,
-      namedArguments=List(
-        "world" -> ps.WorldPtrValue,
-        "self" -> selfTemp,
-        "fixedArg" -> fixedArgTemp,
-        "restArg" -> restArgTemp
-      ),
-      steps=steps,
-      debugContextOpt=None
-    )
-
   test("unused step is completely removed") {
     val unboxResult = namedTemp("unboxResult")
 
     val testSteps = List(
-      ps.UnboxInteger(unboxResult, fixedArgTemp)
+      ps.UnboxInteger(unboxResult, temp1)
     )
-
-    val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List()
 
-    assert(DiscardSteps(testFunction).steps === expectedSteps)
+    assert(DiscardSteps(testSteps) === expectedSteps)
   }
 
   test("simple step with used result") {
     val unboxResult = namedTemp("unboxResult")
 
     val testSteps = List(
-      ps.UnboxInteger(unboxResult, fixedArgTemp),
+      ps.UnboxInteger(unboxResult, temp1),
       ps.Return(Some(unboxResult))
     )
-
-    val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List(
-      ps.UnboxInteger(unboxResult, fixedArgTemp),
+      ps.UnboxInteger(unboxResult, temp1),
       ps.Return(Some(unboxResult))
     )
 
-    assert(DiscardSteps(testFunction).steps === expectedSteps)
+    assert(DiscardSteps(testSteps) === expectedSteps)
   }
 
   test("unused condition is completely removed") {
@@ -87,16 +60,14 @@ class DiscardStepsSuite extends FunSuite {
 
     val falseSteps = Nil
 
-    val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
+    val valuePhi = ps.ValuePhi(condResult, trueResult, temp1)
     val testSteps = List(
-      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
+      ps.CondBranch(temp2, trueSteps, falseSteps, List(valuePhi))
     )
-
-    val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List()
 
-    assert(DiscardSteps(testFunction).steps === expectedSteps)
+    assert(DiscardSteps(testSteps) === expectedSteps)
   }
 
   test("condition with identical branches is simplified") {
@@ -104,29 +75,27 @@ class DiscardStepsSuite extends FunSuite {
 
     val trueResult = namedTemp("trueResult")
     val trueSteps = List(
-      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
+      ps.AssertPredicate(temp2, runtimeErrorMessage),
       ps.CreateIntegerCell(trueResult, 25),
-      ps.AssertPredicate(fixedArgTemp, runtimeErrorMessage)
+      ps.AssertPredicate(temp1, runtimeErrorMessage)
     )
 
     val falseSteps = List(
-      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
-      ps.AssertPredicate(fixedArgTemp, runtimeErrorMessage)
+      ps.AssertPredicate(temp2, runtimeErrorMessage),
+      ps.AssertPredicate(temp1, runtimeErrorMessage)
     )
 
-    val valuePhi = ps.ValuePhi(condResult, trueResult, fixedArgTemp)
+    val valuePhi = ps.ValuePhi(condResult, trueResult, temp1)
     val testSteps = List(
-      ps.CondBranch(restArgTemp, trueSteps, falseSteps, List(valuePhi))
+      ps.CondBranch(temp2, trueSteps, falseSteps, List(valuePhi))
     )
-
-    val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List(
-      ps.AssertPredicate(restArgTemp, runtimeErrorMessage),
-      ps.AssertPredicate(fixedArgTemp, runtimeErrorMessage)
+      ps.AssertPredicate(temp2, runtimeErrorMessage),
+      ps.AssertPredicate(temp1, runtimeErrorMessage)
     )
 
-    assert(DiscardSteps(testFunction).steps === expectedSteps)
+    assert(DiscardSteps(testSteps) === expectedSteps)
   }
 
   test("unused load record fields is removed") {
@@ -143,14 +112,12 @@ class DiscardStepsSuite extends FunSuite {
     )
 
     val testSteps = List(
-      ps.LoadRecordLikeFields(fixedArgTemp, recordType, fieldsToLoad)
+      ps.LoadRecordLikeFields(temp1, recordType, fieldsToLoad)
     )
-
-    val testFunction = functionForSteps(testSteps)
 
     val expectedSteps = List()
 
-    assert(DiscardSteps(testFunction).steps === expectedSteps)
+    assert(DiscardSteps(testSteps) === expectedSteps)
   }
 
   test("partially used load record fields has unused fields removed") {
@@ -167,21 +134,19 @@ class DiscardStepsSuite extends FunSuite {
     )
 
     val testSteps = List(
-      ps.LoadRecordLikeFields(fixedArgTemp, recordType, testFieldsToLoad),
+      ps.LoadRecordLikeFields(temp1, recordType, testFieldsToLoad),
       ps.Return(Some(fieldTemp1))
     )
-
-    val testFunction = functionForSteps(testSteps)
 
     val expectedFieldsToLoad = List(
       (recordField1 -> fieldTemp1)
     )
 
     val expectedSteps = List(
-      ps.LoadRecordLikeFields(fixedArgTemp, recordType, expectedFieldsToLoad),
+      ps.LoadRecordLikeFields(temp1, recordType, expectedFieldsToLoad),
       ps.Return(Some(fieldTemp1))
     )
 
-    assert(DiscardSteps(testFunction).steps === expectedSteps)
+    assert(DiscardSteps(testSteps) === expectedSteps)
   }
 }
