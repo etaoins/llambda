@@ -7,6 +7,9 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 
 object TempValueToIntermediate {
   def apply(valueType: vt.ValueType, tempValue: ps.TempValue): iv.IntermediateValue = valueType match {
+    case literalType: vt.LiteralValueType =>
+      iv.IntermediateValue.fromLiteralType(literalType)
+
     case vt.Predicate =>
       new iv.NativePredicateValue(tempValue)
 
