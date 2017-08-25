@@ -77,10 +77,21 @@ private[planner] object PlanApplication {
     // Perform this inlining at all optimisation levels because it can propagate important type information
     procExpr match {
       case lambdaExpr: et.Lambda =>
-        // We can apply this inline!
-        for(inlineResult <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
-          return inlineResult
+        if (!HasCompatibleArity(
+            args.length,
+            lambdaExpr.mandatoryArgs.length,
+            lambdaExpr.optionalArgs.length,
+            lambdaExpr.restArgOpt.isDefined)) {
+
+        val requiredArity = RequiredArityDescription.fromProcedureType(lambdaExpr.polyType.template)
+          throw new ArityException(
+            located=plan.activeContextLocated,
+            message=s"Called procedure with ${args.length} arguments; requires ${requiredArity}"
+          )
         }
+
+        // We can apply this inline!
+        return PlanInlineApply.fromSEL(initialState)(lambdaExpr, args)
 
       case _ =>
     }
@@ -133,33 +144,31 @@ private[planner] object PlanApplication {
           // Try to plan this as in inline app[lication
           val inlinePlan = plan.forkPlan()
 
-          val inlineResultOpt = AttemptInlineApply.fromManifiest(procResult.state)(
+          val inlineResult = PlanInlineApply.fromManifiest(procResult.state)(
             manifest=schemeProc.manifest,
             args=args,
             selfTempOpt=schemeProc.selfTempOpt
           )(inlinePlan)
 
-          for(inlineResult <- inlineResultOpt) {
-            val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
-            val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
+          val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
+          val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
-            // Is this the only use of the lambda?
-            val isOnlyUse = procExpr match {
-              case et.VarRef(storageLoc) =>
-                // Does this only have a single use?
-                plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1
+          // Is this the only use of the lambda?
+          val isOnlyUse = procExpr match {
+            case et.VarRef(storageLoc) =>
+              // Does this only have a single use?
+              plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1
 
-              case _ =>
-                false
-            }
+            case _ =>
+              false
+          }
 
-            if (isOnlyUse || (inlineCost <= invokeCost)) {
-              // Use the inline plan
-              plan.steps ++= inlinePlan.steps
-              return inlineResult.copy(
-                state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
-              )
-            }
+          if (isOnlyUse || (inlineCost <= invokeCost)) {
+            // Use the inline plan
+            plan.steps ++= inlinePlan.steps
+            return inlineResult.copy(
+              state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
+            )
           }
 
         case _ =>

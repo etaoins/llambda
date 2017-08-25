@@ -3,31 +3,22 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ContextLocated}
+import llambda.compiler.{StorageLocation, ContextLocated, InternalCompilerErrorException}
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 
 
-private[planner] object AttemptInlineApply {
+private[planner] object PlanInlineApply {
   private sealed abstract class ValueSource
   private case class DirectSource(storageLoc: StorageLocation, value: LocationValue) extends ValueSource
   private case class ClosureSource(storageLoc: StorageLocation) extends ValueSource
 
-  private def attemptInline(enclosingState: PlannerState, applyState: PlannerState)(
+  private def planInline(enclosingState: PlannerState, applyState: PlannerState)(
       lambdaExpr: et.Lambda,
       args: List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt: Option[ps.TempValue] = None,
       manifestOpt: Option[LambdaManifest] = None
-  )(implicit plan: PlanWriter): Option[PlanResult] = {
-    if (!HasCompatibleArity(
-        args.length,
-        lambdaExpr.mandatoryArgs.length,
-        lambdaExpr.optionalArgs.length,
-        lambdaExpr.restArgOpt.isDefined)) {
-      // Incompatible arity - let PlanInvokeApply fail this
-      return None
-    }
-
+  )(implicit plan: PlanWriter): PlanResult = {
     val procType = lambdaExpr.polyType.typeForArgs(args.map(_._2.schemeType))
 
     val closedVars = FindClosedVars(enclosingState, lambdaExpr, None)
@@ -61,13 +52,11 @@ private[planner] object AttemptInlineApply {
         LoadClosureData(selfTemp, manifest, Some(wantedClosureValues))
 
       case _ =>
-        if (wantedClosureValues.isEmpty) {
-          Map()
+        if (!wantedClosureValues.isEmpty) {
+          throw new InternalCompilerErrorException("Attempted to inline a capturing lambda without a closure")
         }
-        else {
-          // We need our closure but we don't have one
-          return None
-        }
+
+        Map()
     }
 
     val postClosureState = PlannerState(
@@ -122,10 +111,10 @@ private[planner] object AttemptInlineApply {
         applyState
     }
 
-    Some(PlanResult(state=finalApplystate, value=castValue))
+    PlanResult(state=finalApplystate, value=castValue)
   }
 
-  /** Attempts to inline a self-executing lambda
+  /** Inlines a self-executing lambda
     *
     * These are in the form of ((lambda (arg) x) val) and analogous forms. These are occur frequently as the result of
     * macro expansion of simpler forms.
@@ -133,29 +122,27 @@ private[planner] object AttemptInlineApply {
     * @param  state       State the SEL is executing in
     * @param  lambdaExpr  Lambda expression being self-executed
     * @param  args        Arguments for the SEL
-    * @return Result values if inlining was successful, None otherwise
     */
   def fromSEL(state: PlannerState)(
       lambdaExpr: et.Lambda,
       args: List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan: PlanWriter): Option[PlanResult] =
-    attemptInline(state, state)(lambdaExpr, args)
+  )(implicit plan: PlanWriter): PlanResult =
+    planInline(state, state)(lambdaExpr, args)
 
-  /** Attempts to inline an already planned lambda from its manifest
+  /** Inlines an already planned lambda from its manifest
     *
     * @param  applyState   State the lambda in being applied in. This is used to avoid loading values from the
     *                      procedure's closure that also exist in the applying environment.
     * @param  manifest     Manifest for the planned procedure
     * @param  selfTempOpt  Self value for the inlining procedure if it captured variables. This is used to access the
     *                      closure for the procedure.
-    * @return Result values if inlining was successful, None otherwise
     */
   def fromManifiest(applyState: PlannerState)(
       manifest: LambdaManifest,
       args: List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt: Option[ps.TempValue] = None
-  )(implicit plan: PlanWriter): Option[PlanResult] =
-    attemptInline(manifest.parentState, applyState)(
+  )(implicit plan: PlanWriter): PlanResult =
+    planInline(manifest.parentState, applyState)(
       lambdaExpr=manifest.lambdaExpr,
       args=args,
       selfTempOpt=selfTempOpt,
