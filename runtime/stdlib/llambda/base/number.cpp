@@ -44,7 +44,7 @@ namespace
 					return integerCompare(flonumNumber1AsInteger, integerNumber2->value());
 				}
 
-				// Compare as inteer
+				// Compare as flonum
 				return flonumCompare(flonumNumber1->value(), integerNumber2->value());
 			}
 			else // if (integerNumber1 && !integerNumber2)
