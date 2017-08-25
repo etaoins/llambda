@@ -8,16 +8,36 @@
 (define-test "empty list is not a symbol" (expect #f
   (string? '())))
 
-(define-test "(symbol=?)" (expect-success
-  (assert-true (symbol=? 'test 'test))
-  (assert-false (symbol=? 'test 'nottest))
-  (assert-false (symbol=? 'test 'test 'nottest))
+(define-test "static (symbol=?)" (expect-static-success
+  (assert-true (symbol=? 'alpha 'alpha))
+  (assert-false (symbol=? 'alpha 'beta))
+  (assert-false (symbol=? 'alpha 'alpha 'beta))
 
   ; Inline symbols
-  (assert-true (symbol=? 'test 'test 'test))
+  (assert-true (symbol=? 'alpha 'alpha 'alpha))
 
   ; Heap symbols
   (assert-true (symbol=? 'excessively-long-test-symbol 'excessively-long-test-symbol 'excessively-long-test-symbol))))
+
+(define-test "dynamic (symbol=?)" (expect-success
+  (import (llambda typed))
+
+  (define alpha-or-beta (typed-dynamic 'alpha (U 'alpha 'beta)))
+  (define gamma-or-beta (typed-dynamic 'gamma (U 'beta 'gamma)))
+  (define untyped-gamma (typed-dynamic 'gamma <any>))
+
+  ; Ensure all the comparisons of unsuccessful comparisons work
+  (assert-false (symbol=? alpha-or-beta gamma-or-beta))
+  (assert-false (symbol=? alpha-or-beta untyped-gamma))
+  (assert-false (symbol=? alpha-or-beta 'gamma))
+  (assert-false (symbol=? alpha-or-beta 'alpha gamma-or-beta))
+
+  ; Ensure all of the combinations of successful comparisons work
+  (assert-true (symbol=? alpha-or-beta 'alpha))
+  (assert-true (symbol=? gamma-or-beta 'gamma))
+  (assert-true (symbol=? untyped-gamma 'gamma))
+  (assert-true (symbol=? untyped-gamma gamma-or-beta))
+  (assert-true (symbol=? untyped-gamma gamma-or-beta 'gamma))))
 
 (define-test "(symbol=?) with one arg fails" (expect-compile-error arity-error?
   (symbol=? 'test)))
