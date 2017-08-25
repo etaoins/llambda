@@ -74,13 +74,27 @@ object NumberProcPlanner extends StdlibProcPlanner {
     val List(typedVal1, typedVal2) = List(val1, val2).map(TypedNumberValue.fromIntermediateValue)
 
     (typedVal1, typedVal2) match {
-      case (TypedNumberValue.ConstantInteger(constIntegerVal1), TypedNumberValue.ConstantInteger(constIntegerVal2)) =>
-        val compareResult = staticIntCalc(constIntegerVal1, constIntegerVal2)
-        StaticCompare(compareResult)
+      case (TypedNumberValue.ConstantInteger(constInt1), TypedNumberValue.ConstantInteger(constInt2)) =>
+        StaticCompare(staticIntCalc(constInt1, constInt2))
 
-      case (TypedNumberValue.ConstantNumber(constNum1), TypedNumberValue.ConstantNumber(constNum2)) =>
-        val compareResult = staticFlonumCalc(constNum1.doubleValue, constNum2.doubleValue)
-        StaticCompare(compareResult)
+      case (TypedNumberValue.ConstantInteger(constInt1), TypedNumberValue.ConstantFlonum(constFlonum2)) =>
+        if (constFlonum2.toLong.toDouble == constFlonum2) {
+          StaticCompare(staticIntCalc(constInt1, constFlonum2.toLong))
+        }
+        else {
+          StaticCompare(staticFlonumCalc(constInt1.toDouble, constFlonum2))
+        }
+
+      case (TypedNumberValue.ConstantFlonum(constFlonum1), TypedNumberValue.ConstantInteger(constInt2)) =>
+        if (constFlonum1.toLong.toDouble == constFlonum1) {
+          StaticCompare(staticIntCalc(constFlonum1.toLong, constInt2))
+        }
+        else {
+          StaticCompare(staticFlonumCalc(constFlonum1, constInt2.toDouble))
+        }
+
+      case (TypedNumberValue.ConstantFlonum(constFlonum1), TypedNumberValue.ConstantFlonum(constFlonum2)) =>
+        StaticCompare(staticFlonumCalc(constFlonum1, constFlonum2))
 
       case (TypedNumberValue.Integer(integer1), TypedNumberValue.Integer(integer2)) =>
         val val1Temp = integer1.toTempValue(vt.Int64)
@@ -100,9 +114,9 @@ object NumberProcPlanner extends StdlibProcPlanner {
 
         DynamicCompare(predicateTemp)
 
-      case (known1: TypedNumberValue.Known, known2: TypedNumberValue.Known) =>
-        val val1Temp = known1.toDoubleTemp()
-        val val2Temp = known2.toDoubleTemp()
+      case (TypedNumberValue.Flonum(flonum1), TypedNumberValue.Flonum(flonum2)) =>
+        val val1Temp = flonum1.toTempValue(vt.Double)
+        val val2Temp = flonum2.toTempValue(vt.Double)
 
         val predicateTemp = ps.TempValue()
 

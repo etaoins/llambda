@@ -56,7 +56,10 @@
   (assert-true  (= 4.0 4 4.0))
   (assert-false (= 4.0 5.6))
   (assert-false (= 4.0 4 5.6))
-  (assert-false (= +nan.0 +nan.0))))
+  (assert-false (= +nan.0 +nan.0))
+
+  ; The flonum value maps to 2000000000000000000
+  (assert-false (= 2000000000000000003 2000000000000000003.0))))
 
 (define-test "dynamic (=)" (expect-success
   (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
@@ -71,7 +74,17 @@
 
   (when zero-is-equal
     ; Make sure we didn't replace -0.0 with +0.0 when propagating constants in this branch
-    (assert-equal dynamic-minus-zero -0.0))))
+    (assert-equal dynamic-minus-zero -0.0))
+
+  ; The flonum value maps to 2000000000000000000
+  (define large-dynamic-int-as-number (typed-dynamic 2000000000000000003 <number>))
+  (define large-dynamic-flonum-as-number (typed-dynamic 2000000000000000003.0 <number>))
+  (assert-false (= large-dynamic-int-as-number large-dynamic-flonum-as-number))
+
+  ; The flonum value maps to 2000000000000000000
+  (define large-dynamic-int-as-int (typed-dynamic 2000000000000000003 <integer>))
+  (define large-dynamic-flonum-as-flonum (typed-dynamic 2000000000000000003.0 <flonum>))
+  (assert-false (= large-dynamic-int-as-int large-dynamic-flonum-as-flonum))))
 
 (define-test "equality of two numbers and boolean false is an error" (expect-error type-error?
   (= 4.0 4 #f)))
