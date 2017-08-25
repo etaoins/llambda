@@ -7,6 +7,7 @@ import llambda.compiler.{StorageLocation, ContextLocated}
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 
+
 private[planner] object AttemptInlineApply {
   private sealed abstract class ValueSource
   private case class DirectSource(storageLoc: StorageLocation, value: LocationValue) extends ValueSource
@@ -18,14 +19,6 @@ private[planner] object AttemptInlineApply {
       selfTempOpt: Option[ps.TempValue] = None,
       manifestOpt: Option[LambdaManifest] = None
   )(implicit plan: PlanWriter): Option[PlanResult] = {
-    val mutableVars = plan.config.analysis.mutableVars
-    val allArgs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc) ++ lambdaExpr.restArgOpt
-
-    if (!(mutableVars & allArgs.toSet).isEmpty) {
-      // Not supported yet
-      return None
-    }
-
     if (!HasCompatibleArity(
         args.length,
         lambdaExpr.mandatoryArgs.length,
@@ -89,7 +82,7 @@ private[planner] object AttemptInlineApply {
     val postFixedArgState = fixedArgLocs.zip(args).foldLeft(postClosureState) {
       case (state, (storageLoc, (_, argValue))) =>
         val castValue = argValue.castToSchemeType(storageLoc.schemeType)
-        state.withValue(storageLoc -> ImmutableValue(castValue))
+        state.withValue(storageLoc -> InitLocationValue(storageLoc, castValue))
     }
 
     val defaultedOptionalCount = (fixedArgLocs.length - args.length)
@@ -101,16 +94,15 @@ private[planner] object AttemptInlineApply {
         // Note we don't use the state from the default value. The lambda planner doesn't do this as this code is
         // conditionally executed so it can't introduce bindings etc to the parent state
         val castValue = defaultValue.castToSchemeType(storageLoc.schemeType)
-        state.withValue(storageLoc -> ImmutableValue(castValue))
+        state.withValue(storageLoc -> InitLocationValue(storageLoc, castValue))
     }
-
 
     val restArgImmutables = lambdaExpr.restArgOpt.zip(lambdaExpr.schemeType.restArgMemberTypeOpt) map {
       case (storageLoc, memberType) =>
         val restValues = args.drop(fixedArgLocs.length).map(_._2)
 
         val castValues = restValues.map(_.castToSchemeType(memberType))
-        storageLoc -> ImmutableValue(ValuesToList(castValues))
+        storageLoc -> InitLocationValue(storageLoc, ValuesToList(castValues))
     }
 
     val postRestArgState = postDefaultOptState.withValues(restArgImmutables.toMap)

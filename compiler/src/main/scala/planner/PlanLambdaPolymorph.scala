@@ -12,6 +12,7 @@ import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute
 import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.TypeException
 
+
 object PlanLambdaPolymorph {
   private abstract class Argument {
     val name: String
@@ -51,30 +52,6 @@ object PlanLambdaPolymorph {
 
     case other =>
       Some(other)
-  }
-
-  private def initLocationValue(
-      storageLoc: StorageLocation,
-      value: iv.IntermediateValue
-  )(implicit plan: PlanWriter): LocationValue = {
-    if (plan.config.analysis.mutableVars.contains(storageLoc)) {
-      // Init the mutable
-      val mutableTemp = ps.TempValue()
-
-      // Determine our type and convert the argument to it
-      val compactInnerType = CompactRepresentationForType(value.schemeType)
-      val mutableType = MutableType(compactInnerType)
-      val tempValue = value.toTempValue(compactInnerType)
-
-      // Set the value
-      val fieldValues = Map[vt.RecordField, ps.TempValue](mutableType.recordField -> tempValue)
-      plan.steps += ps.InitRecord(mutableTemp, mutableType, fieldValues, isUndefined=false)
-
-      MutableValue(mutableType, mutableTemp, false)
-    }
-    else {
-      ImmutableValue(value)
-    }
   }
 
   private def resolveOptionalArgs(state: PlannerState)(
@@ -121,7 +98,7 @@ object PlanLambdaPolymorph {
       plan.steps += ps.CondBranch(isPairPred, providedValuePlan.steps.toList, defaultValuePlan.steps.toList, valuePhis)
 
       val argValue = valuePhiResult.resultValue
-      val stateWithOptionalArg = state.withValue(storageLoc -> initLocationValue(storageLoc, argValue))
+      val stateWithOptionalArg = state.withValue(storageLoc -> InitLocationValue(storageLoc, argValue))
 
       (listHeadPhiResult.resultValue, stateWithOptionalArg)
   }
@@ -252,7 +229,7 @@ object PlanLambdaPolymorph {
     val postMandatoryState = mandatoryArgs.foldLeft(postClosureState) {
       case (state, MandatoryArgument(storageLoc, tempValue, valueType)) =>
         val value = TempValueToIntermediate(valueType, tempValue)
-        state.withValue(storageLoc -> initLocationValue(storageLoc, value)(procPlan))
+        state.withValue(storageLoc -> InitLocationValue(storageLoc, value)(procPlan))
     }
 
     // Now the optional args
@@ -274,7 +251,7 @@ object PlanLambdaPolymorph {
 
     // And the rest argument
     val postRestState = lambdaExpr.restArgOpt.foldLeft(postOptionalState) { (state, restArgLoc) =>
-      state.withValue(restArgLoc -> initLocationValue(restArgLoc, restValue)(procPlan))
+      state.withValue(restArgLoc -> InitLocationValue(restArgLoc, restValue)(procPlan))
     }
 
     // Finally, the self argument
@@ -285,7 +262,7 @@ object PlanLambdaPolymorph {
         selfTempOpt=innerSelfTempOpt
       )
 
-      state.withValue(selfLoc -> initLocationValue(selfLoc, selfValue)(procPlan))
+      state.withValue(selfLoc -> InitLocationValue(selfLoc, selfValue)(procPlan))
     }
 
     // Plan the body
