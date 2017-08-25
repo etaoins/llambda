@@ -88,12 +88,8 @@ private[planner] object AttemptInlineApply {
     val fixedArgLocs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
     val postFixedArgState = fixedArgLocs.zip(args).foldLeft(postClosureState) {
       case (state, (storageLoc, (_, argValue))) =>
-        if (vt.SatisfiesType(storageLoc.schemeType, argValue.schemeType) != Some(true)) {
-          // This type cast could fail at runtime
-          return None
-        }
-
-        state.withValue(storageLoc -> ImmutableValue(argValue))
+        val castValue = argValue.castToSchemeType(storageLoc.schemeType)
+        state.withValue(storageLoc -> ImmutableValue(castValue))
     }
 
     val defaultedOptionalCount = (fixedArgLocs.length - args.length)
@@ -102,13 +98,10 @@ private[planner] object AttemptInlineApply {
         val defaultResult = PlanExpr(state)(defaultExpr)
         val defaultValue = defaultResult.value
 
-        if (vt.SatisfiesType(storageLoc.schemeType, defaultValue.schemeType) != Some(true)) {
-          return None
-        }
-
         // Note we don't use the state from the default value. The lambda planner doesn't do this as this code is
         // conditionally executed so it can't introduce bindings etc to the parent state
-        state.withValue(storageLoc -> ImmutableValue(defaultValue))
+        val castValue = defaultValue.castToSchemeType(storageLoc.schemeType)
+        state.withValue(storageLoc -> ImmutableValue(castValue))
     }
 
 
@@ -116,14 +109,8 @@ private[planner] object AttemptInlineApply {
       case (storageLoc, memberType) =>
         val restValues = args.drop(fixedArgLocs.length).map(_._2)
 
-        for (restValue <- restValues)  {
-          if (vt.SatisfiesType(memberType, restValue.schemeType) != Some(true)) {
-            // This type cast could fail at runtime
-            return None
-          }
-        }
-
-        storageLoc -> ImmutableValue(ValuesToList(restValues))
+        val castValues = restValues.map(_.castToSchemeType(memberType))
+        storageLoc -> ImmutableValue(ValuesToList(castValues))
     }
 
     val postRestArgState = postDefaultOptState.withValues(restArgImmutables.toMap)

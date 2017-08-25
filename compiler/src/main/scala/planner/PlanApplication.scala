@@ -156,7 +156,9 @@ private[planner] object PlanApplication {
             if (isOnlyUse || (inlineCost <= invokeCost)) {
               // Use the inline plan
               plan.steps ++= inlinePlan.steps
-              return inlineResult
+              return inlineResult.copy(
+                state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
+              )
             }
           }
 
