@@ -61,7 +61,6 @@ private[planner] object PlanExpr {
             if (needsUndefCheck) {
               val errorMessage = RuntimeErrorMessage(
                 category=ErrorCategory.UndefinedVariable,
-                name="accessUndefined",
                 text="Recursively defined value referenced before its initialization"
               )
 
@@ -103,7 +102,6 @@ private[planner] object PlanExpr {
         if (mutableValue.needsUndefCheck) {
           val errorMessage = RuntimeErrorMessage(
             category=ErrorCategory.UndefinedVariable,
-            name="mutateUndefined",
             text="Recursively defined value mutated before its initialization"
           )
 

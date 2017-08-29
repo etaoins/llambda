@@ -66,7 +66,6 @@ object PlanInvokeApply {
 
     val improperListMessage = RuntimeErrorMessage(
       category=ErrorCategory.Type,
-      name="applyWithImproperList",
       text="Attempted application with improper list"
     )
 

@@ -68,7 +68,6 @@ class CellValue(
       val errorMessage = errorMessageOpt getOrElse {
         RuntimeErrorMessage(
           category=ErrorCategory.Type,
-          name=s"subcastTo${vt.NameForType(targetType)}Failed",
           text=s"Union typed value did not have a procedure type while attempting to convert value to procedure"
         )
       }

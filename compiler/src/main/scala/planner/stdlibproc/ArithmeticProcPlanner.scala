@@ -257,7 +257,6 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     case ("+", multipleArgs) =>
       val intOverflowMessage = RuntimeErrorMessage(
         category=ErrorCategory.IntegerOverflow,
-        name="addOverflow",
         text="Integer overflow in (+)"
       )
 
@@ -278,7 +277,6 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     case ("-", List((_, singleArg))) =>
       val intOverflowMessage = RuntimeErrorMessage(
         category=ErrorCategory.IntegerOverflow,
-        name="invertingSubOverflow",
         text="Integer overflow in inverting (-)"
       )
 
@@ -296,7 +294,6 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     case ("-", multipleArgs) =>
       val intOverflowMessage = RuntimeErrorMessage(
         category=ErrorCategory.IntegerOverflow,
-        name="subtractingSubOverflow",
         text="Integer overflow in subtracting (-)"
       )
 
@@ -313,7 +310,6 @@ object ArithmeticProcPlanner extends StdlibProcPlanner {
     case ("*", multipleArgs) =>
       val intOverflowMessage = RuntimeErrorMessage(
         category=ErrorCategory.IntegerOverflow,
-        name="mulOverflow",
         text="Integer overflow in (*)"
       )
 

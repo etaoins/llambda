@@ -18,7 +18,6 @@ class DiscardStepsSuite extends FunSuite {
 
   private val runtimeErrorMessage = RuntimeErrorMessage(
     category=ErrorCategory.Arity,
-    name="name",
     text="text"
   )
 

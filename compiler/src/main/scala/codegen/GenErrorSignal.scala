@@ -44,7 +44,8 @@ object GenErrorSignal {
     val categoryIr = IntegerConstant(categoryIrType, errorMessage.category.runtimeId)
 
     // Define the error string
-    val messageStartPtr = defineConstantString(module)(s"${errorMessage.name}ErrorString", errorMessage.text)
+    val constantName = s"${errorMessage.text} Error"
+    val messageStartPtr = defineConstantString(module)(constantName, errorMessage.text)
 
     val locationOpt = for(located <- locatedOpt; location <- located.locationOpt) yield location
 

@@ -139,7 +139,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
             category=ErrorCategory.Type,
-            name=s"subcastTo${vt.NameForType(targetType)}Failed",
             text=s"Runtime cast to subtype '${vt.NameForType(targetType)}' failed"
           )
         }

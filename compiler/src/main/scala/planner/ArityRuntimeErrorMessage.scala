@@ -13,12 +13,8 @@ object ArityRuntimeErrorMessage {
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     val requiredArity = RequiredArityDescription.fromProcedureSignature(signature)
 
-    val compactErrorTypeName = errorType.replace(" ", "")
-    val compactArityName = requiredArity.replace(" ", "")
-
     RuntimeErrorMessage(
       category=ErrorCategory.Arity,
-      name=s"${compactErrorTypeName}For${nativeSymbol}Requires${compactArityName}",
       text=s"Called ${nativeSymbol} with ${errorType}; requires ${requiredArity}."
     )
   }

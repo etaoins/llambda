@@ -13,7 +13,6 @@ import llambda.compiler.valuetype.Implicits._
 private[planner] object PlanCaseLambda {
   val noMatchingClauseRuntimeErrorMessage = RuntimeErrorMessage(
     category=ErrorCategory.Arity,
-    name="noMatchingCaseLambdaClause",
     text="No matching (case-lambda) clause"
   )
 

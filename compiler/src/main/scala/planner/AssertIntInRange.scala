@@ -41,7 +41,6 @@ object AssertIntInRange {
 
       val errorMessage = RuntimeErrorMessage(
         category=ErrorCategory.Type,
-        name=s"intTooSmallFor${toType}",
         text=s"Integer value too small to be represented by native integer type ${toType}"
       )
 
@@ -63,7 +62,6 @@ object AssertIntInRange {
 
       val errorMessage = RuntimeErrorMessage(
         category=ErrorCategory.Type,
-        name=s"intTooLargeFor${toType}",
         text=s"Integer value too large to be represented by native integer type ${toType}"
       )
 
