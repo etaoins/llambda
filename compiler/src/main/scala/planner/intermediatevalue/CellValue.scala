@@ -73,7 +73,7 @@ class CellValue(
       }
 
       val isProcPred = typecheck.PlanTypeCheck(boxedValue, schemeType, procedureTypeAtom).toNativePred()
-      plan.steps += ps.AssertPredicate(isProcPred, errorMessage)
+      PlanRuntimeAssert(isProcPred, errorMessage)
     }
 
     // Prepare a trampoline for this procedure conversion

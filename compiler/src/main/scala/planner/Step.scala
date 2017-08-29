@@ -1270,20 +1270,16 @@ case class FloatBitwiseCompare(
     FloatBitwiseCompare(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
-case class AssertPredicate(
-    predicate: TempValue,
+case class SignalError(
     errorMessage: RuntimeErrorMessage,
     evidenceOpt: Option[TempValue] = None
 ) extends Step with AssertStep {
-  lazy val inputValues = Set(WorldPtrValue, predicate) ++ evidenceOpt.toSet
+  lazy val inputValues = Set(WorldPtrValue) ++ evidenceOpt.toSet
   val outputValues = Set[TempValue]()
 
   def renamed(f: (TempValue) => TempValue) =
-    AssertPredicate(
-      f(predicate),
+    SignalError(
       errorMessage,
       evidenceOpt.map(f)
     ).assignLocationFrom(this)
-
-  override def mergeKey = (predicate)
 }

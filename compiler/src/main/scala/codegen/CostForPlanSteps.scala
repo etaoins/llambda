@@ -116,12 +116,12 @@ object CostForPlanSteps {
       val allocCost = allocCostForStackAllocable(allocating)
       allocCost + storeCost
 
-    case _: ps.AllocateHeapCells | _: ps.AssertPredicate | _: ps.AssertRecordLikeDefined =>
-      // These require a test
+    case _: ps.AllocateHeapCells | _: ps.AssertRecordLikeDefined =>
+      // These require a test that nearly always passes
       trivialInstrCost
 
     case _: ps.LoadValueForParameterProc | _: ps.PushDynamicState | _: ps.PopDynamicState  | _: ps.CreateParameterProc |
-         _: ps.InvokeLike  =>
+         _: ps.InvokeLike | _: ps.SignalError  =>
       // These are a function call
       functionCallCost
   }

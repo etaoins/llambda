@@ -147,7 +147,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         val boxedValue = this.toBoxedValue()
         val isTypePred = typecheck.PlanTypeCheck(boxedValue, schemeType, targetType).toNativePred()
 
-        plan.steps += ps.AssertPredicate(isTypePred, errorMessage, evidenceOpt=Some(boxedValue.tempValue))
+        PlanRuntimeAssert(isTypePred, errorMessage, evidenceOpt=Some(boxedValue.tempValue))
         boxedValue.castToCellTempValue(targetType.cellType)
 
       case Some(false) =>

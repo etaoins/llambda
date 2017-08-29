@@ -44,7 +44,7 @@ object AssertIntInRange {
         text=s"Integer value too small to be represented by native integer type ${toType}"
       )
 
-      plan.steps += ps.AssertPredicate(withinLowerRangeTemp, errorMessage, evidenceOpt)
+      PlanRuntimeAssert(withinLowerRangeTemp, errorMessage, evidenceOpt)
     }
 
     if (enclosingValueInterval.end > toType.maxIntValue) {
@@ -65,7 +65,7 @@ object AssertIntInRange {
         text=s"Integer value too large to be represented by native integer type ${toType}"
       )
 
-      plan.steps += ps.AssertPredicate(withinUpperRangeTemp, errorMessage, evidenceOpt)
+      PlanRuntimeAssert(withinUpperRangeTemp, errorMessage, evidenceOpt)
     }
   }
 }

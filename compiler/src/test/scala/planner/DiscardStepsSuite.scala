@@ -16,9 +16,14 @@ class DiscardStepsSuite extends FunSuite {
     override def toString = name
   }
 
-  private val runtimeErrorMessage = RuntimeErrorMessage(
+  private val runtimeErrorMessage1 = RuntimeErrorMessage(
     category=ErrorCategory.Arity,
-    text="text"
+    text="text1"
+  )
+
+  private val runtimeErrorMessage2 = RuntimeErrorMessage(
+    category=ErrorCategory.Arity,
+    text="text2"
   )
 
   test("unused step is completely removed") {
@@ -74,14 +79,14 @@ class DiscardStepsSuite extends FunSuite {
 
     val trueResult = namedTemp("trueResult")
     val trueSteps = List(
-      ps.AssertPredicate(temp2, runtimeErrorMessage),
+      ps.SignalError(runtimeErrorMessage2),
       ps.CreateIntegerCell(trueResult, 25),
-      ps.AssertPredicate(temp1, runtimeErrorMessage)
+      ps.SignalError(runtimeErrorMessage1)
     )
 
     val falseSteps = List(
-      ps.AssertPredicate(temp2, runtimeErrorMessage),
-      ps.AssertPredicate(temp1, runtimeErrorMessage)
+      ps.SignalError(runtimeErrorMessage2),
+      ps.SignalError(runtimeErrorMessage1)
     )
 
     val valuePhi = ps.ValuePhi(condResult, trueResult, temp1)
@@ -90,8 +95,8 @@ class DiscardStepsSuite extends FunSuite {
     )
 
     val expectedSteps = List(
-      ps.AssertPredicate(temp2, runtimeErrorMessage),
-      ps.AssertPredicate(temp1, runtimeErrorMessage)
+      ps.SignalError(runtimeErrorMessage2),
+      ps.SignalError(runtimeErrorMessage1)
     )
 
     assert(DiscardSteps(testSteps) === expectedSteps)

@@ -53,9 +53,7 @@ private[planner] object PlanCaseLambda {
       // We were called with no clauses
       // Note that the checkingClause match below will explicitly check for empty clauses before recursing so this will
       // only be called for completely empty (case-lambda)s
-      val falsePredTemp = ps.TempValue()
-      entryPlan.steps += ps.CreateNativeInteger(falsePredTemp, value=0, bits=vt.Predicate.bits)
-      entryPlan.steps += ps.AssertPredicate(falsePredTemp, noMatchingClauseRuntimeErrorMessage)
+      entryPlan.steps += ps.SignalError(noMatchingClauseRuntimeErrorMessage)
 
       // This isn't reachable but we need to return to make codegen happy
       iv.UnitValue
@@ -104,7 +102,7 @@ private[planner] object PlanCaseLambda {
 
       if (tailClauses.isEmpty) {
         // We have to use this clause - assert then use the true values directly
-        entryPlan.steps += ps.AssertPredicate(matchesPred, noMatchingClauseRuntimeErrorMessage)
+        PlanRuntimeAssert(matchesPred, noMatchingClauseRuntimeErrorMessage)
         entryPlan.steps ++= truePlan.steps
 
         trueValue

@@ -593,21 +593,10 @@ object GenPlanStep {
         currentAllocation=newAllocation
       ).withTempValue(resultTemp -> resultIr)
 
-    case ps.AssertPredicate(predicateTemp, errorMessage, evidenceOpt) =>
+    case ps.SignalError(errorMessage, evidenceOpt) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
-      val predIr = state.liveTemps(predicateTemp)
       val evidenceIrOpt = evidenceOpt.map(state.liveTemps)
 
-      // Start our branches
-      val irFunction = state.currentBlock.function
-      val fatalBlock = irFunction.startChildBlock("predFalse")
-      val successBlock = irFunction.startChildBlock("predTrue")
-
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, evidenceIrOpt, locatedOpt=Some(step))
-
-      state.currentBlock.condBranch(predIr, successBlock, fatalBlock)
-
-      // Continue with the successful block
-      state.copy(currentBlock=successBlock)
+      GenErrorSignal(state)(worldPtrIr, errorMessage, evidenceIrOpt, locatedOpt=Some(step))
   }
 }
