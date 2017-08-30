@@ -1,10 +1,13 @@
 package io.llambda.compiler.planner
 import io.llambda
 
+import llambda.compiler.{SemanticException, RuntimeErrorMessage}
+
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
+
 
 object PlanCond {
   /** Modifies a state to include appropriate type constraints for the passed branch values
@@ -78,6 +81,39 @@ object PlanCond {
     }
   }
 
+  private def planPossibleBranch(state: PlannerState)(
+      testValue: iv.IntermediateValue,
+      testContraint: ConstrainValue.ValueConstraint,
+      branchExpr: et.Expr
+  )(implicit plan: PlanWriter): (PlanWriter, PlanResult) = {
+    val branchWriter = plan.forkPlan()
+    val initialState = ConstrainValue(state)(testValue, testContraint)(plan.config)
+
+    val branchResult = try {
+      PlanExpr(initialState)(branchExpr)(branchWriter)
+    }
+    catch {
+      case sem: SemanticException =>
+        // We aren't sure if this branch is taken so we shouldn't fail the compile for this error. Instead, allow any
+        // expressions up until this point to be evalauated for their side effects and abort at runtime.
+        //
+        // This is especially important for code that the programmer didn't explicitly write: macro expansions, pattern
+        // matching logic, speculative inlining, etc. The code may by unreachable due to a guard that the planner can't
+        // statically resolve and the programmer cannot easily express that to the compiler.
+        val runtimeError = RuntimeErrorMessage(sem.errorCategory, sem.getMessage)
+
+        // Use the location from the exception. SemanticErrorException uses a SourceLocated because some exceptions
+        // happen too early to have a context assigned. This means we can't use withContextLocated
+        val signalErrorStep = ps.SignalError(runtimeError).assignLocationFrom(sem.located)
+
+        branchWriter.steps.appendUnlocated(signalErrorStep)
+
+        PlanResult(state, iv.UnreachableValue)
+    }
+
+    (branchWriter, branchResult)
+  }
+
   def apply(initialState: PlannerState)(
       testExpr: et.Expr,
       trueExpr: et.Expr,
@@ -98,18 +134,14 @@ object PlanCond {
       case None =>
         val truthyPred = testValue.toTempValue(vt.Predicate)
 
-        val trueWriter = plan.forkPlan()
         // The test expression is definitely not false in this branch
         val trueConstraint = ConstrainValue.SubtractType(vt.LiteralBooleanType(false))
-        val initialTrueState = ConstrainValue(testResult.state)(testValue, trueConstraint)(plan.config)
-        val trueResult = PlanExpr(initialTrueState)(trueExpr)(trueWriter)
+        val (trueWriter, trueResult) = planPossibleBranch(testResult.state)(testValue, trueConstraint, trueExpr)
         val trueValue = trueResult.value
 
-        val falseWriter = plan.forkPlan()
         // The test expression is definitely false in this branch
         val falseConstraint = ConstrainValue.IntersectType(vt.LiteralBooleanType(false))
-        val initialFalseState = ConstrainValue(testResult.state)(testValue, falseConstraint)(plan.config)
-        val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
+        val (falseWriter, falseResult) = planPossibleBranch(testResult.state)(testValue, falseConstraint, falseExpr)
         val falseValue = falseResult.value
 
         if (trueValue == iv.UnreachableValue) {

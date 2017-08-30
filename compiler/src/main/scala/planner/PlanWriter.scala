@@ -27,13 +27,17 @@ class PlanWriter(
     private val stepBuffer = new mutable.ListBuffer[ps.Step]
 
     def +=(step: ps.Step) {
-      if (planSealed) {
-        throw new InternalCompilerErrorException("Attempt to write to sealed plan")
-      }
-
       for(contextLoc <- contextLocStack.headOption) {
         // Context locate this step
         step.assignLocationFrom(contextLoc)
+      }
+
+      appendUnlocated(step)
+    }
+
+    def appendUnlocated(step: ps.Step) {
+      if (planSealed) {
+        throw new InternalCompilerErrorException("Attempt to write to sealed plan")
       }
 
       stepBuffer += step

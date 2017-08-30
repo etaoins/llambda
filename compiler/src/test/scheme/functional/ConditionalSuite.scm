@@ -136,3 +136,11 @@
       (raise "Not reachable!")))
 
   (ann result 'true-symbol)))
+
+(define-test "conditional with illegal code in dynamically untaken branch does not fail" (expect-success
+  (when (dynamic-false)
+    (/ 1 0))))
+
+(define-test "conditional with illegal code in dynamically taken branch fails at runtime" (expect-error divide-by-zero-error?
+  (when (dynamic-true)
+    (/ 1 0))))
