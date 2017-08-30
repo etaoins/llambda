@@ -140,15 +140,13 @@ private[planner] object PlanApplication {
 
     if (plan.config.optimise && (initialState.inlineDepth < 8)) {
       procValue match {
+        // XXX: We support inlining recursive procedures and it improves code generation. However, it more than doubles
+        // the time the functional tests take. Re-enable once this has been fixed.
         case schemeProc: iv.KnownSchemeProc if !schemeProc.manifest.isRecursive =>
           // Try to plan this as in inline app[lication
           val inlinePlan = plan.forkPlan()
 
-          val inlineResult = PlanInlineApply.fromManifiest(procResult.state)(
-            manifest=schemeProc.manifest,
-            args=args,
-            selfTempOpt=schemeProc.selfTempOpt
-          )(inlinePlan)
+          val inlineResult = PlanInlineApply.fromKnownSchemeProc(procResult.state)(schemeProc, args)(inlinePlan)
 
           val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
           val invokeCost = CostForPlanSteps(invokePlan.steps.toList)

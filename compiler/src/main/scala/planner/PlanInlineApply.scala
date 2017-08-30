@@ -1,9 +1,8 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ContextLocated, InternalCompilerErrorException}
+import llambda.compiler.{StorageLocation, ContextLocated}
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 
@@ -16,8 +15,7 @@ private[planner] object PlanInlineApply {
   private def planInline(enclosingState: PlannerState, applyState: PlannerState)(
       lambdaExpr: et.Lambda,
       args: List[(ContextLocated, iv.IntermediateValue)],
-      selfTempOpt: Option[ps.TempValue] = None,
-      manifestOpt: Option[LambdaManifest] = None
+      schemeProcOpt: Option[iv.KnownSchemeProc] = None
   )(implicit plan: PlanWriter): PlanResult = {
     val procType = lambdaExpr.polyType.typeForArgs(args.map(_._2.schemeType))
 
@@ -46,18 +44,12 @@ private[planner] object PlanInlineApply {
       storageLoc
     }).toSet
 
-    val closureValues = (selfTempOpt, manifestOpt) match {
-      case (Some(selfTemp), Some(manifest)) =>
+    val closureValues = schemeProcOpt.flatMap { schemeProc =>
+      schemeProc.selfTempOpt.map { selfTemp =>
         // Fill in the rest of our values from our closure
-        LoadClosureData(selfTemp, manifest, Some(wantedClosureValues))
-
-      case _ =>
-        if (!wantedClosureValues.isEmpty) {
-          throw new InternalCompilerErrorException("Attempted to inline a capturing lambda without a closure")
-        }
-
-        Map()
-    }
+        LoadClosureData(selfTemp, schemeProc.manifest, Some(wantedClosureValues))
+      }
+    } getOrElse(Map())
 
     val postClosureState = PlannerState(
       values=(directValues ++ closureValues).toMap,
@@ -95,7 +87,14 @@ private[planner] object PlanInlineApply {
     }
 
     val postRestArgState = postDefaultOptState.withValues(restArgImmutables.toMap)
-    val planResult = PlanExpr(postRestArgState)(lambdaExpr.body)
+
+    val postSelfState = schemeProcOpt.foldLeft(postRestArgState) { (state, selfValue) =>
+      selfValue.manifest.recursiveSelfLocOpt.foldLeft(state) { (state, selfLoc) =>
+        state.withValue(selfLoc -> InitLocationValue(selfLoc, selfValue))
+      }
+    }
+
+    val planResult = PlanExpr(postSelfState)(lambdaExpr.body)
 
     // Make sure our return type is of the declared type
     val stableReturnType = vt.StabiliseReturnType(procType.returnType)
@@ -133,19 +132,15 @@ private[planner] object PlanInlineApply {
     *
     * @param  applyState   State the lambda in being applied in. This is used to avoid loading values from the
     *                      procedure's closure that also exist in the applying environment.
-    * @param  manifest     Manifest for the planned procedure
-    * @param  selfTempOpt  Self value for the inlining procedure if it captured variables. This is used to access the
-    *                      closure for the procedure.
+    * @param  schemeProc   Procedure value being inlined
     */
-  def fromManifiest(applyState: PlannerState)(
-      manifest: LambdaManifest,
-      args: List[(ContextLocated, iv.IntermediateValue)],
-      selfTempOpt: Option[ps.TempValue] = None
+  def fromKnownSchemeProc(applyState: PlannerState)(
+      schemeProc: iv.KnownSchemeProc,
+      args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): PlanResult =
-    planInline(manifest.parentState, applyState)(
-      lambdaExpr=manifest.lambdaExpr,
+    planInline(schemeProc.manifest.parentState, applyState)(
+      lambdaExpr=schemeProc.manifest.lambdaExpr,
       args=args,
-      selfTempOpt=selfTempOpt,
-      manifestOpt=Some(manifest)
+      schemeProcOpt=Some(schemeProc)
     )
 }
