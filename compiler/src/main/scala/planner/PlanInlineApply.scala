@@ -60,25 +60,30 @@ private[planner] object PlanInlineApply {
 
     // Add our provided fixed arguments to the state
     val fixedArgLocs = lambdaExpr.mandatoryArgs ++ lambdaExpr.optionalArgs.map(_.storageLoc)
-    val postFixedArgState = fixedArgLocs.zip(args).foldLeft(postClosureState) {
-      case (state, (storageLoc, (_, argValue))) =>
-        val castValue = argValue.castToSchemeType(storageLoc.schemeType)
+    val fixedArgTypes = procType.mandatoryArgTypes ++ procType.optionalArgTypes
+
+    val postFixedArgState = fixedArgLocs.zip(args).zip(fixedArgTypes).foldLeft(postClosureState) {
+      case (state, ((storageLoc, (_, argValue)), argType)) =>
+        val castValue = argValue.castToSchemeType(argType)
         state.withValue(storageLoc -> InitLocationValue(storageLoc, castValue))
     }
 
     val defaultedOptionalCount = (fixedArgLocs.length - args.length)
-    val postDefaultOptState = lambdaExpr.optionalArgs.takeRight(defaultedOptionalCount).foldLeft(postFixedArgState) {
-      case (state, et.OptionalArg(storageLoc, defaultExpr)) =>
+    val defaultedOptionalArgs = lambdaExpr.optionalArgs.takeRight(defaultedOptionalCount)
+    val defaultedOptionalTypes = fixedArgTypes.takeRight(defaultedOptionalCount)
+
+    val postDefaultOptState = defaultedOptionalArgs.zip(defaultedOptionalTypes).foldLeft(postFixedArgState) {
+      case (state, (et.OptionalArg(storageLoc, defaultExpr), argType)) =>
         val defaultResult = PlanExpr(state)(defaultExpr)
         val defaultValue = defaultResult.value
 
         // Note we don't use the state from the default value. The lambda planner doesn't do this as this code is
         // conditionally executed so it can't introduce bindings etc to the parent state
-        val castValue = defaultValue.castToSchemeType(storageLoc.schemeType)
+        val castValue = defaultValue.castToSchemeType(argType)
         state.withValue(storageLoc -> InitLocationValue(storageLoc, castValue))
     }
 
-    val restArgImmutables = lambdaExpr.restArgOpt.zip(lambdaExpr.schemeType.restArgMemberTypeOpt) map {
+    val restArgImmutables = lambdaExpr.restArgOpt.zip(procType.restArgMemberTypeOpt) map {
       case (storageLoc, memberType) =>
         val restValues = args.drop(fixedArgLocs.length).map(_._2)
 
