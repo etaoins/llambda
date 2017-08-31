@@ -1,8 +1,14 @@
-(define-test "direct application with insufficent args fails" (expect-error arity-error?
+(define-test "direct application with insufficient args fails" (expect-compile-error arity-error?
   (boolean?)))
 
-(define-test "direct application with extraneous args fails" (expect-error arity-error?
+(define-test "direct application with extraneous args fails" (expect-compile-error arity-error?
   (boolean? #t #f)))
+
+(define-test "self-executing lambda with insufficient args fails" (expect-compile-error arity-error?
+  ((lambda (x)))))
+
+(define-test "self-executing lambda with extraneous args fails" (expect-compile-error arity-error?
+  ((lambda (x)) #t #f)))
 
 (define-test "static (apply)" (expect-static-success
   (define one 1)
