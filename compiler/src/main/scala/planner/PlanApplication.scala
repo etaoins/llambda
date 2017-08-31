@@ -133,53 +133,72 @@ private[planner] object PlanApplication {
       case _ =>
     }
 
-    // Plan this as an invoke (function call)
-    val invokePlan = plan.forkPlan()
+    def resultForInvokeApply(implicit plan: PlanWriter): PlanResult = {
+      val invokeValue = PlanInvokeApply.withIntermediateValues(invokableProc, args)
 
-    val invokeValue = PlanInvokeApply.withIntermediateValues(invokableProc, args)(invokePlan)
-
-    if (plan.config.optimise && (initialState.inlineDepth < 8)) {
-      procValue match {
-        // XXX: We support inlining recursive procedures and it improves code generation. However, it more than doubles
-        // the time the functional tests take. Re-enable once this has been fixed.
-        case schemeProc: iv.KnownSchemeProc if !schemeProc.manifest.isRecursive =>
-          // Try to plan this as in inline app[lication
-          val inlinePlan = plan.forkPlan()
-
-          val inlineResult = PlanInlineApply.fromKnownSchemeProc(procResult.state)(schemeProc, args)(inlinePlan)
-
-          val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
-          val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
-
-          // Is this the only use of the lambda?
-          val isOnlyUse = procExpr match {
-            case et.VarRef(storageLoc) =>
-              // Does this only have a single use?
-              plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1
-
-            case _ =>
-              false
-          }
-
-          if (isOnlyUse || (inlineCost <= invokeCost)) {
-            // Use the inline plan
-            plan.steps ++= inlinePlan.steps
-            return inlineResult.copy(
-              state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
-            )
-          }
-
-        case _ =>
-      }
+      PlanResult(
+        state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
+        value=invokeValue.withSchemeType(procedureType.returnType.schemeType)
+      )
     }
 
-    // Use the invoke plan
-    plan.steps ++= invokePlan.steps
+    def resultForInlineApply(schemeProc: iv.KnownSchemeProc)(implicit plan: PlanWriter): PlanResult = {
+      val unregisteredResult = PlanInlineApply.fromKnownSchemeProc(procResult.state)(schemeProc, args)
 
-    return PlanResult(
-      state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
-      value=invokeValue.withSchemeType(procedureType.returnType.schemeType)
-    )
+      unregisteredResult.copy(
+        state=registerTypes(unregisteredResult.state)(procedureType, procValue, args.map(_._2))
+      )
+    }
+
+    procValue match {
+      // XXX: We support inlining recursive procedures and it improves code generation. However, it more than doubles
+      // the time the functional tests take. Re-enable once this has been fixed.
+      case schemeProc: iv.KnownSchemeProc
+          if !schemeProc.manifest.isRecursive && plan.config.optimise && (initialState.inlineDepth < 8) =>
+        val isOnlyUse = procExpr match {
+          case et.VarRef(storageLoc) =>
+            // Does this only have a single use?
+            plan.config.analysis.varUses.getOrElse(storageLoc, 0) == 1
+
+          case _ =>
+            false
+        }
+
+        if (isOnlyUse) {
+          // Always inline
+          resultForInlineApply(schemeProc)(plan)
+        }
+        else {
+          val inlinePlan = plan.forkPlan()
+          val inlineResult = resultForInlineApply(schemeProc)(inlinePlan)
+          val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
+
+          if (inlineCost == 0) {
+            // This was fully statically evaluated
+            plan.steps ++= inlinePlan.steps
+            inlineResult
+          }
+          else {
+            // Plan an invoke and compare
+            val invokePlan = plan.forkPlan()
+            val invokeResult = resultForInvokeApply(invokePlan)
+            val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
+
+            if (inlineCost <= invokeCost) {
+              plan.steps ++= inlinePlan.steps
+              inlineResult
+            }
+            else {
+              plan.steps ++= invokePlan.steps
+              invokeResult
+            }
+          }
+        }
+
+      case _=>
+        // Always invoke
+        resultForInvokeApply(plan)
+    }
   }
 
   private def listToIntermediates(
