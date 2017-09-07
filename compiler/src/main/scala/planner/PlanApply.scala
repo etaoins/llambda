@@ -8,7 +8,7 @@ import llambda.compiler.planner.stdlibproc.StdlibProcPlanner
 import llambda.compiler.ArityException
 import llambda.compiler.codegen.CostForPlanSteps
 
-private[planner] object PlanApplication {
+private[planner] object PlanApply {
   def apply(state: PlannerState)(
       procExpr: et.Expr,
       argExprs: List[et.Expr]

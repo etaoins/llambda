@@ -68,7 +68,7 @@ private[planner] object PlanProcedureTrampoline {
     val procState = PlannerState(Map(selfLoc -> ImmutableValue(updatedProc)))
 
     // Plan the target
-    val applyResult = PlanApplication.planWithArgList(procState)(et.VarRef(selfLoc), argList)(plan)
+    val applyResult = PlanApply.planWithArgList(procState)(et.VarRef(selfLoc), argList)(plan)
 
     applyResult.value match {
       case iv.UnreachableValue =>

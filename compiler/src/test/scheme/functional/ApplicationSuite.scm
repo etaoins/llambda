@@ -46,7 +46,7 @@
   ; The type system should notice this is illegal
   (* typeless-vector typeless-1)))
 
-; This is testing a very specific bug in PlanApplication
+; This is testing a very specific bug in PlanApply
 (define-test "applying a procedure with an unknown list only evaluates the arg expression once" (expect-success
   (define counter 0)
 

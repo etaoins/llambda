@@ -11,7 +11,7 @@ object ApplyProcPlanner extends StdlibProcPlanner {
       args: List[et.Expr]
   )(implicit plan: PlanWriter): Option[PlanResult] = (reportName, args) match {
     case ("apply", List(applyProcExpr)) =>
-      Some(PlanApplication.planWithArgList(initialState)(applyProcExpr, iv.EmptyListValue))
+      Some(PlanApply.planWithArgList(initialState)(applyProcExpr, iv.EmptyListValue))
 
     case ("apply", applyProcExpr :: applyArgExprs) =>
       val initialResult = PlanResult(initialState, iv.UnitValue)
@@ -24,7 +24,7 @@ object ApplyProcPlanner extends StdlibProcPlanner {
       val applyArgs = applyArgResults.tail.map(_.value)
 
       val argList = ValuesToList(applyArgs.dropRight(1), applyArgs.last)
-      Some(PlanApplication.planWithArgList(argState)(applyProcExpr, argList))
+      Some(PlanApply.planWithArgList(argState)(applyProcExpr, argList))
 
     case _ =>
       None

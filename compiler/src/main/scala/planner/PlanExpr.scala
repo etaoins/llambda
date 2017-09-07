@@ -30,7 +30,7 @@ private[planner] object PlanExpr {
         }
 
       case et.Apply(procExpr, argExprs) =>
-        PlanApplication(initialState)(procExpr, argExprs)
+        PlanApply(initialState)(procExpr, argExprs)
 
       case et.TopLevelDefine(binding) =>
         PlanResult(
