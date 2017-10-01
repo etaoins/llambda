@@ -425,20 +425,6 @@
   (assert-equal +inf.0 (abs +inf.0))
   (assert-equal +inf.0 (abs -inf.0))))
 
-(define-test "(gcd)" (expect-success
-  (assert-equal 0 (gcd))
-  (assert-equal 5 (gcd 5))
-  (assert-equal 5 (gcd -5))
-  (assert-equal 4 (gcd 32 -36))
-  (assert-equal 2 (gcd 32 -36 202))))
-
-(define-test "(lcm)" (expect-success
-  (assert-equal 1 (lcm))
-  (assert-equal 5 (lcm 5))
-  (assert-equal 5 (lcm -5))
-  (assert-equal 288 (lcm 32 -36))
-  (assert-equal 576 (lcm 32 -36 192))))
-
 (define-test "(integer-sqrt)" (expect-success
   (let* ((result (integer-sqrt 0))
          (root (car result))

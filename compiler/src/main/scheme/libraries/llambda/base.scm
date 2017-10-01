@@ -18,7 +18,7 @@
   (export eqv? equal?)
   (export number? integer? flonum? rational? zero? even? odd? integer flonum + - / * expt = < > <= >= positive?
           negative? floor ceiling truncate round square abs truncate/ truncate-quotient truncate-remainder floor/
-          floor-quotient floor-remainder max min gcd lcm integer-sqrt)
+          floor-quotient floor-remainder max min integer-sqrt)
   (export number->string string->number)
   (export boolean? not boolean=?)
   (export pair? null? list? cons car cdr caar cadr cdar cddr length make-list list append memv member assv assoc reverse
@@ -367,18 +367,6 @@
 
     (define-stdlib max (native-function llbase "llbase_max" (All ([N : <number>]) N N * N)))
     (define-stdlib min (native-function llbase "llbase_min" (All ([N : <number>]) N N * N)))
-
-    (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <integer> * <native-int64>) nocapture))
-    (define-stdlib gcd (case-lambda
-                       (() 0)
-                       (([single : <integer>]) (abs single))
-                       (rest (apply native-gcd rest))))
-
-    (define native-lcm (native-function llbase "llbase_lcm" (-> <native-int64> <native-int64> <integer> * <native-int64>) nocapture))
-    (define-stdlib lcm (case-lambda
-                       (() 1)
-                       (([single : <integer>]) (abs single))
-                       (rest (apply native-lcm rest))))
 
     (define-stdlib integer-sqrt (world-function llbase "llbase_integer_sqrt" (-> <native-int64> (Pairof <integer> <integer>))))
 

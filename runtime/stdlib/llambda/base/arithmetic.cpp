@@ -68,26 +68,6 @@ namespace
 		return {quotient, remainder};
 	}
 
-	std::int64_t greatestCommonDivisor(std::int64_t a, std::int64_t b)
-	{
-		if (b == 0)
-		{
-			return a;
-		}
-		else
-		{
-			return greatestCommonDivisor(b, a % b);
-		}
-	}
-
-	std::int64_t leastCommonMultiple(std::int64_t a, std::int64_t b)
-	{
-		const std::int64_t product = a * b;
-		const std::int64_t gcm = greatestCommonDivisor(a, b);
-
-		return product / gcm;
-	}
-
 	bool integerDivisionWouldOverflow(std::int64_t num, std::int64_t denom)
 	{
 		return (num == std::numeric_limits<std::int64_t>::min()) && (denom == -1);
@@ -511,30 +491,6 @@ NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 	{
 		return FlonumCell::fromValue(world, floatResult);
 	}
-}
-
-std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, RestValues<IntegerCell> *restInts)
-{
-	std::int64_t result = greatestCommonDivisor(a, b);
-
-	for(auto restInt : *restInts)
-	{
-		result = greatestCommonDivisor(result, restInt->value());
-	}
-
-	return (result < 0) ? -result : result;
-}
-
-std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<IntegerCell> *restInts)
-{
-	std::int64_t result = leastCommonMultiple(a, b);
-
-	for(auto restInt : *restInts)
-	{
-		result = leastCommonMultiple(result, restInt->value());
-	}
-
-	return (result < 0) ? -result : result;
 }
 
 TypedPairCell<IntegerCell, IntegerCell>* llbase_integer_sqrt(World &world, std::int64_t val)
