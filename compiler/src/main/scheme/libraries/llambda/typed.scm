@@ -3,7 +3,7 @@
   (import (llambda nfi))
 
   ; Re-export from (llambda primitives)
-  (export define-type cast ann : make-predicate U Rec Listof Pairof List -> case-> All HashMap)
+  (export define-type cast ann : make-predicate U Rec Listof Pairof List -> All HashMap)
 
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char>

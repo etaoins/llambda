@@ -67,9 +67,6 @@ private[planner] object RetypeLambdaArgs {
     case et.Apply(et.VarRef(procLoc), argExprs) =>
       // Do the proc first
       val knownProcOpt = state.values.get(procLoc) match {
-        case Some(ImmutableValue(knownCaseLambda: iv.KnownCaseLambdaProc)) =>
-          knownCaseLambda.clauseForArityOpt(argExprs.length).map(_.knownProc)
-
         case Some(ImmutableValue(knownProc: iv.KnownProc)) =>
           Some(knownProc)
 
@@ -155,8 +152,7 @@ private[planner] object RetypeLambdaArgs {
     case et.Cast(valueExpr, targetType, _) =>
       attributeTypeToExpr(valueExpr, targetType, argTypes)
 
-    case _: et.Lambda | _: et.CaseLambda | _: et.NativeFunction | _: et.Literal | _: et.ArtificialProcedure |
-         _: et.VarRef  =>
+    case _: et.Lambda | _: et.NativeFunction | _: et.Literal | _: et.ArtificialProcedure | _: et.VarRef  =>
       // Ignore these
       argTypes
 

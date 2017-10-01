@@ -282,8 +282,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Returns an applicable value for the given argument types
     *
-    * This is usually the identity function. It's overridden by KnownCaseLambdaProc and KnownSchemeProc to implement
-    * polymorphism.
+    * This is usually the identity function. It's overridden by KnownSchemeProc to implement polymorphism.
     */
   def toApplicableValueForArgs(args: List[vt.SchemeType])(implicit plan: PlanWriter): IntermediateValue =
     this

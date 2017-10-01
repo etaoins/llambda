@@ -7,7 +7,6 @@ sealed abstract trait PrimitiveDefineExpr extends PrimitiveExpr
 object Primitives {
   object Begin extends PrimitiveExpr
   object Lambda extends PrimitiveExpr
-  object CaseLambda extends PrimitiveExpr
   object Quote extends PrimitiveExpr
   object If extends PrimitiveExpr
   object Set extends PrimitiveExpr
@@ -46,7 +45,6 @@ object Primitives {
   object RecType extends PrimitiveTypeConstructor
   object ProcedureType extends PrimitiveTypeConstructor
   object OptionalProcedureType extends PrimitiveTypeConstructor
-  object CaseProcedureType extends PrimitiveTypeConstructor
   object PolymorphicType extends PrimitiveTypeConstructor
   object ExternalRecordType extends PrimitiveTypeConstructor
   object HashMapType extends PrimitiveTypeConstructor
@@ -57,7 +55,6 @@ object Primitives {
     Map[String, BoundValue](
       "begin" -> Begin,
       "lambda" -> Lambda,
-      "case-lambda" -> CaseLambda,
       "quote" -> Quote,
       "if" -> If,
       "set!" -> Set,
@@ -95,7 +92,6 @@ object Primitives {
       "Rec" -> RecType,
       "->" -> ProcedureType,
       "->*" -> OptionalProcedureType,
-      "case->" -> CaseProcedureType,
       "All" -> PolymorphicType,
       "ExternalRecord" -> ExternalRecordType,
       "HashMap" -> HashMapType,

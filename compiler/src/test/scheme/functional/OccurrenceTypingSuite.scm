@@ -19,23 +19,6 @@
   (assert-equal 1 (ann typeless-1 <integer>))
   (assert-equal 1 take-result)))
 
-(define-test "applying fixed arg storage locs to a case procedure constrains their type" (expect 4
-  (import (llambda case-lambda))
-  (import (llambda typed))
-
-  (define typed-case (case-lambda
-    (([first : <integer>]) first)
-    (([first : <flonum>] [second : <integer>]) first)))
-
-  (define first (typeless-cell 1.5))
-  (define second (typeless-cell 4))
-
-  ; This should match the second clause statically
-  (typed-case first second)
-
-  (ann first <flonum>)
-  (ann second <integer>)))
-
 (define-test "applying fixed arg storage locs through a typed procedure value constrains their type" (expect 2
   (import (llambda typed))
   (: apply-vector-proc (-> (-> <vector> <integer> <any>) <any> <any> <any>))

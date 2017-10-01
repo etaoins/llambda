@@ -17,7 +17,6 @@ class KnownSchemeProc(
     stdlibNameOpt: Option[String] = None)
 extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) {
   // Override this to ensure we have vt.ProcedureType
-  // This is required for KnownCaseLambdaProc to collect its type from its clauses
   override val schemeType: vt.ProcedureType = polySignature.toSchemeProcedureType
 
   override def locationOpt: Option[ContextLocated] =

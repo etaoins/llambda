@@ -140,18 +140,6 @@ case class Lambda(
   }
 }
 
-case class CaseLambda(
-    clauses: List[Lambda]
-) extends Expr {
-  val subexprs = clauses
-
-  def map(f: Expr => Expr): CaseLambda =
-    CaseLambda(clauses.map(_.map(f))).assignLocationFrom(this)
-
-  override def schemeType =
-    vt.CaseProcedureType(clauses.map(_.schemeType))
-}
-
 /** Binding on an initialiser to a value
   *
   * @param  storageLoc   Storage location to bind the value to

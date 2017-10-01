@@ -176,25 +176,6 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(procedureType) === "(->* () (<boolean> <symbol>) <port> * <number>)")
   }
 
-  test("(case-> (-> <number>) (-> <number> <number>))") {
-    val caseProcType = CaseProcedureType(List(
-      ProcedureType(
-        mandatoryArgTypes=Nil,
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=ReturnType.Reachable(NumberType)
-      ),
-      ProcedureType(
-        mandatoryArgTypes=List(NumberType),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=ReturnType.Reachable(NumberType)
-      )
-    ))
-
-    assert(NameForType(caseProcType) === "(case-> (-> <number>) (-> <number> <number>))")
-  }
-
   test("'hello") {
     assert(NameForType(LiteralSymbolType("hello")) === "'hello")
   }

@@ -420,20 +420,6 @@ case class ProcedureType(
     pm.PolymorphicProcedureType(Set(), this)
 }
 
-case class CaseProcedureType(
-    clauseTypes: List[ProcedureType]
-) extends DerivedSchemeType with ApplicableType {
-  val cellType = ct.ProcedureCell
-  val isGcManaged = true
-
-  val parentType = SchemeTypeAtom(ct.ProcedureCell)
-
-  def signatures = clauseTypes
-
-  override def applicableTypeOpt: Option[ApplicableType] =
-    Some(this)
-}
-
 object TopProcedureType extends ProcedureType(Nil, Nil, Some(AnySchemeType), ReturnType.Reachable(AnySchemeType))
 
 /** Union of all possible Scheme types */

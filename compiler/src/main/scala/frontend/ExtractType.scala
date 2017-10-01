@@ -82,21 +82,6 @@ object ExtractType {
         "(->* (mandatory...) (optional...) return) or (->* (mandatory...) (optional...) rest * return) expected")
   }
 
-  private def applyCaseProcedureTypeConstructor(located: SourceLocated, args: List[sst.ScopedDatum]): vt.SchemeType = {
-    val locatedSignatures = args map { arg =>
-      extractSchemeType(arg) match {
-        case procType: vt.ProcedureType =>
-          (arg, procType)
-
-        case _ =>
-          throw new BadSpecialFormException(arg, "case-> only accepts procedure type arguments")
-      }
-    }
-
-    ValidateCaseLambdaClauses(locatedSignatures)
-    vt.CaseProcedureType(locatedSignatures.map(_._2))
-  }
-
   private def constructLiteralType(value: ast.Datum): vt.SchemeType = value match {
     case _: ast.EmptyList =>
       vt.EmptyListType
@@ -186,9 +171,6 @@ object ExtractType {
 
       case Primitives.OptionalProcedureType =>
         applyOptionalProcedureTypeConstructor(constructorName, args)
-
-      case Primitives.CaseProcedureType =>
-        applyCaseProcedureTypeConstructor(constructorName, args)
 
       case Primitives.ExternalRecordType =>
         val sourceNameOpt = recursiveVars.variables.find(_._2 == 0).map(_._1)

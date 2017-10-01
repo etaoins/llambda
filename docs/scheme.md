@@ -21,7 +21,6 @@ R7RS defines a number of additional libraries that implementations may provide. 
 
 | Library Name                 | Description                                         | Support
 |------------------------------|-----------------------------------------------------|--------
-| ``(scheme case-lambda)``     | Exports ``(case-lambda)``                           | Complete
 | ``(scheme char)``            | Procedures for dealing with characters              | Complete
 | ``(scheme complex)``         | Procedures useful for non-real numbers              | None; stub in ``(llambda complex-stub)``
 | ``(scheme cxr)``             | Compositions of ``(car)`` and ``(cdr)``             | Complete

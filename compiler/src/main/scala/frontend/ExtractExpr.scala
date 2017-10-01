@@ -70,12 +70,6 @@ private[frontend] object ExtractExpr {
           definition=definition
         )
 
-      case (Primitives.CaseLambda, clauseData) =>
-        ExtractCaseLambda(
-          located=appliedSymbol,
-          clauseData=clauseData
-        )
-
       case (Primitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.String(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
 

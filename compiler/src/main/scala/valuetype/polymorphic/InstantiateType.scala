@@ -74,9 +74,6 @@ object InstantiateType {
     case procType: ProcedureType =>
       visitProcedureType(typeVars, procType)
 
-    case CaseProcedureType(clauseTypes) =>
-      CaseProcedureType(clauseTypes.map(visitProcedureType(typeVars, _)))
-
     case recordType: RecordType =>
       // Record types cannot have unresovled type variables inside of them - they must be fully instantiated when
       // they're bound to a type

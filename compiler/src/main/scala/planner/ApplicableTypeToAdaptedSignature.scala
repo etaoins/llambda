@@ -30,17 +30,5 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
           returnType=compactReturnType,
           attributes=Set()
         )
-
-      case _: vt.CaseProcedureType =>
-        // All adapted case procedures have the same signature at the moment
-        ProcedureSignature(
-          hasWorldArg=true,
-          hasSelfArg=true,
-          mandatoryArgTypes=Nil,
-          optionalArgTypes=Nil,
-          restArgMemberTypeOpt=Some(vt.AnySchemeType),
-          returnType=vt.ReturnType.Reachable(vt.AnySchemeType),
-          attributes=Set()
-        )
     }
 }

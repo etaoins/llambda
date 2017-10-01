@@ -81,11 +81,6 @@ object NameForType {
       case procType: ProcedureType =>
         nameForProcedureType(procType)
 
-      case caseProcType: CaseProcedureType =>
-        val signatureNames = caseProcType.signatures.map(nameForProcedureType).mkString(" ")
-
-        s"(case-> ${signatureNames})"
-
       case unionType @ UnionType(memberTypes) =>
         unionType.exactCellTypeOpt match {
           case Some(exactCellType) =>

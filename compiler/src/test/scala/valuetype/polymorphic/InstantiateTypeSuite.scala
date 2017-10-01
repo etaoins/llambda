@@ -116,45 +116,6 @@ class InstantiateTypeSuite extends FunSuite {
     assert(InstantiateType(reconciled, polyProc) == expected)
   }
 
-  test("instantiating a case procedure type") {
-    val polyCaseProc = CaseProcedureType(List(
-      ProcedureType(
-        mandatoryArgTypes=List(polyA),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=ReturnType.Reachable(polyB)
-      ),
-      ProcedureType(
-        mandatoryArgTypes=List(polyA, polyB),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=ReturnType.Reachable(polyA)
-      )
-    ))
-
-    val reconciled = ReconcileTypeVars.Result(Map(
-      polyA -> IntegerType,
-      polyB -> FlonumType
-    ))
-
-    val expected = CaseProcedureType(List(
-      ProcedureType(
-        mandatoryArgTypes=List(IntegerType),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=ReturnType.Reachable(FlonumType)
-      ),
-      ProcedureType(
-        mandatoryArgTypes=List(IntegerType, FlonumType),
-        optionalArgTypes=Nil,
-        restArgMemberTypeOpt=None,
-        returnType=ReturnType.Reachable(IntegerType)
-      )
-    ))
-
-    assert(InstantiateType(reconciled, polyCaseProc) == expected)
-  }
-
   test("instantiating a hash map type") {
     val polyHashMap = HashMapType(polyA, polyB)
 

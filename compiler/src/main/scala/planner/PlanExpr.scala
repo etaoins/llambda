@@ -198,17 +198,6 @@ private[planner] object PlanExpr {
           value=procValue
         )
 
-      case et.CaseLambda(clauseExprs) =>
-        val procValue = PlanCaseLambda(initialState, plan)(
-          clauseExprs=clauseExprs,
-          sourceNameHint=sourceNameHint
-        )
-
-        PlanResult(
-          state=initialState,
-          value=procValue
-        )
-
       case et.Parameterize(parameterValues, innerExpr) =>
         val parameterValueTemps = new mutable.ListBuffer[ps.ParameterizedValue]
         val previousParameterValues = initialState.parameterValues
