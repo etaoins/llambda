@@ -7,8 +7,8 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.ValueNotApplicableException
 
-/** Trait for IntermediateValues that cannot be invokable */
-trait UninvokableValue extends IntermediateValue {
+/** Trait for IntermediateValues that cannot be applicable */
+trait UnapplicableValue extends IntermediateValue {
   def toProcedureTempValue(
       targetType: vt.ApplicableType,
       errorMessageOpt: Option[RuntimeErrorMessage]
@@ -20,7 +20,7 @@ trait UninvokableValue extends IntermediateValue {
     impossibleConversion(message)
   }
 
-  def toInvokableProc()(implicit plan: PlanWriter): InvokableProc =
+  def toApplicableValue()(implicit plan: PlanWriter): ApplicableValue =
     throw new ValueNotApplicableException(plan.activeContextLocated, typeDescription)
 }
 

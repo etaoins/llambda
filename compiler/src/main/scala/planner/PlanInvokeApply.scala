@@ -8,12 +8,12 @@ import llambda.compiler.{valuetype => vt}
 
 object PlanInvokeApply {
   private def withTempValues(
-      invokableProc: iv.InvokableProc,
+      applicableValue: iv.ApplicableValue,
       fixedTemps: Seq[ps.TempValue],
       varArgTempOpt: Option[ps.TempValue]
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val entryPointTemp = invokableProc.planEntryPoint()
-    val signature = invokableProc.polySignature.upperBound
+    val entryPointTemp = applicableValue.planEntryPoint()
+    val signature = applicableValue.polySignature.upperBound
 
     val worldTemps = if (signature.hasWorldArg) {
       List(ps.WorldPtrValue)
@@ -23,7 +23,7 @@ object PlanInvokeApply {
     }
 
     val selfTemps = if (signature.hasSelfArg) {
-      List(invokableProc.planSelf())
+      List(applicableValue.planSelf())
     }
     else {
       Nil
@@ -31,7 +31,7 @@ object PlanInvokeApply {
 
     val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ varArgTempOpt
 
-    val discardable = !invokableProc.hasSideEffects(fixedTemps.length)
+    val discardable = !applicableValue.hasSideEffects(fixedTemps.length)
 
     signature.returnType match {
       case vt.ReturnType.Unreachable =>
@@ -57,12 +57,12 @@ object PlanInvokeApply {
   }
 
   def withArgumentList(
-      invokableProc: iv.InvokableProc,
+      applicableValue: iv.ApplicableValue,
       argListValue: iv.IntermediateValue
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val signature = invokableProc.polySignature.upperBound
+    val signature = applicableValue.polySignature.upperBound
 
-    val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
+    val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(applicableValue)
 
     val improperListMessage = RuntimeErrorMessage(
       category=ErrorCategory.Type,
@@ -91,21 +91,21 @@ object PlanInvokeApply {
       Some(typeCheckedVarArg)
     }
     else {
-      val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(invokableProc)
+      val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(applicableValue)
 
       // Make sure we're out of args by doing a check cast to an empty list
       varArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))
       None
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, varArgTempOpt)
+    PlanInvokeApply.withTempValues(applicableValue, fixedArgTemps, varArgTempOpt)
   }
 
   def withIntermediateValues(
-      invokableProc: iv.InvokableProc,
+      applicableValue: iv.ApplicableValue,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val signature = invokableProc.polySignature.upperBound
+    val signature = applicableValue.polySignature.upperBound
 
     // Convert all the args
     val mandatoryTemps = args.zip(signature.mandatoryArgTypes) map { case ((contextLocated, arg), nativeType) =>
@@ -139,7 +139,7 @@ object PlanInvokeApply {
       None
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, mandatoryTemps, varArgTempOpt)
+    PlanInvokeApply.withTempValues(applicableValue, mandatoryTemps, varArgTempOpt)
   }
 }
 

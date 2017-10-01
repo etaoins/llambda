@@ -11,7 +11,7 @@ sealed abstract class NativeValue(
     val nativeType: vt.NativeType,
     val cellType: ct.ConcreteCellType,
     val tempValue: ps.TempValue
-) extends IntermediateValue with UninvokableValue with UnboxedValue {
+) extends IntermediateValue with UnapplicableValue with UnboxedValue {
   val schemeType = vt.SchemeTypeAtom(cellType)
 
   lazy val typeDescription =

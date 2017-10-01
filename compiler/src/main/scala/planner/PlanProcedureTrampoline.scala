@@ -20,7 +20,7 @@ private[planner] object PlanProcedureTrampoline {
     */
   def apply(
       trampolineSignature: ProcedureSignature,
-      targetProc: iv.InvokableProc,
+      targetProc: iv.ApplicableValue,
       targetProcLocOpt: Option[ContextLocated] = None
   )(implicit parentPlan: PlanWriter): PlannedFunction = {
     val inSelfTemp = ps.TempValue()

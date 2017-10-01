@@ -13,7 +13,7 @@ import llambda.compiler.{celltype => ct}
 class BoxedProcCell(
     applicableType: vt.ApplicableType,
     tempValue: ps.TempValue
-) extends CellValue(applicableType, BoxedValue(ct.ProcedureCell, tempValue)) with InvokableProc {
+) extends CellValue(applicableType, BoxedValue(ct.ProcedureCell, tempValue)) with ApplicableValue {
   val signature = ApplicableTypeToAdaptedSignature(applicableType)
   val polySignature = signature.toPolymorphic
 
@@ -33,7 +33,7 @@ class BoxedProcCell(
   def withSelfTemp(selfTemp: ps.TempValue) =
     new BoxedProcCell(applicableType, selfTemp)
 
-  override def toInvokableProc()(implicit plan: PlanWriter): InvokableProc =
+  override def toApplicableValue()(implicit plan: PlanWriter): ApplicableValue =
     this
 }
 

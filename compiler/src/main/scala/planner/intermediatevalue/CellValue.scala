@@ -24,7 +24,7 @@ class CellValue(
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue =
     boxedValue
 
-  def toInvokableProc()(implicit plan: PlanWriter): InvokableProc =  {
+  def toApplicableValue()(implicit plan: PlanWriter): ApplicableValue =  {
     schemeType.applicableTypeOpt match {
       case Some(procedureType) =>
         val boxedProcTemp = toProcedureTempValue(procedureType, None)

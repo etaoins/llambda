@@ -99,11 +99,11 @@ private[planner] object PlanApply {
     val procResult = PlanExpr(initialState)(procExpr)
     val procValue = procResult.value.toApplicableValueForArgs(args.map(_._2.schemeType))
 
-    val invokableProc = procValue.toInvokableProc()
+    val applicableValue = procValue.toApplicableValue()
 
     // Resolve our polymorphic procedure type
     val argTypes = args.map(_._2.schemeType)
-    val signature = invokableProc.polySignature.signatureForArgs(plan.activeContextLocated, argTypes)
+    val signature = applicableValue.polySignature.signatureForArgs(plan.activeContextLocated, argTypes)
 
     val procedureType = signature.toSchemeProcedureType
 
@@ -134,7 +134,7 @@ private[planner] object PlanApply {
     }
 
     def resultForInvokeApply(implicit plan: PlanWriter): PlanResult = {
-      val invokeValue = PlanInvokeApply.withIntermediateValues(invokableProc, args)
+      val invokeValue = PlanInvokeApply.withIntermediateValues(applicableValue, args)
 
       PlanResult(
         state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
@@ -234,13 +234,13 @@ private[planner] object PlanApply {
 
       case None =>
         val procResult = PlanExpr(initialState)(procExpr)
-        val invokableProc = plan.withContextLocation(procExpr) {
-          procResult.value.toInvokableProc
+        val applicableValue = plan.withContextLocation(procExpr) {
+          procResult.value.toApplicableValue
         }
 
         PlanResult(
           state=procResult.state,
-          PlanInvokeApply.withArgumentList(invokableProc, argList)
+          PlanInvokeApply.withArgumentList(applicableValue, argList)
         )
     }
   }

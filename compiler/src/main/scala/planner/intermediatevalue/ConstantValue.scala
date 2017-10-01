@@ -9,7 +9,7 @@ import llambda.compiler.planner.{PlanWriter, BoxedValue}
 import llambda.compiler.{RuntimeErrorMessage, IntervalSet}
 
 
-sealed abstract class ConstantValue(val cellType: ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
+sealed abstract class ConstantValue(val cellType: ct.ConcreteCellType) extends IntermediateValue with UnapplicableValue {
   val schemeType: vt.SchemeType = vt.SchemeTypeAtom(cellType)
 
   def isEqv(other: ConstantValue): Boolean =
