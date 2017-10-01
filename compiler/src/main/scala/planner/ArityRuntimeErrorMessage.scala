@@ -7,10 +7,10 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 object ArityRuntimeErrorMessage {
   private def arityError(
       errorType: String,
-      applicableValue: iv.ApplicableValue
+      procedureValue: iv.ProcedureValue
   )(implicit plan: PlanWriter): RuntimeErrorMessage = {
-    val signature = applicableValue.polySignature.template
-    val nativeSymbol = applicableValue.nativeSymbolOpt.getOrElse("procedure")
+    val signature = procedureValue.polySignature.template
+    val nativeSymbol = procedureValue.nativeSymbolOpt.getOrElse("procedure")
     val requiredArity = RequiredArityDescription.fromProcedureSignature(signature)
 
     RuntimeErrorMessage(
@@ -19,11 +19,11 @@ object ArityRuntimeErrorMessage {
     )
   }
 
-  def insufficientArgs(applicableValue: iv.ApplicableValue)(implicit plan: PlanWriter): RuntimeErrorMessage = {
-    arityError("insufficient arguments", applicableValue)
+  def insufficientArgs(procedureValue: iv.ProcedureValue)(implicit plan: PlanWriter): RuntimeErrorMessage = {
+    arityError("insufficient arguments", procedureValue)
   }
 
-  def tooManyArgs(applicableValue: iv.ApplicableValue)(implicit plan: PlanWriter): RuntimeErrorMessage = {
-    arityError("too many arguments", applicableValue)
+  def tooManyArgs(procedureValue: iv.ProcedureValue)(implicit plan: PlanWriter): RuntimeErrorMessage = {
+    arityError("too many arguments", procedureValue)
   }
 }

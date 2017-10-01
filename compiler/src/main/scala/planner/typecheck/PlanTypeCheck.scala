@@ -186,7 +186,7 @@ object PlanTypeCheck {
           message=s"Value of type ${valueType} does not statically satisfy hash map type ${testType}"
         )
 
-      case _: vt.ApplicableType =>
+      case _: vt.ProcedureType =>
         throw new TypeException(
           located=plan.activeContextLocated,
           message=s"Value of type ${valueType} does not statically satisfy procedure type ${testType}"

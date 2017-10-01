@@ -60,18 +60,18 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Returns our exact procedure signature */
   def procedureSignatureOpt: Option[ProcedureSignature] =
-    schemeType.applicableTypeOpt.map(ApplicableTypeToAdaptedSignature)
+    schemeType.procedureTypeOpt.map(ProcedureTypeToAdaptedSignature)
 
   protected def toNativeTempValue(nativeType: vt.NativeType, errorMessageOpt: Option[RuntimeErrorMessage])(implicit plan: PlanWriter): ps.TempValue
 
   protected[intermediatevalue] def toProcedureTempValue(
-      targetType: vt.ApplicableType,
+      targetType: vt.ProcedureType,
       errorMessageOpt: Option[RuntimeErrorMessage]
   )(implicit plan: PlanWriter): ps.TempValue
 
   private def toProcedureTypeUnionTempValue(
       targetType: vt.SchemeType,
-      targetApplicableType: vt.ApplicableType,
+      targetProcedureType: vt.ProcedureType,
       errorMessageOpt: Option[RuntimeErrorMessage]
   )(implicit plan: PlanWriter): ps.TempValue = {
     // This is a union containing different procedure types
@@ -83,7 +83,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       val retypedThis = this.withSchemeType(knownType)
 
       val procTemp = retypedThis.toProcedureTempValue(
-        targetApplicableType,
+        targetProcedureType,
         errorMessageOpt
       )(isProcPlan)
 
@@ -162,7 +162,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     */
   def toBoxedValue()(implicit plan: PlanWriter): BoxedValue
 
-  def toApplicableValue()(implicit plan: PlanWriter): ApplicableValue
+  def toProcedureValue()(implicit plan: PlanWriter): ProcedureValue
 
   /** Converts this intermediate value to a TempValue of the specified type
     *
@@ -193,8 +193,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
     case targetSchemeType: vt.SchemeType =>
       for(ourSignature <- procedureSignatureOpt;
-          targetProcType <- targetSchemeType.applicableTypeOpt) {
-        val targetSignature = ApplicableTypeToAdaptedSignature(targetProcType)
+          targetProcType <- targetSchemeType.procedureTypeOpt) {
+        val targetSignature = ProcedureTypeToAdaptedSignature(targetProcType)
 
         if (convertProcType && !SatisfiesSignature(targetSignature, ourSignature)) {
           // Need to perform procedure type conversion

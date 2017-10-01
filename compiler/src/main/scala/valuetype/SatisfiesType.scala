@@ -33,7 +33,7 @@ object SatisfiesType {
       Some(true)
     }
 
-  private def satifiesProcedureType(superType: ProcedureType, testingType: ProcedureType): Option[Boolean] =
+  private def satisfiesProcedureType(superType: ProcedureType, testingType: ProcedureType): Option[Boolean] =
     (superType, testingType) match {
       case (ProcedureType(superMandatoryArgTypes, superOptionalArgTypes, superRestArgMemberTypeOpt, superReturnType),
             ProcedureType(testingMandatoryArgTypes, testingOptionalArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
@@ -57,43 +57,6 @@ object SatisfiesType {
           Some(true)
         }
     }
-
-  /** Compares two applicable types
-    *
-    * This ensures that each signature in the testing type is satisfied by at least one signature in the super type
-    */
-  private def satifiesApplicableType(superType: ApplicableType, testingType: ApplicableType): Option[Boolean] = {
-    val allSignatureResults = (testingType.signatures.map { testingSignature =>
-      val testingSignatureResults = superType.signatures map { superSignature =>
-        satifiesProcedureType(superSignature, testingSignature)
-      }
-
-      if (testingSignatureResults.contains(Some(true))) {
-        // At least one of these signatures is definitely satisfies
-        Some(true)
-      }
-      else if (testingSignatureResults.contains(None)) {
-        // One signature can possibly match
-        None
-      }
-      else {
-        Some(false)
-      }
-    }).toSet
-
-    if (allSignatureResults == Set(Some(true))) {
-      // All signatures definitely satisfy
-      Some(true)
-    }
-    else if (allSignatureResults == Set(Some(false))) {
-      // No signatures match
-      Some(false)
-    }
-    else {
-      // Some applications match
-      None
-    }
-  }
 
   def stackedSatisfiesType(superStack: SchemeType.Stack, testingStack: SchemeType.Stack): Option[Boolean] = {
     (superStack.head, testingStack.head) match {
@@ -194,8 +157,8 @@ object SatisfiesType {
 
         mergeNonUnionMemberTypeResults(memberResults)
 
-      case (superApplicable: ApplicableType, testingApplicable: ApplicableType) =>
-        satifiesApplicableType(superApplicable, testingApplicable)
+      case (superProcedure: ProcedureType, testingProcedure: ProcedureType) =>
+        satisfiesProcedureType(superProcedure, testingProcedure)
 
       case (superDerived: DerivedSchemeType, _) =>
         // Didn't have an exact match - check our parent types

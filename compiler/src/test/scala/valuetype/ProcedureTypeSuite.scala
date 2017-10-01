@@ -114,8 +114,8 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(twoStringToNumberProcedure, twoStringToNumberProcedure) === Some(true))
   }
 
-  test("specific procedure type's applicable type is itself") {
-    assert(twoStringToNumberProcedure.applicableTypeOpt === Some(twoStringToNumberProcedure))
+  test("specific procedure type's procedure type is itself") {
+    assert(twoStringToNumberProcedure.procedureTypeOpt === Some(twoStringToNumberProcedure))
   }
 
   test("higher order procedure type satisfies itself") {
@@ -162,8 +162,8 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(twoStringToNumberProcedure, TopProcedureType) === None)
   }
 
-  test("top procedure type's applicable type is itself") {
-    assert(TopProcedureType.applicableTypeOpt === Some(TopProcedureType))
+  test("top procedure type's procedure type is itself") {
+    assert(TopProcedureType.procedureTypeOpt === Some(TopProcedureType))
   }
 
   test("procedure with fixed args may satisfy procedure with compatible rest args") {
@@ -255,38 +255,38 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert((twoStringToPortProcedure + TopProcedureType) === TopProcedureType)
   }
 
-  test("the union of a specific procedure type and the string type has the applicable type of the specific procedure type") {
-    assert((twoStringToPortProcedure + StringType).applicableTypeOpt === Some(twoStringToPortProcedure))
+  test("the union of a specific procedure type and the string type has the procedure type of the specific procedure type") {
+    assert((twoStringToPortProcedure + StringType).procedureTypeOpt === Some(twoStringToPortProcedure))
   }
 
   test("the union of two non-procedure types has no procedure type") {
-    assert((NumberType + StringType).applicableTypeOpt === None)
+    assert((NumberType + StringType).procedureTypeOpt === None)
   }
 
-  test("the procedure type atom has the applicable type of the top procedure type") {
-    assert(SchemeTypeAtom(ct.ProcedureCell).applicableTypeOpt === Some(TopProcedureType))
+  test("the procedure type atom has the procedure type of the top procedure type") {
+    assert(SchemeTypeAtom(ct.ProcedureCell).procedureTypeOpt === Some(TopProcedureType))
   }
 
-  test("the <any> type has a applicable type of the top procedure type") {
-    assert(AnySchemeType.applicableTypeOpt === Some(TopProcedureType))
+  test("the <any> type has a procedure type of the top procedure type") {
+    assert(AnySchemeType.procedureTypeOpt === Some(TopProcedureType))
   }
 
-  test("replacing the applicable type of a non-procedure type") {
-    assert(NumberType.replaceApplicableType(listElementToUnitProcedure) === NumberType)
+  test("replacing the procedure type of a non-procedure type") {
+    assert(NumberType.replaceProcedureType(listElementToUnitProcedure) === NumberType)
   }
 
-  test("replacing the applicable type of the procedure type atom") {
-    val replacedType = SchemeTypeAtom(ct.ProcedureCell).replaceApplicableType(listElementToUnitProcedure)
+  test("replacing the procedure type of the procedure type atom") {
+    val replacedType = SchemeTypeAtom(ct.ProcedureCell).replaceProcedureType(listElementToUnitProcedure)
     assert(replacedType === listElementToUnitProcedure)
   }
 
-  test("replacing the applicable type of a procedure type") {
-    val replacedType = twoStringToPortProcedure.replaceApplicableType(listElementToUnitProcedure)
+  test("replacing the procedure type of a procedure type") {
+    val replacedType = twoStringToPortProcedure.replaceProcedureType(listElementToUnitProcedure)
     assert(replacedType === listElementToUnitProcedure)
   }
 
-  test("replacing the applicable type of a type union") {
-    val replacedType = (twoStringToPortProcedure + NumberType).replaceApplicableType(listElementToUnitProcedure)
+  test("replacing the procedure type of a type union") {
+    val replacedType = (twoStringToPortProcedure + NumberType).replaceProcedureType(listElementToUnitProcedure)
     assert(replacedType === (listElementToUnitProcedure + NumberType))
   }
 }

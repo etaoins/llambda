@@ -43,7 +43,7 @@ object PlanCadr {
           val rawResultType = pairType.unrollChildTypeRef(typeRefForPairType(pairType))
 
           // ValuesToPair will always convert to TopProcedureType
-          rawResultType.replaceApplicableType(vt.TopProcedureType)
+          rawResultType.replaceProcedureType(vt.TopProcedureType)
 
         case _ =>
           vt.AnySchemeType

@@ -19,10 +19,10 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOpt: Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with ApplicableValue {
+abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOpt: Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with ProcedureValue {
   val typeDescription = "procedure"
 
-  val schemeType: vt.ApplicableType = polySignature.upperBound.toSchemeProcedureType
+  val schemeType: vt.ProcedureType = polySignature.upperBound.toSchemeProcedureType
 
   /** Optional location of this procedure's definition
     *
@@ -47,7 +47,7 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
     BoxedValue(ct.ProcedureCell, planSelf())
 
   def toProcedureTempValue(
-      targetType: vt.ApplicableType,
+      targetType: vt.ProcedureType,
       errorMessageOpt: Option[RuntimeErrorMessage]
   )(implicit plan: PlanWriter): ps.TempValue = {
     if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
@@ -55,16 +55,16 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
       impossibleConversion(message)
     }
 
-    val requiredSignature = ApplicableTypeToAdaptedSignature(targetType)
+    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
 
     if (SatisfiesSignature(requiredSignature, polySignature.upperBound)) {
       // The procedure already has the correct signature - return our exisiting cell directly
       return toBoxedValue().tempValue
     }
 
-    // Can we select a more specific polymorph or case lambda clause?
-    targetType.signatures match {
-      case List(vt.ProcedureType(fixedTypes, Nil, None, _)) =>
+    // Can we select a more specific polymorph?
+    targetType match {
+      case vt.ProcedureType(fixedTypes, Nil, None, _) =>
         val selectedPolymorph = toApplicableValueForArgs(fixedTypes)
 
         if (!(selectedPolymorph eq this)) {
@@ -105,7 +105,7 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
     adapterProcTemp
   }
 
-  def toApplicableValue()(implicit plan: PlanWriter): ApplicableValue =
+  def toProcedureValue()(implicit plan: PlanWriter): ProcedureValue =
     this
 
   def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {

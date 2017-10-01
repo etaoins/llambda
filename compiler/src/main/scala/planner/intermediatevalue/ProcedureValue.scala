@@ -7,7 +7,7 @@ import llambda.compiler.planner.PlanWriter
 import llambda.compiler.planner.{step => ps}
 
 
-trait ApplicableValue extends IntermediateValue {
+trait ProcedureValue extends IntermediateValue {
   /** Returns the polymorphic signature of the invokable procedure */
   val polySignature: PolymorphicSignature
 
@@ -24,7 +24,7 @@ trait ApplicableValue extends IntermediateValue {
   def nativeSymbolOpt(implicit plan: PlanWriter): Option[String]
 
   /** Creates a copy of this invokable procedure with a new self temp */
-  def withSelfTemp(tempValue: ps.TempValue): ApplicableValue
+  def withSelfTemp(tempValue: ps.TempValue): ProcedureValue
 
   /** Indicates if this procedure has side effects
     *

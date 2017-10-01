@@ -11,22 +11,22 @@ object ReconcileTypeVars {
 
   /** Reconciles resolved type variables with their defined upper bounds
     *
-    * @param  typeVars        Defined type variables for the polymorphic type
-    * @param  resolved        Resolved types variable as determined by ResolveTypeVars. If this is omitted then the
-    *                         bounds for all of the defined type variables will be returned.
-    * @param  located         Source location causing the reconciliation. This is used to locate any exceptions.
-    * @param  strictBounds    Indicates if an exception should be raised if a type bound is violated. Otherwise the
-    *                         type variable will default to its upper bound
-    * @param  fixApplicable   Indicates if the applicable type of the upper bound should be used. This is important for
-    *                         preserving ABI compatibility if a procedure is either accepting or returning a certain
-    *                         applicable type.
+    * @param  typeVars       Defined type variables for the polymorphic type
+    * @param  resolved       Resolved types variable as determined by ResolveTypeVars. If this is omitted then the
+    *                        bounds for all of the defined type variables will be returned.
+    * @param  located        Source location causing the reconciliation. This is used to locate any exceptions.
+    * @param  strictBounds   Indicates if an exception should be raised if a type bound is violated. Otherwise the
+    *                        type variable will default to its upper bound
+    * @param  fixProcedure   Indicates if the proceduer type of the upper bound should be used. This is important for
+    *                        preserving ABI compatibility if a procedure is either accepting or returning a certain
+    *                        procedure type.
     */
   def apply(
       typeVars: Set[TypeVar],
       resolved: ResolveTypeVars.Result = ResolveTypeVars.Result(),
       located: SourceLocated = NoSourceLocation,
       strictBounds: Boolean = false,
-      fixApplicable: Boolean = false
+      fixProcedure: Boolean = false
   ): ReconcileTypeVars.Result = {
     val finalValues = typeVars.map({ typeVar =>
       val upperBound = typeVar.upperBound
@@ -45,12 +45,12 @@ object ReconcileTypeVars {
               (typeVar -> upperBound)
             }
           }
-          else if (fixApplicable) {
-            val upperBoundApplicableTypeOpt = upperBound.applicableTypeOpt
+          else if (fixProcedure) {
+            val upperBoundProcedureTypeOpt = upperBound.procedureTypeOpt
 
-            upperBoundApplicableTypeOpt match {
-              case Some(applicableType) =>
-                (typeVar -> resolvedType.replaceApplicableType(applicableType))
+            upperBoundProcedureTypeOpt match {
+              case Some(procedureType) =>
+                (typeVar -> resolvedType.replaceProcedureType(procedureType))
 
               case _ =>
                 (typeVar -> resolvedType)

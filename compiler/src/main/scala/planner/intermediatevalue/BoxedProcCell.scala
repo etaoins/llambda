@@ -2,7 +2,7 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, ApplicableTypeToAdaptedSignature, BoxedValue}
+import llambda.compiler.planner.{PlanWriter, ProcedureTypeToAdaptedSignature, BoxedValue}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -11,10 +11,10 @@ import llambda.compiler.{celltype => ct}
   * These can be invoked by loading the procedure's entry point and passing it the procedure cell.
   */
 class BoxedProcCell(
-    applicableType: vt.ApplicableType,
+    procedureType: vt.ProcedureType,
     tempValue: ps.TempValue
-) extends CellValue(applicableType, BoxedValue(ct.ProcedureCell, tempValue)) with ApplicableValue {
-  val signature = ApplicableTypeToAdaptedSignature(applicableType)
+) extends CellValue(procedureType, BoxedValue(ct.ProcedureCell, tempValue)) with ProcedureValue {
+  val signature = ProcedureTypeToAdaptedSignature(procedureType)
   val polySignature = signature.toPolymorphic
 
   def planSelf()(implicit plan: PlanWriter): ps.TempValue =
@@ -31,9 +31,8 @@ class BoxedProcCell(
     None
 
   def withSelfTemp(selfTemp: ps.TempValue) =
-    new BoxedProcCell(applicableType, selfTemp)
+    new BoxedProcCell(procedureType, selfTemp)
 
-  override def toApplicableValue()(implicit plan: PlanWriter): ApplicableValue =
+  override def toProcedureValue()(implicit plan: PlanWriter): ProcedureValue =
     this
 }
-

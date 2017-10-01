@@ -41,8 +41,8 @@ private[planner] object ValuesToPair {
       // This is actually what we want - otherwise it would be very complicated to convert procedure typed lists
       // between each other
       val storedType = vt.PairType(
-        carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceApplicableType(vt.TopProcedureType)),
-        cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceApplicableType(vt.TopProcedureType))
+        carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceProcedureType(vt.TopProcedureType)),
+        cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceProcedureType(vt.TopProcedureType))
       )
 
       new iv.KnownPairCellValue(carValue, cdrValue, storedType, pairTemp)

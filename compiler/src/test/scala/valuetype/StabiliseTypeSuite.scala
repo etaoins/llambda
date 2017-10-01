@@ -19,22 +19,22 @@ class StabiliseTypeSuite extends FunSuite {
   private val procPair = SpecificPairType(StringToStringProcedure, StringToStringProcedure)
   private val procList = UniformProperListType(StringToStringProcedure)
 
-  test("non-applicable pair type is preserved") {
+  test("non-procedure pair type is preserved") {
     assert(StabiliseType(stringPair) === stringPair)
   }
 
-  test("non-applicable proper list type is preserved") {
+  test("non-procedure proper list type is preserved") {
     assert(StabiliseType(stringList) === stringList)
   }
 
-  test("applicable pair type elements are converted to top procedure type") {
+  test("procedure pair type elements are converted to top procedure type") {
     assert(StabiliseType(procPair) === SpecificPairType(
       TopProcedureType,
       TopProcedureType
     ))
   }
 
-  test("applicable proper list type elements are converted to top procedure type") {
+  test("procedure proper list type elements are converted to top procedure type") {
     assert(StabiliseType(procList) === UniformProperListType(TopProcedureType))
   }
 }

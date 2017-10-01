@@ -45,11 +45,11 @@ private[planner] object PlanApply {
   /** Registers the types of our values with the occurrence typing system */
   private def registerTypes(state: PlannerState)(
       procedureType: vt.ProcedureType,
-      procValue: iv.IntermediateValue,
+      applicableValue: iv.IntermediateValue,
       args: List[iv.IntermediateValue]
   )(implicit plan: PlanWriter): PlannerState = {
     val constraint = ConstrainValue.IntersectType(procedureType)
-    val postProcState = ConstrainValue(state)(procValue, constraint)(plan.config)
+    val postProcState = ConstrainValue(state)(applicableValue, constraint)(plan.config)
 
     val fixedArgTypes = procedureType.mandatoryArgTypes ++ procedureType.optionalArgTypes
     val postFixedArgState = args.zip(fixedArgTypes).foldLeft(postProcState) {
@@ -97,13 +97,13 @@ private[planner] object PlanApply {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procValue = procResult.value.toApplicableValueForArgs(args.map(_._2.schemeType))
+    val applicableValue = procResult.value.toApplicableValueForArgs(args.map(_._2.schemeType))
 
-    val applicableValue = procValue.toApplicableValue()
+    val procValue = applicableValue.toProcedureValue()
 
     // Resolve our polymorphic procedure type
     val argTypes = args.map(_._2.schemeType)
-    val signature = applicableValue.polySignature.signatureForArgs(plan.activeContextLocated, argTypes)
+    val signature = procValue.polySignature.signatureForArgs(plan.activeContextLocated, argTypes)
 
     val procedureType = signature.toSchemeProcedureType
 
@@ -121,12 +121,12 @@ private[planner] object PlanApply {
     }
 
     // Does this procedure support planning its application inline?
-    procValue match {
+    applicableValue match {
       case knownProc: iv.KnownProc =>
         for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(args)) {
           // StdlibProcPlanners rarely constrain the types of their arguments. Handle this for them.
           return inlineResult.copy(
-            state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
+            state=registerTypes(inlineResult.state)(procedureType, applicableValue, args.map(_._2))
           )
         }
 
@@ -134,10 +134,10 @@ private[planner] object PlanApply {
     }
 
     def resultForInvokeApply(implicit plan: PlanWriter): PlanResult = {
-      val invokeValue = PlanInvokeApply.withIntermediateValues(applicableValue, args)
+      val invokeValue = PlanInvokeApply.withIntermediateValues(procValue, args)
 
       PlanResult(
-        state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
+        state=registerTypes(procResult.state)(procedureType, applicableValue, args.map(_._2)),
         value=invokeValue.withSchemeType(procedureType.returnType.schemeType)
       )
     }
@@ -146,11 +146,11 @@ private[planner] object PlanApply {
       val unregisteredResult = PlanInlineApply.fromKnownSchemeProc(procResult.state)(schemeProc, args)
 
       unregisteredResult.copy(
-        state=registerTypes(unregisteredResult.state)(procedureType, procValue, args.map(_._2))
+        state=registerTypes(unregisteredResult.state)(procedureType, applicableValue, args.map(_._2))
       )
     }
 
-    procValue match {
+    applicableValue match {
       // XXX: We support inlining recursive procedures and it improves code generation. However, it more than doubles
       // the time the functional tests take. Re-enable once this has been fixed.
       case schemeProc: iv.KnownSchemeProc
@@ -234,13 +234,13 @@ private[planner] object PlanApply {
 
       case None =>
         val procResult = PlanExpr(initialState)(procExpr)
-        val applicableValue = plan.withContextLocation(procExpr) {
-          procResult.value.toApplicableValue
+        val procValue = plan.withContextLocation(procExpr) {
+          procResult.value.toProcedureValue
         }
 
         PlanResult(
           state=procResult.state,
-          PlanInvokeApply.withArgumentList(applicableValue, argList)
+          PlanInvokeApply.withArgumentList(procValue, argList)
         )
     }
   }

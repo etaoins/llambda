@@ -98,4 +98,3 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, stdlibNameOpt) 
       this
     }
 }
-

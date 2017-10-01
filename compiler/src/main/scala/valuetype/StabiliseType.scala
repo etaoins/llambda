@@ -2,16 +2,16 @@ package io.llambda.compiler.valuetype
 
 
 object StabiliseType {
-  /** Recursively stablises a pair elements' types and replaces its applicable type
+  /** Recursively stablises a pair elements' types and replaces its procedure type
     *
-    * Pairs can be cast to AnyPair at any time which has an applicable type of TopProcedureType. This means we always
+    * Pairs can be cast to AnyPair at any time which has an procedure type of TopProcedureType. This means we always
     * construct pairs containing the top procedure type. This ensures that the stablised type reflects that.
     */
   private def replacePairElementRef(typeRef: SchemeTypeRef): SchemeTypeRef =
     typeRef match {
       case DirectSchemeTypeRef(directType) =>
         // Pairs are always constructed with the top procedure type
-        DirectSchemeTypeRef(apply(directType).replaceApplicableType(TopProcedureType))
+        DirectSchemeTypeRef(apply(directType).replaceProcedureType(TopProcedureType))
 
       case other =>
         other
