@@ -103,9 +103,9 @@ private[planner] object PlanApply {
 
     // Resolve our polymorphic procedure type
     val argTypes = args.map(_._2.schemeType)
-    val signature = procValue.polySignature.signatureForArgs(plan.activeContextLocated, argTypes)
 
-    val procedureType = signature.toSchemeProcedureType
+    // XXX: What does this fixProcedure really mean?
+    val procedureType = procValue.polyProcedureType.typeForArgs(argTypes, fixProcedure=true)
 
     val mandatoryArgCount = procedureType.mandatoryArgTypes.length
     val optionalArgCount = procedureType.optionalArgTypes.length

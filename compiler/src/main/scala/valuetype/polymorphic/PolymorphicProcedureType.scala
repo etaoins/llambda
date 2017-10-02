@@ -13,7 +13,7 @@ case class PolymorphicProcedureType(typeVars: Set[TypeVar], template: ProcedureT
     )
   }
 
-  def typeForArgs(args: List[SchemeType]): ProcedureType = {
+  def typeForArgs(args: List[SchemeType], fixProcedure: Boolean = false): ProcedureType = {
     if (typeVars.isEmpty) {
       // Skip!
       return template
@@ -39,7 +39,7 @@ case class PolymorphicProcedureType(typeVars: Set[TypeVar], template: ProcedureT
     val reducedResult = allResults.foldLeft(ResolveTypeVars.Result())(_ ++ _)
 
     // Reconcile our type vars with their upper bounds
-    val reconciled = ReconcileTypeVars(typeVars, reducedResult)
+    val reconciled = ReconcileTypeVars(typeVars, reducedResult, fixProcedure=fixProcedure)
     instantiate(reconciled)
   }
 

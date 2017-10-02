@@ -9,9 +9,10 @@ object ArityRuntimeErrorMessage {
       errorType: String,
       procedureValue: iv.ProcedureValue
   )(implicit plan: PlanWriter): RuntimeErrorMessage = {
-    val signature = procedureValue.polySignature.template
+    val procedureType = procedureValue.polyProcedureType.upperBound
+
     val nativeSymbol = procedureValue.nativeSymbolOpt.getOrElse("procedure")
-    val requiredArity = RequiredArityDescription.fromProcedureSignature(signature)
+    val requiredArity = RequiredArityDescription.fromProcedureType(procedureType)
 
     RuntimeErrorMessage(
       category=ErrorCategory.Arity,

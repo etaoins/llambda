@@ -29,7 +29,7 @@ private[planner] object PlanProcedureTrampoline {
     // Make some aliases
     val inSignature = trampolineSignature
 
-    val updatedProc = if (targetProc.polySignature.upperBound.hasSelfArg) {
+    val updatedProc = if (targetProc.hasSelfArg) {
       // Load the real target proc
       val targetProcCell = ps.TempValue()
       val fieldsToLoad = List((AdapterProcField -> targetProcCell))

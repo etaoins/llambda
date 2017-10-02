@@ -1,19 +1,20 @@
 package io.llambda.compiler.planner
 import io.llambda
 
+import llambda.compiler.{ContextLocated, RuntimeErrorMessage, ErrorCategory, ProcedureAttribute}
+
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{ContextLocated, RuntimeErrorMessage, ErrorCategory, ProcedureAttribute}
 import llambda.compiler.{valuetype => vt}
 
 object PlanInvokeApply {
   private def withTempValues(
       procedureValue: iv.ProcedureValue,
+      invokableProc: InvokableProc,
       fixedTemps: Seq[ps.TempValue],
       varArgTempOpt: Option[ps.TempValue]
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val entryPointTemp = procedureValue.planEntryPoint()
-    val signature = procedureValue.polySignature.upperBound
+    val InvokableProc(signature, entryPointTemp, selfTempOpt) = invokableProc
 
     val worldTemps = if (signature.hasWorldArg) {
       List(ps.WorldPtrValue)
@@ -22,14 +23,7 @@ object PlanInvokeApply {
       Nil
     }
 
-    val selfTemps = if (signature.hasSelfArg) {
-      List(procedureValue.planSelf())
-    }
-    else {
-      Nil
-    }
-
-    val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ varArgTempOpt
+    val argTemps = worldTemps ++ selfTempOpt.toList ++ fixedTemps ++ varArgTempOpt
 
     val discardable = !procedureValue.hasSideEffects(fixedTemps.length)
 
@@ -60,7 +54,8 @@ object PlanInvokeApply {
       procedureValue: iv.ProcedureValue,
       argListValue: iv.IntermediateValue
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val signature = procedureValue.polySignature.upperBound
+    val invokableProc = procedureValue.planInvokableProc()
+    val signature = invokableProc.signature
 
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(procedureValue)
 
@@ -98,14 +93,15 @@ object PlanInvokeApply {
       None
     }
 
-    PlanInvokeApply.withTempValues(procedureValue, fixedArgTemps, varArgTempOpt)
+    PlanInvokeApply.withTempValues(procedureValue, invokableProc, fixedArgTemps, varArgTempOpt)
   }
 
   def withIntermediateValues(
       procedureValue: iv.ProcedureValue,
       args: List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan: PlanWriter): iv.IntermediateValue = {
-    val signature = procedureValue.polySignature.upperBound
+    val invokableProc = procedureValue.planInvokableProc()
+    val signature = invokableProc.signature
 
     // Convert all the args
     val mandatoryTemps = args.zip(signature.mandatoryArgTypes) map { case ((contextLocated, arg), nativeType) =>
@@ -139,7 +135,7 @@ object PlanInvokeApply {
       None
     }
 
-    PlanInvokeApply.withTempValues(procedureValue, mandatoryTemps, varArgTempOpt)
+    PlanInvokeApply.withTempValues(procedureValue, invokableProc, mandatoryTemps, varArgTempOpt)
   }
 }
 

@@ -69,4 +69,7 @@ case class PolymorphicSignature(
     * This is shorthand for upperBound.toSchemeProcedureType
     */
   def toSchemeProcedureType = upperBound.toSchemeProcedureType
+
+  def toPolymorphicProcedureType: pm.PolymorphicProcedureType =
+    pm.PolymorphicProcedureType(typeVars, template.toSchemeProcedureType)
 }
