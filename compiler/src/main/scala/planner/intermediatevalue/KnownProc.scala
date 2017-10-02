@@ -19,10 +19,15 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOpt: Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with ProcedureValue {
+abstract class KnownProc(
+    val polySignature: PolymorphicSignature,
+    val selfTempOpt: Option[ps.TempValue]
+) extends IntermediateValue with BoxedOnlyValue with ProcedureValue {
   val typeDescription = "procedure"
 
   val schemeType: vt.ProcedureType = polySignature.upperBound.toSchemeProcedureType
+  val polyProcedureType = polySignature.toPolymorphicProcedureType
+  val hasSelfArg = selfTempOpt.isDefined
 
   /** Optional location of this procedure's definition
     *
@@ -108,14 +113,14 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
   def toProcedureValue()(implicit plan: PlanWriter): ProcedureValue =
     this
 
-  def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
+  private def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
     val entryPointTemp = ps.TempValue()
     plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, polySignature.upperBound, nativeSymbol)
 
     entryPointTemp
   }
 
-  def planSelf()(implicit plan: PlanWriter): ps.TempValue =
+  private def planSelf()(implicit plan: PlanWriter): ps.TempValue =
     selfTempOpt match {
       case Some(selfTemp) => selfTemp
 
@@ -124,6 +129,17 @@ abstract class KnownProc(val polySignature: PolymorphicSignature, val selfTempOp
         plan.steps += ps.CreateEmptyClosure(cellTemp, planEntryPoint())
         cellTemp
     }
+
+  def planInvokableProc()(implicit plan: PlanWriter): InvokableProc = {
+    val selfTempOpt = if (polySignature.upperBound.hasSelfArg) {
+      Some(planSelf())
+    }
+    else {
+      None
+    }
+
+    InvokableProc(polySignature.upperBound, planEntryPoint(), selfTempOpt)
+  }
 
   def preferredRepresentation: vt.ValueType =
     schemeType

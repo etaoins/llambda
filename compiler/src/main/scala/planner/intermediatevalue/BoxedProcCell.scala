@@ -2,7 +2,7 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, ProcedureTypeToAdaptedSignature, BoxedValue}
+import llambda.compiler.planner.{PlanWriter, ProcedureTypeToAdaptedSignature, BoxedValue, InvokableProc}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -14,18 +14,10 @@ class BoxedProcCell(
     procedureType: vt.ProcedureType,
     tempValue: ps.TempValue
 ) extends CellValue(procedureType, BoxedValue(ct.ProcedureCell, tempValue)) with ProcedureValue {
+  val polyProcedureType = procedureType.toPolymorphic
+  val hasSelfArg = true
+
   val signature = ProcedureTypeToAdaptedSignature(procedureType)
-  val polySignature = signature.toPolymorphic
-
-  def planSelf()(implicit plan: PlanWriter): ps.TempValue =
-    tempValue
-
-  def planEntryPoint()(implicit plan: PlanWriter): ps.TempValue = {
-    val entryPointTemp = ps.TempValue()
-    plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, tempValue, signature)
-
-    entryPointTemp
-  }
 
   def nativeSymbolOpt(implicit plan: PlanWriter) =
     None
@@ -35,4 +27,11 @@ class BoxedProcCell(
 
   override def toProcedureValue()(implicit plan: PlanWriter): ProcedureValue =
     this
+
+  def planInvokableProc()(implicit plan: PlanWriter): InvokableProc = {
+    val entryPointTemp = ps.TempValue()
+    plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, tempValue, signature)
+
+    InvokableProc(signature, entryPointTemp, Some(tempValue))
+  }
 }
