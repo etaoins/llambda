@@ -113,7 +113,7 @@ object CompilerApp extends App {
         }
 
         // Get the URL of the file's parent directory
-        val inputDirUrl = input.getParentFile.toURI.toURL
+        val inputDirUrl = input.getAbsoluteFile.getParentFile.toURI.toURL
 
         // Build the include path
         val includePath = frontend.IncludePath(List(inputDirUrl))
