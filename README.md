@@ -22,8 +22,8 @@ Requirements
 
 * Modern Unix-like operating system such as Mac OS X, Linux or FreeBSD. Llambda is explicitly tested on Mac OS X 10.10, Ubuntu 15.04 and FreeBSD 10.1 after every major change.
 * [CMake](http://www.cmake.org) 2.8
-* [LLVM](http://llvm.org) 3.6
-* [Clang](http://clang.llvm.org) 3.6
+* [LLVM](http://llvm.org) 4.0
+* [Clang](http://clang.llvm.org) 4.0
 * [sbt](http://www.scala-sbt.org)
 
 Installation
